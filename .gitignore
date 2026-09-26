@@ -1,0 +1,14 @@
+# Your own things: never committed, never shared
+.env
+data/*
+!data/.gitkeep
+backups/
+dist-out/
+
+# Installed parts
+node_modules/
+bin/
+
+# Scratch
+*.log
+*.tmp.*

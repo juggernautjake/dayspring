@@ -1,0 +1,337 @@
+/* Dayspring display: layout that fits any window and any Settings → Screen margin.
+   Loaded after tv.html's own styles, so these rules win. layout.js does the parts CSS can't measure:
+   "⋯ More" menus for toolbars, picking the longest text that fits, and folding cards away when a column is too short. */
+
+/* Everything is sized from the SAFE AREA (the window minus the margins), so moving the margin slider reflows the
+   content instead of just squeezing the boxes. */
+body{font-size:clamp(11px, min(calc((100vw - 2 * var(--sx)) * .0132), calc((100vh - 2 * var(--sy)) * .025)), 34px)}
+
+/* the columns and cards size their contents from their own width (container queries) */
+.screen > .col{container:colw / inline-size}
+.card{container:card / inline-size;min-width:0}
+.nowrow > .card{min-width:0}
+
+/* ---------- the clock row ---------- */
+.clock{min-width:0;flex-wrap:nowrap}
+.clock .t{font-size:min(4.6em, 11cqi);flex:0 0 auto}
+.clock .d{flex:1 1 auto;min-width:0;overflow:hidden;white-space:nowrap;font-size:min(1.3em, 3.3cqi)}
+.calbtns{min-width:0}
+.calbtns .util{flex-wrap:nowrap}
+.calbtns .util button .lbl{white-space:nowrap}
+.calbtns .util button.ico-only{padding:.26em .35em}
+.calbtns .util button.ico-only .lbl{display:none}
+
+/* ---------- text that picks the longest version that fits (layout.js sets data-pick) ---------- */
+.fitv > .v{display:none}
+.fitv:not([data-pick]) > .v[data-v="0"], .fitv[data-pick="0"] > .v[data-v="0"], .fitv[data-pick="1"] > .v[data-v="1"],
+.fitv[data-pick="2"] > .v[data-v="2"], .fitv[data-pick="3"] > .v[data-v="3"]{display:inline}
+.now .time.fitv, .now .head .left.fitv, .next .when.fitv{overflow:hidden;white-space:nowrap;min-width:0;max-width:100%}
+.now .head .left.fitv{flex:0 1 auto}
+.exam .w{flex:1 1 auto;min-width:0;overflow:hidden}
+.exam .w b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#examWhen.fitv{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#examWhen.fitv > .v{display:none}
+#examWhen.fitv:not([data-pick]) > .v[data-v="0"], #examWhen.fitv[data-pick="0"] > .v[data-v="0"], #examWhen.fitv[data-pick="1"] > .v[data-v="1"],
+#examWhen.fitv[data-pick="2"] > .v[data-v="2"], #examWhen.fitv[data-pick="3"] > .v[data-v="3"]{display:inline}
+
+/* ---------- now / next ---------- */
+.now h1{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;max-height:none;overflow:hidden}
+.now .head{min-width:0}
+.now .head .label{flex:0 1 auto;min-width:0;overflow:hidden}
+@container card (max-width: 26em){
+  .now h1{font-size:1.65em}
+  .now .desc{display:none}
+}
+@container card (max-width: 18em){
+  .now{padding:.7em .9em .8em}
+  .now .caticon{width:1.9em;height:1.9em;font-size:1em}
+  .now h1{font-size:1.35em}
+  .now .time{font-size:.95em}
+}
+@container card (max-width: 14em){
+  .next{padding:.6em .8em}
+  .next .ring{display:none}
+  .next .txt b{font-size:1.05em}
+}
+
+/* ---------- the showcase header (label · dots · ‹ ⏸ ›) ---------- */
+.showhead{min-width:0}
+.showhead .dots{min-width:0;overflow:hidden;flex:0 1 auto}
+@container card (max-width: 24em){ .showhead .dots{display:none} }
+.today li{grid-template-columns:minmax(4.2em,auto) 1.1em minmax(0,1fr) auto}
+@container card (max-width: 22em){
+  .today li{grid-template-columns:auto 1em minmax(0,1fr);gap:.45em}
+  .today li .dur{display:none}
+  .today ol::before{display:none}
+}
+
+/* ---------- exam and course rings ---------- */
+@container card (max-width: 26em){
+  .exam .n{font-size:2.6em}
+  .exam{gap:.8em}
+}
+@container card (max-width: 30em){
+  .courses{gap:.6em;padding:.8em .9em}
+  .course{gap:.6em}
+  .course .gauge{width:3.4em;height:3.4em}
+  .course .gauge .pct{font-size:.8em}
+}
+@container card (max-width: 22em){
+  .courses{grid-template-columns:minmax(0,1fr)}
+}
+.course .info .label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.course .info b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---------- the Dayspring (talk) panel ---------- */
+.talk{min-height:12em}
+.talkhead{flex-wrap:nowrap;min-width:0}
+.talkhead .label{min-width:0;overflow:hidden;white-space:nowrap}
+.status{flex:0 0 auto;min-width:0;overflow:hidden;white-space:nowrap}
+.status b{overflow:hidden;text-overflow:ellipsis}
+.talktools{flex:0 0 auto;min-width:0;flex-wrap:nowrap}
+.talkhead.fit-quiet .moodtag{display:none}
+.talkhead.fit-dots .status b{display:none}
+.talkhead.fit-nolabel > .label{display:none}
+.mic{min-width:0;flex-wrap:nowrap}
+.mic > span:nth-child(2){flex:1 1 auto}
+.mic .tools{flex:0 0 auto;min-width:0;flex-wrap:nowrap}
+.mic.fit-notext > span:nth-child(2){display:none}
+@container card (max-width: 26em){
+  .talkbody{grid-template-columns:minmax(0,.65fr) minmax(0,1.35fr)}
+  .transcript .cap{font-size:1em}
+}
+@container card (max-width: 17em){
+  .talkbody{grid-template-columns:minmax(0,.45fr) minmax(0,1.55fr);gap:.4em}
+}
+
+/* ---------- the music card ---------- */
+.np .nptop{min-width:0}
+.np .pctl{flex-wrap:nowrap;min-width:0}
+@container card (max-width: 24em){
+  .np img{width:3.4em;height:3.4em}
+  .np .eq{display:none}
+  .np .pctl .pb.sm[data-p="shuffle"], .np .pctl .pb.sm[data-p="repeat"]{display:none}
+}
+@container card (max-width: 19em){
+  .np .pvol{display:none}
+  .np .pctl .pb.sm[data-p="video"]{display:none}
+}
+@container card (max-width: 15em){
+  .np .pctl .pb.sm[data-p="library"]{display:none}
+  .np .pbar span{display:none}
+}
+
+/* ---------- cards folded away by layout.js when a column runs out of height ---------- */
+.fit-hide{display:none!important}
+.exam.fit-compact #examWhen{display:none}
+.exam.fit-compact{padding:.5em 1em}
+.exam.fit-compact .n{font-size:2.2em}
+.courses.fit-compact .course .nx, .courses.fit-compact .course .behind{display:none}
+.courses.fit-compact{padding:.55em .9em}
+.courses.fit-compact .course .gauge{width:2.8em;height:2.8em}
+.nowrow.fit-compact .now .desc{display:none}
+.nowrow.fit-compact .now{padding:.6em 1em .7em}
+.nowrow.fit-compact .now h1{font-size:1.45em;-webkit-line-clamp:1}
+.nowrow.fit-compact .next{padding:.5em .9em}
+.clock.fit-compact .t, .clock.fit-short .t{font-size:min(3.4em, 9cqi)}
+.calbtns .seg.fit-nolead .lead{display:none}
+.np.fit-compact .pbar{display:none}
+.np.fit-compact img{width:2.8em;height:2.8em}
+.talk.fit-small{min-height:9em}
+.talk.fit-small .talk .log, .talk.fit-small .log{display:none}
+
+/* ---------- the overall arrangement follows the window's shape ---------- */
+@media (max-aspect-ratio: 3/2){
+  .screen{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}
+}
+/* tall or square windows: the Dayspring panel moves under the day, with the small cards beside it */
+@media (max-aspect-ratio: 6/5){
+  .screen{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1.05fr) minmax(0,1fr)}
+  .screen > .col:last-child{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);grid-template-rows:auto auto auto minmax(0,1fr);align-content:start;gap:.95em}
+  .screen > .col:last-child > .talk{grid-column:1;grid-row:1 / -1;min-height:0}
+  .screen > .col:last-child > :not(.talk){grid-column:2}
+}
+/* narrow and tall (a phone-shaped window): one column all the way down */
+@media (max-aspect-ratio: 4/5){
+  .screen > .col:last-child{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto auto auto}
+  .screen > .col:last-child > .talk{grid-row:1;grid-column:1}
+  .screen > .col:last-child > :not(.talk){grid-column:1}
+}
+
+/* ---------- toolbars: the "⋯ More" button and its menu ---------- */
+.morebtn{font:inherit;font-size:.8em;line-height:1;color:var(--ink);background:rgba(255,255,255,.07);border:1px solid var(--edge2);border-radius:.7em;padding:.2em .6em;cursor:pointer;flex:0 0 auto}
+.morebtn:hover,.morebtn:focus-visible,.morebtn[aria-expanded="true"]{background:rgba(124,140,255,.32);outline:none}
+.calbtns .morebtn{border-radius:2em;font-size:.76em;padding:.3em .7em}
+.morebox{position:fixed;z-index:45;min-width:11em;max-width:calc(100vw - 2 * var(--sx) - 1em);max-height:calc(100vh - 2 * var(--sy) - 1em);overflow:auto;
+  display:flex;flex-direction:column;align-items:stretch;gap:.25em;padding:.4em;border-radius:.9em;background:rgba(18,21,48,.97);backdrop-filter:blur(18px);
+  border:1px solid var(--edge2);box-shadow:0 18px 50px rgba(0,0,0,.6);font-size:1em;animation:rise .25s var(--ease)}
+.morebox > *{margin:0!important}
+.morebox button, .morebox select{font:inherit;font-size:.9em;text-align:left;justify-content:flex-start;width:100%;color:var(--ink);background:transparent;border:1px solid transparent;border-radius:.6em;padding:.45em .7em;cursor:pointer;white-space:nowrap}
+.morebox button:hover, .morebox button:focus-visible, .morebox select:focus-visible{background:rgba(124,140,255,.25);outline:none}
+.morebox select{background:rgba(255,255,255,.06);border-color:var(--edge2)}
+.morebox .lbl{display:inline!important}
+.morebox .tune{display:flex;gap:.25em}
+.morebox .tune button{width:auto}
+
+/* ---------- pop-ups stay inside the screen ---------- */
+.mixer, .panel, .tunepop, .stpop, .lib .menu{max-width:calc(100vw - 2 * var(--sx) - 1em);max-height:calc(100vh - 2 * var(--sy) - 1em);overflow:auto}
+.toasts{max-width:calc(100vw - 2 * var(--sx) - 2em)}
+.detail .dbox{max-width:calc(100vw - 2 * var(--sx));max-height:calc(100vh - 2 * var(--sy))}
+.alarm .box{max-width:calc(100vw - 2 * var(--sx) - 1em)}
+.alarm h2{font-size:min(6.5em, 16vw, 22vh)}
+.overlay .box{max-height:calc(100vh - 2 * var(--sy));overflow:auto}
+
+/* ---------- the window bar: slides down when the pointer is at the top edge ---------- */
+/* inside the safe area: a TV crops its edges (the margin setting), so the bar sits just inside them, not at the very top */
+.wbar{position:fixed;left:var(--sx,0px);right:var(--sx,0px);top:var(--sy,0px);z-index:60;display:flex;align-items:center;gap:.35em;height:2.3em;padding:0 .5em 0 .9em;
+  background:linear-gradient(180deg,rgba(14,16,40,.96),rgba(14,16,40,.86));backdrop-filter:blur(16px);border:1px solid var(--edge2);border-radius:.7em;
+  box-shadow:0 8px 30px rgba(0,0,0,.45);opacity:0;pointer-events:none;transform:translateY(-.8em);transition:transform .22s var(--ease),opacity .22s var(--ease);font-size:max(12px, .9em)}
+.wbar.show, .wbar:focus-within{opacity:1;pointer-events:auto;transform:none}
+.wbar .wt{font-weight:500;letter-spacing:.04em;color:var(--muted);margin-right:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.wbar .wt b{color:var(--ink);font-weight:500}
+.wbar button{font:inherit;min-width:2.4em;height:1.8em;display:grid;place-items:center;border-radius:.45em;border:1px solid transparent;background:transparent;color:var(--ink);cursor:pointer;padding:0 .5em;line-height:1}
+.wbar button:hover, .wbar button:focus-visible{background:rgba(255,255,255,.12);border-color:var(--edge2);outline:none}
+.wbar button.x:hover, .wbar button.x:focus-visible{background:rgba(232,72,85,.85);border-color:transparent;color:#fff}
+.wconfirm{position:fixed;inset:0;z-index:61;display:grid;place-items:center;background:rgba(4,5,12,.6);backdrop-filter:blur(6px)}
+.wconfirm .wbox{width:min(28em, calc(100vw - 2em));padding:1.2em 1.3em 1em;border-radius:1em;background:rgba(20,24,54,.98);border:1px solid var(--edge2);box-shadow:0 24px 70px rgba(0,0,0,.6)}
+.wconfirm h3{margin:0 0 .4em;font-weight:500}
+.wconfirm p{margin:0 0 1em;color:var(--muted);line-height:1.45}
+.wconfirm .row{display:flex;gap:.6em;justify-content:flex-end;flex-wrap:wrap}
+.wconfirm .row button{font:inherit;border-radius:.7em;padding:.5em 1.1em;cursor:pointer;border:1px solid var(--edge2);background:rgba(255,255,255,.06);color:var(--ink)}
+.wconfirm .row button.go{border:0;background:linear-gradient(135deg,var(--indigo),var(--violet));color:#fff}
+.wconfirm .row button.danger{border:0;background:rgba(232,72,85,.9);color:#fff}
+@media (prefers-reduced-motion: reduce){ .wbar{transition:none} }
+
+/* ---------- the Sound panel (🔊 Sound, 🎚 Volume, the window bar's 🔊) ---------- */
+.sndpanel{position:fixed;z-index:46;right:calc(1em + var(--sx));top:calc(1em + var(--sy));width:min(30em, calc(100vw - 2 * var(--sx) - 2em));
+  max-height:calc(100vh - 2 * var(--sy) - 2em);overflow:auto;padding:.3em 1.1em 1em;border-radius:1em;background:rgba(16,19,44,.97);backdrop-filter:blur(18px);
+  border:1px solid var(--edge2);box-shadow:0 22px 70px rgba(0,0,0,.65);animation:rise .3s var(--ease);font-size:max(12px,.95em);scrollbar-width:thin}
+.sndpanel:focus{outline:none}
+.sndpanel header{position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;padding:.7em 0 .5em;background:rgba(16,19,44,.97)}
+.sndpanel h3{margin:0;font-weight:500;font-size:1.15em}
+.sndpanel h4{margin:1em 0 .45em;font-size:.72em;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);font-weight:600;display:flex;align-items:center;gap:.6em}
+.sndpanel .x{font:inherit;background:none;border:1px solid var(--edge2);border-radius:.6em;color:var(--muted);padding:.15em .55em;cursor:pointer}
+.sndpanel .x:hover, .sndpanel .x:focus-visible{color:var(--ink);background:rgba(255,255,255,.08);outline:none}
+.sndpanel .lvl{display:grid;grid-template-columns:2.3em minmax(0,1fr) 2.2em 2em;align-items:center;gap:.5em;margin:.35em 0}
+.sndpanel .lvl .mute{width:2.2em;height:2.2em;border-radius:50%;border:1px solid var(--edge2);background:rgba(255,255,255,.06);cursor:pointer;display:grid;place-items:center;font-size:.95em}
+.sndpanel .lvl.muted .mute{background:rgba(255,120,140,.2);border-color:rgba(255,120,140,.5);filter:grayscale(.6)}
+.sndpanel .lvl label{display:flex;flex-direction:column;gap:.2em;min-width:0;font-size:.92em}
+.sndpanel .nm{display:flex;flex-direction:column;min-width:0}
+.sndpanel .nm small{color:var(--muted);font-size:.8em;font-weight:300;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sndpanel .lvl input{width:100%;margin:0;accent-color:var(--violet);cursor:pointer}
+.sndpanel .lvl output{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.sndpanel .tst{font:inherit;font-size:.8em;min-width:2em;height:2em;border-radius:.6em;border:1px solid var(--edge2);background:rgba(255,255,255,.06);color:var(--ink);cursor:pointer;padding:0 .5em}
+.sndpanel .tst.lbl{height:auto;padding:.15em .6em;letter-spacing:normal;text-transform:none;font-weight:400;margin-left:auto}
+.sndpanel .tst:hover, .sndpanel .tst:focus-visible, .sndpanel .mute:focus-visible{background:rgba(124,140,255,.3);outline:none}
+.sndpanel .dev{display:grid;grid-template-columns:1.3em 1.6em minmax(0,1fr) auto 2em;align-items:center;gap:.45em;padding:.35em .45em;border-radius:.6em;cursor:pointer}
+.sndpanel .dev:hover{background:rgba(255,255,255,.05)}
+.sndpanel .dev input{accent-color:var(--violet);width:1.05em;height:1.05em}
+.sndpanel .dev .st{font-size:.72em;padding:.1em .55em;border-radius:1em;background:rgba(126,227,176,.14);color:var(--mint);white-space:nowrap}
+.sndpanel .hint{color:var(--muted);font-size:.82em;line-height:1.45;margin:.5em 0 0}
+.sndpanel .lnk{font:inherit;background:none;border:0;padding:0;color:#9fc4ff;text-decoration:underline;cursor:pointer}
+.sndpanel .row{display:flex;align-items:center;gap:.6em;flex-wrap:wrap;font-size:.9em;margin-bottom:.3em}
+.sndpanel .row select{flex:1 1 12em;min-width:0;font:inherit;background:rgba(0,0,0,.3);border:1px solid var(--edge2);border-radius:.6em;padding:.35em .5em;color:var(--ink)}
+.sndpanel .nights{display:flex;gap:.45em;flex-wrap:wrap}
+.sndpanel .nights button{font:inherit;font-size:.88em;background:rgba(255,255,255,.06);border:1px solid var(--edge);border-radius:.7em;padding:.35em .8em;color:var(--ink);cursor:pointer}
+.sndpanel .nights button.on{background:linear-gradient(135deg,rgba(124,140,255,.4),rgba(167,139,250,.35));border-color:rgba(167,139,250,.5)}
+@media (max-width: 520px){ .sndpanel{right:auto;left:calc(.5em + var(--sx));width:calc(100vw - 2 * var(--sx) - 1em)} }
+
+/* the ring's canvas is square: keep it inside the panel (it could reach under the cards below) */
+.talkbody{min-height:0}
+.talk .presence{overflow:hidden;min-height:0}
+.talk .presence canvas{width:100%;height:100%;max-width:none;max-height:none;aspect-ratio:auto;object-fit:contain}
+
+/* after the first second, cards don't replay their entrance animation when a fold brings them back (it made them
+   briefly stick out, which looked like overflow) */
+.screen .card.fit-steady{animation:none}
+
+/* =====================================================================================================================
+   Fitting Dayspring to your screen (Settings → Screen, 📐 in the window bar, "make everything bigger"…). layout.js turns
+   the settings into the variables and body classes below; with nothing adjusted everything looks exactly as before.
+   ===================================================================================================================== */
+/* the four margins (a TV can crop each edge differently): --st/--sb top/bottom (% of the height), --sl/--sr left/right
+   (% of the width). --sx/--sy (the larger of each pair) stay for everything that only knows "both sides". */
+body{font-size:calc(clamp(11px, min(calc((100vw - var(--sl, var(--sx)) - var(--sr, var(--sx))) * .0132), calc((100vh - var(--st, var(--sy)) - var(--sb, var(--sy))) * .025)), 34px) * var(--ui, 1))}
+.screen{padding:calc(1em + var(--st, var(--sy))) calc(1.2em + var(--sr, var(--sx))) calc(1em + var(--sb, var(--sy))) calc(1.2em + var(--sl, var(--sx)))}
+.calwrap{inset:calc(.6em + var(--st, var(--sy))) calc(.6em + var(--sr, var(--sx))) calc(.6em + var(--sb, var(--sy))) calc(.6em + var(--sl, var(--sx)))}
+.detail{padding:calc(1em + var(--st, var(--sy))) calc(1em + var(--sr, var(--sx))) calc(1em + var(--sb, var(--sy))) calc(1em + var(--sl, var(--sx)))}
+.overlay{padding:var(--st, var(--sy)) var(--sr, var(--sx)) var(--sb, var(--sy)) var(--sl, var(--sx))}
+.media.video{inset:calc(1em + var(--st, var(--sy))) calc(1em + var(--sr, var(--sx))) calc(1em + var(--sb, var(--sy))) calc(1em + var(--sl, var(--sx)))}
+.toasts{top:calc(1em + var(--st, var(--sy)));right:calc(1em + var(--sr, var(--sx)))}
+/* the window bar hovers just ABOVE the content (its own height plus a small gap above the top margin), never off-screen */
+.wbar{left:var(--sl, var(--sx));right:var(--sr, var(--sx));top:max(2px, calc(var(--st, var(--sy)) - 2.3em - .45em))}
+.sndpanel{right:calc(1em + var(--sr, var(--sx)));top:calc(1em + var(--st, var(--sy)))}
+
+/* text only (everything inside the cards), and the clock */
+.screen .card{font-size:calc(1em * var(--txt, 1))}
+.clock .t{font-size:calc(min(4.6em, 11cqi) * var(--clk, 1))}
+.clock.fit-compact .t, .clock.fit-short .t{font-size:calc(min(3.4em, 9cqi) * var(--clk, 1))}
+
+/* the talk panel's width (only when set; otherwise the window's shape decides) */
+@media (min-aspect-ratio: 6/5){
+  body.tw .screen{grid-template-columns:minmax(0,1fr) minmax(0, calc((100% - 1.3em) * var(--tw)))}
+}
+/* layouts */
+body.lay-two .screen, body.lay-right .screen, body.lay-left .screen, body.lay-compact .screen{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);grid-template-rows:none}
+body.tw.lay-two .screen, body.tw.lay-right .screen, body.tw.lay-compact .screen{grid-template-columns:minmax(0,1fr) minmax(0, calc((100% - 1.3em) * var(--tw)))}
+body.lay-left .screen{grid-template-columns:minmax(0,1fr) minmax(0,1.55fr)}
+body.tw.lay-left .screen{grid-template-columns:minmax(0, calc((100% - 1.3em) * var(--tw))) minmax(0,1fr)}
+body.lay-left .screen > .col:last-child{order:-1}
+body.lay-two .screen > .col:last-child, body.lay-right .screen > .col:last-child, body.lay-left .screen > .col:last-child, body.lay-compact .screen > .col:last-child{display:flex;grid-template-columns:none;grid-template-rows:none}
+body.lay-two .screen > .col:last-child > *, body.lay-right .screen > .col:last-child > *, body.lay-left .screen > .col:last-child > *, body.lay-compact .screen > .col:last-child > *{grid-column:auto;grid-row:auto}
+body.lay-one .screen{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1.45fr) minmax(0,1fr)}
+body.lay-one #show{min-height:8.5em}
+body.lay-one .nowrow{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr)}
+body.lay-one .screen > .col:last-child{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);grid-template-rows:auto auto auto minmax(0,1fr);align-content:start;gap:.95em}
+body.lay-one .screen > .col:last-child > .talk{grid-column:1;grid-row:1 / -1;min-height:0}
+body.lay-one .screen > .col:last-child > :not(.talk){grid-column:2}
+/* density: tighter spacing (the compact layout uses it too) */
+body.dense .screen{gap:.7em}
+body.dense .col{gap:.55em}
+body.dense .nowrow{gap:.55em}
+body.dense .screen .card{padding:.6em .85em}
+body.dense .now{padding:.55em .9em .65em}
+body.dense .next{padding:.5em .85em}
+body.dense .courses{padding:.55em .8em;gap:.55em}
+body.dense .np{padding:.55em .8em .5em}
+body.lay-compact .now .desc{display:none}
+body.lay-compact .now h1{-webkit-line-clamp:1}
+/* keep proportions: a 16:9 layout in the middle instead of stretching to the window's shape */
+body.keep .screen{width:min(100%, calc((100vh - var(--st, var(--sy)) - var(--sb, var(--sy))) * 1.7778 + var(--sl, var(--sx)) + var(--sr, var(--sx)) + 2.4em));margin-inline:auto}
+/* what to show */
+body.hide-clock .clock, body.hide-nownext .nowrow, body.hide-panel #show, body.hide-exam #examCard, body.hide-courses #courses{display:none!important}
+body.hide-transcript .transcript{display:none!important}
+body.hide-transcript .talkbody{grid-template-columns:minmax(0,1fr)}
+body.hide-col1 .screen{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important}
+body.hide-col1 .screen > .col:first-child{display:none}
+body.hide-col1 .screen > .col:last-child{display:flex!important}
+body.hide-col1 .screen > .col:last-child > *{grid-column:auto!important;grid-row:auto!important}
+/* schedule rows beyond the chosen number */
+.today li.rowcap{display:none!important}
+/* calmer motion (the sky has its own motion setting) */
+body.calm .screen *, body.calm .screen{animation:none!important;transition:none!important}
+
+/* ---------- 📐 Fit to screen: bright edge lines you nudge until they're just visible ---------- */
+.fitcal{position:fixed;inset:0;z-index:80;font-size:max(13px, .95em);color:#fff}
+.fitcal .shade{position:absolute;background:rgba(255,60,90,.28)}
+.fitcal .frame{position:absolute;border:4px solid #7ef0c0;box-shadow:0 0 0 2px rgba(0,0,0,.6),0 0 24px rgba(126,240,192,.7);pointer-events:none}
+.fitcal .edge{position:absolute;display:grid;place-items:center;cursor:grab;touch-action:none}
+.fitcal .edge.t, .fitcal .edge.b{height:28px;left:0;right:0;cursor:ns-resize}
+.fitcal .edge.l, .fitcal .edge.r{width:28px;top:0;bottom:0;cursor:ew-resize}
+.fitcal .edge i{font-style:normal;background:#7ef0c0;color:#062;font-weight:700;border-radius:1em;padding:.1em .55em;font-size:.85em;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+.fitcal .edge.sel i{background:#ffd27a;color:#402a00}
+.fitcal .corner{position:absolute;width:26px;height:26px;border:0 solid #ffd27a;pointer-events:none}
+.fitcal .corner.tl{border-width:5px 0 0 5px}.fitcal .corner.tr{border-width:5px 5px 0 0}.fitcal .corner.bl{border-width:0 0 5px 5px}.fitcal .corner.br{border-width:0 5px 5px 0}
+.fitcal .fcbox{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(34em, 86%);max-height:80%;overflow:auto;padding:1em 1.2em;border-radius:1em;
+  background:rgba(14,17,42,.96);border:1px solid rgba(255,255,255,.2);box-shadow:0 20px 60px rgba(0,0,0,.7);text-align:center}
+.fitcal h3{margin:0 0 .3em;font-weight:500}
+.fitcal p{margin:.2em 0 .7em;color:#c9cdef;line-height:1.4;font-size:.92em}
+.fitcal .grid{display:grid;grid-template-columns:auto auto auto;gap:.35em .6em;justify-content:center;align-items:center;margin:.4em 0 .7em}
+.fitcal .grid b{font-weight:500;text-align:right}
+.fitcal .grid output{min-width:3.4em;font-variant-numeric:tabular-nums}
+.fitcal button{font:inherit;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.25);border-radius:.6em;padding:.3em .8em;cursor:pointer}
+.fitcal button:hover, .fitcal button:focus-visible{background:rgba(124,140,255,.4);outline:none}
+.fitcal .pair{display:inline-flex;gap:.3em}
+.fitcal .presets, .fitcal .actions{display:flex;gap:.4em;justify-content:center;flex-wrap:wrap;margin:.3em 0}
+.fitcal .actions .go{background:linear-gradient(135deg,#7c8cff,#a78bfa);border:0}
+.fitcal .keys{font-size:.8em;color:#9aa0c8}

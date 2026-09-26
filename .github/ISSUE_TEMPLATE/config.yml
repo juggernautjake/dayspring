@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Read the guide (install, setup, every feature, FAQ)
+    url: https://github.com/juggernautjake/dayspring/tree/main/docs
+    about: Most questions are answered in the step-by-step guide and the FAQ.
+  - name: Report a security problem privately
+    url: https://github.com/juggernautjake/dayspring/security/advisories/new
+    about: Please don't open a public issue for security problems.
