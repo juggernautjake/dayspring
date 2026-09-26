@@ -2,6 +2,11 @@
 
 All notable changes to Dayspring. Versions follow [semantic versioning](https://semver.org).
 
+## 1.1.2 — AI answers are back
+
+**Fixed**
+- **Dayspring answers with its AI again.** Two of its abilities had the same name ("resolve_conflict"), and Claude, ChatGPT and Grok refuse a request when that happens, so every question that needed the AI failed. The calendar one is now called "resolve_calendar_conflict", and Dayspring now skips a duplicate instead of letting it break every answer.
+
 ## 1.1.1 — no more YouTube windows
 
 **Fixed**
