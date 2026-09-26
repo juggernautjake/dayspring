@@ -2,6 +2,31 @@
 
 All notable changes to Dayspring. Versions follow [semantic versioning](https://semver.org).
 
+## 1.0.2 — a smoother Schedule, Settings and screen
+
+**Fixed**
+- **The Schedule** no longer slides sideways when you press Add, and a closed side panel can't be tabbed into.
+- Double-clicking **Save** adds an item once, not twice.
+- Clicking through Day, Week, Month and Year quickly always shows the view you picked. The year view loads much faster and says "Loading…" if it takes a moment.
+- A message that has faded away no longer blocks the buttons underneath it.
+- **Fit to screen** by keyboard: pressing Enter on a button presses that button again. It never saves by surprise.
+- **The guided setup**: after you skip a step, its spoken line no longer plays over the next step.
+- **Settings**: a change is saved when you move to another section, so nothing is lost. Things a section started (like waiting for Spotify) stop when you leave it.
+- **Esc** closes only what's on top, one thing at a time.
+- Asking "what's the weather?" before you've set your town now tells you how to add it, instead of saying nothing.
+- Long names and interests wrap neatly instead of running off the edge. Nicknames can't be added twice.
+- **Church** and **Scripture memory** can't be switched on while Faith is off. "Add meal times" remembers what you chose.
+- **Help**: typing one letter clears the old results, and a link to a page that doesn't exist says so and suggests close matches.
+- The status says **Reconnecting…** while Dayspring itself can't be reached, instead of "Ready".
+- The first time the screen opens (often right after setup, maybe at night), it stays bright for a while and explains night mode.
+- Links like "Open on the laptop" work even when Dayspring runs on a different port.
+- Small labels are easier to read.
+
+**New**
+- **Overnight items**: set an end time before the start (11pm to 1am) and it runs past midnight. It shows on both days with its real times, and editing or deleting either day changes the whole thing. You can also drag an item's bottom edge past midnight.
+- Dayspring's typeface now comes with it, so every page looks right even without internet.
+- The Sound panel opens straight away: the list of speakers and microphones is looked up in the background.
+
 ## 1.0.1 — quieter, one window, and updates that look after themselves
 
 **Fixed**

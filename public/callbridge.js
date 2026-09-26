@@ -79,7 +79,7 @@
     $(".x", pop).onclick = closePop;
     return pop;
   }
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && pop) closePop(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && pop && (!e.dsTop || e.dsTop === pop)) closePop(); });
 
   function showInstall(why) {
     const p = openPop(`<h4>🎧 Tune in needs speech-to-text</h4>

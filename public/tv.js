@@ -10,6 +10,18 @@
   const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch { /* private window */ } } };
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  // Esc closes only what's on top. Every open overlay is found here and the top one (highest layer, then the one
+  // added last) is marked on the key event (e.dsTop); each overlay's own Esc handler only acts when it's the one.
+  const ESC_ROOTS = ".wconfirm, .fitcal, #dsUpdate, .stpop, .tunepop, .morebox, #soundPanel, .fyl, #lib, .rpanel, #reader, #detail, #media.video, #calwrap, #pagewrap";
+  const shown = (el) => el.isConnected && !el.hidden && !el.closest("[hidden]") && getComputedStyle(el).display !== "none" && getComputedStyle(el).visibility !== "hidden";
+  const layerOf = (el) => { for (let x = el; x && x !== document.body; x = x.parentElement) { const z = parseInt(getComputedStyle(x).zIndex, 10); if (!Number.isNaN(z)) return z; } return 0; };
+  window.dsTopOverlay = () => {
+    const open = [...document.querySelectorAll(ESC_ROOTS)].filter(shown);
+    if (!open.length) return null;
+    return open.reduce((a, b) => { const za = layerOf(a), zb = layerOf(b); if (zb !== za) return zb > za ? b : a; return a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? b : a; });
+  };
+  window.addEventListener("keydown", (e) => { if (e.key === "Escape") e.dsTop = window.dsTopOverlay(); }, true);
+  const escFor = (e, el) => !e.dsTop || e.dsTop === el;
 
   const CAT = { faith: "--faith", body: "--body", work: "--work", study: "--study", meal: "--meal", home: "--home", rest: "--rest", flex: "--flex" };
   const catVar = (c) => `var(${CAT[c] ?? "--indigo"})`;
@@ -591,7 +603,7 @@
     } catch { /* another origin */ }
   });
   window.addEventListener("message", (e) => { if (e.data?.type === "dayspring-page-close") closePage(); });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && pageOpen()) closePage(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && pageOpen() && escFor(e, $("#pagewrap"))) closePage(); });
   window.addEventListener("message", (e) => { if (e.data?.type === "dayspring-calendar-close") closeCalendar(); });
   document.querySelectorAll("#calBtns [data-cal]").forEach((b) => (b.onclick = () => openCalendar(b.dataset.cal)));
 
@@ -626,7 +638,11 @@
   $("#dBack").onclick = () => detailBack?.();
   $("#dFull").onclick = () => { const el = $("#detail"); document.fullscreenElement ? document.exitFullscreen().catch(() => {}) : el.requestFullscreen?.().catch(() => {}); };
   $("#detail").addEventListener("click", (e) => { if (e.target.id === "detail") closeDetail(); });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (!closeDetail()) closeCalendar(); } });
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (escFor(e, $("#detail")) && closeDetail()) return;
+    if (escFor(e, $("#calwrap"))) closeCalendar();
+  });
   const longDate = (iso) => new Date(iso + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
   const dur = (b) => { const m = toMin(b.end) - toMin(b.start); return m >= 60 ? `${(m / 60).toFixed(m % 60 ? 1 : 0)} h` : `${m} m`; };
 
@@ -637,14 +653,14 @@
     const html = `${d.special.length ? `<div class="dspecial">${d.special.map((s) => specialBadge(s)).join("")}</div>` : ""}
       <div class="dnav"><button data-day="${addDaysISO(date, -1)}">‹ ${esc(new Date(addDaysISO(date, -1) + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }))}</button>
         <button data-day="${addDaysISO(date, 1)}">${esc(new Date(addDaysISO(date, 1) + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }))} ›</button></div>
-      <ol class="dday">${d.blocks.map((b) => `<li style="--c:${catVar(b.category)}" class="${b.done ? "done" : ""}"><span class="hm">${hm12(b.start)}<small>${hm12(b.end)}</small></span><span class="dot"></span>
+      <ol class="dday">${d.blocks.map((b) => `<li style="--c:${catVar(b.category)}" class="${b.done ? "done" : ""}"><span class="hm">${hm12(b.span?.start ?? b.start)}<small>${hm12(b.span?.end ?? b.end)}${b.span ? " (next day)" : ""}</small></span><span class="dot"></span>
         <div><b>${esc(b.title)}</b>${b.description ? `<p>${esc(b.description)}</p>` : ""}<small>${esc(b.category)} · ${dur(b)}${b.projected ? " · from your routine" : ""}</small></div></li>`).join("") || `<li><div><b>Nothing scheduled.</b></div></li>`}</ol>`;
     openDetail(longDate(date), html);
   }
   // ---- one block ----
   function blockDetail(b) {
     if (!b) return;
-    openDetail(b.title, `<div class="dblock" style="--c:${catVar(b.category)}"><div class="bt">${hm12(b.start)} – ${hm12(b.end)} · ${dur(b)} · ${esc(b.category)}</div>
+    openDetail(b.title, `<div class="dblock" style="--c:${catVar(b.category)}"><div class="bt">${hm12(b.span?.start ?? b.start)} – ${hm12(b.span?.end ?? b.end)}${b.span ? " (next day)" : ""} · ${dur(b)} · ${esc(b.category)}</div>
       ${b.description ? `<p>${esc(b.description)}</p>` : `<p class="muted">No notes on this one.</p>`}</div>
       <div class="dnav"><button data-day="${b.date ?? todayISO()}">The whole day ›</button></div>`);
   }
@@ -894,10 +910,11 @@
       : /\b(quote|encourag|inspir)/.test(q) ? "quote" : /\b(video|youtube)\b/.test(q) && !/\bplay\b/.test(q) ? "video" : /\b(year|yearly)\b/.test(q) ? "year" : /\b(month|monthly)\b/.test(q) ? "month"
       : /\b(week|weekly)\b/.test(q) ? "week" : /\b(today|daily|schedule)\b/.test(q) && /\b(show|back|go|switch|pull)\b/.test(q) ? "day" : null;
     if (!v || /\b(add|move|schedule (a|an|my|something)|cancel|remind|free|anything at)\b/.test(q)) return null;
+    if (v === "weather" && !show.weather) return null;
     setCalView(v, { pin: v !== "day" });
     if (v === "weather" && show.weather) { const w = show.weather; return { say: `It's ${w.now.temp} and ${w.now.text.toLowerCase()} in ${w.place}. High of ${w.today.hi}, low of ${w.today.lo}${w.today.rain >= 20 ? `, ${w.today.rain} percent chance of rain` : ""}.` }; }
     if (v === "quote" && show.quote) return { say: `${show.quote.text} ${show.quote.by}.` };
-    return { say: { day: "Here's today.", week: "Here's your week.", month: `Here's ${MON[new Date().getMonth()]}.`, year: `Here's ${new Date().getFullYear()} at a glance.`, prayer: "Here's your prayer list.", memory: "Here are your memory verses.", video: "Here's one I think you'd like." }[v] };
+    return { say: { day: "Here's today.", week: "Here's your week.", month: `Here's ${MON[new Date().getMonth()]}.`, year: `Here's ${new Date().getFullYear()} at a glance.`, prayer: "Here's your prayer list.", prayerChurch: "Here's the church prayer list.", memory: "Here are your memory verses.", video: "Here's one I think you'd like.", quote: "Here's something encouraging." }[v] ?? "Here you go." };
   }
 
   // Night: after the day's last block and before its first, the TV goes nearly black (or just dims),
@@ -912,6 +929,11 @@
     b.toggle("wake", Date.now() < wakeUntil);
   }
   function wake(ms = 45_000) { wakeUntil = Date.now() + ms; nightCheck(); }
+  if (store.get("ds.firstScreen") !== "1") {
+    store.set("ds.firstScreen", "1");
+    wakeUntil = Date.now() + 10 * 60_000;
+    setTimeout(() => { if (document.body.classList.contains("night")) toast("Night mode", "After your day's last item the screen goes dark so it won't keep you up. Move the mouse, tap, or say my name to bring it back. Change it in Settings → Screen.", "", "bell"); }, 4000);
+  }
   function driftNightClock() {
     const c = $("#nclock");
     const d = new Date(), first = blocks.find((b) => toMin(b.start) > nowMin()) ?? blocks[0];
@@ -2080,7 +2102,7 @@
     else if (k === "m" || k === "M") ctl("mute");
     else if (k === "N") ctl("next");
     else if (k === "P") ctl("previous");
-    else if (k === "Escape") { if (box.classList.contains("full")) ctl("full", false); else ctl("stop"); }
+    else if (k === "Escape") { if (!escFor(e, box)) return; if (box.classList.contains("full")) ctl("full", false); else ctl("stop"); }
     else done = false;
     if (done) { e.preventDefault(); e.stopImmediatePropagation(); showCtl(); }
   }, true);
@@ -2216,10 +2238,18 @@
     const alts = phrases.sort((a, b) => b.length - a.length).map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s+"));
     wakeRe = new RegExp(`\\b(?:${alts.join("|")})\\b[,.!?]?\\s*(.*)$`, "i");
   }
+  let serverDown = false;
   function setMic(cls, text) {
     $("#mic").className = "mic " + cls; $("#micText").textContent = text;
     const st = $("#talkStatus");
-    if (st) { st.className = "status " + (cls || "wait"); $("#talkStatusText").textContent = { listen: "Listening", think: "Thinking", speak: "Speaking" }[cls] ?? (micBlocked ? "Mic blocked" : "Ready"); }
+    if (st) { st.className = "status " + (cls || "wait"); $("#talkStatusText").textContent = { listen: "Listening", think: "Thinking", speak: "Speaking" }[cls] ?? (serverDown ? "Reconnecting…" : micBlocked ? "Mic blocked" : "Ready"); }
+  }
+  function setServerDown(down) {
+    if (serverDown === down) return;
+    serverDown = down;
+    const st = $("#talkStatus");
+    if (st && !/listen|think|speak/.test(st.className)) $("#talkStatusText").textContent = down ? "Reconnecting…" : micBlocked ? "Mic blocked" : "Ready";
+    document.body.classList.toggle("offline", down);
   }
   const idleText = () => `Say “${cap(config.wakePhrases[0])}, …” to talk` + (prefs.mode !== "voice" ? ` · ${prefs.mode === "silent" ? "silent" : "chime only"}` : "");
 
@@ -2367,7 +2397,7 @@
   function chatDetail() {
     const msgs = [...$("#log").children].filter((m) => !m.classList.contains("interim") && !m.classList.contains("typing"));
     openDetail("Conversation", `<div class="dchat">${msgs.map((m) => `<div class="${m.className}">${m.innerHTML}</div>`).join("") || '<p class="muted">Nothing yet today. Say “Dayspring” and ask me anything.</p>'}</div>
-      <div class="dnav"><a class="btn" href="http://localhost:4747/history.html">Older conversations ↗</a></div>`, { wide: true });
+      <div class="dnav"><a class="btn" href="${location.origin}/history.html">Older conversations ↗</a></div>`, { wide: true });
     setTimeout(() => { const b = $("#dBody"); b.scrollTop = b.scrollHeight; }, 60);
   }
   $("#repeatBtn").onclick = repeatLast;
@@ -2544,7 +2574,8 @@
     window.dsEvents = es; window.dispatchEvent(new CustomEvent("ds-events", { detail: es }));
     // after Dayspring restarts (new code from Claude Code), reload so the new version shows
     let build0 = null;
-    es.onopen = () => json("/build").then((r) => { if (build0 && r.build !== build0) location.reload(); build0 = r.build; }).catch(() => {});
+    es.onopen = () => { setServerDown(false); json("/build").then((r) => { if (build0 && r.build !== build0) location.reload(); build0 = r.build; }).catch(() => {}); };
+    es.addEventListener("error", () => { if (es.readyState !== EventSource.OPEN) setServerDown(true); });
     // Claude Code at work: a live status line in the Dayspring panel
     es.addEventListener("coder", (e) => {
       const c = JSON.parse(e.data), el = $("#coderStatus");
@@ -2841,7 +2872,7 @@
       if (cur > min) { lastLevel[k] = cur; setLevel(k, min); } else setLevel(k, lastLevel[k] || 60);
     }
   });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !snd.hidden) { e.stopPropagation(); closeSound(); } }, true);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !snd.hidden && escFor(e, snd)) { e.stopPropagation(); closeSound(); } }, true);
   document.addEventListener("pointerdown", (e) => { if (!snd.hidden && !snd.contains(e.target) && !e.target.closest?.("#mixBtn, .wbar, .morebox") && e.target !== gear) closeSound(); });
   function renderBell() {
     applyVolume();

@@ -139,7 +139,7 @@ const PUBLIC = join(here, "public");
 const PORT = Number(process.env.PORT) || 4747;
 const TUNNEL = process.argv.includes("--tunnel");
 
-const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png" };
+const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png", ".woff2": "font/woff2", ".txt": "text/plain; charset=utf-8", ".ico": "image/x-icon" };
 
 // In-memory conversations, one per surface (desk panel, Dayspring screen). Restarting starts fresh; the schedule persists.
 const histories = { desk: [], tv: [] };
@@ -445,13 +445,15 @@ async function api(req, res, url) {
     const plan = store.planBetween(from, to), specials = special.between(from, to);
     // every connected calendar (hidden ones left out, duplicates merged, subscriptions included)
     plan.push(...(await calendarRoutes.externalBlocks(from, to).catch(() => [])));
-    const days = [];
+    const days = [], byDay = new Map(), spByDay = new Map();
+    for (const b of plan) { const l = byDay.get(b.date); if (l) l.push(b); else byDay.set(b.date, [b]); }
+    for (const s of specials) { const l = spByDay.get(s.date); if (l) l.push(s); else spByDay.set(s.date, [s]); }
     for (let d = from; d <= to; d = store.addDays(d, 1)) {
-      const bl = plan.filter((b) => b.date === d);
+      const bl = byDay.get(d) ?? [];
       const cats = [...new Set(bl.map((b) => b.category))];
-      days.push({ date: d, count: bl.length, cats, study: bl.filter((b) => b.category === "study").length, special: specials.filter((s) => s.date === d),
+      days.push({ date: d, count: bl.length, cats, study: bl.filter((b) => b.category === "study").length, special: spByDay.get(d) ?? [],
         major: bl.filter((b) => (b.importance ?? 0) >= 3).map((b) => b.title), important: bl.filter((b) => (b.importance ?? 0) === 2).map((b) => b.title),
-        ...(q.get("summary") ? {} : { blocks: bl.map((b) => ({ id: b.id, start: b.start, end: b.end, title: b.title, description: b.description ?? "", importance: b.importance ?? 0, source: b.source ?? null, category: b.category, done: Boolean(b.done), projected: Boolean(b.projected), external: b.external ?? null, color: b.color ?? null, sourceLabel: b.sourceLabel ?? null, allDay: Boolean(b.allDay), routineId: b.routineId ?? null, repeatText: b.repeatText ?? null, repeat: b.repeat ?? null })) }) });
+        ...(q.get("summary") ? {} : { blocks: bl.map((b) => ({ id: b.id, start: b.start, end: b.end, title: b.title, description: b.description ?? "", importance: b.importance ?? 0, source: b.source ?? null, category: b.category, done: Boolean(b.done), projected: Boolean(b.projected), external: b.external ?? null, color: b.color ?? null, sourceLabel: b.sourceLabel ?? null, allDay: Boolean(b.allDay), routineId: b.routineId ?? null, repeatText: b.repeatText ?? null, repeat: b.repeat ?? null, link: b.link ?? null, span: b.span ?? null })) }) });
     }
     return send(res, 200, { from, to, today: store.todayISO(), categories: store.CATEGORIES, days });
   }
@@ -505,7 +507,9 @@ async function api(req, res, url) {
   if (m === "POST" && po) { const f = photos.filePath(po[1]); if (!f) return send(res, 404, { error: "no such photo" }); spawn("explorer.exe", [f], { detached: true, stdio: "ignore", windowsHide: true }).unref(); return send(res, 200, { opened: true }); }
   if (m === "GET" && p === "/special") return send(res, 200, { today: special.forDate(store.todayISO()), spoken: special.spokenToday(store.todayISO()), upcoming: special.upcoming(store.todayISO(), 30), people: special.people() });
   if (m === "POST" && p === "/blocks") {
-    const r = store.addBlock(await readJSON(req));
+    const body = await readJSON(req);
+    // an end before the start runs past midnight (11pm–1am): two linked halves
+    const r = body?.end && body?.start && body.end < body.start ? store.addSpan(body) : store.addBlock(body);
     announcer.broadcast("refresh", { reason: "add" });
     return send(res, 201, r);
   }
@@ -518,6 +522,8 @@ async function api(req, res, url) {
       const real = id.startsWith("r:") ? store.materialize(id).id : id;
       const { close_gap, ...patch } = await readJSON(req);
       const before = store.blocksBetween("0000-01-01", "9999-12-31").find((b) => b.id === real);
+      const s0 = patch.start ?? before?.span?.start ?? before?.start, e0 = patch.end ?? before?.span?.end ?? before?.end;
+      if (before?.link || (s0 && e0 && e0 < s0)) { const r = store.updateSpan(real, patch); announcer.broadcast("refresh", { reason: "edit" }); return send(res, 200, r); }
       const r = store.updateBlock(real, patch);
       if (close_gap && before && before.date === r.block.date && toM(r.block.end) < toM(before.end))
         r.pulledEarlier = store.pullLater(r.block.date, before.end, toM(before.end) - toM(r.block.end), { isFixed: planner.isAnchored, exceptId: real });
@@ -762,6 +768,8 @@ createServer(async (req, res) => {
   if (process.platform === "win32") setTimeout(() => fixShortcuts(), 20_000);
   // the Dayspring screen's computer stays awake (no sleep, no idle lock) while plugged in, so alerts and alarms get through
   if (DISPLAY_MODE) keepawake.start();
+  // the speakers and mics are looked up once in the background, so the Sound panel opens straight away
+  setTimeout(() => devices.list().catch(() => {}), 8000);
   snooze.start();                // snoozed alarms and reminders come back, even after a restart
   discover.start();
   // connected apps that work in the background: weather alerts, calendar subscriptions, news feeds

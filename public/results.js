@@ -81,7 +81,7 @@
       document.body.appendChild(el);
       el.addEventListener("click", async (e) => {
         const b = e.target.closest("button"); if (!b) return;
-        if (b.id === "rClose") return close();
+        if (b.id === "rsClose") return close();
         if (b.id === "rRead") return readAloud();
         if (b.id === "rMore") { shown += PAGE; return paint(); }
         const li = b.closest("li"), it = R?.items.find((x) => x.n === Number(li?.dataset.n)); if (!it) return;
@@ -97,10 +97,10 @@
       });
     }
     el.innerHTML = `<header><h2>${esc(R.title)}${R.source ? `<small>From ${esc(R.source)} · ${R.items.length} item${R.items.length === 1 ? "" : "s"}</small>` : ""}</h2>
-      <button class="rbtn" id="rRead">🔊 Read it to me</button><button class="rbtn" id="rClose" aria-label="Close">✕</button></header><div class="rbody"></div>`;
+      <button class="rbtn" id="rRead">🔊 Read it to me</button><button class="rbtn" id="rsClose" aria-label="Close">✕</button></header><div class="rbody"></div>`;
     paint();
   }
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && el) { close(); } });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && el && (!e.dsTop || e.dsTop === el)) { close(); } });
   const attach = (es) => es.addEventListener("results", (e) => { let r = {}; try { r = JSON.parse(e.data); } catch { return; } if (r.close) close(); else open(r); });
   if (window.dsEvents) attach(window.dsEvents); else addEventListener("ds-events", (e) => attach(e.detail), { once: true });
   // said on the display (no trip to the server needed)

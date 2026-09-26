@@ -1,5 +1,5 @@
 // End-to-end test of updates, against a fake GitHub on this computer (it never talks to the real one).
-//   node scripts/qa/update-e2e.mjs [--keep] [--old <folder with Dayspring 1.0.0>]
+//   node scripts/qa/update-e2e.mjs [--keep] [--old <folder with an older released Dayspring, e.g. 1.0.0 or 1.0.1>]
 // Cases: install now (data kept, backups made, the new version confirms it started) · a failed download (nothing
 // changes) · a new version that won't start (the launcher puts the old one back) · "next time I open Dayspring" ·
 // "when I'm not using it" (idle) · and, with --old, Dayspring 1.0.0's own updater installing this version.
@@ -159,19 +159,22 @@ try {
     check("idle: data kept", dataKept(dir));
     await stop(dir, port); }
 
-  // 6. Dayspring 1.0.0's own updater ("Update Dayspring.cmd") installing this version
+  // 6. an older release's own updater ("Update Dayspring.cmd") installing this version: it's offered whichever test
+  //    release is newer than it (1.0.0 gets "1.0.1", 1.0.1 gets "1.0.2")
   if (OLD && want("old")) {
-    latest = "A"; const port = portN++; const dir = install(OLD, "from-1.0.0");
+    const from = ver(OLD), newer = ["A", "B"].find((k) => VERS[k].localeCompare(from, undefined, { numeric: true }) > 0);
+    latest = newer; const to = VERS[newer];
+    const port = portN++; const dir = install(OLD, "from-" + from);
     // 1.0.0 runs "tar" from PATH: on Windows that is System32's (a Git Bash PATH would put GNU tar first)
     const winEnv = { ...envFor(port), PATH: join(process.env.SystemRoot ?? "C:\\Windows", "System32") + ";" + (process.env.PATH ?? "") };
     const r = await runAsync(["scripts/update.mjs", "--yes"], { cwd: dir, env: winEnv });
-    check("1.0.0 → 1.0.1 with the old updater", ver(dir) === "1.0.1", (r.stdout + r.stderr).trim().split(/\r?\n/).slice(-2).join(" | "));
-    check("1.0.0 → 1.0.1: data and .env kept", dataKept(dir));
+    check(`${from} → ${to} with the old updater`, ver(dir) === to, (r.stdout + r.stderr).trim().split(/\r?\n/).slice(-2).join(" | "));
+    check(`${from} → ${to}: data and .env kept`, dataKept(dir));
     const binGone = !existsSync(join(dir, "bin", "helper.txt"));
     const l = await launch(dir, [], envFor(port));
-    check("1.0.0 → 1.0.1: new version starts", await up(port), l.stdout?.trim().slice(-160));
-    check("1.0.0 → 1.0.1: downloaded helpers put back", existsSync(join(dir, "bin", "helper.txt")), binGone ? "the old updater had removed bin/" : "bin/ was never removed");
-    check("1.0.0 → 1.0.1: the new launcher files arrived", existsSync(join(dir, "Start Dayspring.vbs")) && existsSync(join(dir, "scripts", "launch.mjs")));
+    check(`${from} → ${to}: new version starts`, await up(port), l.stdout?.trim().slice(-160));
+    check(`${from} → ${to}: downloaded helpers put back`, existsSync(join(dir, "bin", "helper.txt")), binGone ? "the old updater had removed bin/" : "bin/ was never removed");
+    check(`${from} → ${to}: the new launcher files arrived`, existsSync(join(dir, "Start Dayspring.vbs")) && existsSync(join(dir, "scripts", "launch.mjs")));
     await stop(dir, port);
   }
 } finally {

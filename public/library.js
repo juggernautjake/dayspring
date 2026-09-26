@@ -112,7 +112,7 @@
   const isOpen = () => !root.hidden;
   $("#libClose", root).onclick = close;
   $$(".ltabs [data-tab]", root).forEach((b) => (b.onclick = () => open(b.dataset.tab)));
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && isOpen()) { if (menuEl) closeMenu(); else close(); e.stopImmediatePropagation(); } }, true);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && isOpen() && (!e.dsTop || e.dsTop === root)) { if (menuEl) closeMenu(); else close(); e.stopImmediatePropagation(); } }, true);
 
   function render() {
     $$(".ltabs [data-tab]", root).forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));

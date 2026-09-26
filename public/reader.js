@@ -118,7 +118,7 @@
   $("#rToc").addEventListener("click", (e) => { const a = e.target.closest("[data-s]"); if (a) { const i = sectionStart(Number(a.dataset.s)); if (i >= 0) jump(i, R.playing); } });
   document.addEventListener("keydown", (e) => {
     if (el.hidden || /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName ?? "")) return;
-    if (e.key === "Escape") { e.stopPropagation(); cmd("close"); }
+    if (e.key === "Escape" && (!e.dsTop || e.dsTop === el)) { e.stopPropagation(); cmd("close"); }
     else if (e.key === " " && el.contains(document.activeElement)) { e.preventDefault(); R.playing ? pause() : play(); }
   }, true);
   // voice on the display, instant: only while a document is open

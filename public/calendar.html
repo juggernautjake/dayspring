@@ -4,12 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dayspring Schedule</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/fonts/fonts.css">
 <style>
   :root{
     --bg:#070916; --panel:rgba(22,26,56,.72); --panel2:rgba(34,40,80,.6); --edge:rgba(160,170,255,.14); --edge2:rgba(170,180,255,.28);
-    --ink:#eef0ff; --muted:#a4abcc; --dim:#6f7699; --violet:#a78bfa; --indigo:#7c8cff; --gold:#ffd27a; --mint:#7ee3b0; --rose:#ff8fa3;
+    --ink:#eef0ff; --muted:#a4abcc; --dim:#8d94b8; --violet:#a78bfa; --indigo:#7c8cff; --gold:#ffd27a; --mint:#7ee3b0; --rose:#ff8fa3;
     --faith:#f2a1c0; --body:#6ea8fe; --work:#b69cff; --study:#7ee3b0; --meal:#ffd27a; --home:#8fd8ff; --rest:#a5b4fc; --flex:#e0c3a0;
     --ease:cubic-bezier(.2,.7,.2,1);
     color-scheme:dark;
@@ -36,7 +35,8 @@
   .seg button{background:none;border:0;padding:.3em .9em;border-radius:.6em;color:var(--muted)}
   .seg button.on{background:linear-gradient(135deg,rgba(124,140,255,.45),rgba(167,139,250,.4));color:#fff;box-shadow:0 0 16px rgba(124,140,255,.35)}
   .add{background:linear-gradient(135deg,#7c8cff,#a78bfa)!important;border:0!important;color:#fff;font-weight:500;box-shadow:0 6px 20px rgba(124,140,255,.35)}
-  main{flex:1 1 auto;min-height:0;position:relative;display:flex}
+  main{flex:1 1 auto;min-height:0;position:relative;display:flex;overflow:hidden}
+  html{overflow:hidden}
   .view{flex:1;min-width:0;min-height:0;position:relative;animation:in .35s var(--ease) both}
   @keyframes in{from{opacity:0;transform:translateY(.4em)}to{opacity:1;transform:none}}
 
@@ -124,8 +124,8 @@
 
   /* editor drawer */
   .drawer{position:absolute;top:0;right:0;bottom:0;width:min(26em,92vw);background:linear-gradient(180deg,rgba(30,34,72,.98),rgba(16,18,42,.98));border-left:1px solid var(--edge2);
-    box-shadow:-30px 0 80px rgba(0,0,0,.5);transform:translateX(105%);transition:transform .35s var(--ease);z-index:10;display:flex;flex-direction:column}
-  .drawer.open{transform:none}
+    box-shadow:-30px 0 80px rgba(0,0,0,.5);transform:translateX(105%);transition:transform .35s var(--ease),visibility 0s linear .35s;z-index:10;display:flex;flex-direction:column;visibility:hidden}
+  .drawer.open{transform:none;visibility:visible;transition:transform .35s var(--ease),visibility 0s}
   .drawer header{display:flex;align-items:center;gap:.5em;padding:.9em 1em;border-bottom:1px solid var(--edge)}
   .drawer header h2{margin:0;font-weight:500;font-size:1.15em;flex:1}
   .drawer .x{background:none;border:1px solid var(--edge2);border-radius:.6em;padding:.2em .6em}
@@ -153,8 +153,11 @@
   .chips.days button{width:2.3em;height:2.3em;padding:0;border-radius:50%;display:grid;place-items:center}
   .ev .rep{font-style:normal;opacity:.75;margin-right:.3em;font-size:.9em}
   .check{flex-direction:row!important;align-items:center;gap:.5em!important;color:var(--ink)!important}
-  .toast{position:fixed;left:50%;bottom:1.2em;transform:translateX(-50%) translateY(2em);background:rgba(20,24,52,.95);border:1px solid var(--edge2);border-radius:1em;padding:.55em 1em;opacity:0;transition:all .35s var(--ease);z-index:20}
-  .toast.show{opacity:1;transform:translateX(-50%)}
+  .toast{position:fixed;left:50%;bottom:1.2em;transform:translateX(-50%) translateY(2em);background:rgba(20,24,52,.95);border:1px solid var(--edge2);border-radius:1em;padding:.55em 1em;opacity:0;transition:all .35s var(--ease);z-index:20;pointer-events:none;max-width:calc(100vw - 2em);overflow-wrap:anywhere}
+  .toast.show{opacity:1;transform:translateX(-50%);pointer-events:auto}
+  .loading{position:absolute;top:.6em;right:1em;font-size:.8em;color:var(--muted);background:rgba(20,24,52,.85);border:1px solid var(--edge);border-radius:1em;padding:.2em .7em;z-index:5;pointer-events:none}
+  .ev .ovn{font-style:normal;opacity:.8;margin-left:.2em}
+  button:disabled{opacity:.55;cursor:default}
   .empty{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted)}
 
   /* every calendar together: source badges, the legend, the all-day row, conflicts */
@@ -221,6 +224,7 @@
 <div class="srcbar" id="srcbar" hidden></div>
 <main>
   <div class="view" id="view"></div>
+  <div class="loading" id="loading" hidden>Loading…</div>
   <aside class="drawer" id="drawer">
     <header><h2 id="dTitle">Add to your schedule</h2><button class="x" id="dClose">✕</button></header>
     <div class="form">

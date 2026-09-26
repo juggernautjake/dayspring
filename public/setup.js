@@ -157,7 +157,7 @@
       render: () => { const o = S.owner; return `
         <h1>Tell me about you</h1>
         <p class="lead">This helps ${esc(o.assistantName || "Dayspring")} greet you, talk naturally, and keep you in mind when it plans.</p>
-        <div class="row">${field("name", "Your first name", text("name", o.name, "Sam", "text", 'required aria-required="true"'))}</div>
+        <div class="row">${field("name", "Your first name", text("name", o.name, "Sam", "text", 'required aria-required="true" maxlength="60"'))}</div>
         <div class="field"><span class="lbl" id="nk-l">Nicknames (optional)</span>
           <div class="nicks" id="nicks" role="list" aria-labelledby="nk-l">${(o.nicknames ?? []).map((n) => nickRow(n)).join("")}</div>
           <button type="button" class="btn ghost addnick" id="addNick">+ Add nickname</button>
@@ -178,11 +178,18 @@
         list.addEventListener("click", (e) => { const x = e.target.closest(".rm"); if (!x) return; const row = x.closest(".nick-row"); const next = row.nextElementSibling ?? row.previousElementSibling; row.remove(); (next?.querySelector("input") ?? add).focus(); sync(); });
         // Enter in a nickname adds the next one instead of jumping to the next step
         list.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.matches("input")) { e.preventDefault(); e.stopPropagation(); if (e.target.value.trim()) add.click(); } });
+        // the same nickname twice: the second one goes (it'd only be removed on save anyway)
+        list.addEventListener("change", (e) => {
+          if (!e.target.matches("input")) return;
+          const v = e.target.value.trim().toLowerCase(); if (!v) return;
+          const dup = [...list.querySelectorAll("input")].some((i) => i !== e.target && i.value.trim().toLowerCase() === v);
+          if (dup) { $("#nickHint").textContent = `“${e.target.value.trim()}” is already on the list.`; e.target.closest(".nick-row").remove(); sync(); }
+        });
         sync();
       },
       save: async () => {
         if (!val("name")) { $("#name").focus(); throw new Error("Please enter your name. It's the one thing Dayspring needs."); }
-        const nicks = [...document.querySelectorAll("#nicks input")].map((i) => i.value.trim()).filter(Boolean).slice(0, MAX_NICKS);
+        const seen = new Set(), nicks = [...document.querySelectorAll("#nicks input")].map((i) => i.value.trim()).filter((n) => n && !seen.has(n.toLowerCase()) && seen.add(n.toLowerCase())).slice(0, MAX_NICKS);
         const r = await post("/setup/owner", { name: val("name"), nicknames: nicks, about: $("#about").value, interests: S.interestsInput?.values() ?? S.owner.interests ?? [] });
         S.owner = r.owner;
       } },
@@ -422,7 +429,7 @@
           ${field("workStart", "From", text("workStart", "09:00", "", "time"))}
           ${field("workEnd", "Until", text("workEnd", "17:00", "", "time"))}
         </div>
-        ${toggle("meals", "Add meal times", "Breakfast, lunch and dinner, so it plans around them.", true)}
+        ${toggle("meals", "Add meal times", "Breakfast, lunch and dinner, so it plans around them.", !(S.schedule.routines ?? []).length || (S.schedule.routines ?? []).some((r) => r.category === "meal"))}
         <h2>Other things that repeat</h2>
         <div class="list" id="commits"></div>
         <button type="button" class="btn small" id="addCommit">+ Add something that repeats</button>
@@ -533,7 +540,8 @@
         $$("[data-login]").forEach((b) => b.onclick = async () => { try { await post("/media/login", { service: b.dataset.login }); toast("Sign-in window opened"); } catch (e) { msg($("#m"), "Couldn't open the sign-in window: " + e.message, "bad"); } });
         $$("[data-url]").forEach((b) => b.onclick = () => openLink(b.dataset.url));
         // Spotify inside Dayspring: save the Client ID (if one was just pasted), then sign in in the browser
-        const spShow = async () => { try { const r = await api("/player/status"); const s = r.spotify ?? {}; $("#spState").textContent = s.signedIn ? `✓ Connected${s.name ? " as " + s.name : ""}${s.product && s.product !== "premium" ? " (not Premium: songs won't play here)" : ""}` : s.configured ? "Client ID saved. Click Connect to sign in." : "Paste your Client ID first."; } catch { $("#spState").textContent = ""; } };
+        // (the section may be gone by the time an answer comes back: then there's nothing to write to)
+        const spShow = async () => { const el = () => $("#spState"); try { const r = await api("/player/status"); const s = r.spotify ?? {}; if (el()) el().textContent = s.signedIn ? `✓ Connected${s.name ? " as " + s.name : ""}${s.product && s.product !== "premium" ? " (not Premium: songs won't play here)" : ""}` : s.configured ? "Client ID saved. Click Connect to sign in." : "Paste your Client ID first."; } catch { if (el()) el().textContent = ""; } };
         spShow();
         $("#spConnect").onclick = async () => {
           try {
@@ -541,10 +549,12 @@
             if (v) { S.keys = (await post("/setup/key", { name: "SPOTIFY", value: v })).keys; $("#spClientId").value = ""; }
             await post("/player/spotify/login", {});
             $("#spState").textContent = "The Spotify sign-in page opened in your browser. Sign in there, then come back.";
-            const t0 = Date.now(), poll = setInterval(async () => { await spShow(); if ($("#spState").textContent.startsWith("✓") || Date.now() - t0 > 180000) clearInterval(poll); }, 3000);
+            const t0 = Date.now(), poll = setInterval(async () => { await spShow(); if (!$("#spState") || $("#spState").textContent.startsWith("✓") || Date.now() - t0 > 180000) clearInterval(poll); }, 3000);
+            onLeave(() => clearInterval(poll));
           } catch (e) { msg($("#m"), "Couldn't connect Spotify: " + e.message, "bad"); }
         };
-        const faith = () => $$("#f-church, #f-memoryVerses").forEach((x) => x.closest(".toggle").style.opacity = isOn("f-faith") ? "" : ".5");
+        // Church and Scripture memory are part of Faith: with Faith off they're greyed out and can't be switched
+        const faith = () => $$("#f-church, #f-memoryVerses").forEach((x) => { const on = isOn("f-faith"); x.closest(".toggle").style.opacity = on ? "" : ".5"; x.disabled = !on; x.title = on ? "" : "Turn on Faith first"; });
         $("#f-faith").addEventListener("change", faith); faith();
         // Discord bot: show what's saved (never the token itself) and whether it's online
         const dcShow = (r) => {
@@ -902,7 +912,21 @@
   const guideLink = (id) => { const g = GUIDE[id]; if (!g) return ""; const embed = params.get("embed");
     return `<p class="hint guide-link" style="margin-top:1.4em">❓ Need help? <a href="/help${embed ? "?embed=1" : ""}#${g[0]}"${embed ? "" : ' target="_blank" rel="noopener"'}>Open the guide for this step: ${esc(g[1])}</a> · <a href="/help${embed ? "?embed=1" : ""}#settings-reference"${embed ? "" : ' target="_blank" rel="noopener"'}>every setting explained</a></p>`; };
   let goGen = 0;   // which section is showing: a section still loading when they click to another one just stops quietly
+  // things a section started (a poll, a timer) stop when you leave it
+  let leaving = [];
+  function onLeave(fn) { leaving.push(fn); }
+  // Settings (not the wizard) saves a section's changes by itself when you move to another one
+  let dirty = false;
+  $("#card").addEventListener("input", () => { dirty = true; });
+  $("#card").addEventListener("change", () => { dirty = true; });
+  addEventListener("beforeunload", (e) => { if (dirty && !wizard && visible()[cur]?.save) { e.preventDefault(); e.returnValue = ""; } });
   async function go(i, { focus = true } = {}) {
+    if (!wizard && dirty && visible()[cur]?.save && i !== cur) {
+      const ok = await saveCurrent();
+      if (!ok) return;                         // the message says what to fix; they stay here
+    }
+    dirty = false;
+    for (const fn of leaving.splice(0)) { try { fn(); } catch { /* already gone */ } }
     const list = visible(), gen = ++goGen;
     cur = Math.max(0, Math.min(list.length - 1, i));
     const sec = list[cur];
@@ -911,6 +935,7 @@
     $("#main").scrollTop = 0;
     try { await sec.mount?.(sec); } catch (e) { if (gen === goGen) console.error(e); }
     if (gen !== goGen) return;
+    dirty = false;
     $("#bar").style.width = wizard ? `${(cur / (list.length - 1)) * 100}%` : "0";
     // footer
     const last = cur === list.length - 1;
@@ -928,7 +953,7 @@
     if (!sec.save) return true;
     const m = $("#m"), btn = $("#next");
     btn.disabled = true;
-    try { await sec.save(sec); if (!wizard) { toast("Saved ✓"); } return true; }
+    try { await sec.save(sec); dirty = false; if (!wizard) { toast("Saved ✓"); } return true; }
     catch (e) { msg(m, e.message, "bad"); m?.scrollIntoView({ block: "nearest", behavior: "smooth" }); return false; }
     finally { btn.disabled = false; }
   }

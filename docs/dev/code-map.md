@@ -46,7 +46,7 @@ See [Architecture](architecture.md) for how the pieces fit together.
 | `lib/connectors/todoist.mjs` | Todoist: the owner's tasks. | `connected`, `status`, `disconnect`, `connect`, `tasks`, `addTask`, `complete` |
 | `lib/connectors/weatheralerts.mjs` | Severe weather alerts for the owner's location (Settings → Where you are). | `_setTestLocation`, `connected`, `status`, `connect`, `disconnect`, `current`, `startBackground`, `stopBackground` |
 | `lib/connectors/webhooks.mjs` | Webhooks: the bridge to IFTTT, Zapier, Make, n8n, Home Assistant automations and almost anything else. | `secret`, `incomingUrl`, `status`, `connected`, `connect`, `remove`, `disconnect`, `run`, +2 |
-| `lib/devices.mjs` | Every speaker and microphone on the laptop, as physical devices the owner can name and mix and match: "list my audio devices", "call the X100 my blue headset", "use the blue headset for both", "play through the TV and use the laptop mic", "… | `ROLE_OF`, `list`, `label`, `apply`, `setNickname`, `handle` |
+| `lib/devices.mjs` | Every speaker and microphone on the laptop, as physical devices the owner can name and mix and match: "list my audio devices", "call the X100 my blue headset", "use the blue headset for both", "play through the TV and use the laptop mic", "… | `ROLE_OF`, `list`, `invalidate`, `label`, `apply`, `setNickname`, `handle` |
 | `lib/devlog.mjs` | The developer log: everything needed to see why a conversation went the way it did, one JSON line per event in data/devlog/YYYY-MM-DD.jsonl (local only; never sent anywhere). | `log`, `read` |
 | `lib/discord-routes.mjs` | Your Discord bot's endpoints (the bot itself: lib/discord/bot.mjs). | `handle`, `init` |
 | `lib/discord/audio.mjs` | Audio for your Discord bot. | `to16kMono`, `decodeUtterance`, `loudEnough`, `windowsSpeech`, `speechAudio`, `speechResource` |
@@ -106,7 +106,7 @@ See [Architecture](architecture.md) for how the pieces fit together.
 | `lib/snooze.mjs` | Snooze: the alarm, a reminder, "time for …", "time's up" — anything Dayspring alerts about can come back later. | `DEFAULT_ALARM`, `lastAlert`, `list_`, `snooze`, `cancel`, `start`, `handle` |
 | `lib/special.mjs` | What makes a day special: US holidays (state days go in the owner's occasions), the church year, birthdays, and the owner's own occasions. | `holidays`, `forDate`, `between`, `ordinal`, `spokenToday`, `upcoming`, `people`, `findPerson`, +16 |
 | `lib/spotify-api.mjs` | Spotify inside Dayspring: sign-in (PKCE, no client secret), tokens, and the Web API calls the in-app player needs. | `SCOPES`, `hasScope`, `clientId`, `redirectUri`, `signOut`, `status`, `ready`, `loginUrl`, +29 |
-| `lib/store.mjs` | JSON file store. Single user, single process. | `CATEGORIES`, `WEEKDAYS`, `all`, `todayISO`, `addDays`, `weekdayOf`, `blocksBetween`, `conflictsFor`, +30 |
+| `lib/store.mjs` | JSON file store. Single user, single process. | `CATEGORIES`, `WEEKDAYS`, `all`, `todayISO`, `addDays`, `weekdayOf`, `blocksBetween`, `conflictsFor`, +32 |
 | `lib/stt.mjs` | Speech to text on this computer (whisper.cpp): nothing leaves the PC. | `DIR`, `ready`, `stop`, `wav`, `clean`, `transcribe`, `install` |
 | `lib/study-routes.mjs` | /api/study/*: open the next thing to study, check what the owner says they finished, and pull verified progress in. | `handle`, `handlePage` |
 | `lib/study.mjs` | Study courses: open the next thing to study in a real browser window, and check that it was really done. | `config`, `addCourse`, `setCourseUrl`, `removeCourse`, `courses`, `courseFrom`, `itemsOf`, `nextItem`, +13 |

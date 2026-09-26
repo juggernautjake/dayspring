@@ -173,11 +173,13 @@
     { id: "you", title: "About you", required: true,
       say: () => "First, what should I call you? You can add a few nicknames too, if you like. I'll use them now and then.",
       render: () => { const o = W.setup?.owner ?? {}; return `<div class="eyebrow">Step 1</div><h1>What should I call you?</h1>
-        <div class="field" style="max-width:24em"><label for="name">Your first name</label><input id="name" type="text" autocomplete="given-name" value="${esc(o.name)}" placeholder="Sam"></div>
+        <div class="field" style="max-width:24em"><label for="name">Your first name</label><input id="name" type="text" autocomplete="given-name" value="${esc(o.name)}" placeholder="Sam" maxlength="60"></div>
         <div class="field"><span class="lbl">Nicknames <span class="hint">(optional)</span></span><div id="nicks" class="chips">${(o.nicknames ?? []).map((n) => nickChip(n)).join("")}</div>
           <div class="row" style="max-width:24em;margin-top:.4em"><input id="nickIn" type="text" placeholder="e.g. Champ" maxlength="40"><button class="btn small" id="nickAdd" type="button">+ Add</button></div></div>
         <div class="msg" id="m"></div>`; },
-      mount: () => { const add = () => { const v = $("#nickIn").value.trim(); if (!v) return; if ($$("#nicks .chip").length >= 30) return toast("That's the most (30)."); $("#nicks").insertAdjacentHTML("beforeend", nickChip(v)); $("#nickIn").value = ""; $("#nickIn").focus(); };
+      mount: () => { const add = () => { const v = $("#nickIn").value.trim().replace(/\s+/g, " "); if (!v) return;
+          if ($$("#nicks .chip").some((c) => c.dataset.n.toLowerCase() === v.toLowerCase())) { $("#nickIn").value = ""; return toast(`“${v}” is already on the list.`); }
+          if ($$("#nicks .chip").length >= 30) return toast("That's the most (30)."); $("#nicks").insertAdjacentHTML("beforeend", nickChip(v)); $("#nickIn").value = ""; $("#nickIn").focus(); };
         $("#nickAdd").onclick = add; $("#nickIn").onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); add(); } };
         $("#nicks").onclick = (e) => { const x = e.target.closest("[data-rm]"); if (x) x.closest(".chip").remove(); };
         setTimeout(() => $("#name")?.focus(), 150); },
@@ -589,7 +591,7 @@
   ];
   const SPOTIFY_STEPS = [
     { t: "Sign in to the <b>Spotify Developer Dashboard</b> with your Spotify account.", url: "https://developer.spotify.com/dashboard", label: "Open Spotify Dashboard" },
-    { t: "Click <b>Create app</b>. Name it <i>Dayspring</i>. Under <b>Redirect URIs</b> add exactly <code>http://127.0.0.1:4747/spotify/callback</code>. Tick <b>Web API</b> and <b>Web Playback SDK</b>, agree, and <b>Save</b>." },
+    { t: `Click <b>Create app</b>. Name it <i>Dayspring</i>. Under <b>Redirect URIs</b> add exactly <code>http://127.0.0.1:${location.port || 4747}/spotify/callback</code>. Tick <b>Web API</b> and <b>Web Playback SDK</b>, agree, and <b>Save</b>.` },
     { t: "Under <b>User Management</b>, add the email of your Spotify account." },
     { t: "Open the app's <b>Settings</b>, copy the <b>Client ID</b> (not the secret), paste it below and press <b>Connect</b>." },
   ];
@@ -767,6 +769,7 @@
     screen: ["display-setup", "Display setup"], done: ["tutorials", "Tutorials: how do I…?"] };
   const guideLink = (id) => { const g = GUIDE[id]; return g ? `<p class="guide-link" style="margin-top:1.4em;opacity:.85;font-size:.92em">❓ Need help? <a href="/help#${g[0]}" target="_blank" rel="noopener">Open the guide for this step: ${esc(g[1])}</a></p>` : ""; };
   async function show(i, { speak = true } = {}) {
+    clearTimeout(W.sayT); W.sayT = 0;            // a step's delayed line never plays over a later step
     W.idx = i; W.aiOk = false;
     const s = STEPS[i];
     if (s.id === "done") W.setup = await Promise.race([api("/setup/state"), new Promise((ok) => setTimeout(ok, 4000))]).catch(() => null) ?? W.setup;   // the summary shows what was actually saved
@@ -793,7 +796,7 @@
       if (dir > 0 && skip) s.skip?.();
       if (dir > 0) { await api("/welcome/state", { done: { [s.id]: !skip } }).catch(() => {}); W.state.done = { ...(W.state.done ?? {}), [s.id]: !skip }; }
       const j = dir > 0 ? nextIdx(W.idx) : prevIdx(W.idx);
-      if (j !== W.idx) { stopTalking(); await show(j, { speak: !(dir > 0 && skip && s.skip) }); if (dir > 0 && skip && s.skip) setTimeout(() => say(STEPS[j].say?.()), 4200); }
+      if (j !== W.idx) { stopTalking(); await show(j, { speak: !(dir > 0 && skip && s.skip) }); if (dir > 0 && skip && s.skip) { clearTimeout(W.sayT); W.sayT = setTimeout(() => { if (W.idx === j) say(STEPS[j].say?.()); }, 4200); } }
     } finally { busy = false; $("#next").disabled = false; }
   }
   $("#next").onclick = () => go(1);

@@ -57,7 +57,7 @@
 
   let pop = null, lastFocus = null;
   function closePop() { if (!pop) return; pop.remove(); pop = null; document.removeEventListener("keydown", onKey, true); lastFocus?.focus?.(); }
-  function onKey(e) { if (e.key === "Escape") { e.stopPropagation(); e.preventDefault(); closePop(); } }
+  function onKey(e) { if (e.key === "Escape" && (!e.dsTop || e.dsTop === pop)) { e.stopPropagation(); e.preventDefault(); closePop(); } }
   document.addEventListener("pointerdown", (e) => { if (pop && !pop.contains(e.target) && !e.target.closest?.("#examCard,#courses .course")) closePop(); }, true);
 
   function place(el, anchor) {

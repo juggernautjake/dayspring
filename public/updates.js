@@ -38,7 +38,7 @@
       <div class="st" aria-live="polite"></div>`;
     document.body.appendChild(card);
     card.querySelector(".x").onclick = close;
-    card.addEventListener("keydown", (e) => { if (e.key === "Escape") { e.stopPropagation(); close(); } });
+    card.addEventListener("keydown", (e) => { if (e.key === "Escape" && (!e.dsTop || e.dsTop === card)) { e.stopPropagation(); close(); } });
     card.querySelectorAll("[data-c]").forEach((b) => (b.onclick = async () => {
       const st = card.querySelector(".st");
       card.querySelectorAll("[data-c]").forEach((x) => (x.disabled = true));

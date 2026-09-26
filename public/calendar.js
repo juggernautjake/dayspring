@@ -32,7 +32,7 @@
 
   if (embed) { $("#close").hidden = false; $("#laptop").hidden = false; }
   $("#close").onclick = () => parent.postMessage({ type: "dayspring-calendar-close" }, "*");
-  $("#laptop").onclick = () => send("POST", "/open", { url: `http://localhost:4747/calendar.html?view=${view}&date=${cursor}` }).then(() => toast("Opened on the laptop")).catch(() => {});
+  $("#laptop").onclick = () => send("POST", "/open", { url: `${location.origin}/calendar.html?view=${view}&date=${cursor}` }).then(() => toast("Opened on the laptop")).catch(() => {});
   function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2600); }
 
   // ---------- ranges ----------
@@ -60,15 +60,42 @@
   function setView(v, date) { view = v; if (date) cursor = date; history.replaceState(null, "", `?${embed ? "embed=1&" : ""}view=${view}&date=${cursor}`); render(); }
 
   // ---------- render ----------
+  // Only the newest render draws: quick clicks (Year → Next ×5 → Day) cancel the older requests, so an old answer
+  // never lands on a new view. A year's summary is kept for a minute (and dropped when anything changes).
+  let renderGen = 0, inflight = null, loadingT = 0;
+  const yearCache = new Map();
+  const dropCache = () => yearCache.clear();
+  function showLoading(on) {
+    clearTimeout(loadingT);
+    if (on) loadingT = setTimeout(() => { $("#loading").hidden = false; }, 250);   // only if it takes a moment
+    else $("#loading").hidden = true;
+  }
   async function render() {
-    document.querySelectorAll("#views button").forEach((b) => b.classList.toggle("on", b.dataset.v === view));
+    const gen = ++renderGen, v = view;
+    document.querySelectorAll("#views button").forEach((b) => b.classList.toggle("on", b.dataset.v === v));
     $("#title").innerHTML = titleText();
     const [from, to] = range();
+    inflight?.abort(); const ctl = inflight = new AbortController();
+    const get = (path) => fetch("/api" + path, { signal: ctl.signal }).then(async (r) => { const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || "Dayspring couldn't do that just now. Try again in a moment, or restart Dayspring if it keeps happening."); return j; });
     let data;
-    const uP = view === "year" ? Promise.resolve(null) : api(`/calendar/unified?from=${from}&to=${to}`).catch(() => null);
-    try { data = await api(`/calendar?from=${from}&to=${to}${view === "year" ? "&summary=1" : ""}`); } catch (e) { $("#view").innerHTML = `<div class="empty">Couldn't load the schedule: ${esc(e.message)}</div>`; return; }
-    if (data.categories) categories = data.categories;
+    showLoading(true);
+    const uP = v === "year" ? Promise.resolve(null) : get(`/calendar/unified?from=${from}&to=${to}`).catch(() => null);
+    try {
+      const key = `${from}|${to}`, hit = v === "year" ? yearCache.get(key) : null;
+      if (hit && Date.now() - hit.at < 60_000) data = structuredClone(hit.data);
+      else {
+        data = await get(`/calendar?from=${from}&to=${to}${v === "year" ? "&summary=1" : ""}`);
+        if (v === "year") yearCache.set(key, { at: Date.now(), data: structuredClone(data) });
+      }
+    } catch (e) {
+      if (gen !== renderGen || e.name === "AbortError") return;
+      showLoading(false); $("#view").innerHTML = `<div class="empty">Couldn't load the schedule: ${esc(e.message)}</div>`; return;
+    }
     const u = await uP;
+    if (gen !== renderGen || v !== view) return;           // a newer render took over
+    showLoading(false);
+    if (data.categories) categories = data.categories;
+    for (const d of data.days) { d.blocks ??= []; d.special ??= []; }
     if (u) { uni = u; merge(data, u); }
     renderSrcbar(); refreshConfCount();
     lastData = data;
@@ -84,7 +111,7 @@
   // all-day row, duplicates merged, and ⚠ on anything that clashes
   function merge(data, u) {
     uniItems = new Map(u.items.map((x) => [x.id, x]));
-    for (const d of data.days) { d.blocks = u.hiddenDayspring ? [] : d.blocks.filter((b) => !b.external); d.allDay = []; }
+    for (const d of data.days) { d.blocks = u.hiddenDayspring ? [] : (d.blocks ?? []).filter((b) => !b.external); d.allDay = []; }
     const byDate = new Map(data.days.map((d) => [d.date, d]));
     for (const x of u.items) {
       const d = byDate.get(x.date);
@@ -132,8 +159,11 @@
   }
   // one drawer at a time: the editor, an item's card, conflicts, calendars
   const PANELS = ["#drawer", "#card", "#confPanel", "#srcPanel"];
-  function openPanel(id) { PANELS.forEach((p) => $(p).classList.toggle("open", p === id)); }
-  function closePanels() { PANELS.forEach((p) => $(p).classList.remove("open")); editing = null; }
+  function openPanel(id) { PANELS.forEach((p) => { $(p).classList.toggle("open", p === id); $(p).inert = p !== id; }); }
+  function closePanels() { PANELS.forEach((p) => { $(p).classList.remove("open"); $(p).inert = true; }); editing = null; }
+  PANELS.forEach((p) => ($(p).inert = true));
+  // focusing something in a drawer that is still sliding in must never scroll the page sideways
+  $("main").addEventListener("scroll", (e) => { if (e.target.scrollLeft) e.target.scrollLeft = 0; });
   document.querySelectorAll("[data-close]").forEach((b) => (b.onclick = closePanels));
   const openLink = (url) => { if (embed) send("POST", "/open", { url }).then(() => toast("Opened on the computer")).catch((e) => toast(e.message)); else window.open(url, "_blank", "noopener"); };
   const whenText = (x) => `${dateOf(x.date).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })} · ${x.allDay ? "All day" : `${hm12(x.start)} – ${hm12(x.end)}`}`;
@@ -246,7 +276,7 @@
 
   // day and week: a time grid, blocks placed by time, overlaps side by side
   function renderGrid(days) {
-    const all = days.flatMap((d) => d.blocks);
+    const all = days.flatMap((d) => d.blocks ?? []);
     let startH = 6, endH = 22;
     for (const b of all) { startH = Math.min(startH, Math.floor(toMin(b.start) / 60)); endH = Math.max(endH, Math.ceil(toMin(b.end) / 60)); }
     const hours = endH - startH, t = todayISO();
@@ -265,7 +295,7 @@
         ${layout(d.blocks).map(({ b, lane, lanes }) => {
           const top = (toMin(b.start) - startH * 60) / 60, h = Math.max(0.33, (toMin(b.end) - toMin(b.start)) / 60);
           return `<div class="ev imp-${b.importance ?? 0}${b.done ? " done" : ""}${b.projected && !b.external ? " proj" : ""}${b.external ? " ext" : ""}${b.clash ? " clash" : ""}" data-id="${esc(b.id)}" style="--c:${colorOf(b)};top:calc(${top} * var(--hh) + 1px);height:calc(${h} * var(--hh) - 3px);left:calc(${lane} * 100% / ${lanes} + 2px);width:calc(100% / ${lanes} - 4px)">
-            <b>${marks(b)}${badge(b, view === "day")}${b.repeatText ? `<i class="rep" title="${esc(b.repeatText)}">↻</i>` : ""}${(b.importance ?? 0) >= 2 ? `<span class="star">${b.importance >= 3 ? "★★" : "★"}</span>` : ""}${esc(b.title)}${also(b)}</b><small><span>${hm12(b.start)}</span><span class="to"> – ${hm12(b.end)}</span></small><i class="grip" title="Drag to change the end time"></i></div>`;
+            <b>${marks(b)}${badge(b, view === "day")}${b.repeatText ? `<i class="rep" title="${esc(b.repeatText)}">↻</i>` : ""}${(b.importance ?? 0) >= 2 ? `<span class="star">${b.importance >= 3 ? "★★" : "★"}</span>` : ""}${esc(b.title)}${also(b)}</b><small>${b.span ? `<span>${hm12(b.span.start)}</span><span class="to"> – ${hm12(b.span.end)}</span><i class="ovn" title="Runs past midnight">${b.start === "00:00" ? "(from the night before)" : "(next day)"}</i>` : `<span>${hm12(b.start)}</span><span class="to"> – ${hm12(b.end)}</span>`}</small>${b.link || b.span ? "" : '<i class="grip" title="Drag to change the end time"></i>'}</div>`;
         }).join("")}
         ${d.date === t ? `<div class="now" style="top:calc(${(new Date().getHours() * 60 + new Date().getMinutes() - startH * 60) / 60} * var(--hh))"></div>` : ""}
       </div>`).join("")}
@@ -376,7 +406,7 @@
   $("#view").addEventListener("pointerdown", (e) => {
     const el = e.target.closest("#gcanvas .ev");
     if (!el || e.button !== 0) return;
-    const b = findBlock(el.dataset.id); if (!b || b.external) return;     // outside-calendar events don't drag
+    const b = findBlock(el.dataset.id); if (!b || b.external || b.link || b.span) return;     // outside-calendar and overnight items don't drag (click to edit)
     drag = { el, b, x0: e.clientX, y0: e.clientY, pid: e.pointerId, mode: e.target.classList.contains("grip") ? "resize" : "move", moved: false, col: el.parentElement };
     if (drag.mode === "resize") e.preventDefault();
   });
@@ -388,14 +418,15 @@
     const hh = parseFloat(getComputedStyle($("#gcanvas")).getPropertyValue("--hh")) || 50;
     const steps = Math.round(dy / (hh / 4)), s0 = toMin(drag.b.start), e0 = toMin(drag.b.end), dur = e0 - s0;
     let date = drag.b.date, s = s0, en = e0, tx = 0;
-    if (drag.mode === "resize") { en = Math.min(24 * 60 - 1, Math.max(s0 + 15, e0 + steps * 15)); drag.el.style.height = `${((en - s0) / 60) * hh - 3}px`; }
+    // the bottom edge may go past midnight (up to 6 hours): it becomes an overnight item
+    if (drag.mode === "resize") { en = Math.min(30 * 60, Math.max(s0 + 15, e0 + steps * 15)); drag.el.style.height = `${((Math.min(en, 24 * 60) - s0) / 60) * hh - 3}px`; }
     else {
       s = Math.max(0, Math.min(24 * 60 - dur, s0 + steps * 15)); en = s + dur;
       const col = document.elementsFromPoint(e.clientX, e.clientY).find((x) => x.classList?.contains("col")) ?? drag.col;
       date = col.dataset.date; tx = col.offsetLeft - drag.col.offsetLeft;
       drag.el.style.transform = `translate(${tx}px, ${((s - s0) / 60) * hh}px)`;
     }
-    drag.to = { date, start: fromMin(s), end: fromMin(en) };
+    drag.to = { date, start: fromMin(s), end: fromMin(en % (24 * 60)) };
     const sm = drag.el.querySelector("small"); if (sm) sm.innerHTML = `<span>${hm12(drag.to.start)}</span><span class="to"> – ${hm12(drag.to.end)}</span>`;
   });
   const endDrag = async () => {
@@ -407,7 +438,8 @@
     if (same) return render();
     try {
       const r = await send("PATCH", `/blocks/${encodeURIComponent(d.b.id)}`, d.to);
-      toast(r.conflicts?.length ? `Moved. It overlaps ${r.conflicts.map((c) => c.title).slice(0, 2).join(" and ")}.` : `${d.b.title}: ${hm12(d.to.start)} – ${hm12(d.to.end)}`);
+      dropCache();
+      toast(r.conflicts?.length ? `Moved. It overlaps ${r.conflicts.map((c) => c.title).slice(0, 2).join(" and ")}.` : `${d.b.title}: ${hm12(d.to.start)} – ${hm12(d.to.end)}${d.to.end < d.to.start ? " (next day)" : ""}`);
     } catch (err) { toast(err.message); }
     render();
   };
@@ -498,6 +530,8 @@
   document.querySelectorAll("#fScope button").forEach((x) => (x.onclick = (e) => { e.preventDefault(); setScope(x.dataset.scope); }));
 
   function openEditor(b, seed = {}) {
+    // an overnight item's half: edit the whole thing (from its first night)
+    if (b?.span) b = { ...b, date: b.span.date, start: b.span.start, end: b.span.end };
     editing = b ?? null;
     $("#fCat").innerHTML = categories.map((c) => `<option value="${c}">${c[0].toUpperCase() + c.slice(1)}</option>`).join("");
     $("#dTitle").textContent = b ? "Edit" : "Add to your schedule";
@@ -523,14 +557,31 @@
     $("#fWarn").innerHTML = b?.clash ? clashLine(b.clash) : "";
     setScope("one");
     openPanel("#drawer");
-    setTimeout(() => $("#fTitle").focus(), 200);
+    setTimeout(() => $("#fTitle").focus({ preventScroll: true }), 200);
+    syncOvernight();
   }
-  function closeEditor() { $("#drawer").classList.remove("open"); editing = null; }
+  // an end before the start: it runs into the next day (said under the times)
+  function syncOvernight() {
+    const s = $("#fStart").value, e = $("#fEnd").value, w = $("#fWarn");
+    const on = Boolean(s && e && e < s);
+    let n = $("#ovnNote");
+    if (on && !n) { n = document.createElement("div"); n.id = "ovnNote"; n.className = "note"; $("#fEnd").closest(".row").after(n); }
+    if (n) { n.hidden = !on; if (on) n.textContent = `Ends the next day at ${hm12(e)}.`; }
+    if (on && /end time needs/.test(w.textContent)) w.textContent = "";
+  }
+  $("#fStart").addEventListener("input", syncOvernight); $("#fEnd").addEventListener("input", syncOvernight);
+  function closeEditor() { $("#drawer").classList.remove("open"); $("#drawer").inert = true; editing = null; }
   $("#dClose").onclick = closeEditor;
+  // one save (or delete) at a time: a double-click doesn't add the same thing twice
+  let busy = false;
+  const setBusy = (on) => { busy = on; $("#fSave").disabled = on; $("#fDel").disabled = on; };
   $("#fSave").onclick = async () => {
+    if (busy) return;
     const body = { title: $("#fTitle").value.trim(), date: $("#fDate").value, start: $("#fStart").value, end: $("#fEnd").value, category: $("#fCat").value, description: $("#fNotes").value, importance: Number($("#fImp").dataset.v ?? 0) };
     if (!body.title) return ($("#fWarn").textContent = "Give it a name first.");
-    if (!body.start || !body.end || body.end <= body.start) return ($("#fWarn").textContent = "The end time needs to be after the start.");
+    if (!body.start || !body.end || body.end === body.start) return ($("#fWarn").textContent = "The end time needs to be different from the start.");
+    if (body.end < body.start && (editing?.routineId || (!editing && ruleFromForm()) || (editing && !editing.routineId && ruleFromForm()))) return ($("#fWarn").textContent = "A repeating item can't run past midnight yet. Make it end by 11:59pm, or set it to not repeat.");
+    setBusy(true); dropCache();
     try {
       let r;
       const rule = ruleFromForm();
@@ -554,21 +605,26 @@
       if (r.pulledEarlier?.length) toast(`Saved, and moved ${r.pulledEarlier.length} later thing${r.pulledEarlier.length > 1 ? "s" : ""} up.`); else toast(r.conflicts?.length ? `Saved. Heads up: it overlaps ${r.conflicts.map((c) => c.title).slice(0, 2).join(" and ")}.` : "Saved.");
       render();
     } catch (e) { $("#fWarn").textContent = e.message; }
+    finally { setBusy(false); }
   };
   $("#fDel").onclick = async () => {
-    if (!editing) return;
+    if (!editing || busy) return;
     if (!delArmed || Date.now() - delArmed > 4000) { delArmed = Date.now(); $("#fDel").classList.add("arm"); $("#fDel").textContent = "Tap again to delete"; return; }
+    setBusy(true); dropCache();
     if (editing.routineId && scope === "all") {
       try { await send("POST", `/routines/${encodeURIComponent(editing.routineId)}/end`, { from: editing.date }); closeEditor(); toast("Deleted this and every one after it."); render(); } catch (e) { $("#fWarn").textContent = e.message; }
+      finally { setBusy(false); }
       return;
     }
     try { const r = await send("DELETE", `/blocks/${encodeURIComponent(editing.id)}${$("#fGap").checked ? "?close_gap=1" : ""}`); closeEditor(); toast(r.pulledEarlier?.length ? `Deleted, and moved ${r.pulledEarlier.length} later thing${r.pulledEarlier.length > 1 ? "s" : ""} up.` : "Deleted."); render(); } catch (e) { $("#fWarn").textContent = e.message; }
+    finally { setBusy(false); }
   };
 
   // ---------- live: Dayspring changed something by voice ----------
   try {
     const es = new EventSource("/api/events");
     es.addEventListener("refresh", (e) => {
+      dropCache();
       if ($("#drawer").classList.contains("open") || $("#card").classList.contains("open")) return;
       let r = {}; try { r = JSON.parse(e.data); } catch { /* no details */ }
       if (r.reason === "ai-edit") {

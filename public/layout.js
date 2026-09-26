@@ -62,7 +62,7 @@
     box.addEventListener("click", (e) => { const b = e.target.closest("button"); if (b && !b.closest(".tune")) setTimeout(() => m.close(), 0); });
     box.addEventListener("change", (e) => { if (e.target.matches("select")) setTimeout(() => m.close(), 0); });
     // Esc closes the open menu first (before the page's own Esc handling) and puts focus back on ⋯
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !box.hidden) { e.stopPropagation(); e.preventDefault(); m.close(true); } }, true);
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !box.hidden && (!e.dsTop || e.dsTop === box)) { e.stopPropagation(); e.preventDefault(); m.close(true); } }, true);
     document.addEventListener("pointerdown", (e) => { if (!box.hidden && !box.contains(e.target) && e.target !== btn) m.close(); });
     return m;
   }
@@ -270,7 +270,7 @@
     document.body.appendChild(d);
     const close = () => d.remove();
     d.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b && e.target === d) return close(); if (!b) return; close(); if (b.dataset.c === "yes") onGo(); else if (b.dataset.c === "alt") alt?.onGo(); });
-    d.addEventListener("keydown", (e) => { if (e.key === "Escape") { e.stopPropagation(); close(); } });
+    d.addEventListener("keydown", (e) => { if (e.key === "Escape" && (!e.dsTop || e.dsTop === d)) { e.stopPropagation(); close(); } });
     setTimeout(() => d.querySelector('[data-c="no"]').focus(), 20);
     return d;
   }
@@ -348,6 +348,9 @@
     const NAME = { t: "Top", b: "Bottom", l: "Left", r: "Right" };
     const clamp = (v) => Math.max(0, Math.min(20, Math.round(v * 2) / 2));
     function draw() {
+      // the dialog is redrawn on every change: keep keyboard focus on the same control, so a second Enter presses
+      // that button again instead of falling through to "Enter saves"
+      const f = document.activeElement, keep = f && d.contains(f) ? (f.dataset.a ? `[data-a="${f.dataset.a}"]` : f.dataset.p ? `[data-p="${f.dataset.p}"]` : null) : null;
       setMargins(m);
       const W = innerWidth, H = innerHeight, t = H * m.t / 100, b = H * m.b / 100, l = W * m.l / 100, r = W * m.r / 100;
       d.innerHTML = `
@@ -369,6 +372,7 @@
           ${msg ? `<p>${msg}</p>` : ""}
           <div class="actions"><button data-a="auto">Auto-fit</button><button data-a="reset">Reset to defaults</button><button data-a="cancel">Cancel</button><button data-a="save" class="go">Save</button></div>
         </div>`;
+      if (keep) d.querySelector(keep)?.focus(); else if (f && !document.contains(f)) d.focus();
     }
     const close = () => { d.remove(); fitOpen = null; removeEventListener("keydown", onKey, true); applyScreen(); };
     async function save() {
@@ -403,8 +407,9 @@
     function onKey(e) {
       if (!fitOpen) return;
       const k = e.key.toLowerCase(), big = e.shiftKey ? 2 : 0.5;
-      if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); return act("cancel"); }
-      if (e.key === "Enter" && !e.target.closest?.("button")) { e.preventDefault(); return act("save"); }
+      if (e.key === "Escape") { if (e.dsTop && e.dsTop !== d) return; e.preventDefault(); e.stopPropagation(); return act("cancel"); }
+      // Enter saves only from the dialog itself (a focused button presses that button instead)
+      if (e.key === "Enter" && e.target === d) { e.preventDefault(); return act("save"); }
       if (["t", "b", "l", "r"].includes(k) && !e.ctrlKey && !e.altKey) { sel = k; draw(); e.preventDefault(); return; }
       if (e.key === "+" || e.key === "=") { for (const x of Object.keys(m)) m[x] = clamp(m[x] + 0.5); draw(); e.preventDefault(); return; }
       if (e.key === "-") { for (const x of Object.keys(m)) m[x] = clamp(m[x] - 0.5); draw(); e.preventDefault(); return; }

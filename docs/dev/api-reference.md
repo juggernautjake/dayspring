@@ -44,7 +44,7 @@ Conventions: JSON in, JSON out (`content-type: application/json`). Errors come b
 
 | Method | Path | Query | What it does | Handled in |
 |---|---|---|---|---|
-| POST | `/api/blocks` |  | Add a schedule block {date, start, end, title, category, description, importance} | `server.mjs:507` |
+| POST | `/api/blocks` |  | Add a schedule block {date, start, end, title, category, description, importance} | `server.mjs:509` |
 
 ## build
 
@@ -76,8 +76,8 @@ Conventions: JSON in, JSON out (`content-type: application/json`). Errors come b
 
 | Method | Path | Query | What it does | Handled in |
 |---|---|---|---|---|
-| POST | `/api/chat` |  | Talk to the assistant {message, surface} → {reply, changes, …} | `server.mjs:594` |
-| POST | `/api/chat/reset` |  | Forget the conversation so far {surface} | `server.mjs:623` |
+| POST | `/api/chat` |  | Talk to the assistant {message, surface} → {reply, changes, …} | `server.mjs:600` |
+| POST | `/api/chat/reset` |  | Forget the conversation so far {surface} | `server.mjs:629` |
 
 ## claude-event
 
@@ -121,9 +121,9 @@ Conventions: JSON in, JSON out (`content-type: application/json`). Errors come b
 
 | Method | Path | Query | What it does | Handled in |
 |---|---|---|---|---|
-| GET | `/api/detail/bible` |  | A Bible passage for the detail viewer (?ref) | `server.mjs:499` |
-| GET | `/api/detail/memory` |  | the detail viewer on the TV (click anything in the big panel) | `server.mjs:489` |
-| GET | `/api/detail/prayer` |  | The prayer list for the detail viewer | `server.mjs:494` |
+| GET | `/api/detail/bible` |  | A Bible passage for the detail viewer (?ref) | `server.mjs:501` |
+| GET | `/api/detail/memory` |  | the detail viewer on the TV (click anything in the big panel) | `server.mjs:491` |
+| GET | `/api/detail/prayer` |  | The prayer list for the detail viewer | `server.mjs:496` |
 
 ## devices
 
@@ -186,7 +186,7 @@ Conventions: JSON in, JSON out (`content-type: application/json`). Errors come b
 
 | Method | Path | Query | What it does | Handled in |
 |---|---|---|---|---|
-| GET | `/api/free` |  | Free time slots on a day (?date, ?minutes) | `server.mjs:546` |
+| GET | `/api/free` |  | Free time slots on a day (?date, ?minutes) | `server.mjs:552` |
 
 ## fs
 
@@ -235,8 +235,8 @@ Conventions: JSON in, JSON out (`content-type: application/json`). Errors come b
 
 | Method | Path | Query | What it does | Handled in |
 |---|---|---|---|---|
-| GET | `/api/keepawake` |  | Keep-awake status | `server.mjs:565` |
-| POST | `/api/keepawake` |  | Keep-awake on/off {on} | `server.mjs:566` |
+| GET | `/api/keepawake` |  | Keep-awake status | `server.mjs:571` |
+| POST | `/api/keepawake` |  | Keep-awake on/off {on} | `server.mjs:572` |
 
 ## learning
 
@@ -264,7 +264,7 @@ Conventions: JSON in, JSON out (`content-type: application/json`). Errors come b
 
 | Method | Path | Query | What it does | Handled in |
 |---|---|---|---|---|
-| GET | `/api/memories` |  | Things the assistant remembers | `server.mjs:591` |
+| GET | `/api/memories` |  | Things the assistant remembers | `server.mjs:597` |
 
 ## mixer
 
@@ -296,16 +296,16 @@ Conventions: JSON in, JSON out (`content-type: application/json`). Errors come b
 
 | Method | Path | Query | What it does | Handled in |
 |---|---|---|---|---|
-| GET | `/api/overlaps` |  | Blocks that overlap on a day | `server.mjs:550` |
+| GET | `/api/overlaps` |  | Blocks that overlap on a day | `server.mjs:556` |
 
 ## photos
 
 | Method | Path | Query | What it does | Handled in |
 |---|---|---|---|---|
-| ANY | `/api/photos/img/:param` |  | A photo's image | `server.mjs:479` |
-| GET | `/api/photos/next` |  | Photos: the next one for the TV (?ask=1 also says whether now is a good moment to ask about it), the image itself (only files in the photo index are ever served), and which one is on screen (so "don't show that again" kn | `server.mjs:470` |
-| ANY | `/api/photos/open/:param` |  | open one of his photos in the laptop's photo viewer | `server.mjs:504` |
-| POST | `/api/photos/showing` |  | The screen reports which photo it's showing | `server.mjs:478` |
+| ANY | `/api/photos/img/:param` |  | A photo's image | `server.mjs:481` |
+| GET | `/api/photos/next` |  | Photos: the next one for the TV (?ask=1 also says whether now is a good moment to ask about it), the image itself (only files in the photo index are ever served), and which one is on screen (so "don't show that again" kn | `server.mjs:472` |
+| ANY | `/api/photos/open/:param` |  | open one of his photos in the laptop's photo viewer | `server.mjs:506` |
+| POST | `/api/photos/showing` |  | The screen reports which photo it's showing | `server.mjs:480` |
 
 ## player
 
@@ -333,9 +333,9 @@ Conventions: JSON in, JSON out (`content-type: application/json`). Errors come b
 
 | Method | Path | Query | What it does | Handled in |
 |---|---|---|---|---|
-| GET | `/api/routines` |  | Repeating items | `server.mjs:567` |
-| POST | `/api/routines` |  | repeating items: create, change the whole series, stop it; the screen redraws right away | `server.mjs:569` |
-| POST | `/api/routines/apply` |  | Put repeating items on a date | `server.mjs:553` |
+| GET | `/api/routines` |  | Repeating items | `server.mjs:573` |
+| POST | `/api/routines` |  | repeating items: create, change the whole series, stop it; the screen redraws right away | `server.mjs:575` |
+| POST | `/api/routines/apply` |  | Put repeating items on a date | `server.mjs:559` |
 
 ## rundown
 
@@ -347,9 +347,9 @@ Conventions: JSON in, JSON out (`content-type: application/json`). Errors come b
 
 | Method | Path | Query | What it does | Handled in |
 |---|---|---|---|---|
-| GET | `/api/screen` |  | What's on the screen now and the last 24 hours | `server.mjs:560` |
-| POST | `/api/screen/shown` |  | what the Dayspring screen shows: the display reports each thing it shows, and what's on it / coming up | `server.mjs:558` |
-| POST | `/api/screen/state` |  | The screen reports what it shows | `server.mjs:559` |
+| GET | `/api/screen` |  | What's on the screen now and the last 24 hours | `server.mjs:566` |
+| POST | `/api/screen/shown` |  | what the Dayspring screen shows: the display reports each thing it shows, and what's on it / coming up | `server.mjs:564` |
+| POST | `/api/screen/state` |  | The screen reports what it shows | `server.mjs:565` |
 
 ## settings
 
@@ -389,7 +389,7 @@ Conventions: JSON in, JSON out (`content-type: application/json`). Errors come b
 
 | Method | Path | Query | What it does | Handled in |
 |---|---|---|---|---|
-| GET | `/api/showcase` |  | The TV's rotating panel. ?part=weather\|video\|quote\|devotion (or everything at once). | `server.mjs:459` |
+| GET | `/api/showcase` |  | The TV's rotating panel. ?part=weather\|video\|quote\|devotion (or everything at once). | `server.mjs:461` |
 
 ## sky
 
@@ -402,8 +402,8 @@ Conventions: JSON in, JSON out (`content-type: application/json`). Errors come b
 
 | Method | Path | Query | What it does | Handled in |
 |---|---|---|---|---|
-| GET | `/api/snooze` |  | snooze: { minutes } snoozes the last alert; { item, minutes } a specific one (the display sends the alert it showed) | `server.mjs:562` |
-| POST | `/api/snooze` |  | Snooze the last (or a given) alert {item?, minutes} | `server.mjs:563` |
+| GET | `/api/snooze` |  | snooze: { minutes } snoozes the last alert; { item, minutes } a specific one (the display sends the alert it showed) | `server.mjs:568` |
+| POST | `/api/snooze` |  | Snooze the last (or a given) alert {item?, minutes} | `server.mjs:569` |
 
 ## sound
 
@@ -422,7 +422,7 @@ Conventions: JSON in, JSON out (`content-type: application/json`). Errors come b
 
 | Method | Path | Query | What it does | Handled in |
 |---|---|---|---|---|
-| GET | `/api/special` |  | Special days (holidays, birthdays) | `server.mjs:506` |
+| GET | `/api/special` |  | Special days (holidays, birthdays) | `server.mjs:508` |
 
 ## status
 
@@ -445,8 +445,8 @@ Conventions: JSON in, JSON out (`content-type: application/json`). Errors come b
 
 | Method | Path | Query | What it does | Handled in |
 |---|---|---|---|---|
-| GET | `/api/tasks` | `all` | Open tasks | `server.mjs:585` |
-| POST | `/api/tasks` |  | Add a task | `server.mjs:586` |
+| GET | `/api/tasks` | `all` | Open tasks | `server.mjs:591` |
+| POST | `/api/tasks` |  | Add a task | `server.mjs:592` |
 
 ## tts
 

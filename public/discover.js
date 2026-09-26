@@ -140,7 +140,7 @@
     if (a === "like") { act(it, "liked"); note("👍 More like this", it.title); }
     if (a === "nope") { act(it, "dismissed"); paintList(); }
   });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && listEl) { listEl.remove(); listEl = null; } });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && listEl && (!e.dsTop || e.dsTop === listEl)) { listEl.remove(); listEl = null; } });
 
   // ---- a gentle pop-up when something good turns up ----
   function toast(t, items) {

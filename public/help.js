@@ -155,6 +155,18 @@
   // ---------- pages ----------
   async function show(slug, section) {
     document.body.classList.remove("menu");
+    // a link to a page that doesn't exist (an old bookmark, a typo): say so, and suggest the closest pages
+    if (slug && docs.length && !docs.some((d) => d.slug === slug)) {
+      const words = slug.toLowerCase().split(/[-_\s]+/).filter((w) => w.length > 2);
+      const near = docs.map((d) => ({ d, s: words.filter((w) => d.slug.includes(w) || d.title.toLowerCase().includes(w)).length })).filter((x) => x.s).sort((a, b) => b.s - a.s).slice(0, 5).map((x) => x.d);
+      current = null; drawToc();
+      $("#doc").className = "results";
+      $("#doc").innerHTML = `<h1>Page not found</h1><p class="empty">There's no guide page called “${esc(slug)}”. It may have moved.</p>`
+        + (near.length ? `<h2>Maybe one of these?</h2>${near.map((d) => `<a class="hit" href="#${d.slug}"><b>${esc(d.title)}</b></a>`).join("")}` : "")
+        + `<p><a class="hit" href="#${docs[0].slug}"><b>Start at the beginning: ${esc(docs[0].title)}</b></a></p>`;
+      $("#main").scrollTop = 0;
+      return;
+    }
     if (!docs.some((d) => d.slug === slug)) slug = docs[0]?.slug;
     if (!slug) { $("#doc").innerHTML = `<p class="empty">The guide isn't installed. Look for the <code>docs</code> folder.</p>`; return; }
     let d;
@@ -240,7 +252,11 @@
   $("#q").addEventListener("input", (e) => {
     clearTimeout(typing);
     const q = e.target.value.trim();
-    typing = setTimeout(() => { if (q.length > 1) history.replaceState(null, "", `#search=${encodeURIComponent(q)}`), search(q); else if (!q) route(); }, 220);
+    typing = setTimeout(() => {
+      if (q.length > 1) { history.replaceState(null, "", `#search=${encodeURIComponent(q)}`); search(q); }
+      else if (!q) route();
+      else if ($("#doc").className === "results") $("#doc").innerHTML = `<h1>Search</h1><p class="empty">Keep typing: at least two letters.</p>`;   // one letter: the old results don't stay up
+    }, 220);
   });
   $("#q").addEventListener("keydown", (e) => { if (e.key === "Escape") { e.target.value = ""; location.hash = current ?? ""; route(); } if (e.key === "Enter") document.querySelector(".hit")?.click(); });
   document.addEventListener("keydown", (e) => { if (e.key === "/" && document.activeElement !== $("#q")) { e.preventDefault(); $("#q").focus(); } });

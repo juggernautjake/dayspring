@@ -44,6 +44,15 @@ Short items show their time next to the title, so nothing gets cut off.
 - To delete, click **Delete**, then click **Tap again to delete** within a few seconds. The second click is there to stop accidents.
 - Repeating items show **↻**. When you open one, choose **Just this day** (the default) or **Every time** before you change it. With **Every time**, **Delete** becomes **Delete this and all after**. Earlier days stay as history.
 
+### Overnight items
+
+Something that runs past midnight, like a late shift from 11pm to 1am: set the **end** earlier than the **start**. The editor says **Ends the next day at 1am**, and it's saved across both days.
+
+- It shows on both days with its real times, marked **(next day)** on the first and **(from the night before)** on the second.
+- Click either day's part to edit the whole item. **Delete** removes both parts.
+- You can also drag an item's bottom edge down past midnight.
+- Repeating items can't run past midnight yet. End them by 11:59pm, or add the overnight part as its own item.
+
 Press **Esc** or click **✕** to close the Schedule app. **↗ Laptop** opens the same view in a normal browser window on your main screen.
 
 ## Importance
