@@ -174,7 +174,7 @@ See [Architecture](architecture.md) for how the pieces fit together.
 | `scripts/privacy-scan.mjs` | Privacy scan: fails (exit 1) if a folder contains anything personal: the owner's name, people, places, church, photo folders, or anything that looks like a key or phone number. | `DEFAULT_TARGET`, `terms`, `scan`, `report` |
 | `scripts/programs.ps1` | Installed programs, for Dayspring's "open a program" ability. |  |
 | `scripts/qa-fresh-install.mjs` | Install-readiness check: does a brand-new copy of Dayspring install and work for someone who has never used it? |  |
-| `scripts/release.mjs` | Makes a release zip of the generic Dayspring: export (with the privacy scan) → dist-out/dayspring-<version>.zip. |  |
+| `scripts/release.mjs` | Makes a release zip of the generic Dayspring: export (with the privacy scan) → dist-out/Dayspring.zip (a fixed name, so …/releases/latest/download/Dayspring.zip always works). |  |
 | `scripts/twilio-number.mjs` | Manage the Dayspring phone number on the Twilio account. |  |
 | `scripts/update.mjs` | "Update Dayspring.cmd": checks GitHub for a newer Dayspring and installs it. |  |
 | `scripts/window.ps1` | Minimize / maximize / restore / hide / show / close Dayspring's own display window, or report its state. |  |

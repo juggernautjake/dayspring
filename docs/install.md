@@ -4,10 +4,17 @@ This takes about ten minutes. Most of that is waiting for downloads.
 
 ## Step 1: Get Dayspring
 
-1. Open the Dayspring releases page: **[github.com/juggernautjake/dayspring/releases](https://github.com/juggernautjake/dayspring/releases/latest)**. (If someone gave you a different copy, use their link. It ends in `/releases`.)
-2. Under the newest release, click the file named like **dayspring-1.0.0.zip** to download it.
-3. Open your **Downloads** folder, right-click the zip file, and choose **Extract All…**.
-4. For the destination, pick a permanent home, such as `C:\Users\<you>\Dayspring`. Click **Extract**.
+You don't need a GitHub account, and you don't need to know anything about GitHub.
+
+1. Click this link: **[⬇️ Download Dayspring](https://github.com/juggernautjake/dayspring/releases/latest/download/Dayspring.zip)**. The download (about 4 MB) starts right away. It's always the newest version.
+   - If your browser asks what to do with the file, choose **Save** or **Keep**.
+2. Open your **Downloads** folder (press **Windows key + E**, then click **Downloads** on the left).
+3. Right-click **Dayspring.zip** and choose **Extract All…**.
+4. For the destination, pick a permanent home. Typing `C:\Dayspring` in the box works well. Click **Extract**. A window opens showing the Dayspring files.
+
+> **Tip:** Don't run Dayspring from inside the zip file. Extract it first, somewhere you'll keep it. Updates are installed into that same folder.
+>
+> **Prefer to look around first?** Every version and its notes are on the [releases page](https://github.com/juggernautjake/dayspring/releases). Under **Assets**, click **Dayspring.zip**. (Ignore the "Source code" files.)
 
 > **Tip:** Don't run Dayspring from inside the zip file or from your Downloads folder. Extract it somewhere you'll keep it. Updates are installed into that same folder.
 

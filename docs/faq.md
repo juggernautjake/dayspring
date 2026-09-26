@@ -23,7 +23,7 @@ Not yet: it runs on Windows. You can open the Dayspring screen from another devi
 For some things. The schedule, reminders and built-in commands work offline. Speech recognition in the browser, cloud AI, premium voices, weather, music, web lookup and the living sky's weather need a connection.
 
 ### How do I install it?
-Download the latest `dayspring-x.y.z.zip` from the GitHub **Releases** page, unzip it, double-click **Install Dayspring.cmd**, then **Start Dayspring.cmd**. The guided setup takes it from there. See [Installing](install.md).
+Click [Download Dayspring](https://github.com/juggernautjake/dayspring/releases/latest/download/Dayspring.zip) (no GitHub account needed), unzip it, double-click **Install Dayspring.cmd**, then **Start Dayspring.cmd**. The guided setup takes it from there. See [Installing](install.md).
 
 ### How do I update it?
 Say "check for updates", or double-click **Update Dayspring.cmd**. Updates never touch your data. See [Updating](updating.md).

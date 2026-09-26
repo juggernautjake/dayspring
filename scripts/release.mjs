@@ -1,4 +1,5 @@
-// Makes a release zip of the generic Dayspring: export (with the privacy scan) → dist-out/dayspring-<version>.zip.
+// Makes a release zip of the generic Dayspring: export (with the privacy scan) → dist-out/Dayspring.zip.
+// The file name never changes, so the one-click link …/releases/latest/download/Dayspring.zip always gets the newest version.
 // It never pushes or publishes anything; it prints the steps for you to do that yourself.
 //   node scripts/release.mjs [export folder]
 import { spawnSync } from "node:child_process";
@@ -18,7 +19,7 @@ if (ex.status !== 0) { console.error("\nRelease stopped: the export or its priva
 
 const out = join(DESK, "dist-out");
 mkdirSync(out, { recursive: true });
-const zip = join(out, `dayspring-${v}.zip`);
+const zip = join(out, "Dayspring.zip");
 rmSync(zip, { force: true });
 // everything in the export except git, installed modules, and anything personal a test run may have left behind
 const SKIP = new Set([".git", "node_modules", "data", ".env", "dist-out", "backups"]);

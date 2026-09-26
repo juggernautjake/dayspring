@@ -66,7 +66,7 @@ node scripts/privacy-scan.mjs ..\dayspring-app
 node scripts/release.mjs
 ```
 
-This runs the export and privacy scan again, then makes `dist-out\dayspring-<version>.zip` (inside your working copy's app folder) and checks that it contains the program and no personal files. It ends by printing the exact publish steps. It never uploads anything by itself. Write a few friendly lines about what's new to paste into the release.
+This runs the export and privacy scan again, then makes `dist-out\Dayspring.zip` (inside your working copy's app folder) and checks that it contains the program and no personal files. It ends by printing the exact publish steps. It never uploads anything by itself. Write a few friendly lines about what's new to paste into the release.
 
 ### 6. Publish
 

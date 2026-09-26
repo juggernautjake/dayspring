@@ -8,11 +8,13 @@ Dayspring puts your day on a screen: a spare monitor, a TV, or your laptop. It k
 
 ## ⬇️ Install in 5 minutes
 
-You need Windows 10 or 11 and Google Chrome or Microsoft Edge. You don't need to know anything about code.
+You need Windows 10 or 11 and Google Chrome or Microsoft Edge. You don't need a GitHub account or to know anything about code.
 
-1. **Download.** Go to **[Releases](https://github.com/juggernautjake/dayspring/releases/latest)** and click **dayspring-x.y.z.zip** (under *Assets*).
-2. **Unzip.** Open your Downloads folder, right-click the zip, choose **Extract All…**, and pick a permanent home such as `C:\Users\<you>\Dayspring`.
-3. **Install.** In that folder, double-click **Install Dayspring.cmd**. A black window checks your computer. If Node.js (the engine Dayspring runs on) is missing, type **Y** and press **Enter** to install it. Then it downloads Dayspring's parts and adds a **Dayspring** shortcut to your desktop and Start menu. If Windows shows *"Windows protected your PC"*, click **More info → Run anyway**.
+1. **Download.** Click **[⬇️ Download Dayspring](https://github.com/juggernautjake/dayspring/releases/latest/download/Dayspring.zip)**. The download starts right away. It's always the newest version.
+2. **Unzip.** Open your **Downloads** folder, right-click **Dayspring.zip**, choose **Extract All…**, type `C:\Dayspring` as the place, and click **Extract**.
+3. **Install.** In that folder, double-click **Install Dayspring.cmd**. If Windows shows *"Windows protected your PC"*, click **More info → Run anyway**. A black window checks your computer:
+   - If it offers to install **Node.js** (the engine Dayspring runs on), type **Y** and press **Enter**. When it finishes, close the window and double-click **Install Dayspring.cmd** once more.
+   - Then it downloads Dayspring's parts and adds a **Dayspring** shortcut to your desktop and Start menu.
 4. **Start.** Double-click **Start Dayspring.cmd** (or the new shortcut). Your browser opens the **guided setup**: a friendly voice walks you through your name, an optional AI, a voice, your week, what Dayspring may do, and your screen. Only your name is required; everything else can wait. When the browser asks to use your microphone, click **Allow**.
 
 That's it. Say **"Dayspring"** and ask anything, or press **⌨ Type**.
