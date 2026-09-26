@@ -67,6 +67,14 @@
   let ownerName = "", assistantName = "Dayspring";
   // Text only (for calls): no mic, no voice; remembered on this TV
   let textOnly = false;
+  // Active / Quiet / Off (Settings → Notifications, the badge, "Dayspring, go quiet"): Off stops listening and releases the
+  // microphone; Quiet and Off say nothing (alarms still ring unless "Alarms still ring when Off" is off). micMuted: 🎤 button.
+  // micMuted: the owner stopped listening on this screen (🎤, or ✋ when nothing is being said). A HARD stop: recognition is
+  // aborted, the microphone is released, and nothing restarts it (the watchdog, the end of speech, a reconnect, the
+  // speaker hand-over) until they turn it back on. Kept across reloads (not across a restart of Dayspring).
+  let listenState = "active", micMuted = (() => { try { return sessionStorage.getItem("ds-stopped-listening") === "1" || localStorage.getItem("ds-stopped-listening") === "1"; } catch { return false; } })();
+  // compact ("Dayspring mini") whenever the window is small; tv.html's first script keeps html.mini in step with the size
+  const isMini = () => document.documentElement.classList.contains("mini");
   try { textOnly = localStorage.getItem("ds-text-only") === "1"; } catch { /* private mode */ }
 
   /* ================================================================ living background */
@@ -598,7 +606,7 @@
   $("#pageframe").addEventListener("load", () => {
     try {
       const w = $("#pageframe").contentWindow, p = w.location.pathname;
-      if (p === "/display" || p === "/tv") { closePage(); location.reload(); return; }
+      if (p === "/display" || p === "/tv") { closePage(); window.__dsNoCloseBeacon = true; location.reload(); return; }
       w.addEventListener("keydown", (e) => { if (e.key === "Escape") closePage(); });   // Esc works while the page has focus too
     } catch { /* another origin */ }
   });
@@ -1497,6 +1505,7 @@
   async function speakOne(text, chip, bus = "general", v = {}) {
     if (!text) return;
     if (!isSpeaker) return;            // another Dayspring screen is the one speaking
+    if (listenState !== "active" && bus !== "alarm") return;   // Quiet / Off: nothing is said (shown instead)
     await waitForPeer(bus);
     lastSaid = { text, v };
     noteOwnSpeech(text);
@@ -1585,8 +1594,12 @@
   function stopSpeaking() { speechGen++; if (current) { current.pause(); current.onended?.(); } window.speechSynthesis?.cancel(); }
 
   // Deliver something the server wants said, the way notifications are set: voice, chime or silent.
-  async function notify(text, { sound = "motif", chip = null, bus = "notify", polite = true, voice = {} } = {}) {
-    const m = prefs.mode;
+  // kind: reminders | schedule | texts | lantern | discover | system (Settings → Notifications sets each one)
+  async function notify(text, { sound = "motif", chip = null, bus = "notify", polite = true, voice = {}, kind = null, toasted = false } = {}) {
+    const m = kind ? modeForKind(kind) : listenState !== "active" ? "silent" : prefs.mode;
+    window.__dsNotified = (window.__dsNotified ?? 0) + 1; window.__dsLastNotify = { kind, mode: m };
+    // chime and silent: shown on screen (a toast), unless the caller already showed one
+    if (m !== "voice" && !toasted) toast(chip?.title ?? "Dayspring", text.length > 140 ? text.slice(0, 137) + "…" : text, "", "bell");
     if (m === "silent") return;
     // Text only (he's on a call): shown, never spoken
     if (typeof textOnly !== "undefined" && textOnly) { push("ai", text); toast(chip?.title ?? "Dayspring", text.length > 120 ? text.slice(0, 117) + "…" : text, "", "bell"); return; }
@@ -1615,7 +1628,7 @@
     if (rec) { try { rec.abort(); } catch { /* restarts by itself in onend */ } }
   }
   async function startMicMonitor() {
-    if (micAn || !navigator.mediaDevices?.getUserMedia) return;
+    if (micAn || !navigator.mediaDevices?.getUserMedia || listenState === "off" || micMuted) return;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: false, autoGainControl: false } });
       micStream = stream;
@@ -1865,7 +1878,12 @@
   (() => { const sc = document.createElement("script"); sc.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(sc); })();
 
   function playMedia(cmd, { fromHistory = false } = {}) {
-    if (!ytReady) { pendingPlay = cmd; return; }
+    if (!ytReady) {
+      pendingPlay = cmd;
+      // the YouTube player never loaded: Brave Shields (or an ad blocker) blocks it on localhost
+      setTimeout(() => { if (!ytReady && pendingPlay === cmd) { pendingPlay = null; push("sys", IS_BRAVE ? "Brave Shields may block the video player: click the lion icon → Shields down for localhost. Or pop it out." : "The YouTube player couldn't load (an ad blocker may be blocking it). You can pop the video out into your browser."); offerPopOut({ videoId: cmd.videoId, playlistId: cmd.playlistId, title: cmd.title }); } }, 9000);
+      return;
+    }
     if (P.source === "spotify") sp?.pause().catch(() => {});
     if (P.source === "spotify-window") post("/player/window", { action: "pause" }).catch(() => {});
     if (P.source === "youtube" && P.videoId) VPOS[P.videoId] = posNow();
@@ -1909,7 +1927,7 @@
         },
         onError: (e) => {
           if (e.data === 101 || e.data === 150) { push("sys", "That video's owner doesn't let it play inside other apps."); offerPopOut({ videoId: cmd.videoId, playlistId: cmd.playlistId, title: cmd.title }); }
-          else push("sys", "That video couldn't be played.");
+          else push("sys", IS_BRAVE ? "That video couldn't play. Brave Shields may be blocking it: click the lion icon → Shields down for localhost, or pop it out." : "That video couldn't be played.");
           stopMedia(false);
         },
       },
@@ -2258,7 +2276,99 @@
   }
 
   /* ================================================================ listening */
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  // Who turns speech into words: the browser's own speech recognition (Chrome, Edge), or Dayspring's private one on this
+  // computer (whisper; POST /api/stt). Brave and Firefox don't have a working one, so they use the private one; so does
+  // anyone who chooses "On this computer" in Settings → Screen, and any browser whose recognizer fails with "network".
+  const NativeSR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const IS_BRAVE = typeof navigator.brave?.isBrave === "function", IS_FIREFOX = /firefox/i.test(navigator.userAgent);
+  window.dsIsBrave = IS_BRAVE;
+  let srLocal = false, sttMissing = false;
+  function chooseSR() {
+    const pref = prefs.speechEngine ?? "auto";
+    const was = srLocal;
+    srLocal = pref === "local" || (pref !== "browser" && (!NativeSR || IS_BRAVE || IS_FIREFOX)) || (pref === "auto" && srFellBack);
+    window.dsSpeechEngine = srLocal ? "local" : "browser";
+    if (was !== srLocal && rec) { try { rec.abort(); } catch { /* restarts in onend */ } }
+  }
+  let srFellBack = false;
+  // A recognizer shaped like the browser's (start/abort/stop, onresult/onerror/onend) that listens with the microphone,
+  // waits for someone to speak (a simple loudness gate, so silence is never sent), and asks Dayspring for the words.
+  class LocalRec {
+    constructor() { this.onresult = this.onerror = this.onend = this.onaudiostart = this.onsoundstart = null; this.live = false; }
+    async start() {
+      if (this.live) return; this.live = true;
+      try { this.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } }); }
+      catch { this.live = false; this.onerror?.({ error: "not-allowed" }); this.onend?.(); return; }
+      if (!this.live) { this.stream.getTracks().forEach((t) => t.stop()); return; }
+      const ctx = this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const src = ctx.createMediaStreamSource(this.stream), proc = this.proc = ctx.createScriptProcessor(4096, 1, 1);
+      const mute = ctx.createGain(); mute.gain.value = 0;
+      src.connect(proc); proc.connect(mute); mute.connect(ctx.destination);
+      this.onaudiostart?.();
+      let floor = -60, talking = false, quietMs = 0, spoke = 0, parts = [], pre = [];
+      const blockMs = (4096 / ctx.sampleRate) * 1000;
+      proc.onaudioprocess = (e) => {
+        if (!this.live) return;
+        const d = new Float32Array(e.inputBuffer.getChannelData(0));
+        let sum = 0; for (let i = 0; i < d.length; i++) sum += d[i] * d[i];
+        const db = 10 * Math.log10(sum / d.length + 1e-10);
+        const loud = db > Math.max(floor + 12, -52);
+        if (!talking) {
+          floor = floor * 0.97 + db * 0.03;                                  // the room's own level
+          pre.push(d); if (pre.length > 3) pre.shift();                      // ~0.25 s before the first word
+          if (loud) { talking = true; quietMs = 0; spoke = 0; parts = [...pre]; pre = []; this.onsoundstart?.(); }
+          return;
+        }
+        parts.push(d); spoke += blockMs;
+        quietMs = loud ? 0 : quietMs + blockMs;
+        if (quietMs > 750 || spoke > 12_000) { const take = parts; talking = false; parts = []; if (spoke - quietMs > 250) this.send(take, ctx.sampleRate); }
+      };
+    }
+    async send(parts, rate) {
+      const n = parts.reduce((a, p) => a + p.length, 0), all = new Float32Array(n); let o = 0;
+      for (const p of parts) { all.set(p, o); o += p.length; }
+      const ratio = rate / 16000, len = Math.floor(n / ratio), pcm = new Int16Array(len);
+      for (let i = 0; i < len; i++) { const v = all[Math.floor(i * ratio)]; pcm[i] = Math.max(-32768, Math.min(32767, Math.round(v * 32767))); }
+      const purpose = mode === "command" || utter ? "request" : "wake";
+      try {
+        const r = await fetch(`/api/stt?purpose=${purpose}`, { method: "POST", headers: { "content-type": "application/octet-stream" }, body: pcm.buffer });
+        if (r.status === 503) { const j = await r.json().catch(() => ({})); sttNeedsInstall(j); this.abort(); return; }
+        const j = await r.json(); const text = String(j.text ?? "").trim();
+        if (!text || !this.live) return;
+        const res = [{ transcript: text, confidence: 0.9 }]; res.isFinal = true;
+        this.onresult?.({ resultIndex: 0, results: [res] });
+      } catch { /* the server was busy: the next phrase tries again */ }
+    }
+    stop() { this.abort(); }
+    abort() {
+      if (!this.live && !this.stream) return;
+      this.live = false;
+      try { this.proc?.disconnect(); } catch { /* gone */ }
+      try { this.stream?.getTracks().forEach((t) => t.stop()); } catch { /* gone */ }
+      try { this.ctx?.close(); } catch { /* gone */ }
+      this.stream = null; this.proc = null; this.ctx = null;
+      setTimeout(() => this.onend?.(), 0);
+    }
+  }
+  window.dsLocalRec = LocalRec;
+  const SR = NativeSR || LocalRec;
+  // The private speech recognition isn't installed yet: ask once, install with the owner's OK, then listen.
+  function sttNeedsInstall(j = {}) {
+    sttMissing = true;
+    setMic("", "Listening needs Dayspring's private speech recognition");
+    if ($("#sttCard")) return;
+    document.body.insertAdjacentHTML("beforeend", `<div class="sttcard" id="sttCard" role="dialog" aria-label="Install speech recognition"><b>Listening in this browser</b><p>${IS_BRAVE ? "Brave" : IS_FIREFOX ? "Firefox" : "This browser"} can't turn speech into words by itself, so Dayspring does it on this computer. It's private: nothing you say leaves the PC. It needs a one-time download (about 200 MB).</p><div class="row"><button class="big" id="sttGo">Install</button><button id="sttLater">Not now</button></div><p class="hint" id="sttMsg"></p></div>`);
+    $("#sttLater").onclick = () => $("#sttCard")?.remove();
+    $("#sttGo").onclick = async () => {
+      $("#sttGo").disabled = true; $("#sttMsg").textContent = "Downloading… this takes a few minutes.";
+      await post("/stt/install", {}).catch(() => {});
+      const poll = setInterval(async () => {
+        const s = await json("/stt/status").catch(() => null); if (!s) return;
+        if (s.ok) { clearInterval(poll); sttMissing = false; $("#sttCard")?.remove(); toast("Listening", "Private speech recognition is ready. Say “Dayspring”.", "", "bell"); paused = false; startListening(); }
+        else if (!s.installing && s.error) { clearInterval(poll); $("#sttMsg").textContent = "It didn't install: " + s.error; $("#sttGo").disabled = false; }
+      }, 3000);
+    };
+  }
   let micBlocked = false;
   let rec = null, mode = "idle", commandTimer = null, paused = false, interimEl = null, wakeRe = /\bdayspring\b[,.!?]?\s*(.*)$/i;
   function buildWake() {
@@ -2296,26 +2406,32 @@
   }, 4000);
   function startListening() {
     if (!isSpeaker) return;             // another Dayspring screen is the one listening (no double replies)
+    if (listenState === "off" || micMuted) { setMic("", listenState === "off" ? "Dayspring is off: not listening" : "Not listening · tap 🎤 to listen"); return; }
     if (window.dsMicOwner && window.dsMicOwner !== "dayspring") { setMic("", "Lantern is listening. Say “take the mic back” by typing, or use Settings → Lantern."); return; }
-    if (!SR) { setMic("", "This browser can't listen. Use Chrome."); return; }
+    if (!NativeSR && !srLocal) chooseSR();
+    if (sttMissing && srLocal) { setMic("", "Listening needs Dayspring's private speech recognition"); return; }
     // an automated copy of this page (tests, screenshots) never listens: it would hear the real room
-    if (navigator.webdriver) { setMic("", "Automated view: not listening."); return; }
+    if (navigator.webdriver && !window.__dsAllowAutomatedListen) { setMic("", "Automated view: not listening."); return; }
     if (rec || paused) return;
-    rec = new SR();
+    rec = srLocal ? new LocalRec() : new NativeSR();
     rec.lang = "en-US"; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 1;
     rec.onresult = (ev) => { lastRecEvent = Date.now(); onResult(ev); };
     rec.onaudiostart = rec.onsoundstart = () => { lastRecEvent = Date.now(); };
     rec.onerror = (e) => {
       dlog("rec-error", { error: e.error, mode });
       // A blocked mic must not block the TV: everything else keeps working, and it tries again later.
-      if (e.error === "not-allowed" || e.error === "service-not-allowed") { micBlocked = true; setMic("", "Microphone blocked: allow it for localhost (the lock icon in the address bar)."); }
+      // Brave (and some other browsers) have the object but no service behind it: use the private one for this session
+      if (!srLocal && (e.error === "network" || e.error === "service-not-allowed") && (prefs.speechEngine ?? "auto") === "auto" && (IS_BRAVE || e.error === "service-not-allowed" || (window.__dsNetErrs = (window.__dsNetErrs ?? 0) + 1) >= 3)) {
+        srFellBack = true; chooseSR(); toast("Listening", "Switched to Dayspring's private speech recognition on this computer.", "", "bell");
+      }
+      else if (e.error === "not-allowed" || e.error === "service-not-allowed") { micBlocked = true; setMic("", "Microphone blocked: allow it for localhost (the lock icon in the address bar)."); }
       else if (e.error === "network") setMic("", "Listening needs the internet. Retrying…");
     };
     rec.onend = () => { rec = null; if (!paused) setTimeout(() => { micBlocked = false; startListening(); }, micBlocked ? 30_000 : 300); };
     try { rec.start(); if (mode === "idle") setMic("wait", idleText()); } catch { rec = null; }
   }
   function pauseListening() { paused = true; if (rec) { try { rec.abort(); } catch { /* stopped */ } rec = null; } }
-  function resumeListening() { if (typeof textOnly !== "undefined" && textOnly) return; paused = false; if (micBlocked) return; startListening(); if (mode === "idle") setMic("wait", idleText()); else if (mode === "command") setMic("listen", "Listening…"); }
+  function resumeListening() { if (typeof textOnly !== "undefined" && textOnly) return; if (listenState === "off" || micMuted) return; paused = false; if (micBlocked) return; startListening(); if (mode === "idle") setMic("wait", idleText()); else if (mode === "command") setMic("listen", "Listening…"); }
 
   // A long instruction arrives in pieces (the recognizer finalizes at every little pause), so the pieces are gathered
   // into one message and sent only after he's really done: ~2 s of quiet (3.5 s if he trailed off on "and", "so", a comma…),
@@ -2398,6 +2514,7 @@
     else { playSound("wake"); openCommandWindow(10000); }
   }
   function openCommandWindow(ms) {
+    if (listenState === "off" || micMuted) return;
     mode = "command"; setMic("listen", "Listening…"); duck(true); wake();
     if (!speaking) stage("listen");
     clearTimeout(commandTimer);
@@ -2422,7 +2539,16 @@
     if (speaking) stopSpeaking();
     backToIdle();
   }
-  $("#stopBtn").onclick = () => { stopListeningNow(); toast("Stopped", "Say “Dayspring” when you need me.", "", "bell"); };
+  // ✋ Stop: stops talking (and anything queued). When nothing is being said, or on a long press, it also stops listening.
+  let stopDown = 0;
+  $("#stopBtn").addEventListener("pointerdown", () => { stopDown = Date.now(); });
+  $("#stopBtn").onclick = () => {
+    const long = stopDown && Date.now() - stopDown > 600; stopDown = 0;
+    const busy = speaking || mode !== "idle" || Boolean(utter);
+    stopListeningNow();
+    if (busy && !long) { toast("Stopped talking", "Tap ✋ again to stop listening too.", "", "bell"); return; }
+    setStopped(true);
+  };
   function repeatLast() { if (lastSaid) speak(lastSaid.text, null, "general", lastSaid.v); else speak("I haven't said anything yet."); }
   function chatDetail() {
     const msgs = [...$("#log").children].filter((m) => !m.classList.contains("interim") && !m.classList.contains("typing"));
@@ -2438,6 +2564,11 @@
   // Instant, on the TV itself: stop, pause, skip, volume.
   function localCommand(text) {
     const t = text.toLowerCase().replace(/[.!?,]/g, "").trim();
+    // "uninstall Dayspring" only opens the page that asks (it never uninstalls by voice)
+    if (/^(uninstall|remove|delete) (dayspring|yourself)$/.test(t)) { openPage("/setup?embed=1&s=about&uninstall=1"); push("ai", "Here's the uninstall page. It asks you to type your name first."); return true; }
+    // typed: "start listening" / "stop listening" (the hard stop on this screen)
+    if (/^((start|resume) listening|listen( to me)? again|you can listen( again)?|unmute( the mic(rophone)?)?)$/.test(t) && micMuted) { setStopped(false); return true; }
+    if (/^(stop listening|don'?t listen|mute( the mic(rophone)?)?)$/.test(t)) { setStopped(true); return true; }
     if (/^(stop|stop it|stop the (music|video|song)|stop playing.*|turn (it|that) off|shut it off)$/.test(t)) {
       stopSpeaking();
       if (nowPlaying) stopMedia(false);
@@ -2471,7 +2602,7 @@
   const settle = (ms) => new Promise((r) => setTimeout(r, ms));
 
   async function ask(text, { typed = false } = {}) {
-    const silent = typed || textOnly;
+    const silent = typed || textOnly || listenState !== "active";
     const say = (t, ...rest) => (silent ? Promise.resolve() : speak(t, ...rest));
     clearTimeout(commandTimer);
     if (utter) { clearTimeout(utter.timer); utter = null; }
@@ -2607,7 +2738,7 @@
     window.dsEvents = es; window.dispatchEvent(new CustomEvent("ds-events", { detail: es }));
     // after Dayspring restarts (new code from Claude Code), reload so the new version shows
     let build0 = null;
-    es.onopen = () => { setServerDown(false); json("/build").then((r) => { if (build0 && r.build !== build0) location.reload(); build0 = r.build; }).catch(() => {}); };
+    es.onopen = () => { setServerDown(false); json("/build").then((r) => { if (build0 && r.build !== build0) { window.__dsNoCloseBeacon = true; location.reload(); } build0 = r.build; }).catch(() => {}); };
     es.addEventListener("error", () => { if (es.readyState !== EventSource.OPEN) setServerDown(true); });
     // Claude Code at work: a live status line in the Dayspring panel
     es.addEventListener("coder", (e) => {
@@ -2622,46 +2753,48 @@
       energy = 1; wake();
       loadDay(); loadLearning();
       if (item.started?.category === "study" && nowPlaying && !nowPlaying.audioOnly) stopMedia(true);   // study time: videos give way
-      if (item.kind === "morning") { startMorning(item); return; }
-      if (item.alarm) { startAlarm(item); return; }
+      // Off with "Alarms still ring when Off" turned off: the alarm only shows
+      const alarmMuted = listenState === "off" && prefs.alarmsWhenOff === false;
+      if (item.kind === "morning") { if (alarmMuted) { toast("⏰ Alarm (Dayspring is off)", item.text, "wait", "bell"); return; } startMorning(item); return; }
+      if (item.alarm) { if (alarmMuted) { toast("⏰ Alarm (Dayspring is off)", item.text, "wait", "bell"); return; } startAlarm(item); return; }
       if (item.kind === "ready" || item.kind === "rundown") {
-        await notify(item.text, { sound: "motif", chip: { title: item.kind === "ready" ? "Ready for the day?" : "Today", category: "faith" }, voice: { speed: item.speed, tone: item.kind === "ready" ? "soothing" : undefined }, polite: item.kind !== "ready" });
+        await notify(item.text, { kind: "schedule", sound: "motif", chip: { title: item.kind === "ready" ? "Ready for the day?" : "Today", category: "faith" }, voice: { speed: item.speed, tone: item.kind === "ready" ? "soothing" : undefined }, polite: item.kind !== "ready" });
         if (prefs.mode === "voice" && item.kind === "ready") openCommandWindow(45_000);
         return;
       }
       if (item.kind === "coder") {
         // Claude Code finished: what changed, and "want me to restart?" — then listen for the answer
-        await notify(item.text, { sound: "done", chip: { title: "Claude Code", category: "work" } });
+        await notify(item.text, { kind: "system", sound: "done", chip: { title: "Claude Code", category: "work" } });
         if (prefs.mode === "voice") openCommandWindow(30_000);
         return;
       }
       if (item.kind === "text") {
         // "Incoming text message from Alex. Do you want me to read it?" — it's only read on a yes
-        if (prefs.mode !== "voice") toast(`Text from ${item.from ?? "someone"}`, "Say “Dayspring, read it” to hear it.", "", "bell");
-        await notify(item.text, { sound: "ding", chip: { title: `Text from ${item.from ?? "someone"}`, category: "home" } });
+        if (modeForKind("texts") !== "voice") toast(`Text from ${item.from ?? "someone"}`, "Say “Dayspring, read it” to hear it.", "", "bell");
+        await notify(item.text, { kind: "texts", toasted: true, sound: "ding", chip: { title: `Text from ${item.from ?? "someone"}`, category: "home" } });
         if (prefs.mode === "voice") openCommandWindow(25_000);
         return;
       }
       if (item.kind === "person") {
         // "How's Jordan doing lately?" — then listen for the answer (no wake word needed)
-        await notify(item.text, { sound: "chime", chip: { title: item.person ?? "Someone on your list", category: "home" }, voice: { tone: "warm" } });
+        await notify(item.text, { kind: "schedule", sound: "chime", chip: { title: item.person ?? "Someone on your list", category: "home" }, voice: { tone: "warm" } });
         if (prefs.mode === "voice") openCommandWindow(40_000);
         return;
       }
       if (item.kind === "church") {
         // "Can I help you get ready for worship?" / "Want to talk through tonight's study?" — then listen for the answer
-        await notify(item.text, { sound: "motif", chip: { title: item.passage ?? "Church", category: "faith" }, voice: { tone: "warm" } });
+        await notify(item.text, { kind: "schedule", sound: "motif", chip: { title: item.passage ?? "Church", category: "faith" }, voice: { tone: "warm" } });
         if (prefs.mode === "voice") openCommandWindow(45_000);
         return;
       }
       if (item.kind === "lantern") {
-        await notify(item.text, { sound: "chime", chip: { title: item.title ?? "Lantern", category: "study" }, voice: { tone: "warm" } });
+        await notify(item.text, { kind: "lantern", sound: "chime", chip: { title: item.title ?? "Lantern", category: "study" }, voice: { tone: "warm" } });
         if (prefs.mode === "voice" && item.ask) openCommandWindow(30_000);
         return;
       }
       if (item.kind === "reminder") {
         toast(item.snoozed ? "Reminder (snoozed)" : "Reminder", item.reminder?.text ?? item.text, "wait", "bell", { snooze: item });
-        await notify(item.text, { sound: "ding", chip: { title: "Reminder", category: "flex" } });
+        await notify(item.text, { kind: "reminders", toasted: true, sound: "ding", chip: { title: "Reminder", category: "flex" } });
         if (prefs.mode === "voice") openCommandWindow(10_000);
         return;
       }
@@ -2669,18 +2802,18 @@
         // severe weather from Apps & connections → Severe weather alerts: ⚠ and the alert's name, the details underneath
         const t = String(item.title ?? "Weather alert").replace(/^⚠️?\s*/, "");
         toast(`⚠ ${t}`, item.text, "wait", "warn");
-        await notify(item.text, { sound: "ding", chip: { title: `⚠ ${t}`, category: "flex" } });
+        await notify(item.text, { kind: "system", toasted: true, sound: "ding", chip: { title: `⚠ ${t}`, category: "flex" } });
         return;
       }
       if (item.kind === "hook") {
         // an incoming webhook (IFTTT, Zapier…): its title, then what it said
         toast(item.title || "Message", item.text, "", "link");
-        await notify(item.text, { sound: "ding", chip: { title: item.title || "Message", category: "home" } });
+        await notify(item.text, { kind: "system", toasted: true, sound: "ding", chip: { title: item.title || "Message", category: "home" } });
         return;
       }
       const chip = item.started ?? (item.ended ? { title: `Time's up · ${item.ended.title}`, category: "flex" } : null);
       toast(item.kind === "checkin" ? `Time's up · ${item.ended?.title ?? ""}` : item.started?.title ?? "Dayspring", item.text, "", item.started?.category ?? "bell", { snooze: ["start", "checkin"].includes(item.kind) ? item : null });
-      await notify(item.text, { sound: item.kind === "checkin" ? "checkin" : item.kind === "buffer" ? "soft" : "motif", chip: item.kind === "buffer" ? { title: "A few free minutes", category: "home" } : chip });
+      await notify(item.text, { kind: "schedule", toasted: true, sound: item.kind === "checkin" ? "checkin" : item.kind === "buffer" ? "soft" : "motif", chip: item.kind === "buffer" ? { title: "A few free minutes", category: "home" } : chip });
       if (prefs.mode === "voice") openCommandWindow(item.kind === "checkin" ? 30000 : 8000);   // he can just answer
     });
     es.addEventListener("media", (e) => { const c = JSON.parse(e.data); if (c.action === "play") playMedia(c); else stopMedia(false); });
@@ -2709,9 +2842,14 @@
     es.addEventListener("calendar", (e) => { const c = JSON.parse(e.data); if (c.close) closeCalendar(); else openCalendar(c.view ?? "week", c.date ?? todayISO()); });
     es.addEventListener("phonenote", (e) => { const n = JSON.parse(e.data); if (prefs.mode !== "silent") toast("📱 " + (n.title || "Your phone"), "", "", "bell"); });
     es.addEventListener("mic", (e) => { const m = JSON.parse(e.data); setTimeout(restartMic, 400); toast("🎙️ " + (m.role === "headset" ? "Headset mic" : m.role === "laptop" ? "Laptop mic" : m.name), "Listening through it now", "", "bell"); });
+    es.addEventListener("stt", (e) => { try { const d = JSON.parse(e.data); if (d.ready) { sttMissing = false; $("#sttCard")?.remove(); paused = false; startListening(); } } catch { /* bad event */ } });
+    es.addEventListener("listenstate", (e) => { try { const d = JSON.parse(e.data); applyListenState(d.state, { announce: true, text: d.text }); } catch { /* bad event */ } });
     es.addEventListener("settings", (e) => {
       const before = JSON.stringify(prefs.audioOutputs);
       prefs = JSON.parse(e.data); renderBell(); nightCheck();
+      if ((prefs.listenState ?? "active") !== listenState) applyListenState(prefs.listenState);
+      chooseSR();
+      paintStateMenu();
       if (JSON.stringify(prefs.audioOutputs) !== before) routeAudio().then(() => playSound("chime")).catch(() => {});
       if (mode === "idle") setMic("wait", idleText());
     });
@@ -2954,6 +3092,9 @@
     try { config = await json("/tv/config"); } catch { /* defaults */ }
     if (config.setupDone === false) { location.href = "/setup"; return; }
     try { prefs = (await json("/settings")).settings; } catch { /* defaults */ }
+    applyListenState(prefs.listenState ?? "active");
+    chooseSR();
+    document.documentElement.toggleAttribute("data-noai", config.hasKey === false);
     renderBell();
     buildWake();
     try {
@@ -2973,6 +3114,130 @@
     driftNightClock();
     if (ctx.state !== "running") needStart(); else { await routeAudio().catch(() => {}); startListening(); startMicMonitor(); playSound("hello"); }
   }
+  /* ---------------- Active / Quiet / Off, notifications, mini ⇄ full ---------------- */
+  const STATE_LABEL = { active: "Active", quiet: "Quiet", off: "Off" };
+  const STATE_INFO = { active: "Listens for “Dayspring” and speaks", quiet: "Hears “Dayspring”, says nothing (alarms still ring)", off: "Not listening at all, says nothing" };
+  const STATE_DOT = { active: "#7ee3b0", quiet: "#ffd27a", off: "#ff8fa3" };
+  function modeForKind(kind) {
+    if (listenState !== "active") return "silent";
+    if (["voice", "chime", "silent"].includes(prefs.notifyAll)) return prefs.notifyAll;
+    const c = prefs.notify?.[kind];
+    return ["voice", "chime", "silent"].includes(c) ? c : prefs.mode;
+  }
+  window.dsModeForKind = modeForKind;
+  function releaseMic() {
+    try { micStream?.getTracks().forEach((t) => t.stop()); } catch { /* gone */ }
+    clearInterval(micTimer); micAn = null; micStream = null;
+  }
+  function applyListenState(st, { announce = false, text = "" } = {}) {
+    const was = listenState;
+    listenState = ["active", "quiet", "off"].includes(st) ? st : "active";
+    window.dsListenState = listenState;
+    document.documentElement.dataset.listen = listenState;
+    const lbl = $("#stateLbl"); if (lbl) lbl.textContent = STATE_LABEL[listenState];
+    $("#stateBtn")?.setAttribute("aria-label", `Dayspring is ${STATE_LABEL[listenState].toLowerCase()}. Change listening and notifications`);
+    if (listenState === "off") { stopListeningNow(); pauseListening(); releaseMic(); setMic("", "Dayspring is off: not listening"); $("#talkStatusText").textContent = "Off"; }
+    else if (was === "off") { if (micMuted && listenState === "active") setStopped(false, { quiet: true }); resumeListening(); startMicMonitor(); }
+    if (listenState !== "active" && speaking) stopSpeaking();
+    if (listenState === "quiet" && mode === "idle") setMic("wait", "Quiet: I hear “Dayspring”, and answer on screen");
+    if (listenState === "active" && was !== "active" && mode === "idle") setMic("wait", idleText());
+    if (announce && was !== listenState) { toast(`Dayspring is ${STATE_LABEL[listenState].toLowerCase()}`, text || STATE_INFO[listenState], "", "bell"); playSound("soft"); }
+    paintStateMenu();
+  }
+  window.dsApplyListenState = applyListenState;
+  function setListenState(st) { post("/listen", { state: st, from: "button" }).then((r) => applyListenState(r.state, { announce: true, text: r.text })).catch((e) => toast("Couldn't change it", e.message, "", "bell")); }
+  const NOTIFY_ALL = [["", "Usual"], ["voice", "Speak"], ["chime", "Chime"], ["silent", "Silent"]];
+  function paintStateMenu() {
+    const m = $("#stateMenu"); if (!m || m.hidden) return;
+    m.innerHTML = `<h5>Dayspring is</h5>` + ["active", "quiet", "off"].map((s) => `<button type="button" role="menuitemradio" aria-checked="${s === listenState}" data-state="${s}"><span class="dot" style="background:${STATE_DOT[s]}"></span><span><b>${STATE_LABEL[s]}</b><small>${STATE_INFO[s]}</small></span></button>`).join("")
+      + `<h5>All notifications</h5><div class="row">${NOTIFY_ALL.map(([v, l]) => `<button type="button" role="menuitemradio" aria-checked="${(prefs.notifyAll ?? "") === v}" data-all="${v}">${l}</button>`).join("")}</div>`
+      + (isMini() ? `<h5>Window</h5><button type="button" role="menuitemcheckbox" aria-checked="${Boolean(prefs.miniOnTop)}" data-ontop="1"><span class="dot" style="background:${prefs.miniOnTop ? "#6ea8fe" : "transparent"};border:1px solid #6ea8fe"></span><span><b>Keep on top</b><small>Stays in front of other windows</small></span></button>` : "")
+      + `<button type="button" data-open="notifications"><span class="dot" style="background:transparent"></span><span><b>More notification settings…</b></span></button>`;
+  }
+  function openStateMenu() {
+    const m = $("#stateMenu"), b = $("#stateBtn"); if (!m || !b) return;
+    if (!m.hidden) { m.hidden = true; return; }
+    m.hidden = false; paintStateMenu();
+    const r = b.getBoundingClientRect(), w = m.offsetWidth;
+    m.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left)) + "px"; m.style.top = Math.min(innerHeight - m.offsetHeight - 8, r.bottom + 6) + "px";
+    m.querySelector("button")?.focus();
+  }
+  $("#stateBtn")?.addEventListener("click", (e) => { e.stopPropagation(); openStateMenu(); });
+  $("#stateMenu")?.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.state) { setListenState(b.dataset.state); $("#stateMenu").hidden = true; }
+    else if (b.dataset.all !== undefined) post("/settings", { notifyAll: b.dataset.all || null }).then((r) => { prefs = r.settings; paintStateMenu(); toast("Notifications", b.dataset.all ? `All notifications: ${b.textContent.toLowerCase()}` : "Back to your usual settings", "", "bell"); }).catch(() => {});
+    else if (b.dataset.ontop) { const on = !prefs.miniOnTop; post("/window/ontop", { on }).then(() => { prefs.miniOnTop = on; paintStateMenu(); }).catch(() => {}); }
+    else if (b.dataset.open) { $("#stateMenu").hidden = true; openPage?.("/setup?embed=1&s=notifications"); }
+  });
+  document.addEventListener("click", (e) => { const m = $("#stateMenu"); if (m && !m.hidden && !e.target.closest("#stateMenu, [data-w=state]")) m.hidden = true; });
+  document.addEventListener("keydown", (e) => { const m = $("#stateMenu"); if (e.key === "Escape" && m && !m.hidden) { m.hidden = true; $("#stateBtn")?.focus(); e.stopImmediatePropagation(); } }, true);
+  // 🎙 Talk: listen now without the wake word · 🎤 mute the microphone (Dayspring still speaks)
+  $("#pttBtn")?.addEventListener("click", () => {
+    if (listenState === "off") { toast("Dayspring is off", "Turn it back on with the badge to talk. You can still type.", "", "bell"); return; }
+    if (micMuted) setStopped(false, { quiet: true });
+    if (speaking) stopSpeaking();
+    paused = false; startListening(); openCommandWindow(10000);
+  });
+  // 🎤 Stop listening / listen again (a hard stop: see micMuted)
+  function paintStopped() {
+    const b = $("#muteBtn"); if (!b) return;
+    b.setAttribute("aria-pressed", String(micMuted)); b.classList.toggle("on", micMuted);
+    b.textContent = micMuted ? "🎤 Not listening · tap to listen" : "🎤";
+    b.title = micMuted ? "Not listening. Tap to listen again" : "Stop listening (Dayspring still speaks)";
+    document.documentElement.toggleAttribute("data-stopped", micMuted);
+  }
+  function setStopped(on, { quiet: noToast = false } = {}) {
+    micMuted = Boolean(on);
+    try { if (micMuted) { sessionStorage.setItem("ds-stopped-listening", "1"); localStorage.setItem("ds-stopped-listening", "1"); } else { sessionStorage.removeItem("ds-stopped-listening"); localStorage.removeItem("ds-stopped-listening"); } } catch { /* private mode */ }
+    if (micMuted) {
+      clearTimeout(commandTimer); pauseListening(); releaseMic();
+      if (rec) { try { rec.abort(); } catch { /* gone */ } rec = null; }
+      setMic("", "Not listening · tap 🎤 to listen");
+      if (!noToast) toast("Not listening", "Tap 🎤 (or type “start listening”) when you want me to listen again.", "", "bell");
+    } else if (listenState !== "off") {
+      paused = false; startListening(); startMicMonitor(); if (mode === "idle") setMic("wait", idleText());
+      if (!noToast) toast("Listening", `Say “${cap(config.wakePhrases[0])}” when you need me.`, "", "bell");
+    }
+    paintStopped();
+  }
+  window.dsSetStopped = setStopped;
+  window.dsIsStopped = () => micMuted;
+  $("#muteBtn")?.addEventListener("click", () => setStopped(!micMuted));
+  paintStopped();
+  // ⤡ compact ⇄ ⤢ expand: the SAME window gets smaller or bigger (the layout follows its size); from full screen or a
+  // browser tab it reopens as its own window instead (never a second copy)
+  $("#compactBtn")?.addEventListener("click", () => post("/window/compact", {}).catch(() => toast("Couldn't switch", "Try again in a moment.", "", "bell")));
+  $("#expandBtn")?.addEventListener("click", () => post("/window/expand", {}).catch(() => toast("Couldn't switch", "Try again in a moment.", "", "bell")));
+  // opened on purpose (mini ⇄ full): this window speaks and listens now
+  if (/[?&]claim=1\b/.test(location.search)) {
+    let tries = 0;
+    const tryClaim = () => post("/speaker/claim", { id: PAGE_ID }).then((r) => { if (!r.ok && ++tries < 12) setTimeout(tryClaim, 700); }).catch(() => { if (++tries < 12) setTimeout(tryClaim, 1200); });
+    setTimeout(tryClaim, 900);
+    try { history.replaceState(null, "", location.pathname); } catch { /* fine */ }
+  }
+  {
+    // the weather under the clock (shown in the compact layout)
+    const wx = () => json("/ambient").then((a) => { const w = a.weather; const el = $("#miniWx"); if (el && w) el.textContent = `${Math.round(w.temp)}° · ${String(w.kind ?? "").replace(/-/g, " ")}${a.place ? " · " + a.place : ""}`; }).catch(() => {});
+    wx(); setInterval(wx, 10 * 60_000);
+    // remember the layout it was left in, and where the compact window was (so the next launch opens the same way)
+    let lastBox = "", wasMini = null;
+    setInterval(() => {
+      const mini = isMini();
+      const box = { x: window.screenX, y: window.screenY, width: window.outerWidth, height: window.outerHeight, mode: mini ? "compact" : "full" };
+      const k = JSON.stringify(box); if (k === lastBox || box.width < 200 || document.fullscreenElement) return; lastBox = k;
+      post("/window/bounds", box).catch(() => {});
+      if (mini && wasMini === false && prefs.miniOnTop) post("/window/ontop", { on: true }).catch(() => {});
+      if (!mini && wasMini === true && prefs.miniOnTop) post("/window/ontop", { on: false, keep: true }).catch(() => {});
+      wasMini = mini;
+    }, 3000);
+    setTimeout(() => { if (isMini() && prefs.miniOnTop) post("/window/ontop", { on: true }).catch(() => {}); }, 2500);
+  }
+
+  // Closed by any means (✕, Alt+F4, the browser's own ✕): tell Dayspring, so nothing reopens it by itself. A reload
+  // (Dayspring restarting, or F5) reconnects straight away, which clears it again.
+  addEventListener("pagehide", (e) => { if (!e.persisted && !window.__dsNoCloseBeacon) { try { navigator.sendBeacon("/api/window/closed", new Blob([JSON.stringify({ id: PAGE_ID })], { type: "application/json" })); } catch { /* fine */ } } });
+
   window.dayspring = { playSound, speak, playMedia, stopMedia, stage, ask, showNowPlaying, toast, burst, startAlarm, dismissAlarm, notify, startMorning, hearing, politeMoment, player: P, playerCtl: ctl, musicCommand, initSpotify };
   boot();
 })();

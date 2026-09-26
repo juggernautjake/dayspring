@@ -17,11 +17,15 @@ rem ---- 1. Node.js
 set NODE_OK=0
 where node >nul 2>nul && node -e "const [a, b] = process.versions.node.split('.').map(Number); process.exit(a > 22 || (a === 22 && b >= 13) ? 0 : 1)" && set NODE_OK=1
 if "%NODE_OK%"=="1" goto node_ok
-echo Dayspring needs Node.js 22.13 or newer, and it isn't installed (or it's too old).
+echo Dayspring needs Node.js 22.13 or newer (Windows 10 version 1809 or later, or Windows 11, 64-bit), and it isn't installed (or it's too old).
 where winget >nul 2>nul || goto node_manual
 choice /c YN /m "Install Node.js LTS now with winget (Microsoft's installer)"
 if errorlevel 2 goto node_manual
-winget install -e --id OpenJS.NodeJS.LTS --accept-package-agreements
+winget install -e --id OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements
+if errorlevel 1 (
+  echo winget couldn't install Node.js here ^(on Windows 10 it needs an up-to-date "App Installer" from the Microsoft Store^).
+  goto node_manual
+)
 echo.
 echo Node.js is installed. Close this window and run "Install Dayspring.cmd" again so Windows picks it up.
 pause
@@ -60,13 +64,17 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "$w = New-Object -ComObject WScript.Shell; $here = $env:HERE.TrimEnd('\');" ^
   "$menu = Join-Path ([Environment]::GetFolderPath('Programs')) 'Dayspring'; New-Item -ItemType Directory -Force $menu | Out-Null;" ^
   "function mk($path, $target, $desc) { $s = $w.CreateShortcut($path); $s.TargetPath = $target; $s.WorkingDirectory = $here; $s.IconLocation = (Join-Path $here 'dayspring.ico'); $s.Description = $desc; $s.WindowStyle = 7; $s.Save() }" ^
-  "function quiet($path, $desc) { $s = $w.CreateShortcut($path); $s.TargetPath = (Join-Path $env:SystemRoot 'System32\wscript.exe'); $s.Arguments = [char]34 + (Join-Path $here 'Start Dayspring.vbs') + [char]34; $s.WorkingDirectory = $here; $s.IconLocation = (Join-Path $here 'dayspring.ico'); $s.Description = $desc; $s.Save() }" ^
-  "quiet (Join-Path $menu 'Dayspring.lnk') 'Start Dayspring';" ^
+  "function quiet($path, $desc, $extra) { $s = $w.CreateShortcut($path); $s.TargetPath = (Join-Path $env:SystemRoot 'System32\wscript.exe'); $s.Arguments = [char]34 + (Join-Path $here 'Start Dayspring.vbs') + [char]34 + $extra; $s.WorkingDirectory = $here; $s.IconLocation = (Join-Path $here 'dayspring.ico'); $s.Description = $desc; $s.Save() }" ^
+  "quiet (Join-Path $menu 'Dayspring.lnk') 'Start Dayspring' '';" ^
+  "quiet (Join-Path $menu 'Dayspring (full screen).lnk') 'Start Dayspring full screen, like on a TV' ' --open-as fullscreen';" ^
+  "quiet (Join-Path $menu 'Dayspring mini.lnk') 'Dayspring in a small window you can put anywhere' ' --open-as compact';" ^
+  "quiet (Join-Path $menu 'Dayspring in browser.lnk') 'Open Dayspring in a tab in your browser' ' --open-as tab';" ^
+  "quiet (Join-Path $menu 'Uninstall Dayspring.lnk') 'Remove Dayspring from this computer (it asks first)' ' --uninstall';" ^
   "mk (Join-Path $menu 'Stop Dayspring.lnk') (Join-Path $here 'Stop Dayspring.cmd') 'Stop Dayspring completely';" ^
   "mk (Join-Path $menu 'Update Dayspring.lnk') (Join-Path $here 'Update Dayspring.cmd') 'Check for a newer Dayspring';" ^
   "$u = $w.CreateShortcut((Join-Path $menu 'Dayspring Settings.url')); $u.TargetPath = 'http://localhost:4747/setup'; $u.Save();" ^
   "$u = $w.CreateShortcut((Join-Path $menu 'Dayspring Help.url')); $u.TargetPath = 'http://localhost:4747/help'; $u.Save();" ^
-  "quiet (Join-Path ([Environment]::GetFolderPath('Desktop')) 'Dayspring.lnk') 'Start Dayspring'"
+  "quiet (Join-Path ([Environment]::GetFolderPath('Desktop')) 'Dayspring.lnk') 'Start Dayspring' ''"
 echo [ok] Added Dayspring to the Start menu and the desktop
 
 choice /c YN /m "Start Dayspring automatically when you sign in to Windows"
@@ -74,7 +82,7 @@ if errorlevel 2 (
   del "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\Dayspring.lnk" >nul 2>nul
   goto done
 )
-powershell -NoProfile -Command "$w = New-Object -ComObject WScript.Shell; $s = $w.CreateShortcut((Join-Path ([Environment]::GetFolderPath('Startup')) 'Dayspring.lnk')); $s.TargetPath = (Join-Path $env:SystemRoot 'System32\wscript.exe'); $s.Arguments = [char]34 + (Join-Path $env:HERE 'Start Dayspring.vbs') + [char]34; $s.WorkingDirectory = $env:HERE; $s.IconLocation = (Join-Path $env:HERE 'dayspring.ico'); $s.Save()"
+powershell -NoProfile -Command "$w = New-Object -ComObject WScript.Shell; $s = $w.CreateShortcut((Join-Path ([Environment]::GetFolderPath('Startup')) 'Dayspring.lnk')); $s.TargetPath = (Join-Path $env:SystemRoot 'System32\wscript.exe'); $s.Arguments = [char]34 + (Join-Path $env:HERE 'Start Dayspring.vbs') + [char]34 + ' --startup'; $s.WorkingDirectory = $env:HERE; $s.IconLocation = (Join-Path $env:HERE 'dayspring.ico'); $s.Save()"
 echo [ok] Dayspring will start when you sign in
 
 :done

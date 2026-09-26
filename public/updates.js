@@ -77,5 +77,15 @@
     const L = s.latest;
     if (L?.available && !(s.plan && s.plan.version === L.latest) && s.when === "ask") show({ ...L, current: s.version }, { quiet: true });
   }).catch(() => {}), 8000);
-  window.dsUpdates = { show, close };
+  // the ⬆ badge on the window bar while a newer version is waiting
+  function badge(s) {
+    const b = document.querySelector('.wbar [data-w="update"]'); if (!b) return;
+    const L = s?.latest; const on = Boolean(L?.available && !s.source);
+    b.hidden = !on; if (on) { b.title = `Dayspring ${L.latest} is available: what's new and Update now`; b.setAttribute("aria-label", b.title); b.onclick = () => show({ ...L, current: s.version ?? L.current }); }
+  }
+  const refresh = () => fetch("/api/update/status").then((r) => r.json()).then(badge).catch(() => {});
+  setTimeout(refresh, 3000); setInterval(refresh, 15 * 60_000);
+  if (window.dsEvents) window.dsEvents.addEventListener("updatestatus", (e) => { try { badge(JSON.parse(e.data)); } catch { /* bad event */ } });
+  else addEventListener("ds-events", (e) => e.detail.addEventListener("updatestatus", (ev) => { try { badge(JSON.parse(ev.data)); } catch { /* bad event */ } }), { once: true });
+  window.dsUpdates = { show, close, refresh };
 })();

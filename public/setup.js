@@ -628,9 +628,30 @@
           { value: "primary", title: "Main screen", desc: "Always on the main screen." },
           { value: "secondary", title: "Second screen", desc: "Always on the other screen." },
         ], ["auto", "primary", "secondary"].includes(S.owner.display) ? S.owner.display : "")}
+        <h2>How Dayspring opens</h2>
+        ${choiceGroup("openAs", [
+          { value: "auto", title: "Automatic", desc: "Its own window on this screen, full screen on a TV or second screen." },
+          { value: "window", title: "App window", desc: "A clean window of its own with no browser bars. It remembers the microphone and your sign-ins." },
+          { value: "compact", title: "Compact (Dayspring mini)", desc: "A small window you can put anywhere: the time, what's on now and next, the weather, and a chat box." },
+          { value: "fullscreen", title: "Full screen", desc: "Fills the screen, like the TV view. Move the mouse to the top for minimize, exit and sound." },
+          { value: "tab", title: "Browser tab", desc: "A normal tab in your browser. The browser may ask to use the microphone, and sound may need one click to start." },
+        ], ["auto", "window", "compact", "fullscreen", "tab"].includes(S.owner.openAs) ? S.owner.openAs : "auto")}
+        <p class="hint">The Start menu also has "Dayspring (full screen)", "Dayspring mini" and "Dayspring in browser" to open it a different way just once. You can also say "open Dayspring in my browser", "make Dayspring small", "open in its own window" or "go full screen".</p>
         <h2>Which browser shows Dayspring?</h2>
         <div class="field"><select id="dbrowser" aria-label="Browser for the Dayspring screen"><option value="default">Your default browser</option></select>
-          <div class="hint" id="dbNote">Any browser on this computer works. Microsoft Edge has the most natural-sounding free voices. The change shows the next time the Dayspring screen opens.</div></div>
+          <div class="hint" id="dbNote">Any browser on this computer works. Microsoft Edge has the most natural-sounding free voices.</div>
+          <p class="hint" id="dbUsing"></p>
+          <p><button type="button" class="btn small" id="dbReopen" hidden>Reopen now</button></p>
+          <p class="hint">It's used for every way Dayspring opens (mini, app window, full screen, browser tab) and for "Pop out". Each browser keeps its own Dayspring sign-ins, so after switching, allow the microphone once and sign in to your apps again in the new browser.</p></div>
+        <h2>Speech recognition</h2>
+        ${choiceGroup("speechEngine", [
+          { value: "auto", title: "Automatic", desc: "The browser's own when it has one that works (Chrome, Edge), otherwise the private one on this computer (Brave, Firefox)." },
+          { value: "browser", title: "The browser", desc: "Fast, and needs the internet. Chrome and Edge only." },
+          { value: "local", title: "On this computer (private)", desc: "Nothing you say leaves the PC. Works in every browser. A one-time download of about 200 MB." },
+        ], ["auto", "browser", "local"].includes(S.voice?.speechEngine) ? S.voice.speechEngine : "auto")}
+        <h2>Opening and closing</h2>
+        ${toggle("keepScreenOpen", "Keep the Dayspring screen open", "For a TV or an always-on display: if the screen closes or the TV is unplugged, it opens again by itself. Off: when you close Dayspring, it stays closed (alarms and notifications still work).", S.owner.keepScreenOpen === true)}
+        ${toggle("openOnStartup", "Open the screen when Windows starts", "Only if Dayspring starts with Windows. Off: it starts hidden and shows notifications and alarms, and you open the screen when you want it.", S.owner.openOnStartup === true)}
         <h2>Stay awake</h2>
         ${toggle("keepAwake", "Keep this computer awake while Dayspring is running", "Only while it's plugged in: no sleep and no idle lock screen, so Dayspring can wake you, remind you and hear you. On battery it sleeps as usual. Nothing in your power settings changes.", S.keepAwake !== false)}
         <h2>Fit Dayspring to your screen</h2>
@@ -642,13 +663,25 @@
       mount: async (sec) => {
         await screenMount();
         api("/keepawake").then((k) => { S.keepAwake = k.on; $("#keepAwake")?.setAttribute("aria-checked", String(k.on)); }).catch(() => {});
+        api("/settings").then((r) => { const v = r.settings?.speechEngine ?? "auto"; $$("[data-group=speechEngine] .choice").forEach((c) => { const on = c.dataset.value === v; c.classList.toggle("on", on); c.setAttribute("aria-checked", String(on)); }); }).catch(() => {});
         api("/setup/browsers").then((b) => {
           const sel = $("#dbrowser"); if (!sel) return;
           const def = (b.browsers ?? []).find((x) => x.isDefault);
           sel.innerHTML = `<option value="default">Your default browser${def ? " (" + esc(def.name) + ")" : ""}</option>` + (b.browsers ?? []).map((x) => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("");
           sel.value = [...sel.options].some((o) => o.value === b.chosen) ? b.chosen : "default";
-          const note = () => { const id = sel.value === "default" ? def?.id : sel.value; const x = (b.browsers ?? []).find((y) => y.id === id); $("#dbNote").textContent = (x?.note ? x.note + " " : "") + "Microsoft Edge has the most natural-sounding free voices. The change shows the next time the Dayspring screen opens."; };
+          const using = (b.browsers ?? []).find((y) => y.id === b.using);
+          if ($("#dbUsing")) $("#dbUsing").textContent = using ? `In use now: ${using.name}.` : "";
+          const note = () => {
+            const id = sel.value === "default" ? def?.id : sel.value; const x = (b.browsers ?? []).find((y) => y.id === id);
+            $("#dbNote").textContent = (x?.note ? x.note + " " : "") + (id === "brave" ? "In Brave, Dayspring listens with the private speech recognition on this computer, and Brave has Windows' basic voices only (for a warmer voice use ElevenLabs, or Edge's free Natural voices). If a video won't play, turn Brave Shields down for localhost." : "Microsoft Edge has the most natural-sounding free voices.");
+            const r = $("#dbReopen"); if (r) { r.hidden = !x || id === b.using; r.textContent = x ? `Reopen now in ${x.name}` : "Reopen now"; }
+          };
           sel.onchange = note; note();
+          $("#dbReopen").onclick = async () => {
+            try { await post("/setup/display", { displayBrowser: sel.value }); const r = await post("/app/reopen", {}); msg($("#m"), r.noScreen ? r.message : "Reopening Dayspring in the new browser…", r.ok === false ? "bad" : "ok"); b.using = sel.value === "default" ? def?.id : sel.value; note(); if ($("#dbUsing") && x0()) $("#dbUsing").textContent = `In use now: ${x0().name}.`; }
+            catch (e) { msg($("#m"), e.message, "bad"); }
+          };
+          const x0 = () => (b.browsers ?? []).find((y) => y.id === b.using);
         }).catch(() => {});
         $("[data-group=display]").addEventListener("change", () => { sec.display = chosen("display"); $$(".scr").forEach((x) => x.classList.remove("on")); });
         try {
@@ -661,8 +694,10 @@
         } catch { if ($("#screens")) $("#screens").innerHTML = ""; }
       },
       save: async (sec) => {
-        const r = await post("/setup/display", { display: sec.display ?? chosen("display") ?? S.owner.display ?? "auto", displayBrowser: $("#dbrowser")?.value || S.owner.displayBrowser || "default" });
-        S.owner.display = r.display; S.owner.displayBrowser = r.displayBrowser; S.voice.overscan = r.overscan;
+        const r = await post("/setup/display", { display: sec.display ?? chosen("display") ?? S.owner.display ?? "auto", displayBrowser: $("#dbrowser")?.value || S.owner.displayBrowser || "default", openAs: chosen("openAs") ?? S.owner.openAs ?? "auto", keepScreenOpen: isOn("keepScreenOpen"), openOnStartup: isOn("openOnStartup") });
+        S.owner.keepScreenOpen = r.keepScreenOpen; S.owner.openOnStartup = r.openOnStartup;
+        if (chosen("speechEngine")) { const st = await post("/settings", { speechEngine: chosen("speechEngine") }).catch(() => null); if (st?.settings && S.voice) S.voice.speechEngine = st.settings.speechEngine; }
+        S.owner.display = r.display; S.owner.displayBrowser = r.displayBrowser; S.owner.openAs = r.openAs; S.voice.overscan = r.overscan;
         if ($("#keepAwake")) { const k = await post("/keepawake", { on: isOn("keepAwake") }).catch(() => null); if (k) S.keepAwake = k.on; }
       } },
 
@@ -701,9 +736,10 @@
           const avail = L && L.available;
           box.innerHTML = `<p>This is <b>Dayspring ${esc(st.version)}</b>.${st.lastCheck ? ` <span class="hint">Last checked ${esc(when(st.lastCheck))}.</span>` : ""}</p>
             ${st.phase && !["idle", "error"].includes(st.phase) ? `<p class="msg">${esc(st.message)}</p>` : ""}
-            ${st.error ? `<p class="msg bad">${esc(st.error)}</p>` : ""}
+            ${st.error ? `<p class="msg bad">${esc(st.error)} <button class="btn small" type="button" id="upRetry">Retry</button></p>` : ""}
             ${!st.repo || L?.off ? `<p class="hint">${esc(L?.message || st.message || "Automatic updates aren't set up for this copy of Dayspring.")}</p>` : ""}${avail ? `<div class="note"><b>${esc(L.name || "Dayspring " + L.latest)} is available.</b>${st.staged ? " It's downloaded and ready." : ""}${L.notes ? `<details open><summary>What's new</summary>${md(L.notes)}</details>` : ""}</div>` : L && !L.off ? `<p>✓ You're up to date.</p>` : ""}
             <div class="row" style="gap:.5em;margin-top:.6em"><button class="btn" type="button" id="upCheck">Check now</button>${avail ? `<button class="btn primary" type="button" id="upNow">Update now</button>` : ""}</div>`;
+          $("#upRetry")?.addEventListener("click", () => $("#upCheck").click());
           $("#upCheck").onclick = async () => { msg($("#m"), "Checking…"); try { const r = await api("/update/check"); paint(r.status, r); msg($("#m"), r.off ? "" : r.available ? "" : "You're up to date."); } catch (e) { msg($("#m"), e.message, "bad"); } };
           $("#upNow")?.addEventListener("click", async () => { if (!confirm("Install the update now? Dayspring restarts (about a minute). Your data is backed up first.")) return; msg($("#m"), "Installing… Dayspring will restart in a moment."); try { await post("/update/choose", { choice: "now" }); } catch (e) { msg($("#m"), e.message, "bad"); } });
           $$("[data-group=upWhen] .choice").forEach((b) => { const on = b.dataset.value === st.when; b.classList.toggle("on", on); b.setAttribute("aria-checked", String(on)); });
@@ -715,6 +751,130 @@
         $("[data-group=upWhen]")?.addEventListener("change", async () => { try { await post("/update/when", { when: chosen("upWhen") ?? "ask" }); toast("Saved"); } catch (e) { msg($("#m"), e.message, "bad"); } });
       },
       save: async () => { await post("/update/when", { when: chosen("upWhen") ?? "ask" }); } },
+
+    // ------------------------------------------------------------------------------------------------ notifications
+    { id: "notifications", icon: "🔔", title: "Notifications", settingsOnly: true,
+      render: () => `
+        <h1>Notifications and quiet</h1>
+        <p class="lead">Turn Dayspring's listening off with one click, choose how each kind of notification reaches you, and show notifications in front of every window.</p>
+        <h2>Dayspring is</h2>
+        ${choiceGroup("listenState", [
+          { value: "active", title: "Active", desc: "Listens for “Dayspring” and speaks." },
+          { value: "quiet", title: "Quiet", desc: "Still hears “Dayspring”, but says nothing: answers and notifications show on screen. Alarms still ring." },
+          { value: "off", title: "Off", desc: "Not listening at all (the microphone is released) and says nothing. The schedule and alarms keep going." },
+        ], ["active", "quiet", "off"].includes(S.voice?.listenState) ? S.voice.listenState : "active")}
+        ${toggle("alarmsWhenOff", "Alarms still ring when Off", "Your wake-up alarm and alarm reminders ring even when Dayspring is off.", S.voice?.alarmsWhenOff !== false)}
+        <p class="hint">Shortcuts: the coloured badge on the Dayspring screen, <b>Ctrl+Alt+Shift+D</b> anywhere in Windows (off / back on), or say “Dayspring, go quiet”.</p>
+        <h2>How each kind arrives</h2>
+        <div class="field" id="nkinds"></div>
+        <div class="field"><label for="nAll"><b>Quick switch for everything</b></label> <select id="nAll"><option value="">Use the settings above</option><option value="voice">Speak everything</option><option value="chime">Chime only for everything</option><option value="silent">Everything silent (on screen only)</option></select></div>
+        <h2>Desktop notifications</h2>
+        ${toggle("ovOn", "Show notifications in front of every window", "Small cards at the top-right of the screen, even over full-screen apps. They never take the focus, and they go away by themselves. Skipped while the Dayspring window itself is in front.", S.voice?.overlay?.on !== false)}
+        ${toggle("overlayWhenOff", "Show them when Dayspring is off", "Off stops listening and talking; the cards can still show.", S.voice?.overlayWhenOff !== false)}
+        <div class="field"><label for="ovSecs"><b>Stay on screen for</b> <span id="ovSecsV"></span></label><input type="range" id="ovSecs" min="3" max="30" step="1" value="${Number(S.voice?.overlay?.seconds) || 8}"></div>
+        <div class="field"><label for="ovScreen"><b>Show them on</b></label> <select id="ovScreen"><option value="primary">The main screen</option><option value="1">Screen 1</option><option value="2">Screen 2</option><option value="3">Screen 3</option></select></div>
+        <p><button type="button" class="btn small" id="ovTest">Show a test notification</button> <span class="hint" id="ovState"></span></p>
+        <div class="msg" id="m"></div>`,
+      mount: async () => {
+        let s = {}; try { s = (await api("/settings")).settings ?? {}; } catch { /* defaults */ }
+        const pick = (g, v) => $$(`[data-group=${g}] .choice`).forEach((b) => { const on = b.dataset.value === v; b.classList.toggle("on", on); b.setAttribute("aria-checked", String(on)); });
+        if (!$("#nkinds")) return;          // left this section while loading
+        pick("listenState", s.listenState ?? "active");
+        const setT = (id, on) => $("#" + id)?.setAttribute("aria-checked", String(Boolean(on)));
+        setT("alarmsWhenOff", s.alarmsWhenOff !== false); setT("overlayWhenOff", s.overlayWhenOff !== false); setT("ovOn", s.overlay?.on !== false);
+        $("#ovSecs").value = Number(s.overlay?.seconds) || 8;
+        const KINDS = [["reminders", "Reminders"], ["schedule", "Schedule: start times, changes and check-ins"], ["texts", "Texts and phone"], ["lantern", "Lantern"], ["discover", "Discover"], ["system", "Updates, alerts and system"]];
+        const OPTS = [["auto", "Usual (" + ({ voice: "spoken", chime: "chime", silent: "silent" }[s.mode] ?? "spoken") + ")"], ["voice", "Speak"], ["chime", "Chime only"], ["silent", "Silent"]];
+        $("#nkinds").innerHTML = KINDS.map(([k, t]) => `<div class="row" style="display:flex;gap:.6em;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:.25em 0"><label for="nk-${k}">${t}</label><select id="nk-${k}" data-kind="${k}">${OPTS.map(([v, l]) => `<option value="${v}"${(s.notify?.[k] ?? "auto") === v ? " selected" : ""}>${l}</option>`).join("")}</select></div>`).join("");
+        $("#nAll").value = s.notifyAll ?? "";
+        $("#ovScreen").value = String(s.overlay?.screen ?? "primary");
+        const secs = () => { $("#ovSecsV").textContent = `${$("#ovSecs").value} seconds`; }; $("#ovSecs").oninput = secs; secs();
+        api("/overlay").then((o) => { $("#ovState").textContent = o.running ? "On." : o.error ? o.error : "Starts with Dayspring's screen."; }).catch(() => {});
+        $("#ovTest").onclick = async () => { try { const r = await post("/overlay/test", {}); $("#ovState").textContent = r.sent ? "Sent: look at the top-right of the screen." : (r.error || r.skipped || "Couldn't show it here."); } catch (e) { $("#ovState").textContent = e.message; } };
+        $("[data-group=listenState]")?.addEventListener("change", async () => { try { await post("/listen", { state: chosen("listenState") ?? "active", from: "settings" }); } catch (e) { msg($("#m"), e.message, "bad"); } });
+      },
+      save: async () => {
+        const notify = Object.fromEntries($$("#nkinds select").map((x) => [x.dataset.kind, x.value]));
+        const r = await post("/settings", { notify, notifyAll: $("#nAll").value || null, alarmsWhenOff: isOn("alarmsWhenOff"), overlayWhenOff: isOn("overlayWhenOff"), overlay: { on: isOn("ovOn"), seconds: Number($("#ovSecs").value), screen: $("#ovScreen").value } });
+        if (S.voice) Object.assign(S.voice, r.settings ?? {});
+        const want = chosen("listenState"); if (want && want !== (r.settings?.listenState ?? "active")) await post("/listen", { state: want, from: "settings" });
+      } },
+
+    // ------------------------------------------------------------------------------------------------ about
+    { id: "about", icon: "ℹ️", title: "About", settingsOnly: true,
+      render: () => `
+        <h1>About Dayspring</h1>
+        <p class="lead">Dayspring ${esc(S.version ?? "")}. It runs on this computer; your schedule, settings and keys stay here.</p>
+        <h2>Running parts</h2>
+        <p class="hint">Everything of Dayspring's that's running now. In Task Manager, look for <b>Dayspring</b> (with <b>Dayspring Server</b> under it) and helpers named Dayspring Speech, Dayspring Notifications, Dayspring Keep Awake and Dayspring Audio Capture. The Dayspring window itself shows under its browser (Edge, Chrome…), using its own Dayspring profile.</p>
+        <div id="procBox" class="tablewrap"><div class="hint">Looking…</div></div>
+        <p><button type="button" class="btn small" id="procRefresh">Refresh</button> <button type="button" class="btn small" id="procStop">Stop all</button></p>
+        <div class="danger" style="margin-top:2em;border:1px solid rgba(255,143,163,.45);border-radius:.8em;padding:1em 1.1em">
+          <h2 style="margin-top:0">Uninstall Dayspring</h2>
+          <p class="hint" id="unHint">Removes Dayspring from this computer. You choose whether your data stays.</p>
+          <button type="button" class="btn" id="unOpen" style="border-color:#ff8fa3;color:#ffb3c1">Uninstall Dayspring…</button>
+        </div>
+        <div class="msg" id="m"></div>
+        <div id="unDlg" role="dialog" aria-modal="true" aria-labelledby="unTitle" hidden style="position:fixed;inset:0;z-index:100;background:rgba(5,7,16,.72);display:grid;place-items:center;padding:16px">
+          <div style="max-width:34em;width:100%;background:#12162e;border:1px solid rgba(255,143,163,.45);border-radius:1em;padding:1.2em 1.3em;display:grid;gap:.7em">
+            <h2 id="unTitle" style="margin:0">Uninstall Dayspring?</h2>
+            <p class="hint" style="margin:0">This stops Dayspring and removes its program files, its shortcuts (desktop, Start menu, Start with Windows), its browser profiles (its sign-ins in the Dayspring window), and its entry in the shared folder Lantern uses. Lantern itself isn't touched.</p>
+            ${choiceGroup("unData", [
+              { value: "keep", title: "Remove Dayspring, keep my data", desc: "Settings, schedule, notes and backups stay in the folder shown below." },
+              { value: "remove", title: "Remove Dayspring and my data", desc: "Your data goes to the Recycle Bin, so it can still be restored from there." },
+            ], "keep")}
+            <p class="hint" id="unWhere" style="margin:0"></p>
+            ${toggle("unBackup", "Save a backup of my data to Documents first", "A .zip of your data folder, in your Documents folder.", false)}
+            <label for="unName"><b id="unAsk">Type your name to confirm</b></label>
+            <input id="unName" autocomplete="off" spellcheck="false">
+            <div style="display:flex;gap:.6em;justify-content:flex-end;flex-wrap:wrap">
+              <button type="button" class="btn" id="unCancel">Cancel</button>
+              <button type="button" class="btn" id="unGo" disabled style="background:#c2334d;border-color:#c2334d;color:#fff">Uninstall</button>
+            </div>
+            <p class="msg" id="unMsg" aria-live="polite"></p>
+          </div>
+        </div>`,
+      mount: async () => {
+        const paint = async () => {
+          try {
+            const r = await api("/processes");
+            const rows = r.processes ?? [];
+            if (!$("#procBox")) return;        // left this section while loading
+            $("#procBox").innerHTML = rows.length ? `<table><thead><tr><th>Name</th><th>What it is</th><th>PID</th><th>Memory</th></tr></thead><tbody>${rows.map((p) => `<tr><td>${esc(p.name)}</td><td>${esc(p.kind)}</td><td>${p.pid}</td><td>${p.memoryMB} MB</td></tr>`).join("")}</tbody></table>` : `<div class="hint">Nothing found.</div>`;
+          } catch (e) { if ($("#procBox")) $("#procBox").innerHTML = `<div class="hint">${esc(e.message)}</div>`; }
+        };
+        paint();
+        $("#procRefresh").onclick = paint;
+        $("#procStop").onclick = async () => { await post("/processes/stop", {}).catch(() => {}); msg($("#m"), "Stopping Dayspring. Start it again with the Dayspring shortcut.", "ok"); };
+        let info = null;
+        try { info = await api("/uninstall/info"); } catch { /* shown when opened */ }
+        if (info && !info.allowed) { $("#unOpen").disabled = true; $("#unHint").textContent = info.reason; }
+        const dlg = $("#unDlg"), name = $("#unName");
+        const matches = () => info && name.value.trim().toLowerCase().replace(/\s+/g, " ") === String(info.confirmWord).trim().toLowerCase().replace(/\s+/g, " ");
+        const sync = () => {
+          const remove = chosen("unData") === "remove";
+          $("#unWhere").textContent = remove ? "Your data goes to the Recycle Bin." : `Your data stays in: ${info?.dataDir ?? ""}`;
+          $("#unGo").disabled = !matches();
+        };
+        $("[data-group=unData]")?.addEventListener("change", () => { const remove = chosen("unData") === "remove"; $("#unBackup")?.setAttribute("aria-checked", String(remove)); sync(); });
+        name.addEventListener("input", sync);
+        const close = () => { dlg.hidden = true; $("#unOpen").focus(); };
+        $("#unOpen").onclick = () => {
+          if (!info?.allowed) return;
+          dlg.hidden = false; name.value = "";
+          $("#unAsk").textContent = `Type ${info.confirmWord === "Dayspring" ? "Dayspring" : "your name, " + info.confirmWord + ","} to confirm`;
+          sync(); name.focus();
+        };
+        $("#unCancel").onclick = close;
+        dlg.addEventListener("keydown", (e) => { if (e.key === "Escape") { e.stopPropagation(); close(); } });
+        $("#unGo").onclick = async () => {
+          if (!matches()) return;
+          $("#unGo").disabled = true; msg($("#unMsg"), "Uninstalling…");
+          try { const r = await post("/uninstall", { keepData: chosen("unData") !== "remove", backup: isOn("unBackup"), confirm: name.value }); msg($("#unMsg"), (r.backup ? `Backup saved: ${r.backup}. ` : "") + r.text, "ok"); }
+          catch (e) { msg($("#unMsg"), e.message, "bad"); $("#unGo").disabled = !matches(); }
+        };
+        if (params.get("uninstall") === "1") setTimeout(() => $("#unOpen").click(), 300);
+      } },
 
     // ------------------------------------------------------------------------------------------------ lantern
     { id: "lantern", icon: "🏮", title: "Lantern", settingsOnly: true,

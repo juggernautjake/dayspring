@@ -136,7 +136,11 @@ Deleting always asks first and goes to the Recycle Bin, whatever these say.
 | Setting | What it does |
 |---|---|
 | **Which screen** | Click a screen, or choose Automatic (the second screen if there is one), Main screen or Second screen. |
-| **Which browser shows Dayspring?** | Your default browser (the default), or any browser on the computer: Edge, Chrome, Brave, Firefox, Opera, Vivaldi… Edge has the best free voices. Takes effect the next time the screen opens. |
+| **How Dayspring opens** | **Automatic** (an app window on this screen, full screen on a TV or second screen), **App window**, **Compact (Dayspring mini)**, **Full screen** or **Browser tab**. See [Opening Dayspring](display-setup.md#opening-dayspring-app-window-compact-full-screen-or-browser-tab). |
+| **Which browser shows Dayspring?** | Your default browser (the default), or any browser on the computer: Edge, Chrome, Brave, Firefox, Opera, Vivaldi… Used for every way Dayspring opens and for Pop out. **Reopen now in …** switches straight away. Edge has the best free voices. |
+| **Speech recognition** | **Automatic** (the browser's own in Chrome and Edge, otherwise the private one), **The browser** (fast, needs the internet), or **On this computer (private)** (works in every browser; a one-time download of about 200 MB). |
+| **Keep the Dayspring screen open** | Off unless you turn it on. On: if the screen closes or the TV is unplugged, it opens again by itself. Off: when you close it, it stays closed. |
+| **Open the screen when Windows starts** | Only if Dayspring starts with Windows. Off (the default): it starts hidden, with notifications and alarms working. |
 | **Keep this computer awake** | While plugged in: no sleep and no idle lock screen, so Dayspring can wake you and hear you. On battery it sleeps as usual. Your power settings are not changed. See [Keeping the screen awake](display-setup.md#keeping-the-screen-awake). |
 | **📐 Fit to screen…** | Bright lines at the edges to line up with your TV. See [Fitting Dayspring to your screen](display-setup.md#fitting-dayspring-to-your-screen). |
 
@@ -151,6 +155,29 @@ Deleting always asks first and goes to the Recycle Bin, whatever these say.
 **Motion**: *Seconds per slide* in the rotating panel (0 = it stays put) and *Calmer motion*.
 
 Each group has its own **Reset**, and **Reset the whole screen layout** puts everything back.
+
+## Notifications
+
+`?s=notifications` · Settings only. Full walkthrough: [Compact mode, quiet mode and notifications](quiet-and-notifications.md)
+
+| Setting | What it does |
+|---|---|
+| **Dayspring is** | **Active** (listens and speaks), **Quiet** (hears its name, says nothing) or **Off** (not listening; the microphone is released). Also on the badge, with **Ctrl+Alt+Shift+D**, or by voice. |
+| **Alarms still ring when Off** | On by default. |
+| **How each kind arrives** | For Reminders, Schedule, Texts and phone, Lantern, Discover, and Updates, alerts and system: **Usual**, **Speak**, **Chime only** or **Silent**. |
+| **Quick switch for everything** | Overrides them all (speak, chime only, or silent) until you choose **Use the settings above**. |
+| **Show notifications in front of every window** | Small cards at the top-right, over any app, without taking the focus. Skipped while the Dayspring window is in front. |
+| **Show them when Dayspring is off** | On by default. |
+| **Stay on screen for** / **Show them on** | 3–30 seconds; the main screen or screen 1–3. **Show a test notification** tries it. |
+
+## About
+
+`?s=about` · Settings only.
+
+| Setting | What it does |
+|---|---|
+| **Running parts** | Every Dayspring process running now (as named in Task Manager), with **Stop all**. See [What's running](troubleshooting.md#whats-running). |
+| **Uninstall Dayspring…** | Removes Dayspring, keeping your data unless you choose otherwise; you confirm by typing your name. See [Uninstalling](install.md#uninstalling-dayspring). |
 
 ## Sky & scenery
 
@@ -173,7 +200,7 @@ Each group has its own **Reset**, and **Reset the whole screen layout** puts eve
 
 | Setting | What it does |
 | --- | --- |
-| **Check now** | Asks GitHub for a newer Dayspring right away. (Dayspring also checks when it starts and every few hours.) |
+| **Check now** | Asks GitHub for a newer Dayspring right away and shows the answer ("You have the newest version", the new version, or what went wrong, with **Retry**). Dayspring also checks when it starts and every few hours, and a ⬆ appears in the window bar when one is ready. |
 | **Update now** | Shown when a new version is out, with its **What's new**. Backs up your data, installs, restarts (about a minute). |
 | **When a new version comes out** | **Ask me** (a card on the screen with the choices; the default), **Install it when I'm not using Dayspring** (after half an hour of quiet; never during an alarm, a call or Tune in), or **Install it the next time Dayspring starts**. |
 | **What changed** | Every installed update, newest first, with its notes and whether it worked. A version that didn't start is undone by itself, and says so here. |

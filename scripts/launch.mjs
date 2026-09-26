@@ -2,6 +2,8 @@
 //   node scripts/launch.mjs              start Dayspring (if it isn't running) and open its screen, or the guided setup
 //   node scripts/launch.mjs --stop       stop Dayspring
 //   node scripts/launch.mjs --open-display   just open (or bring back) the Dayspring screen (DS_SCREEN / DS_PROFILE apply)
+//   node scripts/launch.mjs --open-as window|compact|fullscreen|tab   start if needed and open the screen that way this time
+//        (an open Dayspring screen moves there: its app window closes first, so there are never two)
 //   node scripts/launch.mjs --restart --wait-pid <pid> [--verify] [--close-console <pid>]
 //        used by Dayspring itself: waits for the old server to stop, starts the new one; with --verify (after an update)
 //        it puts the previous version back if the new one doesn't start within a minute.
@@ -40,6 +42,11 @@ async function waitUp(ms) { const end = Date.now() + ms; while (Date.now() < end
 const alive = (pid) => { try { process.kill(pid, 0); return true; } catch (e) { return e.code === "EPERM"; } };
 async function post(path, body = {}) { const r = await request("POST", `/api${path}`, body, 20000); return r.ok ? r.json ?? {} : null; }
 
+let serverExePath = null;
+async function prepareServerExe() {
+  try { const pn = await import("../lib/procname.mjs"); const r = await pn.ensureServerExe({ log: note }); serverExePath = r.exe; if (r.error) note(`Dayspring.exe: ${r.error}`); }
+  catch (e) { note(`Dayspring.exe skipped: ${e.message}`); serverExePath = null; }
+}
 // The server, hidden, with its words going to data/logs/server.log (the old log is kept once, as server.old.log).
 function startServer() {
   mkdirSync(LOGS, { recursive: true });
@@ -48,7 +55,9 @@ function startServer() {
   const env = { ...process.env };
   if (env.DAYSPRING_TV !== "1") env.DAYSPRING_DISPLAY = "1";
   delete env.DAYSPRING_LEGACY_CONSOLE;
-  const c = spawn(process.execPath, ["--env-file-if-exists=.env", "server.mjs"], { cwd: DESK, env, detached: true, windowsHide: true, stdio: ["ignore", out, out] });
+  // bin\Dayspring.exe (node.exe named and stamped "Dayspring") so Task Manager shows Dayspring; node.exe until it's made
+  const exe = serverExePath ?? process.execPath;
+  const c = spawn(exe, ["--env-file-if-exists=.env", "server.mjs"], { cwd: DESK, env, detached: true, windowsHide: true, stdio: ["ignore", out, out] });
   c.unref();
   note(`server started (pid ${c.pid})`);
   return c.pid;
@@ -62,8 +71,18 @@ function closeLeftoverConsoles(extraPid) {
   if (extraPid) spawnSync("taskkill", ["/pid", String(extraPid), "/f"], { windowsHide: true });
 }
 
+// --startup (Start with Windows): start hidden for alarms and notifications; the screen opens only with --open or when
+// "Open the screen when Windows starts" is on (Settings → Screen)
+const STARTUP = has("--startup");
+// --open-as window | fullscreen | tab (the "Dayspring (full screen)" and "Dayspring in browser" shortcuts): this way, this time
+const OPEN_AS = ["window", "compact", "fullscreen", "tab"].includes(arg("--open-as")) ? arg("--open-as") : undefined;
 async function openScreen() {
-  const r = await post("/app/open", { screen: process.env.DS_SCREEN || undefined });
+  if (STARTUP && !has("--open")) {
+    let want = false;
+    try { want = JSON.parse(readFileSync(join(DESK, "data", "owner.json"), "utf8")).openOnStartup === true; } catch { /* not set up */ }
+    if (!want) { note("started with Windows: running hidden (the screen stays closed)"); return { ok: true, hidden: true }; }
+  }
+  const r = await post("/app/open", { screen: process.env.DS_SCREEN || undefined, openAs: OPEN_AS });
   note(r ? `open: ${JSON.stringify(r)}` : "open: no answer");
   return r;
 }
@@ -79,6 +98,7 @@ async function start() {
       if (r?.updated) { const pid = startServer(); return (await verify(pid)) ? (await openScreen(), 0) : 1; }
     }
   } catch (e) { note(`update check at launch skipped: ${e.message}`); }
+  await prepareServerExe();
   startServer();
   if (!(await waitUp(45_000))) { note("Dayspring didn't start; see data/logs/server.log"); showError("Dayspring didn't start. The reason is in data\\logs\\server.log inside the Dayspring folder (docs\\troubleshooting.md explains the usual ones)."); return 1; }
   closeLeftoverConsoles();
@@ -104,18 +124,23 @@ async function restart() {
   const old = Number(arg("--wait-pid"));
   if (old) { const end = Date.now() + 20_000; while (alive(old) && Date.now() < end) await sleep(300); if (alive(old)) spawnSync("taskkill", ["/pid", String(old), "/t", "/f"], { windowsHide: true }); }
   const end = Date.now() + 10_000; while ((await up()) && Date.now() < end) await sleep(300);   // the port is free
+  await prepareServerExe();
   const pid = startServer();
   const ok = has("--verify") ? await verify(pid) : await waitUp(45_000);
   closeLeftoverConsoles(Number(arg("--close-console")) || null);
   return ok ? 0 : 1;
 }
 
+// Everything else of Dayspring's: its helpers and the browser windows with a Dayspring profile (never other windows,
+// never other node.exe programs)
+async function stopHelpers() { try { const pn = await import("../lib/procname.mjs"); const gone = pn.stopAll({ except: [process.pid] }); if (gone.length) note(`stopped ${gone.length} Dayspring part(s): ${gone.map((p) => p.name).join(", ")}`); } catch (e) { note(`stopping the helpers: ${e.message}`); } }
 async function stop() {
-  if (!(await up())) { console.log("Dayspring isn't running."); return 0; }
+  if (!(await up())) { console.log("Dayspring isn't running."); await stopHelpers(); return 0; }
   await post("/app/quit");
-  if (await (async () => { const end = Date.now() + 10_000; while (Date.now() < end) { if (!(await up())) return true; await sleep(400); } return false; })()) { console.log("Dayspring has stopped."); return 0; }
+  if (await (async () => { const end = Date.now() + 10_000; while (Date.now() < end) { if (!(await up())) return true; await sleep(400); } return false; })()) { console.log("Dayspring has stopped."); await stopHelpers(); return 0; }
   try { const pid = Number(readFileSync(PIDFILE, "utf8")); if (pid) spawnSync("taskkill", ["/pid", String(pid), "/t", "/f"], { windowsHide: true }); } catch { /* no pid file */ }
   console.log("Dayspring has stopped."); try { unlinkSync(PIDFILE); } catch { /* gone */ }
+  await stopHelpers();
   return 0;
 }
 
@@ -125,7 +150,15 @@ function showError(text) {
   spawnSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", `Add-Type -AssemblyName PresentationFramework; [void][System.Windows.MessageBox]::Show(${JSON.stringify(text).replace(/\$/g, "`$")}, 'Dayspring')`], { windowsHide: true, timeout: 300_000 });
 }
 
-const code = has("--stop") ? await stop()
+// the Start menu's "Uninstall Dayspring": start it if needed, then open the page that asks (in the owner's browser)
+async function openUninstall() {
+  if (!(await up())) { await prepareServerExe(); startServer(); if (!(await waitUp(45_000))) { showError("Dayspring didn't start, so the uninstall page can't open. You can also delete the Dayspring folder by hand."); return 1; } }
+  const port = Number(process.env.PORT) || 4747;
+  spawn("rundll32.exe", ["url.dll,FileProtocolHandler", `http://localhost:${port}/setup?s=about&uninstall=1`], { detached: true, stdio: "ignore", windowsHide: true }).unref();
+  return 0;
+}
+const code = has("--uninstall") ? await openUninstall()
+  : has("--stop") ? await stop()
   : has("--restart") ? await restart()
   : has("--open-display") ? ((await waitUp(30_000)) ? ((await openScreen())?.ok === false ? 1 : 0) : (console.error("Dayspring isn't running."), 1))
   : await start();

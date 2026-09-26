@@ -24,6 +24,8 @@ Settings → **Updates** → **When a new version comes out**:
 
 ## Check for updates yourself
 
+A **⬆** in the window bar at the top of the Dayspring screen means a new version is ready: click it for **What's new** and **Update now**.
+
 Any of these:
 
 - Say **"check for updates"**. Say **"update Dayspring"** to install one right away.

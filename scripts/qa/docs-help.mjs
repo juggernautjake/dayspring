@@ -102,7 +102,7 @@ const QUESTIONS = [
   ["how do I keep the computer awake", "display-setup#keeping-the-screen-awake"], ["how do I change the background", "display-setup#the-living-sky"],
   ["how do I hide the screen", "display-setup#the-window-bar-minimize-maximize-hide-close"], ["how do I set up the discord bot", "discord-bot"],
   ["how do I use ollama", "ai-providers#ollama-free-on-your-computer"], ["how do I pick which speakers you use", "audio-devices#choose-where-daysprings-voice-plays"],
-  ["how do I uninstall dayspring", "install#uninstalling"], ["how do I add an interest", "discover#your-interests"], ["how do I add a voice command to the code", "dev-extending"],
+  ["how do I uninstall dayspring", "install#uninstalling-dayspring"], ["how do I add an interest", "discover#your-interests"], ["how do I add a voice command to the code", "dev-extending"],
 ];
 let right = 0; const wrong = [];
 for (const [q, want] of QUESTIONS) {

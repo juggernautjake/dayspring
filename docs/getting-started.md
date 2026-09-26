@@ -47,7 +47,8 @@ See [AI providers](ai-providers.md) and [Voices](voices.md).
 
 | What | Where |
 |---|---|
-| The Dayspring screen | Opens full screen when you start Dayspring. Its web address is `http://localhost:4747/display` |
+| The Dayspring screen | Opens when you start Dayspring: an app window on your main screen, full screen on a TV. Choose app window, Dayspring mini, full screen or a browser tab in Settings → Screen. Its web address is `http://localhost:4747/display` |
+| Quiet or off | The coloured badge on the screen: **Active**, **Quiet** or **Off**. See [Compact mode, quiet mode and notifications](quiet-and-notifications.md) |
 | Settings | The ⚙ button on the Dayspring screen, or say "open settings". Address: `http://localhost:4747/setup` |
 | This guide | The ❓ button, or say "open help". Address: `http://localhost:4747/help` |
 | The desk view on your main screen | `http://localhost:4747` |

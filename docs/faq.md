@@ -29,7 +29,13 @@ Click [Download Dayspring](https://github.com/juggernautjake/dayspring/releases/
 You don't have to: Dayspring checks for new versions by itself and shows what's new, with **Update now**, **Next time I open Dayspring** and **When I'm not using it**. You can also say "check for updates", or double-click **Update Dayspring.cmd**. Updates never touch your data, and a new version that doesn't start is undone by itself. See [Updating](updating.md).
 
 ### Which browser does it use? Can I use Brave, Firefox or Opera?
-Your default browser, unless you pick another in the guided setup or in **Settings → Screen → Which browser shows Dayspring?** The list shows every browser on your computer: Edge, Chrome, Brave, Firefox, Opera, Vivaldi and more. Edge, Chrome, Brave and Vivaldi give Dayspring its own full-screen window; Firefox does too; others open a normal window.
+Your default browser, unless you pick another in the guided setup or in **Settings → Screen → Which browser shows Dayspring?** (or say "use Brave for Dayspring"). The list shows every browser on your computer: Edge, Chrome, Brave, Firefox, Opera, Vivaldi and more. The choice is used for every way Dayspring opens and for Pop out; **Reopen now** switches straight away. Edge, Chrome, Brave and Vivaldi give Dayspring its own window; Firefox does too; others open a normal window.
+
+### Does it work in Brave?
+Yes, fully. Brave has no built-in speech recognition, so Dayspring listens with its own private recognizer that runs on your computer (a one-time download of about 200 MB, offered the first time). If music or a sign-in is blocked, lower Brave's **Shields** for `localhost`. See [Display setup → Using Dayspring with Brave](display-setup.md#using-dayspring-with-brave).
+
+### What's the difference between the browser version and the app window?
+None inside: it's the same Dayspring page, with the same voice, schedule and settings. The **app window** has no address bar or tabs, its own taskbar icon, and its own profile, so the microphone is allowed once and stays allowed. A **browser tab** sits with your other tabs; the browser may ask for the microphone, and sound may need one click on the page. **Full screen** is the TV view, and **Dayspring mini** is a small window for a corner of your desktop. Choose in **Settings → Screen → How Dayspring opens**, or say "open Dayspring in my browser", "open in its own window", "go full screen" or "make Dayspring small". See [Display setup → Opening Dayspring](display-setup.md#opening-dayspring-app-window-compact-full-screen-or-browser-tab).
 
 Gmail, Bing, Yahoo and Google are websites, not browsers, so they aren't in the list. (Gmail is email, and Bing, Yahoo and Google are search sites. You can use any of them inside whichever browser you pick.)
 
@@ -46,10 +52,22 @@ Go to **Settings → Lantern** and connect with the email they invited: sign in 
 That's normal. Press the link in the email on the same computer as Dayspring: it opens a Dayspring page that connects you and goes back to Settings. Opened it on your phone by mistake? Ask for a new link and open it on the computer, or sign in with a password instead. A 6-digit code only comes on hubs whose owner set up their own email sender.
 
 ### How do I stop it completely?
-Move the pointer to the top edge of the Dayspring screen, press **✕**, then **Quit Dayspring**. Or double-click **Stop Dayspring.cmd**. See [Installing → Stopping Dayspring](install.md#stopping-dayspring).
+Move the pointer to the top edge of the Dayspring screen, press **✕**, then **Quit Dayspring**. Or double-click **Stop Dayspring.cmd**, or press **Stop all** in **Settings → About**. See [Installing → Stopping Dayspring](install.md#stopping-dayspring).
+
+### How do I find and close Dayspring in Task Manager?
+Press **Ctrl+Shift+Esc**. Dayspring is listed as **Dayspring** (with **Dayspring Server** under it). Its helpers are **Dayspring Speech**, **Dayspring Notifications**, **Dayspring Keep Awake** and **Dayspring Audio Capture**, and the Dayspring window shows under its browser (Edge, Chrome…). Ending **Dayspring** stops the server too. Easier: **Settings → About → Running parts** lists them all, and **Stop all** ends every one of them and nothing else. See [Troubleshooting → What's running](troubleshooting.md#whats-running).
+
+### I closed Dayspring and it opened again by itself
+From 1.2.0, when you close it, it stays closed. It only reopens itself if you turn on **Settings → Screen → Keep the Dayspring screen open** (meant for a TV). If Dayspring starts with Windows, it starts hidden unless you turn on **Open the screen when Windows starts**.
+
+### Can I make it stop listening, or be quiet for a while?
+Yes. Click the coloured badge on its screen and choose **Quiet** (hears its name but says nothing) or **Off** (not listening at all; alarms still ring). **Ctrl+Alt+Shift+D** turns it off and on from anywhere. See [Compact mode, quiet mode and notifications](quiet-and-notifications.md).
 
 ### How do I uninstall it?
-Delete the Dayspring folder, and its shortcuts if you like. See [Installing → Uninstalling](install.md#uninstalling).
+Open **Settings → About → Uninstall Dayspring…** (or **Uninstall Dayspring** in the Start menu). Choose whether to keep your data, and type your name to confirm. See [Installing → Uninstalling](install.md#uninstalling-dayspring).
+
+### Does it work on Windows 10?
+Yes: Windows 10 version 1809 or newer, or Windows 11, 64-bit. Everything it needs comes with Windows except Node.js, which the installer sets up.
 
 ## The guided setup
 

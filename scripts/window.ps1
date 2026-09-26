@@ -3,7 +3,9 @@
 # "Dayspring - Mozilla Firefox") AND whose browser was started with a Dayspring display profile (...\DayspringDisplay,
 # ...\DayspringTV, a per-browser one like ...\DayspringDisplay-brave, or DS_PROFILE); never the owner's own browser
 # windows, the media window or the study window. Prints JSON: { found, action, windows: [...] }.
-param([ValidateSet("state", "minimize", "maximize", "restore", "hide", "show", "close")][string]$Action = "state", [string]$Title = '^(Welcome to )?Dayspring( [-—] .*)?$')
+# topmost / notopmost: keep it in front of other windows ("Dayspring mini" → Keep on top), never taking the focus.
+# move: restore the window and put it at -X -Y with size -W x -H (compact mode), in front of other windows, never behind.
+param([ValidateSet("state", "minimize", "maximize", "restore", "hide", "show", "close", "topmost", "notopmost", "move")][string]$Action = "state", [string]$Title = '^(Welcome to )?Dayspring( [-—] .*)?$', [Alias("X")][int]$Left = 0, [Alias("Y")][int]$Top = 0, [Alias("W")][int]$Width = 380, [Alias("H")][int]$Height = 560)   # not $W/$H: PowerShell names ignore case, and $w/$h are used below
 $ErrorActionPreference = "Stop"
 Add-Type -TypeDefinition @"
 using System; using System.Text; using System.Runtime.InteropServices; using System.Collections.Generic;
@@ -19,6 +21,8 @@ public static class DsWin {
   [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int c);
   [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
   [DllImport("user32.dll")] public static extern bool PostMessage(IntPtr h, uint m, IntPtr w, IntPtr l);
+  [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr h, IntPtr after, int x, int y, int cx, int cy, uint f);
+  [DllImport("user32.dll")] public static extern bool MoveWindow(IntPtr h, int x, int y, int w, int hgt, bool repaint);
   public static List<long[]> Find(string title) {
     var r = new List<long[]>();
     EnumWindows(delegate (IntPtr h, IntPtr l) {
@@ -46,6 +50,9 @@ foreach ($w in $mine) {
     "close" { [void][DsWin]::PostMessage($h, 0x0010, [IntPtr]::Zero, [IntPtr]::Zero) }
     "show" { [void][DsWin]::ShowWindow($h, 5); if ([DsWin]::IsIconic($h)) { [void][DsWin]::ShowWindow($h, 9) }; [void][DsWin]::SetForegroundWindow($h) }
     "state" { }
+    "move" { [void][DsWin]::ShowWindow($h, 9); Start-Sleep -Milliseconds 120; [void][DsWin]::MoveWindow($h, $Left, $Top, $Width, $Height, $true); [void][DsWin]::SetForegroundWindow($h) }
+    "topmost" { [void][DsWin]::SetWindowPos($h, [IntPtr]::new(-1), 0, 0, 0, 0, 0x13) }
+    "notopmost" { [void][DsWin]::SetWindowPos($h, [IntPtr]::new(-2), 0, 0, 0, 0, 0x13) }
     default { [void][DsWin]::ShowWindow($h, $code[$Action]); if ($Action -in @("maximize", "restore")) { [void][DsWin]::SetForegroundWindow($h) } }
   }
 }

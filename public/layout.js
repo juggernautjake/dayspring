@@ -224,7 +224,10 @@
   const bar = document.createElement("div");
   bar.className = "wbar"; bar.setAttribute("role", "toolbar"); bar.setAttribute("aria-label", "Window");
   bar.innerHTML = `<span class="wt"><b>Dayspring</b></span>
+    <button data-w="update" class="wupd" hidden title="A new version is available" aria-label="A new version is available">⬆</button>
+    <button data-w="state" class="wstate" title="Active, Quiet or Off, and notifications" aria-label="Listening and notifications"><i></i></button>
     <button data-w="sound" title="Sound: outputs, microphone and volume" aria-label="Sound">🔊</button>
+    <button data-w="size" title="Compact: shrink to Dayspring mini" aria-label="Compact">⤡</button>
     <button data-w="fit" title="Fit to screen: size and edges" aria-label="Fit to screen">📐</button>
     <button data-w="full" title="Full screen (F11)" aria-label="Full screen">⛶</button>
     <button data-w="minimize" title="Minimize" aria-label="Minimize">—</button>
@@ -250,6 +253,8 @@
   bar.addEventListener("focusout", hideBarSoon);
   const isMax = () => Boolean(document.fullscreenElement) || (outerWidth >= screen.availWidth - 8 && outerHeight >= screen.availHeight - 8);
   function paintMax() {
+    const sz = bar.querySelector('[data-w="size"]'), mini = document.documentElement.classList.contains("mini");
+    if (sz) { sz.textContent = mini ? "⤢" : "⤡"; sz.title = mini ? "Expand to the full Dayspring screen" : "Compact: shrink to Dayspring mini"; sz.setAttribute("aria-label", mini ? "Expand" : "Compact"); }
     const b = bar.querySelector('[data-w="max"]'), m = isMax();
     b.textContent = m ? "❐" : "□"; b.title = m ? "Restore down" : "Maximize"; b.setAttribute("aria-label", b.title);
     const f = bar.querySelector('[data-w="full"]'); f.title = document.fullscreenElement ? "Exit full screen (F11)" : "Full screen (F11)"; f.setAttribute("aria-label", f.title);
@@ -286,6 +291,8 @@
     const b = e.target.closest("button"); if (!b) return;
     const a = b.dataset.w;
     if (a === "sound") window.dsSound?.toggle?.();
+    else if (a === "state") document.getElementById("stateBtn")?.click();
+    else if (a === "size") document.getElementById(document.documentElement.classList.contains("mini") ? "expandBtn" : "compactBtn")?.click();
     else if (a === "fit") openFit();
     else if (a === "full") toggleFull();
     else if (a === "minimize") win("minimize");

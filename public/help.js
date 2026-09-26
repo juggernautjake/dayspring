@@ -134,7 +134,7 @@
   // ---------- contents ----------
   const GROUPS = [
     ["Start here", ["getting-started", "install", "setup-wizard", "tutorials", "talking-to-dayspring", "schedule", "learning", "lantern"]],
-    ["Make it yours", ["ai-providers", "voices", "audio-devices", "display-setup", "settings-reference"]],
+    ["Make it yours", ["ai-providers", "voices", "audio-devices", "display-setup", "quiet-and-notifications", "settings-reference"]],
     ["Connect", ["connections", "permissions", "files-and-browser", "documents", "music", "discover", "phone", "discord-calls", "discord-bot", "photos", "claude-code"]],
     ["More", ["faith-features", "privacy", "updating", "troubleshooting", "faq"]],
     ["For developers", ["dev-architecture", "dev-code-map", "dev-api-reference", "dev-extending", "dev-testing", "dev-releasing", "integrations-ideas", "publishing-releases"]],

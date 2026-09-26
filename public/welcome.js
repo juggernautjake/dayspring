@@ -698,15 +698,27 @@
   }
 
   // ---- screen ----
-  let scr = { display: "auto", browser: "default" };
+  let scr = { display: "auto", browser: "default", openAs: "auto" };
+  const OPEN_AS = [
+    { v: "auto", icon: "✨", t: "Automatic", d: "Its own window here, full screen on a TV or second screen" },
+    { v: "window", icon: "🪟", t: "App window", d: "A clean window of its own, no browser bars" },
+    { v: "compact", icon: "▫️", t: "Dayspring mini", d: "A small window you can put anywhere" },
+    { v: "fullscreen", icon: "📺", t: "Full screen", d: "Fills the screen, like a TV display" },
+    { v: "tab", icon: "🌐", t: "Browser tab", d: "A normal tab in your browser; it may ask about the microphone" },
+  ];
   function screenHtml() { return `<div class="eyebrow">Screen</div><h1>Where should Dayspring live?</h1><p class="lead">Dayspring runs full screen on a TV or second monitor, or in a window on this one.</p><div class="screens" id="scrs"><p class="hint">Looking for screens…</p></div>
+    <h2 style="margin-top:1em">How should it open?</h2><div class="devs" id="oas">${OPEN_AS.map((o) => `<div class="dev" role="button" tabindex="0" data-oa="${o.v}"><span>${o.icon}</span><div class="g"><b>${o.t}</b><div class="hint">${o.d}</div></div></div>`).join("")}</div>
+    <p class="hint">You can change this any time in <b>Settings → Screen</b>, or say "open Dayspring in my browser".</p>
     <label class="field" for="brSel" style="display:block;margin-top:1em"><b>Which browser should Dayspring use?</b>
       <select id="brSel" style="margin-top:.4em"><option value="default">Your default browser</option></select></label>
     <p class="hint" id="brNote">Any browser on this computer works. Microsoft Edge has the most natural-sounding free voices.</p>
     <p class="hint">Sizes, margins and layout can be fine-tuned later in <b>Settings → Screen</b> (there's a "Fit to screen" helper for TVs).</p>`; }
   async function screenMount(root) {
     const r = await api("/setup/screens", undefined, "GET").catch(() => ({ screens: [] }));
-    scr.display = r.display ?? "auto"; scr.browser = r.displayBrowser ?? "default";
+    scr.display = r.display ?? "auto"; scr.browser = r.displayBrowser ?? "default"; scr.openAs = r.openAs ?? "auto";
+    const paintOa = () => $$("[data-oa]").forEach((x) => { x.classList.toggle("on", x.dataset.oa === scr.openAs); x.setAttribute("aria-pressed", String(x.dataset.oa === scr.openAs)); });
+    $$("[data-oa]").forEach((el) => { el.onclick = () => { scr.openAs = el.dataset.oa; paintOa(); }; el.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); el.click(); } }; });
+    paintOa();
     // the browsers on this computer; "Your default browser" names the one Windows uses
     api("/setup/browsers", undefined, "GET").then((b) => {
       const sel = $("#brSel"); if (!sel) return;
@@ -720,7 +732,7 @@
     $("#scrs").innerHTML = `<button class="scr${scr.display === "auto" ? " on" : ""}" data-sc="auto" type="button" style="width:7em;height:4.5em"><b>✨</b>Automatic<small>2nd screen if there is one</small></button>` + ss.map((s) => `<button class="scr${String(scr.display) === String(s.number) ? " on" : ""}" data-sc="${s.number}" type="button" style="width:${Math.max(6, (s.width / max) * 11)}em;height:${Math.max(3.8, (s.height / max) * 11)}em"><b>${s.number}</b>${s.primary ? "This screen" : "Screen " + s.number}<small>${s.width}×${s.height}</small></button>`).join("");
     $$("[data-sc]").forEach((b) => (b.onclick = () => { $$("[data-sc]").forEach((x) => x.classList.toggle("on", x === b)); scr.display = b.dataset.sc; }));
   }
-  async function screenSave() { await api("/setup/display", { display: scr.display, displayBrowser: scr.browser }).catch(() => {}); return true; }
+  async function screenSave() { await api("/setup/display", { display: scr.display, displayBrowser: scr.browser, openAs: scr.openAs }).catch(() => {}); return true; }
 
   // ---- done ----
   function doneHtml() {

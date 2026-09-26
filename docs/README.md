@@ -44,6 +44,7 @@ Step-by-step with pictures and fixes: **[Installing Dayspring](docs/install.md)*
 - **The living sky**: the background follows the real time of day, season and weather where you live, with rain on the glass, snow, falling leaves, starry nights, fields, forests and rivers. Or pick a vibe: Cozy, Calm, Focus, Night owl…
 - **A rotating showcase**: today, the week, weather, an encouraging quote, a video worth watching, and your photos (if you choose folders).
 - **Discover**: tell it what you're into (woodworking, pickleball, marine wildlife…) and it finds popular new videos, Shorts and articles, never the same one twice.
+- **Your way**: an app window, a small **Dayspring mini** for a corner of your desktop, full screen on a TV, or a tab in any browser (Brave and Firefox included). One click makes it **Quiet** or **Off**, and notifications can speak, chime or stay silent, as cards in front of every window.
 - **Fits any screen**: 📐 Fit to screen for TVs that crop the edges, sizes, layouts, and a window bar to minimize, hide or close it. It keeps the computer awake while plugged in, without changing your power settings.
 
 ![Settings: choosing the screen and fitting Dayspring to it](docs/images/settings-screen.png)
@@ -86,7 +87,7 @@ Everything is explained step by step. The same guide is built into Dayspring: cl
 [Getting started](docs/getting-started.md) · [Installing](docs/install.md) · [The guided setup](docs/setup-wizard.md) · **[Tutorials: how do I…?](docs/tutorials.md)** · [Talking to Dayspring](docs/talking-to-dayspring.md) · [Your schedule](docs/schedule.md) · [Study courses](docs/learning.md) · [Dayspring and Lantern](docs/lantern.md)
 
 **Make it yours**
-[AI providers](docs/ai-providers.md) · [Voices](docs/voices.md) · [Speakers and microphones](docs/audio-devices.md) · [Display setup and the living sky](docs/display-setup.md) · **[Every setting explained](docs/settings-reference.md)**
+[AI providers](docs/ai-providers.md) · [Voices](docs/voices.md) · [Speakers and microphones](docs/audio-devices.md) · [Display setup and the living sky](docs/display-setup.md) · [Compact mode, quiet mode and notifications](docs/quiet-and-notifications.md) · **[Every setting explained](docs/settings-reference.md)**
 
 **Connect**
 [Connecting apps](docs/connections.md) · [Permissions](docs/permissions.md) · [Files, programs and the browser](docs/files-and-browser.md) · [Documents](docs/documents.md) · [Music and videos](docs/music.md) · [Discover](docs/discover.md) · [Your phone](docs/phone.md) · [Tune in to calls](docs/discord-calls.md) · [The Discord bot](docs/discord-bot.md) · [Photos](docs/photos.md) · [Claude Code](docs/claude-code.md)
@@ -96,7 +97,7 @@ Everything is explained step by step. The same guide is built into Dayspring: cl
 
 ## Requirements
 
-- Windows 10 or 11
+- Windows 10 (version 1809 or newer) or Windows 11, 64-bit
 - A web browser: Microsoft Edge (comes with Windows), Chrome, Brave, Firefox or another
 - Node.js 22.13 or newer (the installer sets it up for you)
 - An internet connection for setup, speech recognition and the optional services

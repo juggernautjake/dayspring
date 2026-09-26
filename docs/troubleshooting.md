@@ -12,6 +12,7 @@ Start with the quick checks, then find your problem below.
 
 - **"node is not recognized"**: Node.js isn't installed, or Windows hasn't noticed it yet. Run **Install Dayspring.cmd** again, or install Node.js LTS from [nodejs.org](https://nodejs.org) and restart the computer.
 - **"Dayspring is already running"** in the log: that's fine. Only one Dayspring runs at a time; starting it again brings its window back instead of opening a second one. If another program uses port 4747, restart the computer.
+- **Windows 10**: Dayspring needs Windows 10 version 1809 or newer (press **Win+R**, type `winver`). If the installer can't use winget, install Node.js LTS from [nodejs.org](https://nodejs.org) and run the installer again. The first lines of `data\logs\server.log` show the Windows version Dayspring sees.
 - **Two voices, or Dayspring answering twice**: from 1.0.1 on, only one Dayspring page speaks and listens at a time; the others show a note that another screen is listening. Close the extra pages (or tabs) if you like.
 - **Several Dayspring windows, or black command windows popping up**: that was a bug in version 1.0.0. Update Dayspring (double-click **Update Dayspring.cmd**, type **Y**). From 1.0.1 on, Dayspring runs hidden and never opens itself twice.
 - **"Cannot find module …"**: open a Command Prompt in the Dayspring folder (type `cmd` in the folder's address bar and press Enter), then run `npm install`.
@@ -69,6 +70,30 @@ See [Your phone](phone.md#make-sure-windows-shows-the-notifications).
 - **Is "Stay awake" on?** Check Settings → **Screen** → **Stay awake**, or say *"keep the laptop awake"*. Ask *"will the computer sleep?"* to hear what it's doing.
 - **Did it lock but not sleep?** A screen saver set to lock can still lock it. Open Windows **Settings → Personalization → Lock screen → Screen saver** and untick **On resume, display logon screen**, or choose **(None)**.
 - **Is Dayspring running on the Dayspring screen?** Staying awake is tied to the Dayspring screen being on this computer (started with **Start Dayspring**).
+
+## What's running
+
+Open **Settings → About → Running parts** for everything of Dayspring's that's running now, with **Stop all**. In Task Manager (**Ctrl+Shift+Esc**) they're called:
+
+| Name | What it is |
+|---|---|
+| **Dayspring** | Dayspring itself. Ending it stops the server too. |
+| **Dayspring Server** | Dayspring's engine (it runs on Node.js). |
+| **Dayspring Speech** | The private speech recognizer, only if you use "On this computer" speech recognition. |
+| **Dayspring Notifications** | The desktop notification cards. |
+| **Dayspring Keep Awake** | Keeps the computer awake while plugged in. |
+| **Dayspring Audio Capture** | Only while Tune in is listening to a call. |
+| Your browser (Edge, Chrome…) | The Dayspring window, with its own Dayspring profile. |
+
+**Stop all** (or **Stop Dayspring.cmd**) ends all of these, and never your other browser windows or programs.
+
+## I closed it and it came back
+
+From 1.2.0 it doesn't, unless **Settings → Screen → Keep the Dayspring screen open** is on (for a TV). Turn that off. If it starts with Windows and you don't want the screen then, turn off **Open the screen when Windows starts**.
+
+## It keeps listening after I press stop
+
+From 1.2.0, **🎤** (or pressing **✋ Stop** twice) fully stops listening until you tap 🎤 again, even after a reload. To stop it everywhere, click the badge and choose **Off**, or press **Ctrl+Alt+Shift+D**. See [Compact mode, quiet mode and notifications](quiet-and-notifications.md).
 
 ## Something else
 

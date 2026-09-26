@@ -54,6 +54,11 @@ import * as keepawake from "./lib/keepawake.mjs";
 import * as snooze from "./lib/snooze.mjs";
 import * as windowRoutes from "./lib/window-routes.mjs";
 import * as display from "./lib/display.mjs";
+import * as quiet from "./lib/quiet.mjs";
+import { release as osRelease } from "node:os";
+import * as aboutRoutes from "./lib/about-routes.mjs";
+import * as overlay from "./lib/overlay.mjs";
+import { claim as claimSpeaker } from "./lib/bus.mjs";
 import * as screenlog from "./lib/screenlog.mjs";
 import * as documentRoutes from "./lib/document-routes.mjs";
 import * as connectorRoutes from "./lib/connector-routes.mjs";
@@ -72,7 +77,7 @@ import * as lanternRoutes from "./lib/lantern-routes.mjs";
 // A fresh install: create the data folder and any missing data files (empty, nothing personal) before anything runs.
 firstrun.ensure();
 // The Settings/setup wizard, updates and the in-app guide each answer their own /api routes.
-const ROUTES = [setupRoutes, updateRoutes, helpRoutes, discordRoutes, callRoutes, studyRoutes, playerRoutes, ambientRoutes, windowRoutes, documentRoutes, connectorRoutes, fsRoutes, toolingRoutes, welcomeRoutes, discoverRoutes, calendarRoutes, lanternRoutes];
+const ROUTES = [setupRoutes, updateRoutes, helpRoutes, discordRoutes, callRoutes, studyRoutes, playerRoutes, ambientRoutes, windowRoutes, documentRoutes, connectorRoutes, fsRoutes, toolingRoutes, welcomeRoutes, discoverRoutes, calendarRoutes, lanternRoutes, aboutRoutes];
 // 🎧 Tune in: what it hears addressed to Dayspring goes through the same assistant
 tunein.setChat(chat);
 // DAYSPRING_DISPLAY=1: this computer shows the Dayspring screen (any screen: a TV, a monitor…), so it keeps it open and
@@ -287,8 +292,12 @@ async function api(req, res, url) {
     const b = await readJSON(req).catch(() => ({}));
     windowRoutes.clearClosed();
     if (!owner.setupDone()) return send(res, 200, { setup: true, ...(await display.openSetup({ connected: announcer.clientCount() })) });
-    return send(res, 200, await display.open({ screen: b.screen || undefined }));
+    // openAs (window | compact | fullscreen | tab, or "full" = Expand from the mini) from a shortcut like "Dayspring in
+    // browser" or the ⤢ / ⤡ buttons: open that way this time, moving an open screen there (never a second one)
+    const openAs = (owner.OPEN_AS.includes(String(b.openAs ?? "")) && b.openAs !== "auto") || b.openAs === "full" ? b.openAs : undefined;
+    return send(res, 200, await display.open({ screen: b.screen || undefined, openAs, switchTo: Boolean(openAs) }));
   }
+  aboutRoutes.setQuit(() => { announcer.broadcast("window", { action: "quit" }); lantern.stopping(); setTimeout(async () => { try { await windowRoutes.windowAction("close"); } catch { /* no window */ } try { mixer.stop(); await browser.close(); } catch { /* fine */ } process.exit(0); }, 300); });
   if (m === "POST" && p === "/app/quit") {
     send(res, 200, { ok: true, text: "Dayspring is stopping." });
     announcer.broadcast("window", { action: "quit" });
@@ -297,7 +306,43 @@ async function api(req, res, url) {
     return;
   }
   // ---- the Dayspring screen ----
-  if (m === "GET" && p === "/events") return announcer.addClient(res, { page: q.get("page") ?? "", id: q.get("id") ?? "" });
+  if (m === "GET" && p === "/events") {
+    if (q.get("page") === "display") windowRoutes.clearClosed();      // a Dayspring screen is open again
+    return announcer.addClient(res, { page: q.get("page") ?? "", id: q.get("id") ?? "" });
+  }
+  // "Reopen now in <browser>": the Dayspring screen closes and opens again the same way in the browser just chosen
+  if (m === "POST" && p === "/app/reopen") { windowRoutes.clearClosed(); return send(res, 200, await display.open({ openAs: display.openedAs() ?? undefined, switchTo: true, reopen: true })); }
+  // Speech to text for the Dayspring screen when the browser can't do it (Brave, Firefox) or the owner chose "on this
+  // computer": 16 kHz mono 16-bit PCM in the body; ?purpose=wake (fast model) | request (accurate). Nothing is kept.
+  if (m === "POST" && p === "/stt") {
+    const chunks = []; let size = 0;
+    for await (const c of req) { size += c.length; if (size > 1_500_000) return send(res, 413, { error: "That's too long to transcribe in one go." }); chunks.push(c); }
+    const pcm = Buffer.concat(chunks);
+    if (pcm.length < 3200) return send(res, 200, { text: "" });
+    const r = stt.ready();
+    if (!r.ok) return send(res, 503, { needsInstall: true, why: r.why, installing: sttJob.running });
+    const wake = q.get("purpose") !== "request";
+    const name = owner.assistant();
+    try { const t = await stt.transcribe(pcm, { speed: wake ? "fast" : "accurate", prompt: wake ? `Hey ${name}, what's the weather? ${name}, tell us a joke.` : "" }); return send(res, 200, { text: t.text, ms: t.ms }); }
+    catch (e) { return send(res, e.status ?? 500, { error: e.message }); }
+  }
+  if (m === "GET" && p === "/stt/status") return send(res, 200, { ...stt.ready(), installing: sttJob.running, error: sttJob.error, engine: settings.get().speechEngine ?? "auto" });
+  if (m === "POST" && p === "/stt/install") {
+    if (!sttJob.running) { sttJob.running = true; sttJob.error = null; stt.install().then(() => { sttJob.running = false; announcer.broadcast("stt", { ready: true }); }).catch((e) => { sttJob.running = false; sttJob.error = e.message; announcer.broadcast("stt", { ready: false, error: e.message }); }); }
+    return send(res, 200, { installing: true });
+  }
+  // the window the owner just opened on purpose (mini ⇄ full) takes over speaking and listening
+  if (m === "POST" && p === "/speaker/claim") { const b = await readJSON(req).catch(() => ({})); return send(res, 200, { ok: claimSpeaker(String(b.id ?? "")) }); }
+  // Active / Quiet / Off
+  if (m === "GET" && p === "/listen") return send(res, 200, { state: quiet.state(), label: quiet.label(), alarmsWhenOff: settings.get().alarmsWhenOff !== false, overlayWhenOff: settings.get().overlayWhenOff !== false });
+  if (m === "POST" && p === "/listen") { const b = await readJSON(req).catch(() => ({})); try { return send(res, 200, await quiet.setState(String(b.state ?? ""), { from: b.from ?? "button" })); } catch (e) { return send(res, 400, { error: e.message }); } }
+  // desktop notifications (top-right, in front of every window)
+  if (m === "GET" && p === "/overlay") return send(res, 200, overlay.status());
+  if (m === "POST" && p === "/overlay/test") {
+    const st = await overlay.start({ onAction: overlayAction });
+    const ok = overlay.show({ title: "Dayspring", text: "This is how desktop notifications look. They sit in front of every window and go away on their own.", kind: "schedule", snooze: false });
+    return send(res, 200, { ...st, sent: ok });
+  }
   if ((m === "POST" || m === "GET") && p === "/tts") {
     const b = m === "GET" ? { text: q.get("text"), speed: q.get("speed"), tone: q.get("tone"), voice: q.get("voice") } : await readJSON(req);
     const text = b.text;
@@ -641,10 +686,10 @@ async function api(req, res, url) {
 }
 
 // Page names: /display (the Dayspring screen; /tv is its older name), /setup (first-run wizard and Settings), /help (the guide)
-const PAGES = { "/": "/index.html", "/tv": "/tv.html", "/display": "/tv.html", "/history": "/history.html", "/setup": "/setup.html", "/settings": "/setup.html", "/help": "/help.html", "/welcome": "/welcome.html" };
+const PAGES = { "/": "/index.html", "/tv": "/tv.html", "/display": "/tv.html", "/mini": "/tv.html", "/history": "/history.html", "/setup": "/setup.html", "/settings": "/setup.html", "/help": "/help.html", "/welcome": "/welcome.html" };
 async function serveStatic(res, pathname) {
   // until setup is done, the Dayspring screen (and the plain address, which a new user is most likely to type) sends people to the wizard
-  if ((pathname === "/" || pathname === "/tv" || pathname === "/display" || pathname === "/setup" || pathname === "/settings") && !owner.setupDone()) { res.writeHead(302, { location: "/welcome" }); return res.end(); }
+  if ((pathname === "/" || pathname === "/tv" || pathname === "/display" || pathname === "/mini" || pathname === "/setup" || pathname === "/settings") && !owner.setupDone()) { res.writeHead(302, { location: "/welcome" }); return res.end(); }
   const rel = PAGES[pathname] ?? pathname;
   const file = join(PUBLIC, rel);
   if (!file.startsWith(PUBLIC)) { res.writeHead(403); return res.end(); }
@@ -724,6 +769,7 @@ createServer(async (req, res) => {
   const onMinute = () => announcer.tick().catch((e) => console.log(`announce tick error: ${e.message}`));
   setTimeout(() => { onMinute(); setInterval(onMinute, 60_000); }, 60_000 - (Date.now() % 60_000) + 500);
   const v = voice.voiceReady();
+  console.log(`System: Windows ${osRelease()} (${osRelease().split(".")[2] >= 22000 ? "11" : "10"}) · Node ${process.version} · running as ${process.execPath.split(/[\/]/).pop()}`);
   console.log(`Screen: http://localhost:${PORT}/display   (voice: ${voice.ttsProvider() === "browser" ? "free browser voices" : v.ready ? `${v.voiceName} via ${voice.ttsProvider() === "openai" ? "OpenAI" : "ElevenLabs"}` : voice.ttsProvider()})`);
   console.log(owner.setupDone() ? `Settings: http://localhost:${PORT}/setup   Help: http://localhost:${PORT}/help` : `First-time setup: http://localhost:${PORT}/welcome`);
   console.log(`Files:  ${permissions.describe()}${permissions.get().files === "off" ? " (Settings → Permissions)" : ` (backups in ${files.BACKUPS()})`}`);
@@ -768,20 +814,31 @@ createServer(async (req, res) => {
     // brings back the one that's open (even minimized or loading) instead. When the chosen screen isn't connected, it
     // looks again every few minutes, quietly.
     let missing = 0, nextTry = 0;
+    const WATCH_MS = Number(process.env.DAYSPRING_WATCHDOG_MS) || 30_000;   // tests make it tick faster
     setInterval(async () => {
       if (!owner.setupDone()) return;
       if (announcer.displayCount() > 0) { missing = 0; return; }
+      if (!owner.get().keepScreenOpen) return;          // only when "Keep the Dayspring screen open" is on (TV / always-on display)
       if (windowRoutes.closedByOwner()) return;          // they closed it on purpose: don't pop it back open
+      if (display.wantOpenAs() === "tab" || display.openedAs() === "tab") return;   // a browser tab they close stays closed
       if (screenPick() === "primary") return;
       if (++missing < 2 || Date.now() < nextTry) return;
-      nextTry = Date.now() + 90_000;      // give the browser time to connect before trying again
+      nextTry = Date.now() + 3 * WATCH_MS;   // give the browser time to connect before trying again
       const r = await display.open({ screen: screenPick() }).catch(() => null);
-      if (r?.noScreen) nextTry = Date.now() + 5 * 60_000;
+      if (r?.noScreen) nextTry = Date.now() + 10 * WATCH_MS;
       else if (r?.opened) console.log("Dayspring screen reopened");
-    }, 30_000);
+    }, WATCH_MS);
   }
   // Updates: checked now and every 6 hours. The notice (What's new + Update now / Next time / When I'm not using it) shows
   // on the screen; "idle" installs wait for a quiet half hour, never during an alarm, a call or Tune in.
+  // Quiet/Off pauses Tune in; desktop notifications start (and restart when turned back on in Settings)
+  quiet._setDeps({ tunein });
+  if (DISPLAY_MODE || process.env.DAYSPRING_OVERLAY === "1") {
+    overlay.start({ onAction: overlayAction }).catch(() => {});
+    settings.onChange((s) => { if (s.overlay?.on) overlay.start({ onAction: overlayAction }).catch(() => {}); else overlay.stop(); });
+  }
+  // installs from before 1.1.3 get the "Dayspring (full screen)" and "Dayspring in browser" Start-menu shortcuts, once
+  import("./lib/shortcuts.mjs").then((m) => m.ensure()).catch(() => {});
   updater.onStatus((s) => announcer.broadcast("updatestatus", s));
   updater.startAuto({
     announce: (text) => announcer.announce({ kind: "update", text }),
@@ -807,6 +864,16 @@ createServer(async (req, res) => {
   if (TUNNEL) startTunnel();
   else if (t.publicUrl) console.log(`Public URL (from .env): ${t.publicUrl}  → point Twilio webhooks here or run with --tunnel`);
 });
+
+// Installing the private speech recognition (whisper.cpp) from the Dayspring screen, with the owner's OK
+const sttJob = { running: false, error: null };
+
+// What the desktop notification cards do when clicked
+async function overlayAction(a) {
+  if (a.type === "hotkey") { await quiet.setState(quiet.state() === "off" ? "active" : "off", { from: "hotkey" }).catch(() => {}); return; }
+  if (a.type === "snooze" && a.item) { try { snooze.snooze(a.item); } catch { /* nothing to snooze */ } return; }
+  if (a.type === "click") { windowRoutes.clearClosed(); await display.open().catch(() => {}); }
+}
 
 // ---- optional: expose this laptop to Twilio through a Cloudflare quick tunnel ----
 // Spawns `cloudflared tunnel --url http://localhost:PORT`, grabs the random trycloudflare.com URL,

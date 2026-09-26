@@ -10,7 +10,7 @@ Dayspring's screen can go on any screen: a TV, a spare monitor, a small tablet-s
 4. In Dayspring, open Settings → **Screen** and choose **Automatic** or **Second screen**.
 5. Start Dayspring. The screen opens full screen on the second display.
 
-While Dayspring is running, it keeps its screen open. If you close it, or unplug and re-plug the display, it comes back within about a minute.
+For a TV or an always-on display, turn on Settings → **Screen** → **Keep the Dayspring screen open**: then if the screen closes, or you unplug and re-plug the display, it comes back within about a minute. It's off unless you turn it on, so when you close Dayspring it stays closed.
 
 ## Option B: just your main screen
 
@@ -18,7 +18,56 @@ While Dayspring is running, it keeps its screen open. If you close it, or unplug
 2. Start Dayspring. The screen opens full screen on your main display.
 3. Press **Alt+Tab** to switch between Dayspring and your other windows.
 
-> **Tip:** On a single screen, you might prefer the **desk view** at `http://localhost:4747`. It's a normal window with your day and a chat panel.
+> **Tip:** On a single screen, you might prefer **Dayspring mini** (below), or the **desk view** at `http://localhost:4747`: a normal window with your day and a chat panel.
+
+## Opening Dayspring: app window, compact, full screen or browser tab
+
+It's the same Dayspring every way: the same screen, voice, schedule and settings. Only the window around it changes. Choose in Settings → **Screen** → **How Dayspring opens** (or in the guided setup):
+
+| | What you see | Good for |
+|---|---|---|
+| **Automatic** (the usual) | An app window on your main screen; full screen on a TV or second screen. | Most people. |
+| **App window** | A clean window of its own, with no address bar or tabs, and its own taskbar icon. It remembers the microphone and your sign-ins. | Using your computer while Dayspring is open. |
+| **Compact (Dayspring mini)** | A small window: the time and date, what's on now and next, the weather, the orb, a chat box and the voice buttons. | A corner of your desktop. |
+| **Full screen** | Fills the screen, like the TV view. Move the mouse to the top for the window buttons. | A TV or a screen of its own. |
+| **Browser tab** | A normal tab in your browser, next to your other tabs. | Trying it out, or a browser you like to keep everything in. |
+
+**What's the difference between the browser tab and the app window?** Nothing inside: it's the same page. The app window has no browser bars, its own icon on the taskbar, its own Dayspring profile (so the microphone is allowed once and stays allowed) and it can't be closed by accident along with your other tabs. In a browser tab the browser may ask for the microphone, and sound may need one click on the page before it can start.
+
+**Just once, a different way:** the Start menu has **Dayspring (full screen)**, **Dayspring mini** and **Dayspring in browser**. Or say:
+
+- "open Dayspring in my browser" (a tab)
+- "open in its own window" (the app window)
+- "go full screen" / "full screen"
+- "make Dayspring small" / "compact mode" (Dayspring mini)
+
+The **Dayspring** icon on your desktop always opens the app window (or the way you chose), never a tab.
+
+### Dayspring mini (compact mode)
+
+Dayspring mini is the same Dayspring window made small. It picks its layout from its size: make any Dayspring window small and it becomes the mini view; make it big and the full screen comes back.
+
+- **⤡ Compact**: next to the talk buttons, or in the window bar at the top of the full view (move the pointer there). The same window shrinks to about 380 × 560 at the top-right of the screen.
+- **⤢ Expand**: in the mini view. The same window fills the screen again with the full view. Maximizing it does the same.
+- **Keep on top**: click the coloured badge (**Active**, **Quiet** or **Off**) in the mini view and tick **Keep on top** to keep it above your other windows.
+- Move and resize it however you like. Dayspring remembers where it was and whether you last used it compact, and opens that way next time.
+
+The mini view shows the time and date, what's on now and next, the weather, the orb, a chat box, the Active / Quiet / Off badge, and the voice buttons: 🎙 **Talk** (listen now), ✋ **Stop** and 🎤 (stop listening).
+
+## Choosing the browser
+
+Settings → **Screen** → **Which browser shows Dayspring?** lists every browser on your computer. The choice is used for every way Dayspring opens (app window, mini, full screen, browser tab) and for ↗ **Pop out**. After changing it, press **Reopen now in …** to switch without restarting. You can also say "use Brave for Dayspring" (or Edge, Chrome, Firefox…).
+
+Each browser keeps its own Dayspring sign-ins, so after switching, allow the microphone once and sign in to Spotify and your other apps again in the new browser.
+
+### Using Dayspring with Brave
+
+Brave works fully:
+
+- **Listening**: Brave doesn't include the speech recognition that Chrome and Edge have, so Dayspring uses its own private recognizer, which runs on your computer (nothing you say leaves the PC). The first time, Dayspring offers a one-time download of about 200 MB. You can choose this for any browser in Settings → **Screen** → **Speech recognition** → **On this computer (private)**.
+- **Voices**: Dayspring's voice uses the Windows voices (or ElevenLabs and the other voice services, if you set one up). Edge's "Natural" voices are only in Edge.
+- **Shields**: if music, a video or a sign-in doesn't work in the Dayspring window, click the lion icon in the address bar of a normal Brave window on `localhost` and turn **Shields** down for it. Dayspring shows this tip when something is blocked.
+- **Sound**: Dayspring's window is allowed to play sound by itself. In a Brave tab, click the page once if it asks.
 
 ## Which screen number is which?
 
@@ -117,6 +166,8 @@ Move the pointer to the **top** of the Dayspring screen (anywhere above the cloc
 | Button | What it does |
 |---|---|
 | 🔊 | Opens the **Sound** panel (speakers, microphone, every volume). |
+| ⬆ | Shows up only when a new version is ready: opens **What's new** with **Update now**. |
+| ⤡ / ⤢ | **Compact** (Dayspring mini) / **Expand** back to the full view. See "Dayspring mini". |
 | 📐 | **Fit to screen**: line up the edges and save (see "Fitting Dayspring to your screen"). |
 | ⛶ | Full screen on and off. **F11** does the same. |
 | — | Minimize to the taskbar. |

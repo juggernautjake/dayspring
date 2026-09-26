@@ -2,6 +2,8 @@
 
 This takes about ten minutes. Most of that is waiting for downloads.
 
+**You need** Windows 10 (version 1809 or newer) or Windows 11, 64-bit, and an internet connection for the install. (To see your version, press **Win+R**, type `winver` and press **Enter**.) The old Internet Explorer and the original "legacy" Edge aren't supported; any current browser is fine.
+
 ## Step 1: Get Dayspring
 
 You don't need a GitHub account, and you don't need to know anything about GitHub.
@@ -31,7 +33,7 @@ You don't need a GitHub account, and you don't need to know anything about GitHu
 4. When it says **"Dayspring is installed"**, press any key to close the window.
 
 > **If it doesn't work:**
-> - **"winget is not recognized"**: install Node.js yourself. Go to [nodejs.org](https://nodejs.org), click the **LTS** download, run it, and accept the defaults. Then run **Install Dayspring.cmd** again.
+> - **"winget is not recognized"**, or winget fails (common on older Windows 10): install Node.js yourself. Go to [nodejs.org](https://nodejs.org), click the **LTS** download, run it, and accept the defaults. Then run **Install Dayspring.cmd** again.
 > - **"npm ERR! network"**: check your internet connection and run the installer again. It picks up where it left off.
 > - **The window flashes and closes**: right-click **Install Dayspring.cmd** and choose **Open**, or open the folder, type `cmd` in the address bar, press Enter, and type `"Install Dayspring.cmd"`. The error will stay on screen.
 
@@ -43,6 +45,8 @@ You don't need a GitHub account, and you don't need to know anything about GitHu
 4. When the browser asks to use your microphone, click **Allow**.
 
 Starting Dayspring again while it's running never opens a second copy: its window just comes back to the front.
+
+The Start menu's **Dayspring** folder also has **Dayspring (full screen)**, **Dayspring mini** and **Dayspring in browser**, to open it a different way just once. See [Display setup → Opening Dayspring](display-setup.md#opening-dayspring-app-window-compact-full-screen-or-browser-tab).
 
 > **Tip:** To leave the full-screen view for a moment, press **Alt+Tab**. Move the pointer to the top edge of the Dayspring screen for its window buttons: sound, full screen, minimize, maximize, hide and **✕**.
 
@@ -65,14 +69,18 @@ Dayspring uses your **default browser** unless you pick another one in the guide
 
 The free **"Natural"** voices (Aria, Jenny, Guy and others) come with Microsoft Edge, so Edge gives the nicest free voices. See [Voices](voices.md#free-voices).
 
-## Uninstalling
+## Uninstalling Dayspring
 
-1. Stop Dayspring (**✕** at the top of its screen → **Quit Dayspring**, or **Stop Dayspring.cmd**).
-2. If you chose "start with Windows", press **Win+R**, type `shell:startup`, press **Enter**, and delete the **Dayspring** shortcut there.
-3. Delete the Dayspring shortcuts from the desktop and Start menu.
-4. Delete the Dayspring folder.
+1. Open **Settings → About** and press **Uninstall Dayspring…** (or open **Uninstall Dayspring** in the Start menu's Dayspring folder, or say "uninstall Dayspring", which opens this page).
+2. Choose **Remove Dayspring, keep my data** (the usual) or **Remove Dayspring and my data**. Removed data goes to the Recycle Bin, so you can still get it back.
+3. Optional: tick **Save a backup of my data to Documents first** for a .zip of your data.
+4. Type your name (as Dayspring knows it; capitals don't matter) to confirm. If you never told Dayspring your name, type **Dayspring**.
 
-> **Warning:** The `data` folder inside Dayspring holds your schedule, people, notes and photo catalogue. Copy it somewhere safe first if you might want it again.
+Dayspring stops, then removes its program files, its shortcuts (desktop, Start menu, Start with Windows), its browser profiles, and its entry in the folder it shares with Lantern. A page says when it's done. Lantern and your other programs aren't touched, and if you shared the AI key with Lantern, Lantern keeps it.
+
+> **Warning:** The `data` folder inside Dayspring holds your schedule, people, notes and photo catalogue. With **keep my data** it stays where it is; copy it somewhere safe if you might want it again.
+
+**By hand**, if Dayspring won't start: stop it (**Stop Dayspring.cmd**), delete the Dayspring shortcuts from the desktop, the Start menu and `shell:startup` (press **Win+R** and type it), then delete the Dayspring folder.
 
 ## Moving to a new computer
 

@@ -2,6 +2,25 @@
 
 All notable changes to Dayspring. Versions follow [semantic versioning](https://semver.org).
 
+## 1.2.0 — your way: app window, mini, browser, quiet
+
+**New**
+- **Choose how Dayspring opens** (Settings → Screen, or the guided setup): an **app window**, **Dayspring mini**, **full screen** like the TV, or a normal **browser tab**. It's the same Dayspring every way. Say "open Dayspring in my browser", "open in its own window" or "go full screen". The Start menu has "Dayspring (full screen)", "Dayspring mini" and "Dayspring in browser" for a one-off.
+- **Dayspring mini**: a small window with the time, what's on now and next, the weather, a chat box and the voice buttons. **⤡** shrinks the window, **⤢** (or maximizing) brings the full view back, and it can stay on top. Say "make Dayspring small".
+- **Active, Quiet or Off** in one click on the new badge, or **Ctrl+Alt+Shift+D** from anywhere. Off really lets go of the microphone. Alarms still ring (you can change that).
+- **Notification modes**: speak, chime or silent for reminders, your schedule, texts, Lantern, Discover and updates, plus a quick switch for everything.
+- **Desktop notifications**: small cards at the top-right, in front of every window, that never steal the keyboard. Snooze or click to open.
+- **Any browser, fully**: the browser you pick is used everywhere (with **Reopen now**), and Brave and Firefox can listen too, with a private speech recognizer that runs on your computer (Settings → Screen → Speech recognition). Say "use Brave for Dayspring".
+- **Uninstall button** in Settings → About: keep or remove your data, with an optional backup; you confirm by typing your name.
+- **Task Manager** shows **Dayspring** (and Dayspring Speech, Notifications, Keep Awake, Audio Capture). Settings → About → **Running parts** lists them, with **Stop all**.
+- New guide page: [Compact mode, quiet mode and notifications](docs/quiet-and-notifications.md).
+
+**Fixed**
+- **Updates are found and installed from inside Dayspring.** "Check for updates" shows the answer right away (or what went wrong, with **Retry**), and a ⬆ appears at the top of the screen when a new version is ready.
+- **Closed means closed.** Dayspring no longer reopens its screen by itself after you close it. For a TV, turn on Settings → Screen → **Keep the Dayspring screen open**. When it starts with Windows, it starts hidden unless you choose **Open the screen when Windows starts**.
+- **Stop listening really stops.** 🎤 (or ✋ pressed twice) releases the microphone and stays stopped, even after a reload, until you tap 🎤 again.
+- Works on **Windows 10** (1809 or newer) as well as Windows 11, with fallbacks when tar or winget isn't there.
+
 ## 1.1.2 — AI answers are back
 
 **Fixed**

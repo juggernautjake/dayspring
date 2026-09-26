@@ -14,7 +14,10 @@ Every task in Dayspring, with a link to its step-by-step walkthrough. You can al
 - **Check for and install updates** → [Updating](updating.md#check-for-updates-yourself)
 - **Go back to the previous version** → [Updating](updating.md#going-back-to-the-previous-version-by-hand)
 - **Move Dayspring to a new computer** → [Installing](install.md#moving-to-a-new-computer)
-- **Uninstall** → [Installing](install.md#uninstalling)
+- **Uninstall** → [Installing](install.md#uninstalling-dayspring)
+- **Open Dayspring in a browser tab, its own window, full screen or small** → [Display setup](display-setup.md#opening-dayspring-app-window-compact-full-screen-or-browser-tab)
+- **Make Dayspring quiet or turn it off** → [Quiet mode and notifications](quiet-and-notifications.md#active-quiet-or-off)
+- **Find Dayspring in Task Manager** → [Troubleshooting](troubleshooting.md#whats-running)
 - **Erase all my data** → [Privacy](privacy.md#erasing-everything)
 
 ## Talk to it

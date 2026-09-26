@@ -1,8 +1,10 @@
 ' Starts Dayspring with no command window at all (the Dayspring shortcuts on the desktop and in the Start menu run this).
 ' It does the same as "Start Dayspring.cmd": starts Dayspring if it isn't running, then opens its screen, or the guided
 ' setup the first time. Dayspring never opens twice: if it's already open, its window comes back.
+' Arguments are passed on to scripts\launch.mjs: the "Dayspring (full screen)" and "Dayspring in browser" shortcuts add
+' --open-as fullscreen or --open-as tab.
 Option Explicit
-Dim sh, fso, here
+Dim sh, fso, here, extra, i
 Set sh = CreateObject("WScript.Shell")
 Set fso = CreateObject("Scripting.FileSystemObject")
 here = fso.GetParentFolderName(WScript.ScriptFullName)
@@ -16,4 +18,8 @@ If Not fso.FolderExists(here & "\node_modules") Then
   sh.Run "cmd /c """ & here & "\Start Dayspring.cmd""", 1, False
   WScript.Quit 0
 End If
-sh.Run "node """ & here & "\scripts\launch.mjs""", 0, False
+extra = ""
+For i = 0 To WScript.Arguments.Count - 1
+  extra = extra & " """ & WScript.Arguments(i) & """"
+Next
+sh.Run "node """ & here & "\scripts\launch.mjs""" & extra, 0, False
