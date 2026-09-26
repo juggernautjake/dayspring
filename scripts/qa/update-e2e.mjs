@@ -45,10 +45,12 @@ const A = makeVersion("A", "1.0.1");
 const B = makeVersion("B", "1.0.2", (d) => writeFileSync(join(d, "NEW-MARKER.txt"), "1.0.2"));
 const BAD = makeVersion("bad", "1.0.3", (d) => writeFileSync(join(d, "server.mjs"), 'throw new Error("this version is broken on purpose");\n'));
 const ZIPS = { B: zip(B, join(BASE, "B.zip")), bad: zip(BAD, join(BASE, "bad.zip")), A: zip(A, join(BASE, "A.zip")) };
+// with --old from a release at or after 1.0.2: a newer test release for its own updater to install
+if (OLD) ZIPS.C = zip(makeVersion("C", "9.9.0"), join(BASE, "C.zip"));
 
 // ---- a fake GitHub -----------------------------------------------------------------------------------------------------
 let latest = "B", failDownload = false;
-const VERS = { A: "1.0.1", B: "1.0.2", bad: "1.0.3" };
+const VERS = { A: "1.0.1", B: "1.0.2", bad: "1.0.3", C: "9.9.0" };
 const gh = createServer((req, res) => {
   const port = gh.address().port;
   if (req.url.startsWith("/repos/test/dayspring/releases/latest")) {
@@ -78,7 +80,7 @@ function install(from, label, { seed = true } = {}) {
   }
   return dir;
 }
-const envFor = (port, extra = {}) => ({ ...process.env, PORT: String(port), DAYSPRING_UPDATE_API: API, DAYSPRING_UPDATE_REPO: "test/dayspring", DS_PROFILE: "DayspringQA", DS_LAUNCH_LOG: join(BASE, `launch-${port}.log`), DAYSPRING_TV: "", ...extra });
+const envFor = (port, extra = {}) => ({ ...process.env, PORT: String(port), DAYSPRING_UPDATE_API: API, DAYSPRING_UPDATE_REPO: "test/dayspring", DS_PROFILE: "DayspringQA", DS_LAUNCH_LOG: join(BASE, `launch-${port}.log`), DAYSPRING_TV: "", DAYSPRING_NO_ECO: "1", ...extra });
 const ver = (dir) => JSON.parse(readFileSync(join(dir, "package.json"), "utf8")).version;
 const dataKept = (dir) => { try { return JSON.parse(readFileSync(join(dir, "data", "keepme.json"), "utf8")).precious === 42 && readFileSync(join(dir, ".env"), "utf8").includes("TEST_SECRET_MARKER=keep"); } catch { return false; } };
 const hist = (dir) => { try { return JSON.parse(readFileSync(join(dir, "data", "updates.json"), "utf8")).history ?? []; } catch { return []; } };
@@ -162,7 +164,7 @@ try {
   // 6. an older release's own updater ("Update Dayspring.cmd") installing this version: it's offered whichever test
   //    release is newer than it (1.0.0 gets "1.0.1", 1.0.1 gets "1.0.2")
   if (OLD && want("old")) {
-    const from = ver(OLD), newer = ["A", "B"].find((k) => VERS[k].localeCompare(from, undefined, { numeric: true }) > 0);
+    const from = ver(OLD), newer = ["A", "B", "C"].find((k) => VERS[k].localeCompare(from, undefined, { numeric: true }) > 0);
     latest = newer; const to = VERS[newer];
     const port = portN++; const dir = install(OLD, "from-" + from);
     // 1.0.0 runs "tar" from PATH: on Windows that is System32's (a Git Bash PATH would put GNU tar first)

@@ -83,7 +83,7 @@ Everything is explained step by step. The same guide is built into Dayspring: cl
 ![The built-in guide](docs/images/guide.png)
 
 **Start here**
-[Getting started](docs/getting-started.md) · [Installing](docs/install.md) · [The guided setup](docs/setup-wizard.md) · **[Tutorials: how do I…?](docs/tutorials.md)** · [Talking to Dayspring](docs/talking-to-dayspring.md) · [Your schedule](docs/schedule.md) · [Study courses](docs/learning.md)
+[Getting started](docs/getting-started.md) · [Installing](docs/install.md) · [The guided setup](docs/setup-wizard.md) · **[Tutorials: how do I…?](docs/tutorials.md)** · [Talking to Dayspring](docs/talking-to-dayspring.md) · [Your schedule](docs/schedule.md) · [Study courses](docs/learning.md) · [Dayspring and Lantern](docs/lantern.md)
 
 **Make it yours**
 [AI providers](docs/ai-providers.md) · [Voices](docs/voices.md) · [Speakers and microphones](docs/audio-devices.md) · [Display setup and the living sky](docs/display-setup.md) · **[Every setting explained](docs/settings-reference.md)**

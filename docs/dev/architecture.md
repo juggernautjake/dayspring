@@ -109,3 +109,15 @@ data/                 created on first run; everything personal lives here
 ```
 
 See the [Code map](code-map.md) for every file, and the [API reference](api-reference.md) for every route.
+
+## Working with Lantern (the ecosystem)
+
+`lib/lantern.mjs` is Dayspring's side of the Dayspring ↔ Lantern contract (`vendor/ecosystem-core/docs/ECOSYSTEM.md`; Lantern's `docs/dev/ecosystem.md` and `dayspring-bridge.md`). `vendor/ecosystem-core` is a copy of the shared package, refreshed with `node scripts/sync-core.mjs`; its page files are served at `/eco/`.
+
+- **The bus** (`lib/bus.mjs`) is the page connection and the one-speaker election, split out of `announcer.mjs` (which re-exports it) so modules can broadcast without importing the schedule.
+- **Presence and events**: Dayspring writes `%LOCALAPPDATA%\Ecosystem\apps\dayspring.json` (port, version, a new token every start; `ECOSYSTEM_DIR` overrides the folder) and answers `GET /api/eco/hello`, `POST /api/eco/event` (token) and `GET /api/eco/events` (what it sends). `lib/lantern-routes.mjs` checks the Host (421) and Origin (403) on all three.
+- **Sends**: `app.started`/`app.stopping`, `mic.owner`, `speaking.start/stop` (from the display's `/api/tunein/speaking` reports), `alarm` (a bus listener on alarm announcements), `dnd` (silent mode), `call.state` (Tune in or talking into Discord), `schedule.block.started` (blocks linked to a course in `data/lantern.json`).
+- **Handles**: offers, friend requests, `unit.completed`, `reminder.due`, `schedule.block.request`, `speaking.*` (the display waits up to 20 s; the alarm doesn't), `mic.owner` (the display stops listening).
+- **Without Lantern installed**: `data/lantern-session.json` holds a hub session from email + password, an emailed sign-in link (landing on `/lantern/auth/callback`, which posts the #fragment tokens to `/api/lantern/link`) or, on hubs with `emailCode`, a 6-digit code (never `.env`), polled every minute for offers and friend requests, and handed to Lantern once at install (`<Lantern data>/handoff.json`). The hub comes from Settings → Lantern, else `config/lantern-hub.json`, which `scripts/release.mjs` bakes into the zip only from `%LOCALAPPDATA%\Lantern\release-hub.json` (public URL + key; a secret key stops the release).
+- **Installing Lantern**: download → `tar` into a temp folder → rename into place → `scripts/install.ps1 --quiet --no-start --status <file>` hidden, following its exit codes (10 Node.js question, 11/13 nodejs.org, 12 retry once).
+- Tests: `scripts/qa/lantern-bridge.mjs`.

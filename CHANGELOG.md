@@ -2,6 +2,23 @@
 
 All notable changes to Dayspring. Versions follow [semantic versioning](https://semver.org).
 
+## 1.1.0 — works with Lantern
+
+**New**
+- **Works with Lantern**, the free learning app from the same family. If both are on your computer:
+  - Lantern's courses show next to Dayspring's study rings, with how far you are and your next lesson. Click one to open that lesson.
+  - Ask "what's my next lesson?", "how far am I in Python?", "open Python" or "remind me to study at 7".
+  - Course invitations and friend requests are read out, with Accept, Decline (and Ignore) on a card. Just say "yes", "no" or "later".
+  - The hub's owner can say "send the Python course to Sam" or "add Sam as a friend".
+  - The two apps take turns speaking, and an alarm always goes first. Only one listens for its name at a time ("let Lantern listen", "take the mic back").
+- **Install Lantern for you**: say "install Lantern" or press the button. Dayspring asks first, installs it quietly and opens it.
+- **Connect to Lantern** (Settings → Lantern): use Lantern's own sign-in if it's on this computer, or your email and a password, or an emailed sign-in link (no password). Then invitations and friend requests reach you in Dayspring, even before Lantern is installed.
+- Copies of Dayspring from the owner's download already know their Lantern hub, so there's nothing to paste.
+- **Set up the AI once**: share Dayspring's AI key with Lantern, or use Lantern's, with your OK. It's stored encrypted for your Windows account only.
+- New page in Help: [Dayspring and Lantern](docs/lantern.md).
+
+Nothing changes if you don't use Lantern.
+
 ## 1.0.2 — a smoother Schedule, Settings and screen
 
 **Fixed**

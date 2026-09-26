@@ -67,10 +67,12 @@ import * as discover from "./lib/discover.mjs";
 import * as tunein from "./lib/tunein.mjs";
 import * as callbridge from "./lib/callbridge.mjs";
 import * as stt from "./lib/stt.mjs";
+import * as lantern from "./lib/lantern.mjs";
+import * as lanternRoutes from "./lib/lantern-routes.mjs";
 // A fresh install: create the data folder and any missing data files (empty, nothing personal) before anything runs.
 firstrun.ensure();
 // The Settings/setup wizard, updates and the in-app guide each answer their own /api routes.
-const ROUTES = [setupRoutes, updateRoutes, helpRoutes, discordRoutes, callRoutes, studyRoutes, playerRoutes, ambientRoutes, windowRoutes, documentRoutes, connectorRoutes, fsRoutes, toolingRoutes, welcomeRoutes, discoverRoutes, calendarRoutes];
+const ROUTES = [setupRoutes, updateRoutes, helpRoutes, discordRoutes, callRoutes, studyRoutes, playerRoutes, ambientRoutes, windowRoutes, documentRoutes, connectorRoutes, fsRoutes, toolingRoutes, welcomeRoutes, discoverRoutes, calendarRoutes, lanternRoutes];
 // 🎧 Tune in: what it hears addressed to Dayspring goes through the same assistant
 tunein.setChat(chat);
 // DAYSPRING_DISPLAY=1: this computer shows the Dayspring screen (any screen: a TV, a monitor…), so it keeps it open and
@@ -139,7 +141,7 @@ const PUBLIC = join(here, "public");
 const PORT = Number(process.env.PORT) || 4747;
 const TUNNEL = process.argv.includes("--tunnel");
 
-const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png", ".woff2": "font/woff2", ".txt": "text/plain; charset=utf-8", ".ico": "image/x-icon" };
+const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".mjs": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png", ".woff2": "font/woff2", ".txt": "text/plain; charset=utf-8", ".ico": "image/x-icon" };
 
 // In-memory conversations, one per surface (desk panel, Dayspring screen). Restarting starts fresh; the schedule persists.
 const histories = { desk: [], tv: [] };
@@ -290,6 +292,7 @@ async function api(req, res, url) {
   if (m === "POST" && p === "/app/quit") {
     send(res, 200, { ok: true, text: "Dayspring is stopping." });
     announcer.broadcast("window", { action: "quit" });
+    lantern.stopping();
     setTimeout(async () => { try { await windowRoutes.windowAction("close"); } catch { /* no window */ } try { mixer.stop(); await browser.close(); } catch { /* fine */ } process.exit(0); }, 400);
     return;
   }
@@ -648,6 +651,15 @@ async function serveStatic(res, pathname) {
   }
 }
 
+const ECO_ROOT = join(here, "vendor", "ecosystem-core");
+async function serveEco(res, pathname) {
+  const rel = decodeURIComponent(pathname.slice(5));
+  const file = join(ECO_ROOT, rel);
+  if (!file.startsWith(ECO_ROOT) || !/^(client|shared)[\\/]/.test(rel)) { res.writeHead(404); return res.end("not found"); }
+  try { const body = await readFile(file); res.writeHead(200, { "content-type": MIME[extname(file)] ?? "application/octet-stream" }); res.end(body); }
+  catch { res.writeHead(404); res.end("not found"); }
+}
+
 createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   // Requests arriving through the Cloudflare tunnel carry cf-connecting-ip. Only Twilio's
@@ -657,12 +669,16 @@ createServer(async (req, res) => {
   try {
     if (url.pathname.startsWith("/api/")) await api(req, res, url);
     else if (url.pathname.startsWith("/twilio/") && req.method === "POST") await twilio(req, res, url);
+    // the shared look and page parts both apps use (vendor/ecosystem-core: tokens.css, icons, the lantern avatar…)
+    else if (url.pathname.startsWith("/eco/")) await serveEco(res, url.pathname);
     // the study window's course pages (a course's own files served locally)
     // Google and Microsoft sign-ins come back here (/oauth/google, /oauth/microsoft)
     else if (await connectorRoutes.handlePage(req, res, { m: req.method, pathname: url.pathname, q: url.searchParams })) return;
     // the Spotify sign-in comes back here (/spotify/callback)
     else if (await playerRoutes.handlePage(req, res, { m: req.method, pathname: url.pathname, q: url.searchParams })) return;
     else if (await studyRoutes.handlePage(req, res, { m: req.method, pathname: url.pathname, q: url.searchParams })) return;
+    // an emailed "Connect to Lantern" sign-in link comes back here (/lantern/auth/callback)
+    else if (await lanternRoutes.handlePage(req, res, { m: req.method, pathname: url.pathname })) return;
     else await serveStatic(res, url.pathname);
   } catch (err) {
     const status = err?.status ?? 400;
@@ -685,6 +701,9 @@ createServer(async (req, res) => {
   { const pv = updater.confirmStarted(); if (pv) console.log(`Updated from ${pv.from} to ${pv.to}.`); }
   // an update from 1.0.0 took the downloaded helpers (bin/) away with the old files: bring them back
   try { if (updater.restoreHelpers()) console.log("Put the downloaded helpers (bin) back after the update."); } catch { /* not important */ }
+  // Lantern (the learning app), if it's on this computer: presence, events, "one voice, one ear"
+  lantern.setDeps({ tunein, callbridge });
+  lantern.start({ port: PORT, announce: (x) => announcer.announce(x) });
   // Make sure today has its routines so the first screen isn't empty.
   const added = store.applyRoutines(store.todayISO());
   console.log(`Dayspring desk  →  http://localhost:${PORT}`);

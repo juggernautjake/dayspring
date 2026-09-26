@@ -133,7 +133,7 @@
 
   // ---------- contents ----------
   const GROUPS = [
-    ["Start here", ["getting-started", "install", "setup-wizard", "tutorials", "talking-to-dayspring", "schedule", "learning"]],
+    ["Start here", ["getting-started", "install", "setup-wizard", "tutorials", "talking-to-dayspring", "schedule", "learning", "lantern"]],
     ["Make it yours", ["ai-providers", "voices", "audio-devices", "display-setup", "settings-reference"]],
     ["Connect", ["connections", "permissions", "files-and-browser", "documents", "music", "discover", "phone", "discord-calls", "discord-bot", "photos", "claude-code"]],
     ["More", ["faith-features", "privacy", "updating", "troubleshooting", "faq"]],

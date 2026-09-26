@@ -58,7 +58,7 @@
   let pop = null, lastFocus = null;
   function closePop() { if (!pop) return; pop.remove(); pop = null; document.removeEventListener("keydown", onKey, true); lastFocus?.focus?.(); }
   function onKey(e) { if (e.key === "Escape" && (!e.dsTop || e.dsTop === pop)) { e.stopPropagation(); e.preventDefault(); closePop(); } }
-  document.addEventListener("pointerdown", (e) => { if (pop && !pop.contains(e.target) && !e.target.closest?.("#examCard,#courses .course")) closePop(); }, true);
+  document.addEventListener("pointerdown", (e) => { if (pop && !pop.contains(e.target) && !e.target.closest?.("#examCard,#courses .course:not(.lnc)")) closePop(); }, true);
 
   function place(el, anchor) {
     const a = anchor.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight, vw = innerWidth, vh = innerHeight;
@@ -144,25 +144,25 @@
     const st = await api("/study/state").catch(() => null);
     if (!st) return null;
     if (el.id === "examCard") return st.examCourse;
-    const all = [...document.querySelectorAll("#courses .course")];
+    const all = [...document.querySelectorAll("#courses .course:not(.lnc)")];   // (Lantern's courses, .lnc, open Lantern instead)
     return Object.keys(st.courses)[all.indexOf(el)] ?? null;
   }
   const activate = async (el) => { const c = await courseFor(el); if (c) show(c, el); };
   document.addEventListener("click", (e) => {
-    const el = e.target.closest?.("#examCard,#courses .course");
+    const el = e.target.closest?.("#examCard,#courses .course:not(.lnc)");
     if (!el || e.target.closest("a,button")) return;
     e.stopPropagation(); activate(el);
   }, true);
   document.addEventListener("keydown", (e) => {
     if ((e.key !== "Enter" && e.key !== " ") || pop) return;
-    const el = document.activeElement?.closest?.("#examCard,#courses .course");
+    const el = document.activeElement?.closest?.("#examCard,#courses .course:not(.lnc)");
     if (el) { e.preventDefault(); activate(el); }
   });
   // the rings are redrawn when progress changes: keep them focusable and labelled
   const label = () => {
     const ex = $("#examCard");
     if (ex && !ex.hasAttribute("tabindex")) { ex.tabIndex = 0; ex.setAttribute("role", "button"); ex.setAttribute("aria-label", "Study for the exam: open the next lesson or check progress"); }
-    document.querySelectorAll("#courses .course").forEach((c) => { if (!c.hasAttribute("tabindex")) { c.tabIndex = 0; c.setAttribute("role", "button"); c.setAttribute("aria-label", (c.querySelector(".label")?.textContent ?? "Course") + ": open the next lesson or check progress"); } });
+    document.querySelectorAll("#courses .course:not(.lnc)").forEach((c) => { if (!c.hasAttribute("tabindex")) { c.tabIndex = 0; c.setAttribute("role", "button"); c.setAttribute("aria-label", (c.querySelector(".label")?.textContent ?? "Course") + ": open the next lesson or check progress"); } });
   };
   label();
   const box = $("#courses");

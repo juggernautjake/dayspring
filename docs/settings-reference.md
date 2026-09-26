@@ -180,6 +180,18 @@ Each group has its own **Reset**, and **Reset the whole screen layout** puts eve
 
 Backups of your data and of the previous version are in the `backups` folder. See [Updating](updating.md).
 
+## Lantern
+
+Shown in Settings only. Everything here is optional; see [Dayspring and Lantern](lantern.md).
+
+| Setting | What it does |
+| --- | --- |
+| **Status** | Whether Lantern is running, your courses and their progress, and **Open Lantern**. Without Lantern: **Install Lantern** (it asks before installing anything). |
+| **Connect to Lantern** | So Dayspring can tell you about course invitations and friend requests: **I already have Lantern** (uses Lantern's sign-in), your email and a password (**Sign in** / **Create an account**; the password is never saved), or **Email me a sign-in link** (open it on this computer). A 6-digit code only on hubs whose email includes one. The sign-in is kept in Dayspring's `data` folder, not `.env`, and handed to Lantern once when it's installed. |
+| **Your Lantern hub** | The hub's address and its **public** key, from the person who invited you. A secret key is refused. |
+| **The AI key** | **Use Dayspring's AI key in Lantern** or **Use the AI key from Lantern**: set up the AI once. Stored encrypted for your Windows account; never sent between the apps. |
+| **Listening** | **Let Lantern listen** or **Dayspring listens**: which app listens for its name. Dayspring does while it runs, unless you hand it over. |
+
 ## Keys in the .env file
 
 Keys you paste in Settings are saved in the `.env` file in the Dayspring folder. You normally never need to open it. If you do, it's a plain text file of `NAME=value` lines; restart Dayspring after editing it. Never share this file: it holds your keys. See [Privacy](privacy.md).

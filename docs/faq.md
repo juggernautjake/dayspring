@@ -36,6 +36,15 @@ Gmail, Bing, Yahoo and Google are websites, not browsers, so they aren't in the 
 ### Dayspring opened several windows, and black command windows kept popping up
 That was a bug in version 1.0.0, fixed in 1.0.1. Double-click **Update Dayspring.cmd** in the Dayspring folder and type **Y**. From then on Dayspring runs quietly in the background, never opens itself twice, and keeps itself up to date.
 
+### What is Lantern? Do I need it?
+Lantern is a free learning app from the same family as Dayspring. You don't need it. If you have both, Dayspring shows your courses and next lesson, opens lessons when you ask, reads out course invitations and friend requests, and the two never talk over each other. Dayspring can even install it for you: say "install Lantern". See [Dayspring and Lantern](lantern.md).
+
+### Someone sent me a course on Lantern, but I only have Dayspring
+Go to **Settings → Lantern** and connect with the email they invited: sign in with a password (or **Create an account**), or press **Email me a sign-in link** and open that email on this computer. If Dayspring asks for the hub, paste the address and public key they gave you. Dayspring then tells you about the invitation and offers to install Lantern. See [Dayspring and Lantern](lantern.md#connecting-before-lantern-is-installed).
+
+### The Lantern email has a link, not a code
+That's normal. Press the link in the email on the same computer as Dayspring: it opens a Dayspring page that connects you and goes back to Settings. Opened it on your phone by mistake? Ask for a new link and open it on the computer, or sign in with a password instead. A 6-digit code only comes on hubs whose owner set up their own email sender.
+
 ### How do I stop it completely?
 Move the pointer to the top edge of the Dayspring screen, press **✕**, then **Quit Dayspring**. Or double-click **Stop Dayspring.cmd**. See [Installing → Stopping Dayspring](install.md#stopping-dayspring).
 

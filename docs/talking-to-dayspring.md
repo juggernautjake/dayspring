@@ -152,6 +152,17 @@ Lists and research answers open in a **Results** panel. It has a numbered list, 
 
 Video stats come from what Dayspring played, plus your YouTube watch history when the media browser is signed in to YouTube (it only reads the history). Music stats come from Spotify when it's connected. If you connected Spotify before this feature existed, reconnect it once so Dayspring can read your top artists. Without Spotify, stats come from what Dayspring played. Spotify no longer gives apps its own recommendations, so "more like this" searches by the artist's genres.
 
+## Lantern (your courses)
+
+If the free learning app [Lantern](lantern.md) is on your computer:
+- "What's my next lesson?" · "How far am I in Python?" · "What courses do I have?"
+- "Open Python." · "Open Lantern." · "Install Lantern."
+- "Remind me to study Python at 7." (a study block on your schedule, linked to the course)
+- "Send the Python course to Sam." (the hub's owner; it asks you to confirm)
+- "Add Sam as a friend on Lantern." · "Who are my Lantern friends?"
+- When Dayspring tells you about an invitation or a friend request: "yes", "no" or "later".
+- "Let Lantern listen." · "Take the mic back." (only one app listens for its name at a time)
+
 ## Ask about what's on the screen
 
 Dayspring knows what its screen is showing right now, what's coming up next in the rotating panel, and everything it showed in the last 24 hours: quotes and proverbs, memory verses, the prayer list, weather, photos, recommended videos, pop-ups, reminders and alarms.

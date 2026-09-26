@@ -716,6 +716,73 @@
       },
       save: async () => { await post("/update/when", { when: chosen("upWhen") ?? "ask" }); } },
 
+    // ------------------------------------------------------------------------------------------------ lantern
+    { id: "lantern", icon: "🏮", title: "Lantern", settingsOnly: true,
+      render: () => `
+        <h1>Lantern</h1>
+        <p class="lead">Lantern is a free learning app from the same family as Dayspring. When both are on this computer they work together: Dayspring shows your courses and next lesson, opens a lesson when you ask, reads out course invitations and friend requests, and the two never talk over each other. Nothing here is needed if you don't use Lantern.</p>
+        <div id="lnBox" aria-live="polite"><div class="hint">Looking…</div></div>
+        <h2>Connect to Lantern</h2>
+        <p class="hint">So Dayspring can tell you about course invitations and friend requests. If Lantern is on this computer, it keeps your account and Dayspring uses it. If not, sign in here with the email you were invited with; when Lantern is installed later, it takes over the sign-in, so you won't sign in twice.</p>
+        <div id="lnConnect"></div>
+        <details class="note"><summary>Your Lantern hub (from the person who invited you)</summary>
+          <p class="hint">The hub is where Lantern keeps accounts. Paste its address and its <b>public</b> key (never a secret key). Leave it alone if Dayspring already knows it.</p>
+          <div class="row">${field("lnHubUrl", "Hub address", text("lnHubUrl", "", "https://….supabase.co"))}</div>
+          <div class="row">${field("lnHubKey", "Public key", text("lnHubKey", "", "sb_publishable_… or eyJ…"))}</div>
+          <button class="btn" type="button" id="lnHubSave">Save the hub</button></details>
+        <h2>The AI key</h2>
+        <div id="lnKey"></div>
+        <h2>Listening</h2>
+        <p class="hint">Only one app listens for its name at a time. Dayspring does while it's running; you can hand the microphone to Lantern (say "Dayspring, let Lantern listen", and "take the mic back" to return it).</p>
+        <div class="row" style="gap:.5em"><button class="btn" type="button" id="lnMicL">Let Lantern listen</button><button class="btn" type="button" id="lnMicD">Dayspring listens</button></div>
+        <div class="msg" id="m"></div>`,
+      mount: async () => {
+        const m = $("#m");
+        const paint = async () => {
+          let s; try { s = await api("/lantern/status"); } catch (e) { return msg(m, e.message, "bad"); }
+          const st = s.status;
+          $("#lnBox").innerHTML = s.running
+            ? `<p>✓ <b>Lantern is running</b>${st?.version ? " (" + esc(st.version) + ")" : ""}${st?.name ? ", signed in as <b>" + esc(st.name) + "</b>" : ""}.</p>
+               ${(st?.courses ?? []).length ? "<ul>" + st.courses.map((c) => `<li><b>${esc(c.title)}</b>: ${esc(c.measure || (c.percent ?? 0) + "%")}${c.next ? " · next: " + esc(c.next.title) : ""}</li>`).join("") + "</ul>" : "<p class='hint'>No courses yet.</p>"}
+               <button class="btn" type="button" id="lnOpen">Open Lantern</button>`
+            : s.installed ? `<p>Lantern is installed but not running.</p><button class="btn" type="button" id="lnOpen">Open Lantern</button>`
+            : `<p>Lantern isn't on this computer.</p><p class="hint">Dayspring can install it for you in <b>${esc(s.installDir)}</b> (about a minute, and it asks before installing anything else).</p><button class="btn primary" type="button" id="lnInstall">Install Lantern</button>${s.install ? `<p class="msg">${esc(s.install.message ?? "")}</p>` : ""}`;
+          $("#lnOpen")?.addEventListener("click", async () => { try { await post("/lantern/open", {}); toast("Opening Lantern"); } catch (e) { msg(m, e.message, "bad"); } });
+          $("#lnInstall")?.addEventListener("click", async () => { msg(m, "Installing Lantern… you can follow it on the Dayspring screen."); try { await post("/lantern/install", {}); } catch (e) { msg(m, e.message, "bad"); } });
+          const c = s.connected;
+          const codeHub = Boolean(s.hub?.emailCode);
+          $("#lnConnect").innerHTML = s.running ? `<p class="hint">${st?.signedIn ? "✓ Lantern is running and signed in, so it keeps your account and Dayspring uses it." : "Lantern is running. Sign in there (Settings → Account &amp; hub) and Dayspring uses that account."}</p>`
+            : c ? `<p>Connected as <b>${esc(c.email)}</b>.</p><button class="btn" type="button" id="lnOut">Disconnect</button>`
+            : !s.hub ? `<p class="hint">First add the hub below (the person who invited you has it).</p>`
+            : `${s.installed ? `<p><button class="btn primary" type="button" id="lnUseL">I already have Lantern on this computer</button> <span class="hint">Dayspring uses Lantern's sign-in.</span></p>` : ""}
+               <div class="row">${field("lnEmail", "Your email", text("lnEmail", "", "you@example.com", "email"))}</div>
+               <div class="row">${field("lnPw", "Password (6 or more characters)", text("lnPw", "", "", "password"))}</div>
+               <div class="row" style="gap:.5em"><button class="btn primary" type="button" id="lnSignIn">Sign in</button><button class="btn" type="button" id="lnCreate">Create an account</button></div>
+               <p class="hint" style="margin-top:.8em">No password? <button class="btn small" type="button" id="lnSend">Email me a sign-in link</button> Open the email on this computer and press its link.</p>
+               ${codeHub ? `<div class="row" style="margin-top:.6em">${field("lnCode", "Or the 6-digit code from the email", text("lnCode", "", "123456", "text", 'inputmode="numeric" maxlength="8"'))}</div><button class="btn" type="button" id="lnVerify">Connect with the code</button>` : ""}`;
+          $("#lnOut")?.addEventListener("click", async () => { await post("/lantern/disconnect", {}); paint(); });
+          $("#lnUseL")?.addEventListener("click", async () => { msg(m, "Opening Lantern…"); try { const r = await post("/lantern/use-lantern", {}); msg(m, r.connected ? "✓ Dayspring uses Lantern's account." : (r.say || "Sign in in Lantern."), r.connected ? "ok" : ""); paint(); } catch (e) { msg(m, e.message, "bad"); } });
+          const pwGo = async (create) => { const pw = $("#lnPw"); try { const r = await post("/lantern/password", { email: $("#lnEmail").value, password: pw.value, create }); pw.value = ""; msg(m, r.connected ? "Connected." : (r.say || "Check your email."), r.connected ? "ok" : ""); paint(); } catch (e) { msg(m, e.message, "bad"); } };
+          $("#lnSignIn")?.addEventListener("click", () => pwGo(false));
+          $("#lnCreate")?.addEventListener("click", () => pwGo(true));
+          $("#lnSend")?.addEventListener("click", async () => { try { await post("/lantern/connect", { email: $("#lnEmail").value }); msg(m, codeHub ? "Sent. Press the link in the email on this computer, or type the code from it below." : "Sent. Open the email on this computer and press its sign-in link (check spam too). This page updates by itself.", "ok"); const was = Date.now(); const t = setInterval(async () => { const x = await api("/lantern/status").catch(() => null); if (x?.connected || Date.now() - was > 600000) { clearInterval(t); if (x?.connected) paint(); } }, 3000); } catch (e) { msg(m, e.message, "bad"); } });
+          $("#lnVerify")?.addEventListener("click", async () => { try { await post("/lantern/verify", { code: $("#lnCode").value }); msg(m, "Connected.", "ok"); paint(); } catch (e) { msg(m, e.message, "bad"); } });
+          const k = s.sharedKey ?? {};
+          $("#lnKey").innerHTML = k.exists && k.updatedBy === "lantern" && !k.allowed ? `<p>Lantern already has an AI set up (${esc(k.provider ?? "")}). Use it in Dayspring too? The key stays encrypted on this computer and is never sent between the apps.</p><button class="btn primary" type="button" id="lnUse">Use the AI key from Lantern</button>`
+            : k.exists && k.allowed && k.updatedBy !== "dayspring" ? `<p>✓ Dayspring uses the AI key from Lantern.</p><button class="btn" type="button" id="lnStop">Stop using it</button>`
+            : k.exists && k.updatedBy === "dayspring" ? `<p>✓ Dayspring's AI key is shared with this computer's Lantern (Lantern still asks you first). <button class="btn" type="button" id="lnShare">Share it again</button></p>`
+            : `<p class="hint">Share Dayspring's AI key with Lantern, so you only set it up once. It's stored encrypted for your Windows account only, and Lantern asks you before it uses it.</p><button class="btn" type="button" id="lnShare">Use Dayspring's AI key in Lantern</button>`;
+          $("#lnUse")?.addEventListener("click", async () => { try { await post("/lantern/key", { use: true }); msg(m, "Done. Dayspring uses Lantern's AI key (restart Dayspring if replies don't use it yet).", "ok"); paint(); } catch (e) { msg(m, e.message, "bad"); } });
+          $("#lnStop")?.addEventListener("click", async () => { try { await post("/lantern/key", { use: false }); paint(); } catch (e) { msg(m, e.message, "bad"); } });
+          $("#lnShare")?.addEventListener("click", async () => { try { await post("/lantern/key", { share: true }); msg(m, "Shared. Lantern will ask you before it uses it.", "ok"); paint(); } catch (e) { msg(m, e.message, "bad"); } });
+          $("#lnMicL").classList.toggle("primary", s.micOwner === "lantern"); $("#lnMicD").classList.toggle("primary", s.micOwner !== "lantern");
+        };
+        $("#lnMicL").onclick = async () => { await post("/lantern/mic", { app: "lantern" }).catch(() => {}); paint(); };
+        $("#lnMicD").onclick = async () => { await post("/lantern/mic", { app: "dayspring" }).catch(() => {}); paint(); };
+        $("#lnHubSave").onclick = async () => { try { await post("/lantern/hub", { url: $("#lnHubUrl").value, anonKey: $("#lnHubKey").value }); msg(m, "Hub saved.", "ok"); paint(); } catch (e) { msg(m, e.message, "bad"); } };
+        await paint();
+      } },
+
     // ------------------------------------------------------------------------------------------------ done
     { id: "done", icon: "🎉", title: "All set", wizardOnly: true,
       render: () => { const o = S.owner, f = o.features, on = Object.entries(f).filter(([, v]) => v).length; return `

@@ -1475,9 +1475,18 @@
   // Tune in (listening to calls in the headset) ignores Dayspring's own voice and music: tell it when they start and stop
   function tuneIn(on, ms, kind = "voice") { post("/tunein/speaking", { on, kind, ...(ms ? { ms: Math.round(ms) } : {}) }).catch(() => {}); }
   let lastSaid = null;      // { text, v } — "say that again"
+  // Lantern (the learning app) speaking on this computer: Dayspring waits its turn (at most 20 s); the alarm never waits
+  let peerTalking = { on: false, until: 0 };
+  window.dsPeerSpeaking = () => peerTalking.on && Date.now() < peerTalking.until;
+  async function waitForPeer(bus) {
+    if (bus === "alarm") return;
+    const t0 = Date.now();
+    while (window.dsPeerSpeaking() && Date.now() - t0 < 20_000) await sleep(250);
+  }
   async function speakOne(text, chip, bus = "general", v = {}) {
     if (!text) return;
     if (!isSpeaker) return;            // another Dayspring screen is the one speaking
+    await waitForPeer(bus);
     lastSaid = { text, v };
     noteOwnSpeech(text);
     stateSince = Date.now();
@@ -2267,6 +2276,7 @@
   }, 4000);
   function startListening() {
     if (!isSpeaker) return;             // another Dayspring screen is the one listening (no double replies)
+    if (window.dsMicOwner && window.dsMicOwner !== "dayspring") { setMic("", "Lantern is listening. Say “take the mic back” by typing, or use Settings → Lantern."); return; }
     if (!SR) { setMic("", "This browser can't listen. Use Chrome."); return; }
     // an automated copy of this page (tests, screenshots) never listens: it would hear the real room
     if (navigator.webdriver) { setMic("", "Automated view: not listening."); return; }
@@ -2570,6 +2580,9 @@
     const es = new EventSource(`/api/events?page=display&role=display&id=${encodeURIComponent(PAGE_ID)}`);
     // one voice at a time: only the page the server names speaks (another open Dayspring screen stays quiet)
     es.addEventListener("speaker", (e) => { try { const d = JSON.parse(e.data); const was = isSpeaker; isSpeaker = !d.id || d.id === PAGE_ID; window.dsIsSpeaker = isSpeaker; if (!isSpeaker) { stopSpeaking(); pauseListening(); setMic("", "Another Dayspring screen is listening."); } else if (!was) resumeListening(); } catch { /* bad event */ } });
+    // Lantern speaking / who owns the microphone (lib/lantern.mjs)
+    es.addEventListener("peer-speaking", (e) => { try { const d = JSON.parse(e.data); peerTalking = d.on ? { on: true, until: Date.now() + 20_000 } : { on: false, until: 0 }; } catch { /* bad event */ } });
+    es.addEventListener("mic-owner", (e) => { try { const d = JSON.parse(e.data); window.dsMicOwner = d.app; if (d.app !== "dayspring") { pauseListening(); setMic("", "Lantern is listening."); } else resumeListening(); } catch { /* bad event */ } });
     // shared with the page's add-ons (the living sky) so they don't each open another connection
     window.dsEvents = es; window.dispatchEvent(new CustomEvent("ds-events", { detail: es }));
     // after Dayspring restarts (new code from Claude Code), reload so the new version shows
@@ -2619,6 +2632,11 @@
         // "Can I help you get ready for worship?" / "Want to talk through tonight's study?" — then listen for the answer
         await notify(item.text, { sound: "motif", chip: { title: item.passage ?? "Church", category: "faith" }, voice: { tone: "warm" } });
         if (prefs.mode === "voice") openCommandWindow(45_000);
+        return;
+      }
+      if (item.kind === "lantern") {
+        await notify(item.text, { sound: "chime", chip: { title: item.title ?? "Lantern", category: "study" }, voice: { tone: "warm" } });
+        if (prefs.mode === "voice" && item.ask) openCommandWindow(30_000);
         return;
       }
       if (item.kind === "reminder") {
