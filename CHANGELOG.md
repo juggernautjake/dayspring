@@ -2,6 +2,16 @@
 
 All notable changes to Dayspring. Versions follow [semantic versioning](https://semver.org).
 
+## 1.1.1 — no more YouTube windows
+
+**Fixed**
+- **No more YouTube windows popping up.** Discover (the "something new about your interests" feed) used to search YouTube in a browser window that flashed open on screen, a couple of minutes after Dayspring started and every so often after that. Now Dayspring reads YouTube's search results quietly in the background: no window opens, ever, for searching or looking things up.
+- **You don't need a YouTube key.** Search works without one. A key is still optional (Settings → Features & apps → Extra keys) and only makes searches a little faster.
+
+**New**
+- **↗ Pop out**: videos play inside Dayspring, and the new ↗ button on the video controls (or saying "pop it out" / "open this in my browser") pauses it and opens it in your own browser at the same second.
+- A video whose owner blocks playing inside other apps now shows a card, "This video can't play inside Dayspring. Pop it out?", instead of opening a window by itself.
+
 ## 1.1.0 — works with Lantern
 
 **New**

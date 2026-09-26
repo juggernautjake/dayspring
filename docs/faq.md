@@ -157,6 +157,12 @@ It announces texts and reads them to you (through Phone Link). Sending texts isn
 ### How do I connect Spotify?
 Make a free Spotify developer app (about 5 minutes; Premium needed for playing inside Dayspring) and paste its Client ID in Settings. See [Music and videos](music.md).
 
+### Do I need a YouTube API key?
+No. YouTube search and playback work with no key. A key is optional and only makes searches a little faster. See [Music and videos](music.md#do-i-need-a-youtube-api-key).
+
+### A browser window with YouTube keeps opening. How do I stop it?
+Update to Dayspring 1.1.1 or newer (it updates itself; or Settings → Updates → **Check now**). Older versions searched YouTube in a visible browser window for the Discover feed. Now searching happens in the background with no window, and videos play inside Dayspring. To watch one in your browser, press **↗ Pop out**.
+
 ### Why do YouTube ads show?
 Sign in to YouTube in Dayspring's music window with a YouTube Premium account. See [Music and videos](music.md).
 

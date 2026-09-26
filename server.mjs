@@ -346,11 +346,17 @@ async function api(req, res, url) {
     return send(res, 200, { playing: cmd });
   }
   if (m === "POST" && p === "/media/stop") { const r = await media.stopAll(); announcer.broadcast("media", { action: "stop" }); lastNow = ""; announcer.broadcast("nowplaying", { playing: false }); return send(res, 200, { stopped: r }); }
-  // The TV couldn't embed a video (its owner blocks it): play it on youtube.com in the media browser.
-  if (m === "POST" && p === "/media/fallback") {
+  // Pop a video out into the person's own browser (their choice, a normal window), at the second it was on.
+  // Only ever on request: the Pop out button, "pop it out", or the card for a video that can't be embedded.
+  // /media/fallback is the old name (older screens): it does the same thing, and never plays in a hidden window.
+  if (m === "POST" && (p === "/media/popout" || p === "/media/fallback")) {
     const b = await readJSON(req);
-    if (!media.policyNow().videosAllowed) return send(res, 200, { skipped: "study time" });
-    return send(res, 200, await browser.youtubeWatch({ videoId: b.videoId, playlistId: b.playlistId }));
+    const vid = /^[\w-]{11}$/.test(b.videoId ?? "") ? b.videoId : null, list = /^[\w-]{10,64}$/.test(b.playlistId ?? "") ? b.playlistId : null;
+    if (!vid && !list) return send(res, 400, { opened: false, error: "There's no video to pop out." });
+    const t = Math.max(0, Math.floor(Number(b.t) || 0));
+    const url = vid ? `https://www.youtube.com/watch?v=${vid}${list ? `&list=${list}` : ""}${t ? `&t=${t}s` : ""}` : `https://www.youtube.com/playlist?list=${list}`;
+    try { return send(res, 200, await (await import("./lib/browsers.mjs")).openUrl(url, owner.displayBrowser())); }
+    catch (e) { return send(res, 200, { opened: false, url, error: `I couldn't open your browser (${e.message}).` }); }
   }
   // The morning wake song, started when the TV's alarm goes off. Spotify (the curated track) first; YouTube if Spotify can't.
   if (m === "POST" && p === "/morning/music") {

@@ -872,6 +872,7 @@
       if (vto[1]) return { say: `I don't have a voice called ${want}. Say "show me the voices" to see the ones I have.` };
     }
     if (/\b(show|list|what are)( me)?( the| your| all)? voices\b|\bdemo (the )?voices\b/.test(q)) { voicesDetail(); return { say: "Here are my voices." }; }
+    if (P.source === "youtube" && /^(?:please )?(?:pop (?:it|this|that|the video) out|pop out(?: the video)?|open (?:it|this|that|the video) (?:in|on) (?:my |the )?(?:web )?browser|watch (?:it|this) in (?:my |the )?browser)(?: please)?$/.test(q)) { ctl("popout"); return { say: "Opening it in your browser." }; }
     // Settings and the guide
     if (pageOpen() && /\b(close|exit|hide)( the)? (settings|help|guide)\b/.test(q)) { closePage(); return { say: "Okay." }; }
     if (/\b(open|show|go to|pull up)( me)?( the| my| your)? (settings|preferences|setup( wizard)?|permissions)\b/.test(q)) { openPage("/setup?embed=1"); return { say: "Here are the settings." }; }
@@ -1012,6 +1013,16 @@
     setTimeout(() => dismissToast(el), 40_000);
     let list; while ((list = $("#toasts").querySelectorAll(".toast")).length > 4) list[0].remove();
     syncToastClear();
+    return el;
+  }
+  // A video that can't be embedded: a card with a Pop out button (nothing opens unless they ask)
+  function offerPopOut(v) {
+    const el = toast("Can't play here", "This video can't play inside Dayspring. Pop it out into your browser?", "", "bell");
+    const row = document.createElement("div"); row.className = "snzrow";
+    row.innerHTML = '<button data-a="pop">Pop out ↗</button><button data-a="no">Not now</button>';
+    row.querySelector('[data-a="pop"]').onclick = async (e) => { e.stopPropagation(); dismissToast(el); const r = await post("/media/popout", { videoId: v.videoId, playlistId: v.playlistId, t: 0 }).catch(() => null); if (r && !r.opened) toast("Player", r.error || "I couldn't open your browser.", "", "bell"); };
+    row.querySelector('[data-a="no"]').onclick = (e) => { e.stopPropagation(); dismissToast(el); };
+    el.insertBefore(row, el.querySelector(".timer"));
     return el;
   }
   function dismissToast(el) {
@@ -1897,7 +1908,7 @@
           ytTick(true);
         },
         onError: (e) => {
-          if (e.data === 101 || e.data === 150) { push("sys", "That one can't play here, opening it on YouTube instead."); post("/media/fallback", { videoId: cmd.videoId, playlistId: cmd.playlistId }).catch(() => {}); }
+          if (e.data === 101 || e.data === 150) { push("sys", "That video's owner doesn't let it play inside other apps."); offerPopOut({ videoId: cmd.videoId, playlistId: cmd.playlistId, title: cmd.title }); }
           else push("sys", "That video couldn't be played.");
           stopMedia(false);
         },
@@ -2045,6 +2056,15 @@
         const box = $("#media"), on = v === undefined || v === null ? !box.classList.contains("full") : Boolean(v);
         if (on) { P.video = true; box.classList.add("video"); box.classList.remove("audio"); }
         box.classList.toggle("full", on); break;
+      }
+      case "popout": {
+        if (!yt1 && !(src === "youtube" && P.videoId)) return "Only YouTube videos pop out into your browser.";
+        const t = Math.max(0, Math.floor(posNow()));
+        try { yt?.pauseVideo(); } catch { /* gone */ }
+        P.pos = t; P.playing = false; P.at = Date.now();
+        const r = await post("/media/popout", { videoId: P.videoId, playlistId: nowPlaying?.playlistId ?? null, t }).catch(() => null);
+        renderPlayer(); reportState();
+        return r?.opened ? "" : (r?.error || "I couldn't open your browser.");
       }
       case "stop": stopMedia(true); return "";
       default: return "";

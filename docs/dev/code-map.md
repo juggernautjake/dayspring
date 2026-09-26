@@ -21,8 +21,8 @@ See [Architecture](architecture.md) for how the pieces fit together.
 | `lib/announcer.mjs` | Schedule-triggered speech for the TV. | `setEventHook`, `recent`, `spokenTime`, `boundaryAt`, `tick`, `announceNow`, `announce` |
 | `lib/assistant.mjs` | The assistant loop: Claude + the scheduling tools. | `modelName`, `hasKey`, `tools`, `localScripture`, `localMedia`, `localAnswer`, `chat` |
 | `lib/bible.mjs` | Scripture: look up any passage in several translations, and search the Bible by words. | `BOOKS`, `VERSIONS`, `versionFrom`, `parseRef`, `passage`, `spoken`, `search`, `ensureOffline` |
-| `lib/browser.mjs` | The media browser: a real Chrome window driven by Playwright. | `page`, `isOpen`, `windowState`, `hide`, `close`, `youtubeSearch`, `youtubeMyPlaylists`, `youtubeWatch`, +14 |
-| `lib/browsers.mjs` | Which web browsers are installed, which one Windows uses by default, and how to start one for Dayspring. | `KNOWN`, `NOT_BROWSERS`, `list`, `defaultId`, `resolve`, `familyNote`, `playwrightChannel` |
+| `lib/browser.mjs` | The media browser: a real Chrome window driven by Playwright. | `page`, `isOpen`, `searchPage`, `closeSearch`, `windowState`, `hide`, `close`, `youtubeSearchHeadless`, +17 |
+| `lib/browsers.mjs` | Which web browsers are installed, which one Windows uses by default, and how to start one for Dayspring. | `KNOWN`, `NOT_BROWSERS`, `list`, `defaultId`, `resolve`, `openUrl`, `familyNote`, `playwrightChannel` |
 | `lib/bus.mjs` | The live connection from Dayspring's server to its own pages (Server-Sent Events), split out of announcer.mjs so any module can broadcast without importing the schedule, owner, morning… (see ecosystem-core docs/MIGRATION.md). | `setHello`, `speaker`, `addClient`, `clientCount`, `displayCount`, `broadcast`, `on` |
 | `lib/calendar-routes.mjs` | All the owner's calendars together, and the conflicts between them (for the Schedule app and the display): GET /api/calendar/unified?from=&to=[&refresh=1] → { items (outside calendars and tasks, each with its source, color and link), confli… | `handle`, `externalBlocks` |
 | `lib/call-routes.mjs` | Routes for Tune in (listen to what's playing in the headset) and Talk into calls (Voicemeeter bridge). | `handle`, `command` |
@@ -70,8 +70,8 @@ See [Architecture](architecture.md) for how the pieces fit together.
 | `lib/interests.mjs` | Interests: a short, friendly list people pick from during setup (and later in Settings). | `CATALOG`, `GROUPS`, `picked`, `suggestions`, `apply`, `MAX`, `mapFree`, `addFree`, +1 |
 | `lib/keepawake.mjs` | Keep the computer awake while Dayspring runs on it and it's plugged in (so it can wake you, remind you and hear you). | `wanted`, `status`, `start`, `stop`, `set`, `handle` |
 | `lib/knowledge.mjs` | A map of the owner's world, built from their folders: every area and project two levels deep, with the opening of its README (or what it contains). | `build`, `map` |
-| `lib/lantern-routes.mjs` | Routes for the Dayspring ↔ Lantern link (lib/lantern.mjs). | `handle` |
-| `lib/lantern.mjs` | Dayspring ↔ Lantern: the two apps on one computer, working as one (ecosystem-core docs/ECOSYSTEM.md; Lantern's side is in Lantern's docs/dev/ecosystem.md and dayspring-bridge.md). | `lanternDataDir`, `defaultInstallDir`, `ecoApi`, `version`, `start`, `stopping`, `send`, `addEcoClient`, +32 |
+| `lib/lantern-routes.mjs` | Routes for the Dayspring ↔ Lantern link (lib/lantern.mjs). | `handle`, `handlePage` |
+| `lib/lantern.mjs` | Dayspring ↔ Lantern: the two apps on one computer, working as one (ecosystem-core docs/ECOSYSTEM.md; Lantern's side is in Lantern's docs/dev/ecosystem.md and dayspring-bridge.md). | `lanternDataDir`, `defaultInstallDir`, `ecoApi`, `version`, `start`, `stopping`, `send`, `addEcoClient`, +35 |
 | `lib/learning.mjs` | Learning progress: the owner's courses (and an exam, if they have one) as checklists, each item tied to the schedule block it is planned for. | `EXAM`, `exam`, `progress`, `items`, `mark`, `addCourse`, `removeCourse`, `logNote`, +1 |
 | `lib/listskills.mjs` | Lists, stats, research and the prayer list — one entry point for the assistant: TOOLS / runTool(name, input) show_results, close_results, prayer_*, youtube_insights, music_insights, more_like_this, research handle(text) the no-AI phrases (r… | `TOOLS`, `GUIDANCE`, `runTool`, `handle` |
 | `lib/llm.mjs` | The AI "brain", whichever one the user picked: Claude (Anthropic), ChatGPT (OpenAI), Grok (xAI), or a free local model through Ollama. | `PROVIDERS`, `provider`, `ready`, `modelName`, `label`, `canSearchWeb`, `complete`, `chatWithToolsOpenAI`, +2 |
@@ -130,6 +130,7 @@ See [Architecture](architecture.md) for how the pieces fit together.
 | `lib/web.mjs` | Looking things up online, for any AI provider (Claude also has its own web search built in). | `safeUrl`, `search`, `readable`, `read` |
 | `lib/welcome-routes.mjs` | The first-run guided setup (/welcome): where the owner is in it (so closing the page resumes at the same step), the interests menu, and the connection walkthroughs. | `handle` |
 | `lib/window-routes.mjs` | The Dayspring screen's own window, and the Sound panel's server side. | `closedByOwner`, `clearClosed`, `windowAction`, `handle`, `command` |
+| `lib/ytsearch.mjs` | YouTube search for Dayspring, with nothing opening on screen: 1. | `_setFake`, `search` |
 
 ## Pages and scripts in the browser (public/)
 

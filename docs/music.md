@@ -2,7 +2,7 @@
 
 Dayspring plays music and videos right on its screen, with full controls: play and pause, skip, go back, jump to any point, volume, shuffle, repeat, and speed for videos. You can use the buttons, your voice, or typing.
 
-- **YouTube** plays on the Dayspring screen itself. It works with no setup. Sign in once to get no ads if you have YouTube Premium.
+- **YouTube** plays on the Dayspring screen itself. It works with no setup and **no YouTube key**. Searching happens quietly in the background: no browser window opens. Want a video in your own browser instead? Press **↗ Pop out** (or say "pop it out"). Sign in once to get no ads if you have YouTube Premium.
 - **Spotify** plays on the Dayspring screen once you connect it. This needs **Spotify Premium** and about 5 minutes of setup, explained below. Until then, Dayspring falls back to playing Spotify in a small browser window of its own (the "music window"), which has fewer controls.
 
 Commands marked ⚡ work even without an AI brain.
@@ -121,6 +121,23 @@ Open it with the 📚 button on the music card, the ☰ on a video, or by saying
 - **Video queue**: drag to reorder, or use ▲ ▼, ▶ to play now, ✕ to remove, and **Clear**.
 
 > **Note:** "Play next" on Spotify adds the song to your queue. It plays right after the current song, after anything you queued before it. That's how Spotify's queue works.
+
+## Pop a video out into your browser
+
+Press **↗** on the video controls, or say **"pop it out"** / **"open this in my browser"** ⚡. The video pauses in Dayspring and opens in your own browser (the one you picked in Settings → Screen, or your Windows default) at the same second, signed in as you.
+
+A few videos can't play inside other apps (their owners turn that off). For those, Dayspring shows a card: **"This video can't play inside Dayspring. Pop it out?"** Nothing opens unless you press **Pop out ↗**.
+
+## Do I need a YouTube API key?
+
+**No.** Dayspring searches YouTube by reading youtube.com's own results page, with no key and no window. A key is optional: it makes searches a little faster and steadier. To add one:
+
+1. Go to [Google Cloud's YouTube Data API page](https://console.cloud.google.com/apis/library/youtube.googleapis.com) and sign in.
+2. Create a project if it asks, then click **Enable**.
+3. Open **Credentials → Create credentials → API key** and copy it.
+4. Paste it in Dayspring's Settings → **Features & apps** → **Extra keys (optional)** → **YouTube search**.
+
+The free allowance is about 100 searches a day. When it runs out, Dayspring goes back to the no-key way by itself.
 
 ## Video playlists
 

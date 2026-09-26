@@ -521,7 +521,7 @@
         ${toggle("f-claudeCode", "🛠️ Claude Code (for tinkerers)", "Ask Dayspring to change its own code by voice. This needs the Claude Code app installed.", f.claudeCode, `<div class="sub hint"><a href="/help#claude-code">How to install Claude Code</a></div>`)}
         <h2>Extra keys (optional)</h2>
         <p class="hint">These make a few things better. Skip them if you're not sure.</p>
-        ${[["YOUTUBE", "YOUTUBE_API_KEY", "YouTube search", "Better video search. Free key from Google Cloud (YouTube Data API v3).", "https://console.cloud.google.com/apis/library/youtube.googleapis.com"],
+        ${[["YOUTUBE", "YOUTUBE_API_KEY", "YouTube search", "Optional: YouTube search already works with no key and nothing opens on screen. A free key (Google Cloud, YouTube Data API v3) only makes searches a little faster and steadier.", "https://console.cloud.google.com/apis/library/youtube.googleapis.com"],
            ["ESV", "ESV_API_KEY", "ESV Bible", "Adds the English Standard Version. Free from api.esv.org.", "https://api.esv.org/"],
            ["NLT", "NLT_API_KEY", "NLT Bible", "Adds the New Living Translation. Free from api.nlt.to.", "https://api.nlt.to/"]].map(([n, kv, t, d, url]) => `
           <div class="item"><div class="grow"><div class="t">${t}</div><div class="s">${d}</div></div>${keyStatus(kv)}
