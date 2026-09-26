@@ -341,7 +341,7 @@
           $("#vget").onclick = () => openLink(p === "openai" ? "https://platform.openai.com/api-keys" : "https://elevenlabs.io/app/settings/api-keys");
           try {
             const r = await api("/setup/voices?provider=" + p);
-            const current = p === "openai" ? (S.voice.openaiVoice ?? "nova").replace(/^./, (c) => c.toUpperCase()) : S.voice.elevenVoice;
+            const current = p === "openai" ? (S.voice.openaiVoice ?? "coral").replace(/^./, (c) => c.toUpperCase()) : S.voice.elevenVoice;
             drawList(r.voices, current, async (n) => {
               msg($("#m"), `Playing ${n}…`);
               const out = await previewServer(p, n, $("#vkey").value.trim() || undefined);
@@ -618,11 +618,9 @@
           { value: "primary", title: "Main screen", desc: "Always on the main screen." },
           { value: "secondary", title: "Second screen", desc: "Always on the other screen." },
         ], ["auto", "primary", "secondary"].includes(S.owner.display) ? S.owner.display : "")}
-        <h2>Show the display in</h2>
-        ${choiceGroup("dbrowser", [
-          { value: "chrome", title: "Google Chrome", desc: "The default. Fast and reliable." },
-          { value: "edge", title: "Microsoft Edge", desc: "Includes Microsoft's free Natural voices, which sound much more human.", tag: "Better free voices" },
-        ], S.owner.displayBrowser === "edge" ? "edge" : "chrome")}
+        <h2>Which browser shows Dayspring?</h2>
+        <div class="field"><select id="dbrowser" aria-label="Browser for the Dayspring screen"><option value="default">Your default browser</option></select>
+          <div class="hint" id="dbNote">Any browser on this computer works. Microsoft Edge has the most natural-sounding free voices. The change shows the next time the Dayspring screen opens.</div></div>
         <h2>Stay awake</h2>
         ${toggle("keepAwake", "Keep this computer awake while Dayspring is running", "Only while it's plugged in: no sleep and no idle lock screen, so Dayspring can wake you, remind you and hear you. On battery it sleeps as usual. Nothing in your power settings changes.", S.keepAwake !== false)}
         <h2>Fit Dayspring to your screen</h2>
@@ -634,6 +632,14 @@
       mount: async (sec) => {
         await screenMount();
         api("/keepawake").then((k) => { S.keepAwake = k.on; $("#keepAwake")?.setAttribute("aria-checked", String(k.on)); }).catch(() => {});
+        api("/setup/browsers").then((b) => {
+          const sel = $("#dbrowser"); if (!sel) return;
+          const def = (b.browsers ?? []).find((x) => x.isDefault);
+          sel.innerHTML = `<option value="default">Your default browser${def ? " (" + esc(def.name) + ")" : ""}</option>` + (b.browsers ?? []).map((x) => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("");
+          sel.value = [...sel.options].some((o) => o.value === b.chosen) ? b.chosen : "default";
+          const note = () => { const id = sel.value === "default" ? def?.id : sel.value; const x = (b.browsers ?? []).find((y) => y.id === id); $("#dbNote").textContent = (x?.note ? x.note + " " : "") + "Microsoft Edge has the most natural-sounding free voices. The change shows the next time the Dayspring screen opens."; };
+          sel.onchange = note; note();
+        }).catch(() => {});
         $("[data-group=display]").addEventListener("change", () => { sec.display = chosen("display"); $$(".scr").forEach((x) => x.classList.remove("on")); });
         try {
           const r = await api("/setup/screens");
@@ -645,7 +651,7 @@
         } catch { if ($("#screens")) $("#screens").innerHTML = ""; }
       },
       save: async (sec) => {
-        const r = await post("/setup/display", { display: sec.display ?? chosen("display") ?? S.owner.display ?? "auto", displayBrowser: chosen("dbrowser") ?? "chrome" });
+        const r = await post("/setup/display", { display: sec.display ?? chosen("display") ?? S.owner.display ?? "auto", displayBrowser: $("#dbrowser")?.value || S.owner.displayBrowser || "default" });
         S.owner.display = r.display; S.owner.displayBrowser = r.displayBrowser; S.voice.overscan = r.overscan;
         if ($("#keepAwake")) { const k = await post("/keepawake", { on: isOn("keepAwake") }).catch(() => null); if (k) S.keepAwake = k.on; }
       } },
@@ -658,6 +664,47 @@
         <div id="skyBox"><div class="hint">Loading…</div></div>
         <div class="msg" id="m"></div>`,
       mount: () => skyPanel() },
+
+    // ------------------------------------------------------------------------------------------------ updates
+    // New versions come from GitHub. The notice on the Dayspring screen offers the same three choices as "When a new
+    // version comes out". Data and keys are backed up first and never replaced; a failed update is undone by itself.
+    { id: "updates", icon: "⬆️", title: "Updates", settingsOnly: true,
+      render: () => `
+        <h1>Updates</h1>
+        <p class="lead">Dayspring checks for a new version when it starts and every few hours. Your schedule, settings and keys are backed up first and are never replaced. If a new version doesn't start, the old one comes back by itself.</p>
+        <div id="upBox" aria-live="polite"><div class="hint">Looking…</div></div>
+        <h2>When a new version comes out</h2>
+        ${choiceGroup("upWhen", [
+          { value: "ask", title: "Ask me", desc: "Show what's new on the Dayspring screen and let me choose." },
+          { value: "idle", title: "Install it when I'm not using Dayspring", desc: "After half an hour of quiet. Never during an alarm, a call or Tune in." },
+          { value: "launch", title: "Install it the next time Dayspring starts", desc: "Downloaded now, installed just before Dayspring opens next time." },
+        ], "ask")}
+        <h2>What changed</h2>
+        <div id="upHist"><div class="hint">Looking…</div></div>
+        <div class="msg" id="m"></div>`,
+      mount: async () => {
+        const md = (t) => esc(t).split(/\r?\n/).map((l) => /^\s*[-*]\s+/.test(l) ? `<li>${l.replace(/^\s*[-*]\s+/, "").replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")}</li>` : /^#+\s/.test(l) ? `<b>${l.replace(/^#+\s/, "")}</b>` : l.trim() ? `<p>${l.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")}</p>` : "").join("").replace(/(<li>.*?<\/li>)+/g, (x) => `<ul>${x}</ul>`);
+        const when = (iso) => { try { return new Date(iso).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }); } catch { return iso; } };
+        const paint = (st, info) => {
+          const box = $("#upBox"); if (!box) return;
+          const L = info ?? st.latest;
+          const avail = L && L.available;
+          box.innerHTML = `<p>This is <b>Dayspring ${esc(st.version)}</b>.${st.lastCheck ? ` <span class="hint">Last checked ${esc(when(st.lastCheck))}.</span>` : ""}</p>
+            ${st.phase && !["idle", "error"].includes(st.phase) ? `<p class="msg">${esc(st.message)}</p>` : ""}
+            ${st.error ? `<p class="msg bad">${esc(st.error)}</p>` : ""}
+            ${!st.repo || L?.off ? `<p class="hint">${esc(L?.message || st.message || "Automatic updates aren't set up for this copy of Dayspring.")}</p>` : ""}${avail ? `<div class="note"><b>${esc(L.name || "Dayspring " + L.latest)} is available.</b>${st.staged ? " It's downloaded and ready." : ""}${L.notes ? `<details open><summary>What's new</summary>${md(L.notes)}</details>` : ""}</div>` : L && !L.off ? `<p>✓ You're up to date.</p>` : ""}
+            <div class="row" style="gap:.5em;margin-top:.6em"><button class="btn" type="button" id="upCheck">Check now</button>${avail ? `<button class="btn primary" type="button" id="upNow">Update now</button>` : ""}</div>`;
+          $("#upCheck").onclick = async () => { msg($("#m"), "Checking…"); try { const r = await api("/update/check"); paint(r.status, r); msg($("#m"), r.off ? "" : r.available ? "" : "You're up to date."); } catch (e) { msg($("#m"), e.message, "bad"); } };
+          $("#upNow")?.addEventListener("click", async () => { if (!confirm("Install the update now? Dayspring restarts (about a minute). Your data is backed up first.")) return; msg($("#m"), "Installing… Dayspring will restart in a moment."); try { await post("/update/choose", { choice: "now" }); } catch (e) { msg($("#m"), e.message, "bad"); } });
+          $$("[data-group=upWhen] .choice").forEach((b) => { const on = b.dataset.value === st.when; b.classList.toggle("on", on); b.setAttribute("aria-checked", String(on)); });
+          const h = st.history ?? [];
+          $("#upHist").innerHTML = h.length ? h.map((x) => `<details class="note"${x === h[0] ? " open" : ""}><summary><b>${esc(x.to)}</b> · ${esc(when(x.at))} · ${x.ok === true ? "✓ installed" : x.ok === false ? "✗ didn't work, the previous version was kept" : "installing"}</summary>${x.error ? `<p class="msg bad">${esc(x.error)}</p>` : ""}${x.notes ? md(x.notes) : "<p class='hint'>No notes.</p>"}</details>`).join("") : `<p class="hint">No updates installed yet. When one is, its notes show here.</p>`;
+        };
+        try { paint(await api("/update/status")); } catch (e) { msg($("#m"), e.message, "bad"); }
+        // the choice saves as soon as it's made
+        $("[data-group=upWhen]")?.addEventListener("change", async () => { try { await post("/update/when", { when: chosen("upWhen") ?? "ask" }); toast("Saved"); } catch (e) { msg($("#m"), e.message, "bad"); } });
+      },
+      save: async () => { await post("/update/when", { when: chosen("upWhen") ?? "ask" }); } },
 
     // ------------------------------------------------------------------------------------------------ done
     { id: "done", icon: "🎉", title: "All set", wizardOnly: true,

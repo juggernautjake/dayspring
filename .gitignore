@@ -3,6 +3,8 @@
 data/*
 !data/.gitkeep
 backups/
+updates/
+logs/
 dist-out/
 
 # Installed parts

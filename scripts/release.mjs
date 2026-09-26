@@ -22,7 +22,7 @@ mkdirSync(out, { recursive: true });
 const zip = join(out, "Dayspring.zip");
 rmSync(zip, { force: true });
 // everything in the export except git, installed modules, and anything personal a test run may have left behind
-const SKIP = new Set([".git", "node_modules", "data", ".env", "dist-out", "backups"]);
+const SKIP = new Set([".git", "node_modules", "data", ".env", "dist-out", "backups", "bin", "updates", "logs"]);
 const entries = readdirSync(target).filter((e) => !SKIP.has(e));
 const t = spawnSync("tar", ["-a", "-c", "-f", zip, "-C", target, ...entries, "data/.gitkeep"], { encoding: "utf8", windowsHide: true });
 if (t.status !== 0 || !existsSync(zip)) { console.error("Zipping failed: " + (t.stderr || "").trim()); process.exit(1); }

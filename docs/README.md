@@ -8,14 +8,14 @@ Dayspring puts your day on a screen: a spare monitor, a TV, or your laptop. It k
 
 ## ⬇️ Install in 5 minutes
 
-You need Windows 10 or 11 and Google Chrome or Microsoft Edge. You don't need a GitHub account or to know anything about code.
+You need Windows 10 or 11 and a web browser (Edge, Chrome, Brave, Firefox…). You don't need a GitHub account or to know anything about code.
 
 1. **Download.** Click **[⬇️ Download Dayspring](https://github.com/juggernautjake/dayspring/releases/latest/download/Dayspring.zip)**. The download starts right away. It's always the newest version.
 2. **Unzip.** Open your **Downloads** folder, right-click **Dayspring.zip**, choose **Extract All…**, type `C:\Dayspring` as the place, and click **Extract**.
 3. **Install.** In that folder, double-click **Install Dayspring.cmd**. If Windows shows *"Windows protected your PC"*, click **More info → Run anyway**. A black window checks your computer:
    - If it offers to install **Node.js** (the engine Dayspring runs on), type **Y** and press **Enter**. When it finishes, close the window and double-click **Install Dayspring.cmd** once more.
    - Then it downloads Dayspring's parts and adds a **Dayspring** shortcut to your desktop and Start menu.
-4. **Start.** Double-click **Start Dayspring.cmd** (or the new shortcut). Your browser opens the **guided setup**: a friendly voice walks you through your name, an optional AI, a voice, your week, what Dayspring may do, and your screen. Only your name is required; everything else can wait. When the browser asks to use your microphone, click **Allow**.
+4. **Start.** Double-click the new **Dayspring** icon on your desktop. Your browser opens the **guided setup**: a friendly voice walks you through your name, an optional AI, a voice, your week, what Dayspring may do, and your screen. Only your name is required; everything else can wait. When the browser asks to use your microphone, click **Allow**.
 
 That's it. Say **"Dayspring"** and ask anything, or press **⌨ Type**.
 Step-by-step with pictures and fixes: **[Installing Dayspring](docs/install.md)** · **[The guided setup](docs/setup-wizard.md)**
@@ -97,8 +97,8 @@ Everything is explained step by step. The same guide is built into Dayspring: cl
 ## Requirements
 
 - Windows 10 or 11
-- Google Chrome or Microsoft Edge
-- Node.js 22.9 or newer (the installer sets it up for you)
+- A web browser: Microsoft Edge (comes with Windows), Chrome, Brave, Firefox or another
+- Node.js 22.13 or newer (the installer sets it up for you)
 - An internet connection for setup, speech recognition and the optional services
 - A microphone for talking (optional: you can type), and speakers or a headset
 

@@ -263,19 +263,19 @@
   addEventListener("keydown", (e) => { if (e.key === "F11") { e.preventDefault(); toggleFull(); } }, true);
   const win = (action) => post("/window", { action }).catch(() => ({}));
 
-  function confirmBox({ title, text, go, goClass = "go", cancel = "Cancel", onGo }) {
+  function confirmBox({ title, text, go, goClass = "go", cancel = "Cancel", onGo, alt = null }) {
     const d = document.createElement("div");
     d.className = "wconfirm"; d.setAttribute("role", "alertdialog"); d.setAttribute("aria-modal", "true"); d.setAttribute("aria-label", title);
-    d.innerHTML = `<div class="wbox"><h3>${title}</h3><p>${text}</p><div class="row"><button data-c="no">${cancel}</button><button data-c="yes" class="${goClass}">${go}</button></div></div>`;
+    d.innerHTML = `<div class="wbox"><h3>${title}</h3><p>${text}</p><div class="row"><button data-c="no">${cancel}</button>${alt ? `<button data-c="alt">${alt.label}</button>` : ""}<button data-c="yes" class="${goClass}">${go}</button></div></div>`;
     document.body.appendChild(d);
     const close = () => d.remove();
-    d.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b && e.target === d) return close(); if (!b) return; close(); if (b.dataset.c === "yes") onGo(); });
+    d.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b && e.target === d) return close(); if (!b) return; close(); if (b.dataset.c === "yes") onGo(); else if (b.dataset.c === "alt") alt?.onGo(); });
     d.addEventListener("keydown", (e) => { if (e.key === "Escape") { e.stopPropagation(); close(); } });
     setTimeout(() => d.querySelector('[data-c="no"]').focus(), 20);
     return d;
   }
   function askExit() {
-    return confirmBox({ title: "Close Dayspring's screen?", text: "Alarms and reminders won't sound until you open it again (say “open the screen” at the desk, or use Start Dayspring).", go: "Close", goClass: "danger", cancel: "Keep open", onGo: () => win("close") });
+    return confirmBox({ title: "Close Dayspring's screen?", text: "Alarms and reminders won't sound until you open it again with the Dayspring icon. <b>Quit Dayspring</b> stops it completely.", go: "Close the screen", goClass: "danger", cancel: "Keep open", onGo: () => win("close"), alt: { label: "Quit Dayspring", onGo: () => post("/app/quit", {}).catch(() => {}) } });
   }
   function doHide(explain = true) {
     let seen = false; try { seen = localStorage.getItem("ds-hide-tip") === "1"; } catch { /* no storage */ }

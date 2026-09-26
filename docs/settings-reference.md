@@ -62,6 +62,8 @@ Most settings can also be changed by voice, for example "make everything bigger"
 
 On the Dayspring screen, the **🔊 Sound** panel has separate sliders for the voice, music, videos and sound effects.
 
+**Until you choose a voice**, Dayspring uses a friendly, warm female voice: **Matilda** with ElevenLabs, **coral** with OpenAI (else shimmer), and with free voices the first of **Ava**, **Jenny** or **Aria** (Natural), another Natural English voice (Emma, Michelle, Sonia, Libby, Natasha), then Windows' **Zira**. The guided setup's **guide** has its own warm male voice (Will with ElevenLabs; Andrew, Brian or Guy (Natural), then David) and never changes Dayspring's voice. Full list: [Voices → The default voices](voices.md#the-default-voices).
+
 ## Speakers & mic
 
 `?s=sound` · Full walkthrough: [Sound: speakers, headsets and microphones](audio-devices.md)
@@ -134,7 +136,7 @@ Deleting always asks first and goes to the Recycle Bin, whatever these say.
 | Setting | What it does |
 |---|---|
 | **Which screen** | Click a screen, or choose Automatic (the second screen if there is one), Main screen or Second screen. |
-| **Show the display in** | Google Chrome (default) or Microsoft Edge (free Natural voices). |
+| **Which browser shows Dayspring?** | Your default browser (the default), or any browser on the computer: Edge, Chrome, Brave, Firefox, Opera, Vivaldi… Edge has the best free voices. Takes effect the next time the screen opens. |
 | **Keep this computer awake** | While plugged in: no sleep and no idle lock screen, so Dayspring can wake you and hear you. On battery it sleeps as usual. Your power settings are not changed. See [Keeping the screen awake](display-setup.md#keeping-the-screen-awake). |
 | **📐 Fit to screen…** | Bright lines at the edges to line up with your TV. See [Fitting Dayspring to your screen](display-setup.md#fitting-dayspring-to-your-screen). |
 
@@ -166,6 +168,17 @@ Each group has its own **Reset**, and **Reset the whole screen layout** puts eve
 | **Motion** | Normal, Reduced (no particles), or Still; smoothness 15, 30 or 60 fps (lower is lighter on older computers). |
 | **Schedule-aware vibe** | Changes the vibe during kinds of blocks, for example Focus while studying. |
 | **Preview** | Shows a look for 20 seconds without saving it. |
+
+## Updates
+
+| Setting | What it does |
+| --- | --- |
+| **Check now** | Asks GitHub for a newer Dayspring right away. (Dayspring also checks when it starts and every few hours.) |
+| **Update now** | Shown when a new version is out, with its **What's new**. Backs up your data, installs, restarts (about a minute). |
+| **When a new version comes out** | **Ask me** (a card on the screen with the choices; the default), **Install it when I'm not using Dayspring** (after half an hour of quiet; never during an alarm, a call or Tune in), or **Install it the next time Dayspring starts**. |
+| **What changed** | Every installed update, newest first, with its notes and whether it worked. A version that didn't start is undone by itself, and says so here. |
+
+Backups of your data and of the previous version are in the `backups` folder. See [Updating](updating.md).
 
 ## Keys in the .env file
 

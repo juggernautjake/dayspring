@@ -1,6 +1,6 @@
 {
   "name": "dayspring",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "description": "Dayspring: a friendly voice assistant and day planner for Windows that lives on any screen. Free by default; better with an AI key.",
@@ -30,7 +30,7 @@
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "engines": {
-    "node": ">=22.9"
+    "node": ">=22.13"
   },
   "dayspring": {
     "updateRepo": "juggernautjake/dayspring"

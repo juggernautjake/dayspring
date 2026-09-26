@@ -32,7 +32,7 @@ const QA = join(tmpdir(), `dayspring-qa-${Date.now().toString(36)}`), APP = join
 
 // 1. Node
 const [maj, min] = process.versions.node.split(".").map(Number);
-row("Node.js 22.9 or newer", maj > 22 || (maj === 22 && min >= 9), process.versions.node);
+row("Node.js 22.13 or newer", maj > 22 || (maj === 22 && min >= 13), process.versions.node);
 
 // 2. export (runs the privacy scan; fails on anything personal)
 let src = fromArg;

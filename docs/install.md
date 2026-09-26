@@ -37,20 +37,37 @@ You don't need a GitHub account, and you don't need to know anything about GitHu
 
 ## Step 3: Start Dayspring
 
-1. Double-click the **Dayspring** shortcut, or **Start Dayspring.cmd** in the folder.
-2. A small minimized window named **Dayspring server** appears on the taskbar. That's Dayspring running. Leave it open. Closing it stops Dayspring.
-3. The Dayspring screen opens full screen. The first time, you'll see the **setup wizard** instead. See [The setup wizard](setup-wizard.md).
+1. Double-click the **Dayspring** shortcut on your desktop or in the Start menu. (Or **Start Dayspring.cmd** in the folder: its small window closes by itself.)
+2. Dayspring runs quietly in the background. There's no command window to keep open.
+3. The first time, the **guided setup** opens in your browser. See [The guided setup](setup-wizard.md). After that, the Dayspring screen opens in its own window: full screen on a TV or second monitor, or an app window on this screen.
 4. When the browser asks to use your microphone, click **Allow**.
 
-> **Tip:** To leave the full-screen view for a moment, press **Alt+Tab**. To close it, press **Alt+F4** while it's in front. Starting Dayspring again brings it back.
+Starting Dayspring again while it's running never opens a second copy: its window just comes back to the front.
 
-## Step 4 (optional): Microsoft Edge natural voices
+> **Tip:** To leave the full-screen view for a moment, press **Alt+Tab**. Move the pointer to the top edge of the Dayspring screen for its window buttons: sound, full screen, minimize, maximize, hide and **✕**.
 
-Dayspring opens its screen in Google Chrome if you have it, otherwise in Microsoft Edge. The free **"Natural"** voices (Aria, Jenny, Guy and others) are built into Edge. If you want them, see [Voices](voices.md#free-voices).
+## Stopping Dayspring
+
+Move the pointer to the top edge of the Dayspring screen, press **✕**, then choose:
+
+- **Close the screen**: the window closes, and Dayspring keeps running in the background. Alarms and reminders don't sound until you open it again with the Dayspring icon.
+- **Quit Dayspring**: stops it completely.
+
+You can also double-click **Stop Dayspring.cmd** in the folder, or **Stop Dayspring** in the Start menu.
+
+## Step 4 (optional): choose the browser
+
+Dayspring uses your **default browser** unless you pick another one in the guided setup or in Settings → **Screen** → **Which browser shows Dayspring?** The list shows the browsers on your computer: Microsoft Edge, Google Chrome, Brave, Firefox, Opera, Vivaldi and others.
+
+- **Edge, Chrome, Brave, Vivaldi**: Dayspring gets its own window (full screen on a second screen), and the microphone works without asking.
+- **Firefox**: its own full-screen window too. Allow the microphone once if it asks.
+- **Opera and others**: a normal browser window.
+
+The free **"Natural"** voices (Aria, Jenny, Guy and others) come with Microsoft Edge, so Edge gives the nicest free voices. See [Voices](voices.md#free-voices).
 
 ## Uninstalling
 
-1. Close the **Dayspring server** window.
+1. Stop Dayspring (**✕** at the top of its screen → **Quit Dayspring**, or **Stop Dayspring.cmd**).
 2. If you chose "start with Windows", press **Win+R**, type `shell:startup`, press **Enter**, and delete the **Dayspring** shortcut there.
 3. Delete the Dayspring shortcuts from the desktop and Start menu.
 4. Delete the Dayspring folder.

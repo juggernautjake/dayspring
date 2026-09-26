@@ -774,7 +774,8 @@
     return shown;
   }
   let demoStop = false;
-  async function playVoice(n) {
+  function playVoice(n) { return window.dsVoiceLock ? window.dsVoiceLock.run(() => playVoiceNow(n)) : playVoiceNow(n); }
+  async function playVoiceNow(n) {
     if (voiceProvider === "browser") return browserSpeak(VOICE_LINE(String(n).replace(/^Microsoft |^Google /, "").replace(/ Online \(Natural\)| - English.*$/, "")), {}, { voiceName: n });
     try { const r = await api("/tts", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: VOICE_LINE(n), voice: n }) }); const url = URL.createObjectURL(await r.blob()); const a = new Audio(url); try { audioCtx().createMediaElementSource(a).connect(CH.general.voice); } catch { /* plays direct */ } await a.play(); await new Promise((res) => { a.onended = res; a.onerror = res; }); URL.revokeObjectURL(url); } catch { /* skip that one */ }
   }
@@ -1434,6 +1435,10 @@
 
   /* ================================================================ speaking (fetched ahead, played through the chain) */
   let speaking = false, speakQueue = Promise.resolve(), current = null;
+  const PAGE_ID = (crypto.randomUUID?.() ?? String(Math.random()).slice(2)) + "";
+  let isSpeaker = true; window.dsIsSpeaker = true;
+  // everything that talks on this page (replies, announcements, call answers) goes through this one queue
+  window.dsVoiceLock = { run: (fn) => (speakQueue = speakQueue.then(() => (isSpeaker ? fn() : null)).catch(() => {})) };
   const pending = new Map();
   // voice opts: { speed, tone } — the morning asks for "soothing"; otherwise the server picks the tone of the hour
   const vkey = (text, v = {}) => `${v.speed ?? ""}|${v.tone ?? ""}|${text}`;
@@ -1442,12 +1447,15 @@
     if (!pending.has(k)) pending.set(k, api("/tts", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text, speed: v.speed, tone: v.tone }), signal: AbortSignal.timeout(25_000) }).then((r) => r.blob()));
     return pending.get(k);
   }
-  function speak(text, chip, bus = "general", v = {}) { prefetch(text, v).catch(() => {}); speakQueue = speakQueue.then(() => speakOne(text, chip, bus, v)).catch(() => {}); return speakQueue; }
+  // speechGen: "stop" (and anything urgent) bumps it, so the sentence being said ends AND everything queued before it is dropped
+  let speechGen = 0;
+  function speak(text, chip, bus = "general", v = {}) { const g = speechGen; prefetch(text, v).catch(() => {}); speakQueue = speakQueue.then(() => (g === speechGen ? speakOne(text, chip, bus, v) : null)).catch(() => {}); return speakQueue; }
   // Tune in (listening to calls in the headset) ignores Dayspring's own voice and music: tell it when they start and stop
   function tuneIn(on, ms, kind = "voice") { post("/tunein/speaking", { on, kind, ...(ms ? { ms: Math.round(ms) } : {}) }).catch(() => {}); }
   let lastSaid = null;      // { text, v } — "say that again"
   async function speakOne(text, chip, bus = "general", v = {}) {
     if (!text) return;
+    if (!isSpeaker) return;            // another Dayspring screen is the one speaking
     lastSaid = { text, v };
     noteOwnSpeech(text);
     stateSince = Date.now();
@@ -1494,10 +1502,11 @@
   function loadVoices() { sysVoices = window.speechSynthesis?.getVoices?.() ?? []; return sysVoices; }
   if (window.speechSynthesis) { loadVoices(); speechSynthesis.onvoiceschanged = () => { loadVoices(); dlog("voices", { count: sysVoices.length, english: sysVoices.filter((x) => /^en/i.test(x.lang)).length, natural: sysVoices.filter((x) => /natural|online|neural/i.test(x.name)).map((x) => x.name).slice(0, 12) }); }; }
   const isNatural = (v) => /natural|online|neural|google/i.test(v.name);
-  // the voice he picked, else the best English one available (natural first)
+  // the voice they picked, else Dayspring's default: a warm female voice (the list is in voices.js: Ava, Jenny, Aria… Zira)
   function pickSysVoice(name = prefs.browserVoice) {
     const vs = sysVoices.length ? sysVoices : loadVoices();
     if (name) { const exact = vs.find((x) => x.name === name) ?? vs.find((x) => x.name.toLowerCase().includes(String(name).toLowerCase())); if (exact) return exact; }
+    if (window.dsVoicePrefs) return window.dsVoicePrefs.pick("assistant", vs);
     const en = vs.filter((x) => /^en[-_]US/i.test(x.lang)).concat(vs.filter((x) => /^en/i.test(x.lang)));
     return en.find(isNatural) ?? en[0] ?? vs[0] ?? null;
   }
@@ -1507,6 +1516,7 @@
     return new Promise((resolve) => {
       if (!window.speechSynthesis) return resolve();
       speechSynthesis.cancel();
+      const my = speechGen;               // a stop (speechGen changes) ends this whole reply, not just one sentence
       const voiceObj = pickSysVoice(voiceName);
       const tone = TONE_VOICE[v.tone] ?? TONE_VOICE[prefs.timeTone === false ? "bright" : (new Date().getHours() < 9 ? "soothing" : new Date().getHours() < 12 ? "bright" : new Date().getHours() < 17 ? "chipper" : "warm")];
       const rate = Math.max(0.6, Math.min(1.6, tone.rate * (v.speed ? v.speed / 0.95 : 1) + (prefs.speedAdj ?? 0)));
@@ -1516,6 +1526,7 @@
       let wordBase = 0, i = 0;
       const guard = setTimeout(() => { speechSynthesis.cancel(); resolve(); }, Math.min(120_000, 6000 + text.length * 110));
       const next = () => {
+        if (my !== speechGen) { clearTimeout(guard); return resolve(); }
         if (i >= parts.length) { clearTimeout(guard); words.forEach((w) => w.classList.add("on")); return resolve(); }
         const part = parts[i++], u = new SpeechSynthesisUtterance(part);
         if (voiceObj) u.voice = voiceObj;
@@ -1529,7 +1540,7 @@
       next();
     });
   }
-  function stopSpeaking() { if (current) { current.pause(); current.onended?.(); } window.speechSynthesis?.cancel(); }
+  function stopSpeaking() { speechGen++; if (current) { current.pause(); current.onended?.(); } window.speechSynthesis?.cancel(); }
 
   // Deliver something the server wants said, the way notifications are set: voice, chime or silent.
   async function notify(text, { sound = "motif", chip = null, bus = "notify", polite = true, voice = {} } = {}) {
@@ -1638,15 +1649,20 @@
     $("#alarmText").textContent = item.greeting;
     const mcat = item.segmentTitle === "Your morning" ? "home" : "faith";
     await speak(item.greeting, { title: "Good morning", category: mcat }, "notify", slow);
-    if (item.wish) { await sleep(500); await speak(item.wish, { title: "Good morning", category: mcat }, "notify", slow); }
+    if (run !== morningRun) return;
+    if (item.wish) { await sleep(500); if (run !== morningRun) return; await speak(item.wish, { title: "Good morning", category: mcat }, "notify", slow); }
+    if (run !== morningRun) return;
     $("#alarm").hidden = true; alarmOn = false;
     if (src) {
       // back to full for a whole minute of the song, then it fades away
       await fadeMusic(src, 1, 3000);
+      if (run !== morningRun) return;
       await sleep((item.hold ?? 60) * 1000);
+      if (run !== morningRun) return;
       await fadeMusic(src, 0, 5000, { stop: true });
     }
-    for (const sg of item.segments) { await sleep(900); await speak(sg, { title: item.segmentTitle ?? "Time with God", category: mcat }, "notify", slow); }
+    for (const sg of item.segments) { await sleep(900); if (run !== morningRun) return; await speak(sg, { title: item.segmentTitle ?? "Time with God", category: mcat }, "notify", slow); }
+    if (run !== morningRun) return;
     openCommandWindow(60_000);
   }
   /* ================================================================ the player: YouTube and Spotify, one set of controls */
@@ -2220,6 +2236,7 @@
     if (rec && !paused && now - lastRecEvent > 4 * 60_000) { dlog("watchdog", { what: "recognizer quiet 4 min, restarted" }); lastRecEvent = now; try { rec.abort(); } catch { /* onend restarts it */ } }
   }, 4000);
   function startListening() {
+    if (!isSpeaker) return;             // another Dayspring screen is the one listening (no double replies)
     if (!SR) { setMic("", "This browser can't listen. Use Chrome."); return; }
     // an automated copy of this page (tests, screenshots) never listens: it would hear the real room
     if (navigator.webdriver) { setMic("", "Automated view: not listening."); return; }
@@ -2368,7 +2385,7 @@
       push("ai", "Stopped."); showNowPlaying(null);
       return true;
     }
-    if (/^(never ?mind|cancel|forget it|be quiet)$/.test(t)) { stopSpeaking(); return true; }
+    if (/^(never ?mind|cancel|forget it|be quiet)$/.test(t)) { morningRun++; stopSpeaking(); return true; }
     if (alarmOn && /^(snooze|hit snooze|snooze it|snooze the alarm|(give me )?(five|ten|\d+|a few) more minutes|snooze (for )?(\d+|five|ten|fifteen|thirty) minutes)$/.test(t)) {
       const n = /(\d+|five|ten|fifteen|thirty)/.exec(t); const m = n ? Number({ five: 5, ten: 10, fifteen: 15, thirty: 30 }[n[1]] ?? n[1]) : /a few/.test(t) ? 5 : 9;
       snoozeAlarm(m); return true;
@@ -2472,6 +2489,7 @@
     // starts gentle and grows over the first minute and a half
     const ring = () => {
       if (speaking) return;
+      if (!isSpeaker) return;
       const k = Math.min(1, (Date.now() - alarmStart) / 90_000);
       const notes = k < 0.3 ? [784, 988, 1175] : k < 0.7 ? [659, 784, 988, 1319] : [659, 784, 988, 1319, 988, 784];
       onBus("notify", () => {
@@ -2480,12 +2498,14 @@
       }, { alarm: true });
     };
     ring(); alarmLoop = setInterval(ring, 5200);
+    stopSpeaking();                    // the alarm is urgent: whatever was being said stops, then the alarm speaks
     setTimeout(() => speak(item.text, null, "notify"), 2500);
     alarmRepeat = setInterval(() => speak(item.text, null, "notify"), 180_000);
     alarmStop = setTimeout(() => dismissAlarm(false), 30 * 60_000);
   }
   function dismissAlarm(answered) {
     if (!alarmOn) return;
+    morningRun++;                        // a wake-up song and greeting in progress stop here
     alarmOn = false; $("#alarm").hidden = true;
     clearInterval(alarmLoop); clearInterval(alarmRepeat); clearTimeout(alarmStop);
     playSound("done", "notify"); burst(40, 70);
@@ -2510,12 +2530,16 @@
   $("#alarmSnooze").onclick = () => { if (snzOpened) { snzOpened = false; return; } snoozeAlarm(9); };
   // tests (headless, muted): show the alarm or a snoozable pop-up without a real one going off
   window.addEventListener("ds-test-alarm", (e) => startAlarm({ kind: "alarm", alarm: true, hm: "07:00", text: "Good morning. Time to get up.", ...(e.detail || {}) }));
+  window.addEventListener("ds-test-say", (e) => speak(e.detail?.text ?? "Testing."));
+  window.addEventListener("ds-test-morning", (e) => startMorning({ greeting: "Good morning.", wish: "Have a good day.", segments: ["Segment one.", "Segment two."], lead: 0, ...(e.detail || {}) }));
   window.addEventListener("ds-test-alert", (e) => toast("Reminder", e.detail?.text ?? "Test reminder", "wait", "bell", { snooze: { kind: "reminder", text: e.detail?.text ?? "Test reminder" } }));
   $("#snzOpts").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) snoozeAlarm(Number(b.dataset.m)); });
 
   /* ================================================================ events from the server */
   function connectEvents() {
-    const es = new EventSource("/api/events");
+    const es = new EventSource(`/api/events?page=display&role=display&id=${encodeURIComponent(PAGE_ID)}`);
+    // one voice at a time: only the page the server names speaks (another open Dayspring screen stays quiet)
+    es.addEventListener("speaker", (e) => { try { const d = JSON.parse(e.data); const was = isSpeaker; isSpeaker = !d.id || d.id === PAGE_ID; window.dsIsSpeaker = isSpeaker; if (!isSpeaker) { stopSpeaking(); pauseListening(); setMic("", "Another Dayspring screen is listening."); } else if (!was) resumeListening(); } catch { /* bad event */ } });
     // shared with the page's add-ons (the living sky) so they don't each open another connection
     window.dsEvents = es; window.dispatchEvent(new CustomEvent("ds-events", { detail: es }));
     // after Dayspring restarts (new code from Claude Code), reload so the new version shows

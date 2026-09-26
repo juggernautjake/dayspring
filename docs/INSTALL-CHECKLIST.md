@@ -14,7 +14,7 @@ It exports the generic copy (with the privacy scan), installs it fresh in a temp
 
 | Check | What it proves |
 |---|---|
-| Node.js 22.9 or newer | The computer can run Dayspring |
+| Node.js 22.13 or newer | The computer can run Dayspring |
 | export + privacy scan | Nothing personal is in the copy (names, places, people, keys, phone numbers, folder paths, your own words in `data/privacy-terms.json`) |
 | export has no personal data | `data/` holds only `.gitkeep`; no backups, logs, `bin/` or `.env` |
 | npm install --omit=dev | A clean install works, with no warnings |

@@ -1,6 +1,6 @@
 @echo off
 rem Installs Dayspring on this computer:
-rem   1. checks for Node.js 22.9 or newer (and offers to install it with winget if it's missing)
+rem   1. checks for Node.js 22.13 or newer (and offers to install it with winget if it's missing)
 rem   2. downloads Dayspring's parts (npm install)
 rem   3. creates your private settings file (.env) for keys you may add later
 rem   4. adds Dayspring to the Start menu and the desktop, and (if you want) starts it with Windows
@@ -15,9 +15,9 @@ echo.
 
 rem ---- 1. Node.js
 set NODE_OK=0
-where node >nul 2>nul && node -e "const [a, b] = process.versions.node.split('.').map(Number); process.exit(a > 22 || (a === 22 && b >= 9) ? 0 : 1)" && set NODE_OK=1
+where node >nul 2>nul && node -e "const [a, b] = process.versions.node.split('.').map(Number); process.exit(a > 22 || (a === 22 && b >= 13) ? 0 : 1)" && set NODE_OK=1
 if "%NODE_OK%"=="1" goto node_ok
-echo Dayspring needs Node.js 22.9 or newer, and it isn't installed (or it's too old).
+echo Dayspring needs Node.js 22.13 or newer, and it isn't installed (or it's too old).
 where winget >nul 2>nul || goto node_manual
 choice /c YN /m "Install Node.js LTS now with winget (Microsoft's installer)"
 if errorlevel 2 goto node_manual
@@ -53,15 +53,20 @@ if not exist data mkdir data
 
 rem ---- 4. shortcuts
 set HERE=%~dp0
+rem files from a downloaded zip are marked "from the internet"; clear that on Dayspring's own files so its starter
+rem (Start Dayspring.vbs) doesn't ask "Do you want to open this file?" every time
+powershell -NoProfile -Command "Get-ChildItem -LiteralPath $env:HERE -Recurse -File -ErrorAction SilentlyContinue | Unblock-File -ErrorAction SilentlyContinue"
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "$w = New-Object -ComObject WScript.Shell; $here = $env:HERE.TrimEnd('\');" ^
   "$menu = Join-Path ([Environment]::GetFolderPath('Programs')) 'Dayspring'; New-Item -ItemType Directory -Force $menu | Out-Null;" ^
   "function mk($path, $target, $desc) { $s = $w.CreateShortcut($path); $s.TargetPath = $target; $s.WorkingDirectory = $here; $s.IconLocation = (Join-Path $here 'dayspring.ico'); $s.Description = $desc; $s.WindowStyle = 7; $s.Save() }" ^
-  "mk (Join-Path $menu 'Dayspring.lnk') (Join-Path $here 'Start Dayspring.cmd') 'Start Dayspring';" ^
+  "function quiet($path, $desc) { $s = $w.CreateShortcut($path); $s.TargetPath = (Join-Path $env:SystemRoot 'System32\wscript.exe'); $s.Arguments = [char]34 + (Join-Path $here 'Start Dayspring.vbs') + [char]34; $s.WorkingDirectory = $here; $s.IconLocation = (Join-Path $here 'dayspring.ico'); $s.Description = $desc; $s.Save() }" ^
+  "quiet (Join-Path $menu 'Dayspring.lnk') 'Start Dayspring';" ^
+  "mk (Join-Path $menu 'Stop Dayspring.lnk') (Join-Path $here 'Stop Dayspring.cmd') 'Stop Dayspring completely';" ^
   "mk (Join-Path $menu 'Update Dayspring.lnk') (Join-Path $here 'Update Dayspring.cmd') 'Check for a newer Dayspring';" ^
   "$u = $w.CreateShortcut((Join-Path $menu 'Dayspring Settings.url')); $u.TargetPath = 'http://localhost:4747/setup'; $u.Save();" ^
   "$u = $w.CreateShortcut((Join-Path $menu 'Dayspring Help.url')); $u.TargetPath = 'http://localhost:4747/help'; $u.Save();" ^
-  "mk (Join-Path ([Environment]::GetFolderPath('Desktop')) 'Dayspring.lnk') (Join-Path $here 'Start Dayspring.cmd') 'Start Dayspring'"
+  "quiet (Join-Path ([Environment]::GetFolderPath('Desktop')) 'Dayspring.lnk') 'Start Dayspring'"
 echo [ok] Added Dayspring to the Start menu and the desktop
 
 choice /c YN /m "Start Dayspring automatically when you sign in to Windows"
@@ -69,7 +74,7 @@ if errorlevel 2 (
   del "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\Dayspring.lnk" >nul 2>nul
   goto done
 )
-powershell -NoProfile -Command "$w = New-Object -ComObject WScript.Shell; $s = $w.CreateShortcut((Join-Path ([Environment]::GetFolderPath('Startup')) 'Dayspring.lnk')); $s.TargetPath = (Join-Path $env:HERE 'Start Dayspring.cmd'); $s.WorkingDirectory = $env:HERE; $s.WindowStyle = 7; $s.IconLocation = (Join-Path $env:HERE 'dayspring.ico'); $s.Save()"
+powershell -NoProfile -Command "$w = New-Object -ComObject WScript.Shell; $s = $w.CreateShortcut((Join-Path ([Environment]::GetFolderPath('Startup')) 'Dayspring.lnk')); $s.TargetPath = (Join-Path $env:SystemRoot 'System32\wscript.exe'); $s.Arguments = [char]34 + (Join-Path $env:HERE 'Start Dayspring.vbs') + [char]34; $s.WorkingDirectory = $env:HERE; $s.IconLocation = (Join-Path $env:HERE 'dayspring.ico'); $s.Save()"
 echo [ok] Dayspring will start when you sign in
 
 :done

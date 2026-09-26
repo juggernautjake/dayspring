@@ -18,10 +18,11 @@ See [Architecture](architecture.md) for how the pieces fit together.
 | `lib/abilities.mjs` | What Dayspring can do on the computer and the web, as AI tools, limited by the owner's permissions (lib/permissions.mjs). | `NAMES`, `setDocViewer`, `tools`, `run`, `summary` |
 | `lib/ambient-routes.mjs` | The living sky's data, settings and previews. | `previewLook`, `handle` |
 | `lib/ambient.mjs` | What it's like outside right now, for the living sky on the Dayspring screen: where the sun is (sunrise, sunset and the twilights, computed for the owner's location), the weather (Open-Meteo, free, no key), the season and the moon. | `sunElevation`, `moonPhase`, `season`, `kindOf`, `now`, `keepFresh` |
-| `lib/announcer.mjs` | Schedule-triggered speech for the TV. | `setEventHook`, `addClient`, `clientCount`, `recent`, `broadcast`, `spokenTime`, `boundaryAt`, `tick`, +2 |
+| `lib/announcer.mjs` | Schedule-triggered speech for the TV. | `setEventHook`, `speaker`, `addClient`, `clientCount`, `displayCount`, `recent`, `broadcast`, `spokenTime`, +4 |
 | `lib/assistant.mjs` | The assistant loop: Claude + the scheduling tools. | `modelName`, `hasKey`, `tools`, `localScripture`, `localMedia`, `localAnswer`, `chat` |
 | `lib/bible.mjs` | Scripture: look up any passage in several translations, and search the Bible by words. | `BOOKS`, `VERSIONS`, `versionFrom`, `parseRef`, `passage`, `spoken`, `search`, `ensureOffline` |
 | `lib/browser.mjs` | The media browser: a real Chrome window driven by Playwright. | `page`, `isOpen`, `windowState`, `hide`, `close`, `youtubeSearch`, `youtubeMyPlaylists`, `youtubeWatch`, +14 |
+| `lib/browsers.mjs` | Which web browsers are installed, which one Windows uses by default, and how to start one for Dayspring. | `KNOWN`, `NOT_BROWSERS`, `list`, `defaultId`, `resolve`, `familyNote`, `playwrightChannel` |
 | `lib/calendar-routes.mjs` | All the owner's calendars together, and the conflicts between them (for the Schedule app and the display): GET /api/calendar/unified?from=&to=[&refresh=1] → { items (outside calendars and tasks, each with its source, color and link), confli… | `handle`, `externalBlocks` |
 | `lib/call-routes.mjs` | Routes for Tune in (listen to what's playing in the headset) and Talk into calls (Voicemeeter bridge). | `handle`, `command` |
 | `lib/callbridge.mjs` | "Talk into calls": when it's on, Dayspring's answers during Tune in go into the owner's call (Discord or any app) through Voicemeeter, mixed with the owner's own mic. | `status`, `setTalk`, `resume`, `finish`, `isTalking` |
@@ -29,7 +30,7 @@ See [Architecture](architecture.md) for how the pieces fit together.
 | `lib/chores.mjs` | Micro-habits: 5-10 minute tasks done consistently in the small windows of a day. | `MAX_PER_DAY`, `list`, `pick`, `markDone`, `set` |
 | `lib/church.mjs` | Church: the owner's congregation (data/church.json). | `info`, `addBulletin`, `latest`, `prayerList`, `verses`, `setStudy`, `studies`, `potluck`, +2 |
 | `lib/churchtalk.mjs` | Church conversations: getting ready before a service, talking it through after, and preparing lessons. | `passageFor`, `offerNow`, `start`, `handle`, `notesFor`, `isActive`, `contextFor`, `lessonScaffold` |
-| `lib/cli-tools.mjs` | The AI coding tools Dayspring can work through ("Dayspring, add a button that…", fixing things, automation): Claude Code (Anthropic) and Codex (OpenAI). | `TOOLS`, `suggestFor`, `status`, `statusAll`, `preferred`, `setPreferred`, `coderTool`, `job`, +4 |
+| `lib/cli-tools.mjs` | The AI coding tools Dayspring can work through ("Dayspring, add a button that…", fixing things, automation): Claude Code (Anthropic) and Codex (OpenAI). | `TOOLS`, `suggestFor`, `status`, `refreshAll`, `statusAll`, `preferred`, `setPreferred`, `coderTool`, +5 |
 | `lib/coder.mjs` | Working on Dayspring (or writing things) by voice, through Claude Code — the same agent the owner uses in the terminal. | `toolLabel`, `onEvent`, `isRunning`, `status`, `start`, `stop`, `canContinue` |
 | `lib/conflicts.mjs` | Scheduling conflicts across every calendar (unified.mjs): Dayspring, Google, Outlook, subscriptions. | `detect`, `dayWord`, `describe`, `isFree`, `findSlot`, `options`, `scan`, `resolve`, +7 |
 | `lib/connector-routes.mjs` | Connected apps (Notion, Google Calendar + Gmail, Outlook + Microsoft To Do, calendar subscriptions, news feeds, Home Assistant, webhooks, Todoist, weather alerts): GET /api/connect → every app: its walkthrough and status GET /api/connect/<n… | `handle`, `handlePage` |
@@ -53,6 +54,7 @@ See [Architecture](architecture.md) for how the pieces fit together.
 | `lib/discord/wake.mjs` | Is someone talking to Dayspring? | `wakeCommand`, `isNoise` |
 | `lib/discover-routes.mjs` | /api/discover (the For you feed and its settings) and /api/interests (their interests, free text). | `handle` |
 | `lib/discover.mjs` | Discover: things you're into. | `DEFAULTS`, `_reset`, `settings`, `setSettings`, `topics`, `kindOf`, `_setDeps`, `run`, +11 |
+| `lib/display.mjs` | Opening the Dayspring screen: which screen, which browser, and never a second copy. | `screens`, `pick`, `wantScreen`, `windowCmd`, `profileBase`, `launchArgs`, `openUrl`, `open`, +1 |
 | `lib/docskills.mjs` | Documents by voice (no AI needed to open, find or read aloud; summaries and explanations use the AI the owner chose): "open my resume", "read me the lease agreement", "read the bulletin in Downloads", "what's in my budget spreadsheet?" whil… | `current`, `report`, `show`, `handle` |
 | `lib/document-routes.mjs` | Documents for the Dayspring screen's reader and Settings: find, outline, read in paragraphs, where the owner stopped. | `handle` |
 | `lib/documents.mjs` | Documents: open and understand the owner's files — Word (.docx and old .doc), PDF, PowerPoint, Excel/CSV, OpenDocument, RTF, plain text/markdown/HTML/email, and pictures of text (Windows' built-in OCR). | `TYPES`, `supported`, `guard`, `readWithWord`, `extract`, `outline`, `read`, `find`, +3 |
@@ -83,7 +85,7 @@ See [Architecture](architecture.md) for how the pieces fit together.
 | `lib/permissions.mjs` | What Dayspring may do on this computer. | `DEFAULTS`, `normalize`, `get`, `set`, `DENY`, `userFolders`, `roots`, `fileEntries`, +6 |
 | `lib/phonelink.mjs` | Sending texts through Microsoft Phone Link (iPhone over Bluetooth). | `send`, `ready` |
 | `lib/phonenotify.mjs` | The owner's phone, through Phone Link: new texts and app notifications, read from Windows' own notification list (read-only). | `poll`, `prime`, `announceText`, `pending`, `clear`, `last`, `all`, `lastFrom` |
-| `lib/photos.mjs` | Photos from the owner's computer, shown now and then on the TV, and catalogued in their own words over time. | `idOf`, `scan`, `byId`, `pick`, `info`, `canAskToday`, `markAsked`, `pending`, +6 |
+| `lib/photos.mjs` | Photos from the owner's computer, shown now and then on the TV, and catalogued in their own words over time. | `idOf`, `scan`, `scanNow`, `byId`, `pick`, `info`, `canAskToday`, `markAsked`, +7 |
 | `lib/phrases.mjs` | Variety. Every spoken line has many ways to be said, and Dayspring avoids the ones it used recently, so it never sounds like the same recording. | `setBitRate`, `phrase`, `has`, `keys`, `habitNudge`, `PERSONALITY` |
 | `lib/planner.mjs` | "I need to schedule something Saturday at 3. | `isFixed`, `isAnchored`, `fit`, `apply`, `hasPending`, `dropPending`, `doNow` |
 | `lib/player-routes.mjs` | The in-app player's routes: Spotify sign-in and tokens for the screen's Spotify player, what's playing, and controls. | `openSignIn`, `handle`, `handlePage` |
@@ -115,10 +117,10 @@ See [Architecture](architecture.md) for how the pieces fit together.
 | `lib/tunein.mjs` | "Tune in": Dayspring listens to whatever is playing in the owner's headset (a Discord call, a game, a video) and answers when someone says its name. | `resume`, `setChat`, `isOn`, `status`, `start`, `stop`, `speaking`, `noteSaid`, +3 |
 | `lib/twilio.mjs` | Twilio voice + SMS for Dayspring. | `publicUrl`, `twilioReady`, `validSignature`, `handleVoiceStart`, `handleVoiceTurn`, `handleSms`, `listNumbers`, `searchNumbers`, +2 |
 | `lib/unified.mjs` | Every calendar in one place: Dayspring's own schedule, each Google calendar, Outlook, calendar subscriptions (ICS), and Microsoft To Do / Todoist items that have a due date, as one list of items with the same shape: { id, key, source, sourc… | `config`, `setConfig`, `setHidden`, `setBusyAllDay`, `clear`, `keyOf`, `items`, `sources` |
-| `lib/update-routes.mjs` | Settings → Updates: GET /update/check, POST /update/apply, GET /update/status (paths are after /api). | `handle` |
-| `lib/updater.mjs` | Updates from GitHub releases. | `DESK`, `version`, `repo`, `status`, `cmp`, `check`, `apply`, `restartServer`, +2 |
+| `lib/update-routes.mjs` | Settings → Updates and the update notice on the Dayspring screen (paths are after /api). | `handle`, `command` |
+| `lib/updater.mjs` | Updates from GitHub releases. | `DESK`, `KEEP`, `version`, `isSource`, `repo`, `when`, `setWhen`, `history`, +18 |
 | `lib/videolists.mjs` | Dayspring's own named video playlists ("my Worship playlist", "Morning hymns"), kept on this computer in data/video-playlists.json. | `all`, `find`, `create`, `rename`, `remove`, `add`, `removeItem`, `move` |
-| `lib/voice.mjs` | Text to speech. The Dayspring screen asks /api/tts for audio and plays it. | `ttsProvider`, `OPENAI_VOICES`, `OPENAI_DESCRIBE`, `describeFor`, `VOICES`, `DESCRIBE`, `loadLibrary`, `voiceReady`, +7 |
+| `lib/voice.mjs` | Text to speech. The Dayspring screen asks /api/tts for audio and plays it. | `ttsProvider`, `OPENAI_VOICES`, `OPENAI_DEFAULT`, `defaults`, `OPENAI_DESCRIBE`, `describeFor`, `VOICES`, `DESCRIBE`, +9 |
 | `lib/voicemeeter-install.mjs` | Installing Voicemeeter (VB-Audio, free/donationware) — what lets Dayspring talk into calls. | `PAGE`, `status`, `latest`, `job`, `install` |
 | `lib/voicemeeter.mjs` | NOTE (2026-09-24): Dayspring no longer changes the Windows default output. | `classify`, `installDir`, `route`, `windowsOutputs`, `restoreDefault`, `start`, `stop`, `isActive`, +6 |
 | `lib/voiceskills.mjs` | Spoken skills that work with or without Claude: Memory verses: "what am I memorizing", "quiz me" (then they recite), "I've got it", "I need more time", "read my verses". | `offerRestart`, `handle` |
@@ -152,6 +154,8 @@ See [Architecture](architecture.md) for how the pieces fit together.
 | `public/study.js` | Study cards on the Dayspring display: click (or Enter on) the exam card or a course ring to open a small menu — |  |
 | `public/tv.html` | The Dayspring screen: clock, now/next, the rotating showcase, the talk panel, the player, alarms, overlays. |  |
 | `public/tv.js` | Dayspring on the TV: the day at a glance over a living aurora, spoken check-ins and announcements, a wake-phrase listener, music and video, sound bites, Claude Code alerts, and notification modes (voice / chime / silent). |  |
+| `public/updates.js` | The update notice on the Dayspring screen: "Dayspring 1.2.0 is ready", what's new, and four choices: Update now · Next time I open Dayspring · When I'm not using it · Not now. |  |
+| `public/voices.js` | Which free voice speaks when nobody has chosen one: one list, used by the Dayspring screen (tv.js), the guided setup (welcome.js) and Settings. |  |
 | `public/welcome.html` | The guided first-run setup with the spoken guide (/welcome). |  |
 | `public/welcome.js` | Dayspring's first-run guided setup (/welcome). |  |
 
@@ -167,14 +171,15 @@ See [Architecture](architecture.md) for how the pieces fit together.
 | `scripts/gen-dev-docs.mjs` | Regenerates the two reference pages in docs/dev/ from the code itself, so they never drift: docs/dev/code-map.md every lib/*.mjs, lib/*/*.mjs, public/*.js and scripts/*.mjs with its purpose (the first sentence of the comment at the top of e… |  |
 | `scripts/install-whisper.ps1` | Installs local speech-to-text for Dayspring's "Tune in" and Discord features: whisper.cpp (CPU build, from the official GitHub releases of ggml-org/whisper.cpp) and an English model (from huggingface.co/ggerganov/whisper.cpp). |  |
 | `scripts/keep-awake.ps1` | Keeps this PC awake (no sleep, screen stays on, so no idle lock screen) while it's plugged in and Dayspring is running. |  |
+| `scripts/launch.mjs` | Starts, restarts and stops Dayspring without any black command windows. |  |
 | `scripts/loopcap.cs` | loopcap: hears whatever a playback device is playing (WASAPI loopback, shared mode: it never takes the device over, so Discord and everything else keep working) and writes it to stdout as 16 kHz mono 16-bit PCM for Dayspring's "Tune in". |  |
-| `scripts/open-display.cmd` | Opens the Dayspring display on the chosen screen (Settings -> Screen, saved as "display" in data\owner.json). |  |
+| `scripts/open-display.cmd` | Opens (or brings back) the Dayspring screen on the chosen screen (Settings -> Screen), in the chosen browser. |  |
 | `scripts/open-tv.cmd` | The older name for open-display.cmd, kept so existing shortcuts and launchers still work: the Dayspring screen on the second screen, with the browser profile it has always used (its sign-ins live there). |  |
 | `scripts/pick-screen.ps1` | Which screen the Dayspring display opens on. |  |
 | `scripts/privacy-scan.mjs` | Privacy scan: fails (exit 1) if a folder contains anything personal: the owner's name, people, places, church, photo folders, or anything that looks like a key or phone number. | `DEFAULT_TARGET`, `terms`, `scan`, `report` |
 | `scripts/programs.ps1` | Installed programs, for Dayspring's "open a program" ability. |  |
 | `scripts/qa-fresh-install.mjs` | Install-readiness check: does a brand-new copy of Dayspring install and work for someone who has never used it? |  |
-| `scripts/release.mjs` | Makes a release zip of the generic Dayspring: export (with the privacy scan) → dist-out/Dayspring.zip (a fixed name, so …/releases/latest/download/Dayspring.zip always works). |  |
+| `scripts/release.mjs` | Makes a release zip of the generic Dayspring: export (with the privacy scan) → dist-out/Dayspring.zip. |  |
 | `scripts/twilio-number.mjs` | Manage the Dayspring phone number on the Twilio account. |  |
 | `scripts/update.mjs` | "Update Dayspring.cmd": checks GitHub for a newer Dayspring and installs it. |  |
 | `scripts/window.ps1` | Minimize / maximize / restore / hide / show / close Dayspring's own display window, or report its state. |  |
@@ -184,6 +189,7 @@ See [Architecture](architecture.md) for how the pieces fit together.
 | File | What it does | Exports |
 |---|---|---|
 | `dist/Install Dayspring.cmd` | Installs Dayspring on this computer: 1. |  |
-| `dist/Start Dayspring.cmd` | Starts Dayspring and opens its display on the screen you chose in Settings -> Screen. |  |
+| `dist/Start Dayspring.cmd` | Starts Dayspring and opens its screen on the screen you chose in Settings -> Screen (the first time: the guided setup). |  |
+| `dist/Stop Dayspring.cmd` | Stops Dayspring completely (the voice, alarms and reminders stop too). |  |
 | `dist/Update Dayspring.cmd` | Checks for a newer Dayspring and installs it if you say yes. |  |
 

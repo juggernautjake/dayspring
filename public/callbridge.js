@@ -143,7 +143,8 @@
     return outs.find((d) => d.label.toLowerCase().startsWith(label.toLowerCase()))?.deviceId ?? null;
   }
   navigator.mediaDevices?.addEventListener?.("devicechange", () => { outs = null; });
-  async function speak(text) {
+  function speak(text) { return window.dsVoiceLock ? window.dsVoiceLock.run(() => speakNow(text)) : speakNow(text); }
+  async function speakNow(text) {
     // ask the server where answers go right now (the call mixer may have come up after this page loaded)
     try { const fresh = await api("/tunein"); st = { ...st, ...fresh }; } catch { /* use what we have */ }
     const talkTo = st.talk?.talk ? st.talk.playTo : null;
@@ -153,7 +154,7 @@
     try {
       const r = await fetch("/api/tts?text=" + encodeURIComponent(text));
       if (r.status === 204 || !r.ok) {         // free voices: the browser speaks (it can't be sent into the call)
-        const u = new SpeechSynthesisUtterance(text); u.onend = done; speechSynthesis.speak(u); return;
+        await new Promise((ok) => { const u = new SpeechSynthesisUtterance(text); u.onend = u.onerror = () => { done(); ok(); }; speechSynthesis.speak(u); setTimeout(ok, 8000 + text.length * 90); }); return;
       }
       const url = URL.createObjectURL(await r.blob());
       audioEl?.pause(); audioEl = new Audio(url);
@@ -165,20 +166,19 @@
         const set = await audioEl.setSinkId(sink).then(() => true).catch(() => false);
         if (!set) card("Couldn't reach the call", "Chrome wouldn't send my voice to the call mixer, so I answered in your headset only.");
       }
-      audioEl.onended = () => { URL.revokeObjectURL(url); done(); };
-      await audioEl.play();
+      await new Promise((ok) => { audioEl.onended = audioEl.onerror = () => { URL.revokeObjectURL(url); done(); ok(); }; audioEl.play().catch(() => { done(); ok(); }); setTimeout(ok, 8000 + text.length * 90); });
     } catch { done(); }
   }
 
   try {
-    const es = new EventSource("/api/events");
-    es.addEventListener("tunein", (e) => {
+    const hookTunein = (es) => es.addEventListener("tunein", (e) => {
       const d = JSON.parse(e.data);
       if (d.kind === "state") { st = { ...st, ...d }; paint(); }
       else if (d.kind === "wake") { wrap.classList.add("wake"); setTimeout(() => wrap.classList.remove("wake"), 6000); }
       else if (d.kind === "heard") { wrap.classList.remove("wake"); card("🎧 " + d.text, "Heard on the call"); }
       else if (d.kind === "reply") { card(d.text, d.heard ? `“${d.heard}”` : ""); speak(d.text); }
     });
+    if (window.dsEvents) hookTunein(window.dsEvents); else addEventListener("ds-events", (e) => hookTunein(e.detail), { once: true });
   } catch { /* no live updates */ }
 
   // The rest of the display speaks too (announcements, replies): tell Tune in, so it never answers itself.

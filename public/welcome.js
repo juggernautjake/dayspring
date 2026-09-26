@@ -19,11 +19,13 @@
   const msg = (el, text, kind = "") => { if (!el) return; el.className = "msg " + kind; el.textContent = text; };
 
   /* ================================================================ the guide's voice ================================ */
-  // A warm male voice: Microsoft's free "Natural" voices (best in Edge), else any English male voice, else the default.
+  // A warm male voice, separate from Dayspring's own voice: Edge's free Natural voices Andrew, Brian or Guy, else Windows'
+  // David (the list is in voices.js); with an ElevenLabs key, ElevenLabs' Will. Choosing Dayspring's voice never changes it.
   const G = { voice: null, muted: store.get("ds-welcome-muted", false), paused: false, last: "", blocked: false, speaking: false, unlocked: false };
   const PREF = [/andrew.*natural/i, /guy.*natural/i, /brian.*natural/i, /christopher.*natural/i, /eric.*natural/i, /roger.*natural/i, /davis.*natural/i, /natural.*(andrew|guy|brian|christopher|eric|roger)/i,
     /microsoft (andrew|guy|brian|christopher|eric|roger|davis|mark|david)/i, /google us english/i, /\b(male|man)\b/i];
   function pickVoice() {
+    if (window.dsVoicePrefs) return (G.voice = window.dsVoicePrefs.pick("guide"));
     const vs = (window.speechSynthesis?.getVoices() ?? []).filter((v) => /^en(-|_|$)/i.test(v.lang));
     for (const re of PREF) { const v = vs.find((x) => re.test(x.name)); if (v) return (G.voice = v); }
     return (G.voice = vs.find((v) => /en-us/i.test(v.lang)) ?? vs[0] ?? null);
@@ -38,7 +40,10 @@
     // the caption is the whole line, one span per sentence, so it can follow along while he talks
     $("#caption").innerHTML = parts.map((x, i) => `<span data-c="${i}">${esc(x)}</span>`).join(" ");
     window.__guideLog?.push(text);                       // (tests)
-    if (G.muted || !window.speechSynthesis) return;
+    if (G.muted || G.quiet) return;
+    let eleven = false; try { eleven = W.setup?.voice?.provider === "elevenlabs" && Boolean(W.setup?.voice?.ready); } catch { /* not loaded yet */ }
+    if (eleven) { elevenSay(text, parts).catch(() => { G.noEleven = true; }); if (!G.noEleven) return; }
+    if (!window.speechSynthesis) return;
     speechSynthesis.cancel(); G.paused = false; paintPause();
     parts.forEach((part, i) => {
       const u = new SpeechSynthesisUtterance(part);
@@ -50,7 +55,19 @@
       speechSynthesis.speak(u);
     });
   }
-  function stopTalking() { try { speechSynthesis.cancel(); } catch { /* none */ } $("#guide").classList.remove("talking"); G.speaking = false; }
+  // ElevenLabs' Will for the guide (only once ElevenLabs is connected); the free voice if that doesn't work
+  async function elevenSay(text, parts) {
+    if (G.noEleven) throw new Error("off");
+    try { speechSynthesis?.cancel(); } catch { /* none */ }
+    G.audio?.pause();
+    const r = await fetch("/api/tts", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text, voice: window.dsVoicePrefs?.ELEVEN.guide ?? "Will" }) });
+    if (!r.ok || r.status === 204) { G.noEleven = true; throw new Error("no audio"); }
+    const a = G.audio = new Audio(URL.createObjectURL(await r.blob()));
+    a.onplay = () => { G.speaking = true; $("#guide").classList.add("talking"); $$("#caption [data-c]").forEach((x) => x.classList.add("now")); };
+    a.onended = () => { G.speaking = false; $("#guide").classList.remove("talking"); $$("#caption .now").forEach((x) => x.classList.remove("now")); };
+    await a.play().catch((e) => { if (e.name === "NotAllowedError") { G.blocked = true; $("#caption").textContent = text + "  (Tap anywhere to hear me.)"; } else throw e; });
+  }
+  function stopTalking() { try { speechSynthesis.cancel(); } catch { /* none */ } try { G.audio?.pause(); } catch { /* none */ } $("#guide").classList.remove("talking"); G.speaking = false; }
   // browsers only let a page talk after the first click or key press
   const unlock = () => { if (G.unlocked) return; G.unlocked = true; if (G.blocked) { G.blocked = false; say(G.last); } };
   addEventListener("pointerdown", unlock, { capture: true }); addEventListener("keydown", unlock, { capture: true });
@@ -294,7 +311,7 @@
     { id: "done", title: "All set", nextLabel: "Open Dayspring →",
       say: () => `That's it${who()}! You're all set. Here's a quick summary. Press Open Dayspring to start. Say "Dayspring" any time you need me, and you can change anything in Settings. It's good to meet you.`,
       render: () => doneHtml(), mount: () => doneMount(),
-      next: async () => { await api("/setup/finish", {}).catch(() => {}); await saveState({ finished: true }); location.href = "/display"; return false; } },
+      next: async () => { await api("/setup/finish", {}).catch(() => {}); await saveState({ finished: true }); await openDayspring(); return false; } },
   ];
 
   /* ---------------- step helpers ---------------- */
@@ -348,7 +365,8 @@
         $("#vlist").innerHTML = vs.length ? vs.map((v, i) => `<div class="voice" data-v="${esc(v.name)}"><button class="play" type="button" data-pv="${i}" aria-label="Hear ${esc(v.name)}">▶</button><div class="g"><div class="n">${/natural/i.test(v.name) ? "✨ " : ""}${esc(v.name.replace(/^Microsoft /, "").replace(/ Online \(Natural\)/, ""))}</div><div class="d">${esc(v.lang)}</div></div></div>`).join("") : `<p class="empty">No voices found in this browser.</p>`;
         $$("[data-pv]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); const u = new SpeechSynthesisUtterance(`Hi${who()}. This is how I'd sound.`); u.voice = vs[Number(b.dataset.pv)]; speechSynthesis.cancel(); speechSynthesis.speak(u); }));
         $$("#vlist .voice").forEach((el) => (el.onclick = () => { $$("#vlist .voice").forEach((x) => x.classList.toggle("on", x === el)); vChoice = { name: el.dataset.v }; }));
-        const cur = W.setup?.voice?.browserVoice; if (cur) $(`#vlist .voice[data-v="${CSS.escape(cur)}"]`)?.classList.add("on"); };
+        const cur = W.setup?.voice?.browserVoice || window.dsVoicePrefs?.pick("assistant", vs)?.name;
+        if (cur) { const el = $(`#vlist .voice[data-v="${CSS.escape(cur)}"]`); el?.classList.add("on"); if (el && !W.setup?.voice?.browserVoice) el.querySelector(".d").textContent += " · Dayspring's default"; } };
       draw(); speechSynthesis?.addEventListener?.("voiceschanged", draw, { once: true });
     }
   }
@@ -678,18 +696,27 @@
   }
 
   // ---- screen ----
-  let scr = { display: "auto", browser: "edge" };
+  let scr = { display: "auto", browser: "default" };
   function screenHtml() { return `<div class="eyebrow">Screen</div><h1>Where should Dayspring live?</h1><p class="lead">Dayspring runs full screen on a TV or second monitor, or in a window on this one.</p><div class="screens" id="scrs"><p class="hint">Looking for screens…</p></div>
-    <div class="toggle"><div class="txt"><b>Show Dayspring in</b><div>Microsoft Edge includes free, natural-sounding voices.</div></div>${seg("br", [["edge", "Microsoft Edge"], ["chrome", "Google Chrome"]], scr.browser)}</div>
+    <label class="field" for="brSel" style="display:block;margin-top:1em"><b>Which browser should Dayspring use?</b>
+      <select id="brSel" style="margin-top:.4em"><option value="default">Your default browser</option></select></label>
+    <p class="hint" id="brNote">Any browser on this computer works. Microsoft Edge has the most natural-sounding free voices.</p>
     <p class="hint">Sizes, margins and layout can be fine-tuned later in <b>Settings → Screen</b> (there's a "Fit to screen" helper for TVs).</p>`; }
   async function screenMount(root) {
     const r = await api("/setup/screens", undefined, "GET").catch(() => ({ screens: [] }));
-    scr.display = r.display ?? "auto"; scr.browser = r.displayBrowser ?? "edge";
+    scr.display = r.display ?? "auto"; scr.browser = r.displayBrowser ?? "default";
+    // the browsers on this computer; "Your default browser" names the one Windows uses
+    api("/setup/browsers", undefined, "GET").then((b) => {
+      const sel = $("#brSel"); if (!sel) return;
+      const def = (b.browsers ?? []).find((x) => x.isDefault);
+      sel.innerHTML = `<option value="default">Your default browser${def ? " (" + esc(def.name) + ")" : ""}</option>` + (b.browsers ?? []).map((x) => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("");
+      sel.value = [...sel.options].some((o) => o.value === scr.browser) ? scr.browser : "default";
+      const note = () => { const id = sel.value === "default" ? def?.id : sel.value; const x = (b.browsers ?? []).find((y) => y.id === id); $("#brNote").textContent = (x?.note ? x.note + " " : "") + "Microsoft Edge has the most natural-sounding free voices, but any browser works."; };
+      sel.onchange = () => { scr.browser = sel.value; note(); }; note();
+    }).catch(() => {});
     const ss = r.screens ?? [], max = Math.max(1, ...ss.map((s) => s.width));
     $("#scrs").innerHTML = `<button class="scr${scr.display === "auto" ? " on" : ""}" data-sc="auto" type="button" style="width:7em;height:4.5em"><b>✨</b>Automatic<small>2nd screen if there is one</small></button>` + ss.map((s) => `<button class="scr${String(scr.display) === String(s.number) ? " on" : ""}" data-sc="${s.number}" type="button" style="width:${Math.max(6, (s.width / max) * 11)}em;height:${Math.max(3.8, (s.height / max) * 11)}em"><b>${s.number}</b>${s.primary ? "This screen" : "Screen " + s.number}<small>${s.width}×${s.height}</small></button>`).join("");
     $$("[data-sc]").forEach((b) => (b.onclick = () => { $$("[data-sc]").forEach((x) => x.classList.toggle("on", x === b)); scr.display = b.dataset.sc; }));
-    root.querySelectorAll('[data-seg="br"] button').forEach((b) => b.classList.toggle("on", b.dataset.v === scr.browser));
-    wireSeg(root, (n, v) => { if (n === "br") scr.browser = v; });
   }
   async function screenSave() { await api("/setup/display", { display: scr.display, displayBrowser: scr.browser }).catch(() => {}); return true; }
 
@@ -708,6 +735,21 @@
   }
   const permSummaryShort = () => (P.mode === "off" ? "No file access" : P.mode === "all" ? `Everything (${P.allAccess === "readwrite" ? "read & change" : "read only"})` : P.entries.length ? `${P.entries.length} chosen place${P.entries.length === 1 ? "" : "s"}` : "No file access");
   function doneMount() { /* nothing */ }
+  // Dayspring opens in its own window (full screen on a TV or second screen, an app window here), in the browser chosen
+  // on the Screen step. This setup tab can be closed then. If that can't happen, this tab becomes the Dayspring screen.
+  async function openDayspring(screen) {
+    const r = await api("/app/open", screen ? { screen } : {}).catch(() => null);
+    if (r?.setup) { toast("One more thing: I need your name first."); const i = STEPS.findIndex((s) => s.id === "you"); if (i >= 0) show(i); return; }
+    if (!r || r.ok === false && !r.noScreen) { location.href = "/display"; return; }
+    const card = $("#card");
+    card.innerHTML = r.noScreen
+      ? `<div class="eyebrow">Almost there</div><h1>The screen you chose isn't connected</h1><p class="lead">${esc(r.message ?? "")}</p><p><button class="btn primary" id="hereBtn" type="button">Open Dayspring on this screen</button></p>`
+      : `<div class="hero"><div class="bigsun" aria-hidden="true"></div><div class="eyebrow">All set</div><h1>Dayspring is open</h1></div><p class="lead">It's in its own window${r.primary === false ? " on your other screen" : ""}. You can close this tab now.</p><p class="hint">Next time, start it with the <b>Dayspring</b> icon on your desktop or in the Start menu. It opens right where you left it, and it never opens twice.</p><p><button class="btn" id="hereBtn" type="button">I don't see it</button></p>`;
+    $("#next").hidden = true; $("#back").hidden = true; $("#skip").hidden = true;
+    if (!r.noScreen) try { presence?.close(); } catch { /* fine */ }
+    $("#hereBtn").onclick = () => (r.noScreen ? openDayspring("primary") : (location.href = "/display"));
+    say(r.noScreen ? "The screen you chose isn't connected. You can open me on this screen instead." : "I'm open in my own window now. You can close this tab.");
+  }
 
   /* ================================================================ navigation ===================================== */
   const visible = () => STEPS.filter((s) => !s.show || s.show());
@@ -764,6 +806,11 @@
   });
 
   /* ================================================================ start ========================================== */
+  // while the setup is open, Dayspring knows (starting it again then doesn't open a second setup page); closed at the end
+  const PAGE_ID = (crypto.randomUUID?.() ?? String(Math.random()).slice(2)) + "";
+  let presence = null; try { presence = new EventSource(`/api/events?page=welcome&id=${encodeURIComponent(PAGE_ID)}`); } catch { /* old browser: no matter */ }
+  // the guide and Dayspring never talk over each other: when a Dayspring screen opens, the guide stops
+  presence?.addEventListener("speaker", (e) => { try { const d = JSON.parse(e.data); G.quiet = Boolean(d.id && d.page === "display"); if (G.quiet) stopTalking(); } catch { /* bad event */ } });
   (async () => {
     try { W.setup = await api("/setup/state", undefined, "GET"); } catch { W.setup = { owner: {}, ai: {} }; }
     try { W.state = await api("/welcome/state", undefined, "GET"); } catch { W.state = {}; }

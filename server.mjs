@@ -4,7 +4,7 @@
 //   npm start                → http://localhost:4747   (first run: http://localhost:4747/welcome)
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { existsSync, writeFileSync, unlinkSync, readFileSync as readFileNow } from "node:fs";
 import { dirname, join, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn, spawnSync } from "node:child_process";
@@ -53,6 +53,7 @@ import * as ambient from "./lib/ambient.mjs";
 import * as keepawake from "./lib/keepawake.mjs";
 import * as snooze from "./lib/snooze.mjs";
 import * as windowRoutes from "./lib/window-routes.mjs";
+import * as display from "./lib/display.mjs";
 import * as screenlog from "./lib/screenlog.mjs";
 import * as documentRoutes from "./lib/document-routes.mjs";
 import * as connectorRoutes from "./lib/connector-routes.mjs";
@@ -77,22 +78,49 @@ tunein.setChat(chat);
 const DISPLAY_MODE = process.env.DAYSPRING_DISPLAY === "1" || process.env.DAYSPRING_TV === "1";
 // A new id every start: the Dayspring screen reloads itself when it sees a new one (so new code shows up after a restart).
 const BUILD = String(Date.now());
-// Restart the server in place (after Claude Code changed Dayspring): a fresh server starts, then this one exits.
-function restartSelf() {
+// Restart the server in place (after an update, or after Claude Code changed Dayspring): scripts/launch.mjs waits for this
+// server to stop, then starts the new one hidden (no command window). verify: after an update, the launcher puts the old
+// version back if the new one doesn't start. The console window an older launcher left ("Dayspring server") closes too.
+let restarting = false;
+function restartSelf({ verify = false } = {}) {
+  if (restarting) return;
+  restarting = true;
   const desk = dirname(fileURLToPath(import.meta.url));
-  const cmd = `timeout /t 2 /nobreak >nul & set DAYSPRING_DISPLAY=${DISPLAY_MODE ? "1" : ""}& set DAYSPRING_TV=${process.env.DAYSPRING_TV ?? ""}& start "Dayspring server" /min cmd /k node --env-file-if-exists=.env server.mjs`;
-  spawn("cmd.exe", ["/d", "/c", cmd], { cwd: desk, detached: true, stdio: "ignore", windowsHide: true }).unref();
+  const parentIsLauncherConsole = (() => {
+    try { return /^"cmd\.exe"/i.test((spawnSync("tasklist", ["/fi", `PID eq ${process.ppid}`, "/fo", "csv", "/nh"], { encoding: "utf8", windowsHide: true }).stdout ?? "").trim()) && process.stdout.isTTY && DISPLAY_MODE; } catch { return false; }
+  })();
+  const args = [join(desk, "scripts", "launch.mjs"), "--restart", "--wait-pid", String(process.pid), ...(verify ? ["--verify"] : []), ...(parentIsLauncherConsole ? ["--close-console", String(process.ppid)] : [])];
+  spawn(process.execPath, args, { cwd: desk, detached: true, stdio: "ignore", windowsHide: true, env: { ...process.env, DAYSPRING_DISPLAY: DISPLAY_MODE ? "1" : "" } }).unref();
   console.log("restarting…");
-  // the old console window (cmd /k) goes too, when it's the one the launcher opened
-  // (only the launcher's own cmd.exe window, never a terminal it happened to be started from; no /t, or the new server would go too)
-  setTimeout(() => {
-    try {
-      const parent = spawnSync("tasklist", ["/fi", `PID eq ${process.ppid}`, "/fo", "csv", "/nh"], { encoding: "utf8", windowsHide: true }).stdout ?? "";
-      if (DISPLAY_MODE && /^"cmd\.exe"/i.test(parent.trim())) spawnSync("taskkill", ["/pid", String(process.ppid), "/f"], { windowsHide: true });
-    } catch { /* leave it */ }
-    process.exit(0);
-  }, 500);
+  // the media window (Playwright) and the call mixer are closed first, so the new server can open them again
+  setTimeout(async () => { await Promise.race([(async () => { try { await browser.close(); } catch { /* none */ } try { mixer.stop(); } catch { /* none */ } })(), new Promise((r) => setTimeout(r, 3000))]); process.exit(0); }, 300);
 }
+// Servers started by Dayspring 1.0.0's launcher or updater live in a visible (minimized) command window. Move to the
+// hidden way once: a hidden copy starts as soon as this one stops, and that window closes. (Not the TV launcher's, and not
+// a terminal someone ran "npm start" in: those don't set DAYSPRING_DISPLAY.)
+// The morning alarm is close (from 45 minutes before the day's first block until half an hour after): no updates then.
+function alarmSoon() {
+  if (!settings.get().alarm) return false;
+  const today = store.todayISO(), first = store.blocksBetween(today, today).filter((b) => !b.done).sort((a, b) => a.start.localeCompare(b.start))[0];
+  if (!first || first.start >= "12:00") return false;
+  const [h, m] = first.start.split(":").map(Number), at = new Date(); at.setHours(h, m, 0, 0);
+  const d = (Date.now() - at.getTime()) / 60_000;
+  return d > -45 && d < 30;
+}
+// Shortcuts made by Dayspring 1.0.0 open "Start Dayspring.cmd" (a command window). Point them at the windowless starter.
+let shortcutsFixed = false;
+function fixShortcuts() {
+  if (shortcutsFixed) return; shortcutsFixed = true;
+  const vbs = join(here, "Start Dayspring.vbs");
+  if (!existsSync(vbs)) return;
+  const script = `$ErrorActionPreference='SilentlyContinue'; $w = New-Object -ComObject WScript.Shell; $vbs = $env:DS_VBS; $here = Split-Path $vbs;
+foreach ($dir in @([Environment]::GetFolderPath('Desktop'), (Join-Path ([Environment]::GetFolderPath('Programs')) 'Dayspring'), [Environment]::GetFolderPath('Startup'))) {
+  Get-ChildItem -LiteralPath $dir -Filter '*.lnk' | ForEach-Object { $s = $w.CreateShortcut($_.FullName);
+    if ($s.TargetPath -and ($s.TargetPath -ieq (Join-Path $here 'Start Dayspring.cmd'))) { $s.TargetPath = (Join-Path $env:SystemRoot 'System32\\wscript.exe'); $s.Arguments = '"' + $vbs + '"'; $s.WindowStyle = 1; $s.Save(); 'fixed ' + $_.Name } } }`;
+  spawn("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", script], { windowsHide: true, stdio: ["ignore", "pipe", "ignore"], env: { ...process.env, DS_VBS: vbs } })
+    .stdout.on("data", (d) => { const t = String(d).trim(); if (t) console.log(`shortcuts: ${t.replace(/\r?\n/g, ", ")}`); });
+}
+const LEGACY_CONSOLE = process.platform === "win32" && process.stdout.isTTY && process.env.DAYSPRING_DISPLAY === "1" && process.env.DAYSPRING_TV !== "1" && !process.env.DAYSPRING_KEEP_CONSOLE;
 // Claude Code's progress shows on the Dayspring screen; when it's done, Dayspring says what changed and offers a restart.
 coder.onEvent((e) => {
   if (e.kind === "progress" || e.kind === "started") announcer.broadcast("coder", e);
@@ -151,6 +179,10 @@ settings.onChange((s, patch) => {
   if ((patch.musicVolume !== undefined || patch.musicVolumeDelta !== undefined) && browser.isOpen()) browser.spotifyFade((s.musicVolume ?? 100) / 100, 800).catch(() => {});
 });
 settings.onChange((s, patch) => { if (patch.audioOutputs && browser.isOpen() && !mixer.isActive()) browser.spotifySink(spotifyRoles(s)).then((l) => l && console.log(`spotify output → ${l}`)).catch(() => {}); });
+// Something unexpected (a network hiccup in a callback, a bug in one feature) is written down and Dayspring keeps going,
+// instead of the whole server stopping and the screen going quiet.
+process.on("unhandledRejection", (e) => { console.error("unexpected (kept running):", e?.stack ?? e); try { devlog.log("error", { where: "unhandledRejection", error: String(e?.message ?? e).slice(0, 500) }); } catch { /* logging only */ } });
+process.on("uncaughtException", (e) => { console.error("unexpected (kept running):", e?.stack ?? e); try { devlog.log("error", { where: "uncaughtException", error: String(e?.message ?? e).slice(0, 500) }); } catch { /* logging only */ } if (e?.code === "EADDRINUSE") process.exit(0); });
 // SIGHUP is Windows closing the server's window: put the old Windows audio output back on the way out.
 for (const sig of ["SIGINT", "SIGTERM", "SIGHUP"]) process.on(sig, async () => { mixer.stop(); await browser.close(); process.exit(0); });
 process.on("exit", () => { if (mixer.isActive()) mixer.stop(); try { tunein.stop({ quiet: true, shutdown: true }); stt.stop(); } catch { /* already stopped */ } });
@@ -244,10 +276,25 @@ async function api(req, res, url) {
   const m = req.method;
   const q = url.searchParams;
 
+  if (m !== "GET" && /^\/(chat|tts|blocks|routines|tasks|media|player|reader|documents|setup|welcome|study|snooze|voice|call|tunein)\b/.test(p)) updater.touch();
   for (const r of ROUTES) if (await r.handle(req, res, { m, p, q, send, readJSON, restart: restartSelf })) return;
 
+  // ---- starting and stopping (scripts/launch.mjs, the window bar) ----
+  // open: the guided setup until it's done (once), then the Dayspring screen (the open one comes back instead of a second)
+  if (m === "POST" && p === "/app/open") {
+    const b = await readJSON(req).catch(() => ({}));
+    windowRoutes.clearClosed();
+    if (!owner.setupDone()) return send(res, 200, { setup: true, ...(await display.openSetup({ connected: announcer.clientCount() })) });
+    return send(res, 200, await display.open({ screen: b.screen || undefined }));
+  }
+  if (m === "POST" && p === "/app/quit") {
+    send(res, 200, { ok: true, text: "Dayspring is stopping." });
+    announcer.broadcast("window", { action: "quit" });
+    setTimeout(async () => { try { await windowRoutes.windowAction("close"); } catch { /* no window */ } try { mixer.stop(); await browser.close(); } catch { /* fine */ } process.exit(0); }, 400);
+    return;
+  }
   // ---- the Dayspring screen ----
-  if (m === "GET" && p === "/events") return announcer.addClient(res);
+  if (m === "GET" && p === "/events") return announcer.addClient(res, { page: q.get("page") ?? "", id: q.get("id") ?? "" });
   if ((m === "POST" || m === "GET") && p === "/tts") {
     const b = m === "GET" ? { text: q.get("text"), speed: q.get("speed"), tone: q.get("tone"), voice: q.get("voice") } : await readJSON(req);
     const text = b.text;
@@ -434,8 +481,9 @@ async function api(req, res, url) {
     const f = photos.filePath(pm[1]);
     if (!f) return send(res, 404, { error: "no such photo" });
     const type = { ".png": "image/png", ".webp": "image/webp", ".gif": "image/gif" }[extname(f).toLowerCase()] ?? "image/jpeg";
+    let body; try { body = await readFile(f); } catch { return send(res, 404, { error: "that photo isn't there any more" }); }
     res.writeHead(200, { "content-type": type, "cache-control": "max-age=86400" });
-    return res.end(await readFile(f));
+    return res.end(body);
   }
   // ---- the detail viewer on the TV (click anything in the big panel) ----
   if (m === "GET" && p === "/detail/memory") {
@@ -552,6 +600,8 @@ async function api(req, res, url) {
     // "minimize", "hide yourself", "show yourself", "close the screen": the display window, right away
     const wc = await windowRoutes.command(message.trim()).catch(() => null);
     if (wc) { transcripts.log({ role: "dayspring", text: wc, surface: key }); return send(res, 200, { reply: wc, changes: [], usage: null }); }
+    const uc = await updateRoutes.command(message.trim(), { restart: restartSelf }).catch(() => null);
+    if (uc) { transcripts.log({ role: "dayspring", text: uc, surface: key }); return send(res, 200, { reply: uc, changes: [], usage: null }); }
     const tc = await callRoutes.command(message.trim()).catch(() => null);
     if (tc) { transcripts.log({ role: "dayspring", text: tc, surface: key }); return send(res, 200, { reply: tc, changes: [], usage: null }); }
     const t0 = Date.now();
@@ -612,9 +662,23 @@ createServer(async (req, res) => {
     const status = err?.status ?? 400;
     console.error(`${req.method} ${url.pathname} ->`, err?.message ?? err);
     if (process.env.DAYSPRING_DEBUG && err?.stack) console.error(err.stack);
+    if (res.headersSent) { try { res.destroy(); } catch { /* gone */ } return; }
     send(res, status, { error: err?.message ?? String(err) });
   }
+}).on("error", (e) => {
+  // Only one Dayspring at a time: a second start (a double-click, a shortcut while it's running) just stops quietly.
+  if (e.code === "EADDRINUSE") { console.log(`Dayspring is already running (port ${PORT} is in use). This copy stops; the running one carries on.`); process.exit(0); }
+  throw e;
 }).listen(PORT, "127.0.0.1", () => {
+  if (LEGACY_CONSOLE) { console.log("Moving Dayspring to run in the background, without a command window…"); restartSelf(); return; }
+  // which process is Dayspring (Stop Dayspring uses it if asking nicely doesn't work)
+  const PIDFILE = join(here, "data", "server.pid");
+  try { writeFileSync(PIDFILE, String(process.pid)); } catch { /* not important */ }
+  process.on("exit", () => { try { if (readFileNow(PIDFILE, "utf8") === String(process.pid)) unlinkSync(PIDFILE); } catch { /* gone */ } });
+  // after an update: this is the new version running, so the update worked (Settings → Updates shows it in the history)
+  { const pv = updater.confirmStarted(); if (pv) console.log(`Updated from ${pv.from} to ${pv.to}.`); }
+  // an update from 1.0.0 took the downloaded helpers (bin/) away with the old files: bring them back
+  try { if (updater.restoreHelpers()) console.log("Put the downloaded helpers (bin) back after the update."); } catch { /* not important */ }
   // Make sure today has its routines so the first screen isn't empty.
   const added = store.applyRoutines(store.todayISO());
   console.log(`Dayspring desk  →  http://localhost:${PORT}`);
@@ -639,6 +703,7 @@ createServer(async (req, res) => {
     setInterval(() => { if (mixer.isActive()) mixer.route(settings.get().audioOutputs).catch(() => {}); }, 20_000);
   });
   knowledge.map();   // builds the folder map if it is missing or a day old
+  if (owner.feature("photos")) import("./lib/photos.mjs").then((p) => p.scan()).catch(() => {});   // the photo list, built in the background
   // While the media browser is open, keep the screen's "now playing" card in step with Spotify.
   setInterval(async () => {
     if (!browser.isOpen() || announcer.clientCount() === 0) return;
@@ -668,21 +733,33 @@ createServer(async (req, res) => {
   // 🎧 Tune in comes back on if the owner left it on
   if (DISPLAY_MODE) setTimeout(() => tunein.resume().catch(() => {}), 4000);
   if (DISPLAY_MODE) {
-    // installs from before the rename keep their browser profile (their sign-ins live there)
-    const profile = existsSync(join(process.env.LOCALAPPDATA ?? "", "DayspringTV")) ? "DayspringTV" : "DayspringDisplay";
+    // Not until the guided setup is finished (the setup page is the window then), and never a second window: display.open()
+    // brings back the one that's open (even minimized or loading) instead. When the chosen screen isn't connected, it
+    // looks again every few minutes, quietly.
     let missing = 0, nextTry = 0;
-    setInterval(() => {
-      if (announcer.clientCount() > 0) { missing = 0; return; }
+    setInterval(async () => {
+      if (!owner.setupDone()) return;
+      if (announcer.displayCount() > 0) { missing = 0; return; }
       if (windowRoutes.closedByOwner()) return;          // they closed it on purpose: don't pop it back open
       if (screenPick() === "primary") return;
       if (++missing < 2 || Date.now() < nextTry) return;
-      nextTry = Date.now() + 90_000;      // give Chrome time to connect before trying again
-      const c = spawn("cmd", ["/c", join(here, "scripts", "open-display.cmd")], { windowsHide: true, detached: true, stdio: "ignore", env: { ...process.env, DS_PROFILE: process.env.DS_PROFILE || profile, DS_SCREEN: screenPick(), PORT: String(PORT) } });
-      c.on("exit", (code) => { if (code === 0) console.log("Dayspring screen reopened"); });
-      c.unref();
+      nextTry = Date.now() + 90_000;      // give the browser time to connect before trying again
+      const r = await display.open({ screen: screenPick() }).catch(() => null);
+      if (r?.noScreen) nextTry = Date.now() + 5 * 60_000;
+      else if (r?.opened) console.log("Dayspring screen reopened");
     }, 30_000);
   }
-  updater.startDailyCheck((text) => announcer.announce({ kind: "update", text }));
+  // Updates: checked now and every 6 hours. The notice (What's new + Update now / Next time / When I'm not using it) shows
+  // on the screen; "idle" installs wait for a quiet half hour, never during an alarm, a call or Tune in.
+  updater.onStatus((s) => announcer.broadcast("updatestatus", s));
+  updater.startAuto({
+    announce: (text) => announcer.announce({ kind: "update", text }),
+    notify: (info) => announcer.broadcast("update", info),
+    busy: () => tunein.isOn() || callbridge.isTalking() || snooze.list_().some((x) => Date.parse(x.until) - Date.now() < 30 * 60_000) || alarmSoon(),
+    restart: restartSelf,
+  });
+  // older shortcuts started "Start Dayspring.cmd" (a command window); point them at the windowless starter
+  if (process.platform === "win32") setTimeout(() => fixShortcuts(), 20_000);
   // the Dayspring screen's computer stays awake (no sleep, no idle lock) while plugged in, so alerts and alarms get through
   if (DISPLAY_MODE) keepawake.start();
   snooze.start();                // snoozed alarms and reminders come back, even after a restart
@@ -705,7 +782,7 @@ function startTunnel() {
   // Prefer the copy in apps/desk/bin (downloaded during setup); fall back to one on PATH.
   const local = join(here, "bin", process.platform === "win32" ? "cloudflared.exe" : "cloudflared");
   const bin = existsSync(local) ? local : "cloudflared";
-  const child = spawn(bin, ["tunnel", "--url", `http://localhost:${PORT}`, "--no-autoupdate"], { stdio: ["ignore", "pipe", "pipe"] });
+  const child = spawn(bin, ["tunnel", "--url", `http://localhost:${PORT}`, "--no-autoupdate"], { stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
   let found = false;
   const onData = async (buf) => {
     const m = String(buf).match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/);

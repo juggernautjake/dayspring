@@ -12,7 +12,7 @@ It runs on your own Windows computer. Your schedule, notes, people and photos st
 - About 500 MB of free disk space.
 - A screen for Dayspring. A second monitor or a TV plugged into the computer is ideal, but your main screen works too.
 - A microphone if you want to talk to it. A headset, a webcam mic or the laptop's built-in mic all work. You can also just type.
-- Google Chrome or Microsoft Edge. At least one is already on almost every Windows computer.
+- A web browser. Microsoft Edge comes with Windows; Chrome, Brave, Firefox and others work too.
 
 ## Free, or better with an upgrade
 
@@ -38,7 +38,7 @@ See [AI providers](ai-providers.md) and [Voices](voices.md).
 ## The five-minute version
 
 1. **Install.** Download Dayspring, unzip it, and double-click **Install Dayspring.cmd**. See [Installing Dayspring](install.md).
-2. **Start.** Double-click the **Dayspring** shortcut on your desktop (or **Start Dayspring.cmd**).
+2. **Start.** Double-click the **Dayspring** shortcut on your desktop. Dayspring runs in the background, with no command window.
 3. **Set up.** The first time, the setup wizard opens. Tell it your name, what to call the assistant, where you live, and which screen to use. Skip anything you're not sure about. See [The setup wizard](setup-wizard.md).
 4. **Say hello.** Say "Dayspring, what's on today?" or click **⌨ Type** and type it.
 5. **Build your week.** Say "add work Monday at 9 until 5", or open the schedule and click **+ Add**. See [Your schedule](schedule.md).

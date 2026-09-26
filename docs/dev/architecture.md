@@ -29,6 +29,18 @@ Dayspring is one small Node.js program that runs on the user's own Windows compu
 - Startup: `firstrun.ensure()` creates `data/`, then routines are stamped onto today, the announcer and schedulers start, and the display window is opened in display mode.
 - Display mode is on when `DAYSPRING_DISPLAY=1`, which the launchers set. In display mode the server keeps the Dayspring screen open, keeps the PC awake while plugged in, and runs Tune in and the phone watcher.
 
+### Starting, one instance, no console windows (`scripts/launch.mjs`, `lib/display.mjs`, `lib/browsers.mjs`)
+- The shortcuts run `Start Dayspring.vbs` (wscript, no window), which runs `node scripts/launch.mjs`. The launcher starts `server.mjs` **detached and hidden**, logging to `data/logs/server.log`, then `POST /api/app/open`: the guided setup once (in the owner's own browser) until setup is done, then the Dayspring screen.
+- **One server**: a second server exits on `EADDRINUSE`; `data/server.pid` names the running one. **One window**: `display.open()` first asks `scripts/window.ps1` to bring back an existing Dayspring window (matched by title *and* browser profile), and never starts a second one within 20 s. The screen watchdog is off until setup is done.
+- **No consoles**: every child process is started with `windowsHide: true` and never `detached` (a detached console process has no console, so *its* children would each open a visible one). Browsers are launched directly, not through `cmd`. Restarts go through `launch.mjs --restart --wait-pid`, never `start … cmd /k`.
+- **Browsers**: `browsers.list()` reads the registry (StartMenuInternet, the default-browser ProgId) plus known paths. Chromium-family browsers get `--app`/`--kiosk` and a Dayspring profile; Firefox gets its own profile with `user.js` (mic and autoplay allowed) and `--kiosk`; others a normal window. The Playwright media and study windows use Chrome, else Edge.
+- **Stopping**: `POST /api/app/quit` (the window bar's ✕ → Quit Dayspring, or `Stop Dayspring.cmd` / `launch.mjs --stop`).
+
+### Updates (`lib/updater.mjs`, `lib/update-routes.mjs`, `public/updates.js`)
+- Checks GitHub (`package.json` `dayspring.updateRepo`, asset `Dayspring.zip`) on start and every 6 h. `data/updates.json` holds the standing choice (`ask` / `launch` / `idle`), the per-version plan, what's downloaded (`updates/<version>`), and the history shown in Settings → Updates.
+- `install()`: back up `data/` + `.env` → move the program files into `backups/code-<old>-<date>` and the new ones in (renames, so it can be undone) → `npm install` only if dependencies changed → `pendingVerify` → restart with `--verify`. The new server calls `confirmStarted()`; if it doesn't answer within a minute, the launcher calls `rollback()`. `data/`, `.env`, `bin/`, `node_modules/`, `backups/`, `updates/` and `logs/` are never replaced.
+- Tests: `scripts/qa/update-e2e.mjs` runs every path against a fake GitHub.
+
 ### The assistant (`lib/assistant.mjs`)
 `chat(history, text, opts)` handles each message in this order:
 1. **Local skills first**, with no AI needed and in a deliberate order: photos, church, the voice skills, Discord, study, documents, connectors, screen questions, snooze, keep-awake, the sky, devices and mic, settings phrases, media, and the offline scheduler (`lib/offline.mjs`).

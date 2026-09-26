@@ -10,6 +10,18 @@ Dayspring can speak with three kinds of voices. Choose in Settings → **Voice**
 
 Whichever you choose, Dayspring adjusts its pace and tone through the day: soothing first thing, brighter mid-morning, upbeat in the afternoon, calm at night. Say "slow down", "speed up" or "normal speed" to adjust.
 
+## The default voices
+
+Until you pick a voice, Dayspring speaks with a **friendly, warm female voice**. Any voice you choose replaces it, and stays chosen through updates.
+
+| You have | Dayspring's voice | The setup guide's voice |
+|---|---|---|
+| **An ElevenLabs key** | **Matilda** (warm) | **Will** (friendly and relaxed) |
+| **An OpenAI key** (for voices) | **coral** (or **shimmer** if coral isn't offered) | The free voice below |
+| **No keys** (free voices) | The first of these on your computer: **Ava (Natural)**, **Jenny (Natural)**, **Aria (Natural)**, another Natural English voice (Emma, Michelle, Sonia, Libby or Natasha), Windows' **Zira**, then the first US-English voice | The first of these: **Andrew (Natural)**, **Brian (Natural)**, **Guy (Natural)**, Windows' **David**, then the first US-English voice |
+
+The **guide** is the voice that talks you through the guided setup. It's a warm male voice, and it's separate from Dayspring's own voice: choosing Dayspring's voice never changes the guide, and the other way round. The Natural voices come with Microsoft Edge (see below).
+
 ## Free voices
 
 These are the voices built into Windows and your browser.
@@ -21,13 +33,13 @@ Voices marked ✨ are "Natural" voices. They sound far better than the older rob
 
 ### Getting the ✨ Natural voices
 
-The best free voices (Aria, Jenny, Guy, Ava, Andrew, Emma, Brian and many more) are built into **Microsoft Edge**. Dayspring's screen uses Chrome if it's installed, and Edge otherwise.
+The best free voices (Aria, Jenny, Guy, Ava, Andrew, Emma, Brian and many more) are built into **Microsoft Edge**. Dayspring's screen uses your default browser unless you choose another in Settings → **Screen**.
 
 To use Edge's natural voices:
 
 1. Make sure Microsoft Edge is installed. It is on almost every Windows computer.
-2. Open Settings → **Screen** and set **Browser** to **Microsoft Edge**. If you don't see that option, close Dayspring, open the Dayspring folder, and edit `scripts\open-display.cmd` so it prefers `msedge.exe`.
-3. Restart Dayspring. The ✨ voices now appear in the list.
+2. Open Settings → **Screen** → **Which browser shows Dayspring?** and choose **Microsoft Edge**. Press **Save**.
+3. Close the Dayspring screen (**✕** → **Close the screen**) and open it again with the Dayspring icon. The ✨ voices now appear in the list.
 
 > **Note:** The Natural voices are streamed by Microsoft, so they need an internet connection. With no internet, Dayspring falls back to the built-in offline voices.
 

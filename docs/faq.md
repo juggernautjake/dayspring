@@ -11,7 +11,7 @@ A friendly assistant and day planner that lives on a screen in your home: a spar
 Yes. Everything that runs on your computer is free: the schedule, reminders, the alarm, the free voices, music through your own Spotify and YouTube, documents read aloud, and many voice commands. Optional upgrades (an AI brain, premium voices) are paid directly to those companies. There's no Dayspring subscription.
 
 ### What do I need?
-Windows 10 or 11, Google Chrome or Microsoft Edge, and an internet connection for setup. A microphone for voice is optional; you can type instead. The installer sets up Node.js for you. See [Installing](install.md).
+Windows 10 or 11, a web browser (Edge comes with Windows; Chrome, Brave, Firefox and others work too), and an internet connection for setup. A microphone for voice is optional; you can type instead. The installer sets up Node.js for you. See [Installing](install.md).
 
 ### Do I need a TV?
 No. Any screen works. See [Display setup](display-setup.md).
@@ -23,10 +23,21 @@ Not yet: it runs on Windows. You can open the Dayspring screen from another devi
 For some things. The schedule, reminders and built-in commands work offline. Speech recognition in the browser, cloud AI, premium voices, weather, music, web lookup and the living sky's weather need a connection.
 
 ### How do I install it?
-Click [Download Dayspring](https://github.com/juggernautjake/dayspring/releases/latest/download/Dayspring.zip) (no GitHub account needed), unzip it, double-click **Install Dayspring.cmd**, then **Start Dayspring.cmd**. The guided setup takes it from there. See [Installing](install.md).
+Click [Download Dayspring](https://github.com/juggernautjake/dayspring/releases/latest/download/Dayspring.zip) (no GitHub account needed), unzip it, double-click **Install Dayspring.cmd**, then the **Dayspring** icon on your desktop. The guided setup takes it from there. See [Installing](install.md).
 
 ### How do I update it?
-Say "check for updates", or double-click **Update Dayspring.cmd**. Updates never touch your data. See [Updating](updating.md).
+You don't have to: Dayspring checks for new versions by itself and shows what's new, with **Update now**, **Next time I open Dayspring** and **When I'm not using it**. You can also say "check for updates", or double-click **Update Dayspring.cmd**. Updates never touch your data, and a new version that doesn't start is undone by itself. See [Updating](updating.md).
+
+### Which browser does it use? Can I use Brave, Firefox or Opera?
+Your default browser, unless you pick another in the guided setup or in **Settings → Screen → Which browser shows Dayspring?** The list shows every browser on your computer: Edge, Chrome, Brave, Firefox, Opera, Vivaldi and more. Edge, Chrome, Brave and Vivaldi give Dayspring its own full-screen window; Firefox does too; others open a normal window.
+
+Gmail, Bing, Yahoo and Google are websites, not browsers, so they aren't in the list. (Gmail is email, and Bing, Yahoo and Google are search sites. You can use any of them inside whichever browser you pick.)
+
+### Dayspring opened several windows, and black command windows kept popping up
+That was a bug in version 1.0.0, fixed in 1.0.1. Double-click **Update Dayspring.cmd** in the Dayspring folder and type **Y**. From then on Dayspring runs quietly in the background, never opens itself twice, and keeps itself up to date.
+
+### How do I stop it completely?
+Move the pointer to the top edge of the Dayspring screen, press **✕**, then **Quit Dayspring**. Or double-click **Stop Dayspring.cmd**. See [Installing → Stopping Dayspring](install.md#stopping-dayspring).
 
 ### How do I uninstall it?
 Delete the Dayspring folder, and its shortcuts if you like. See [Installing → Uninstalling](install.md#uninstalling).
@@ -66,7 +77,7 @@ Usually the account has no credit yet, or the key was copied with a missing char
 Say "switch your voice to Rachel", or use the voice drop-down on the screen, or **Settings → Voice**. See [Voices](voices.md).
 
 ### How do I get the really natural voices for free?
-Use **Microsoft Edge** for the Dayspring screen (Settings → Screen → Show the display in: Edge). Edge includes Microsoft's free "Natural" voices. See [Voices](voices.md).
+Use **Microsoft Edge** for the Dayspring screen (Settings → Screen → Which browser shows Dayspring? → Microsoft Edge). Edge includes Microsoft's free "Natural" voices. See [Voices](voices.md).
 
 ### My ElevenLabs voices don't show up
 Your ElevenLabs API key needs the **Voices: Read** permission. Edit the key on elevenlabs.io (or make a new one) with that permission turned on, then paste it into Settings → Voice. See [Voices → ElevenLabs](voices.md).

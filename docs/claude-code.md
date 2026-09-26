@@ -79,6 +79,6 @@ Guard rails:
 
 Backups are in the `backups\dayspring-code\` folder, one per job, named by date and time. To roll back:
 
-1. Close the **Dayspring server** window.
+1. Stop Dayspring: press **✕** at the top of its screen, then **Quit Dayspring** (or double-click **Stop Dayspring.cmd**).
 2. Copy the files from the backup folder over the Dayspring folder.
 3. Start Dayspring again.

@@ -1,8 +1,9 @@
 # Minimize / maximize / restore / hide / show / close Dayspring's own display window, or report its state.
-# It only ever touches a Chrome/Edge window whose title is exactly "Dayspring" AND whose browser was started with a
-# Dayspring display profile (--user-data-dir ...\DayspringDisplay or ...\DayspringTV, or DS_PROFILE); never the owner's
-# own browser windows, the media window or the study window. Prints JSON: { found, action, windows: [...] }.
-param([ValidateSet("state", "minimize", "maximize", "restore", "hide", "show", "close")][string]$Action = "state", [string]$Title = "Dayspring")
+# It only ever touches a browser window (Chromium-family or Firefox) titled "Dayspring" (or "Welcome to Dayspring", or
+# "Dayspring - Mozilla Firefox") AND whose browser was started with a Dayspring display profile (...\DayspringDisplay,
+# ...\DayspringTV, a per-browser one like ...\DayspringDisplay-brave, or DS_PROFILE); never the owner's own browser
+# windows, the media window or the study window. Prints JSON: { found, action, windows: [...] }.
+param([ValidateSet("state", "minimize", "maximize", "restore", "hide", "show", "close")][string]$Action = "state", [string]$Title = '^(Welcome to )?Dayspring( [-—] .*)?$')
 $ErrorActionPreference = "Stop"
 Add-Type -TypeDefinition @"
 using System; using System.Text; using System.Runtime.InteropServices; using System.Collections.Generic;
@@ -22,9 +23,9 @@ public static class DsWin {
     var r = new List<long[]>();
     EnumWindows(delegate (IntPtr h, IntPtr l) {
       var sb = new StringBuilder(512); GetWindowText(h, sb, 512);
-      if (sb.ToString() == title) {
+      if (System.Text.RegularExpressions.Regex.IsMatch(sb.ToString(), title)) {
         var c = new StringBuilder(256); GetClassName(h, c, 256);
-        if (c.ToString() == "Chrome_WidgetWin_1") { uint pid; GetWindowThreadProcessId(h, out pid); r.Add(new long[] { h.ToInt64(), pid }); }
+        if (c.ToString() == "Chrome_WidgetWin_1" || c.ToString() == "MozillaWindowClass") { uint pid; GetWindowThreadProcessId(h, out pid); r.Add(new long[] { h.ToInt64(), pid }); }
       }
       return true;
     }, IntPtr.Zero);
@@ -32,7 +33,7 @@ public static class DsWin {
   }
 }
 "@
-$profileRx = 'user-data-dir="?[^"]*\\' + $(if ($env:DS_PROFILE) { [regex]::Escape($env:DS_PROFILE) } else { 'Dayspring(Display|TV)' }) + '"?(\s|$)'
+$profileRx = '(user-data-dir=|-profile\s+)"?[^"]*\\' + $(if ($env:DS_PROFILE) { [regex]::Escape($env:DS_PROFILE) } else { 'Dayspring(Display|TV)' }) + '(-[a-z]+)?"?(\s|$)'
 $mine = @()
 foreach ($w in [DsWin]::Find($Title)) {
   $cl = (Get-CimInstance Win32_Process -Filter "ProcessId=$($w[1])" -ErrorAction SilentlyContinue).CommandLine

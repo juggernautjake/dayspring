@@ -2,6 +2,27 @@
 
 All notable changes to Dayspring. Versions follow [semantic versioning](https://semver.org).
 
+## 1.0.1 — quieter, one window, and updates that look after themselves
+
+**Fixed**
+- Dayspring no longer opens extra copies of itself during the guided setup (or afterwards). Starting it again brings its window back instead of opening a new one.
+- No more black command windows popping up. Dayspring now runs quietly in the background, with no command window to keep open.
+- The guided setup opens once, in your own browser, and at the end Dayspring opens in its own window.
+- **One voice at a time**: if more than one Dayspring page is open, only one speaks and listens, and the setup guide goes quiet once Dayspring's screen opens. Saying "stop" now stops the whole answer, and dismissing the wake-up stops the rest of the morning greeting.
+- **No freezing**: slow checks (coding tools, Voicemeeter, photos, updates) now run in the background, a missing photo or course file can no longer stop Dayspring, and an unexpected error is logged instead of stopping the server.
+- Dayspring now needs Node.js 22.13 or newer (the installer checks and offers to update it).
+
+**New**
+- **Pick your browser**: Dayspring uses your default browser, or any other browser on your computer (Edge, Chrome, Brave, Firefox, Opera, Vivaldi and more). Choose in the guided setup or in Settings → Screen. It no longer forces Microsoft Edge.
+- **Automatic updates**: Dayspring checks for new versions when it starts and every few hours. A card shows what's new, with **Update now**, **Next time I open Dayspring**, **When I'm not using it** and **Not now**. You can also set it to always do one of these (Settings → Updates).
+- **Safe updates**: your data and keys are backed up before every update and never replaced. If a new version doesn't start, the previous one comes back by itself.
+- **What changed**: Settings → Updates lists every update with its notes. Or ask "what's new in Dayspring?"
+- **Stopping Dayspring**: the ✕ at the top of the screen now offers **Close the screen** or **Quit Dayspring**. There's also **Stop Dayspring** in the Start menu.
+- Say **"update Dayspring"** to install a new version right away.
+- **A warm default voice**: until you pick one, Dayspring speaks with a friendly, warm female voice (Matilda with ElevenLabs, coral with OpenAI, and Edge's Ava, Jenny or Aria for free). The setup guide keeps its own warm male voice. A voice you already chose never changes.
+
+**Updating from 1.0.0**: double-click **Update Dayspring.cmd** in the Dayspring folder once and type **Y**. Your data, keys and downloaded helpers carry over, and from then on updates come to you.
+
 ## 1.0.0 — first public release
 
 **Getting started**

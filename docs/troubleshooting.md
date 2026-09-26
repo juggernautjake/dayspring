@@ -4,16 +4,18 @@ Start with the quick checks, then find your problem below.
 
 ## Quick checks
 
-1. **Is Dayspring running?** Look for the **Dayspring server** window on the taskbar. If it's not there, start Dayspring.
-2. **Is it reachable?** Open `http://localhost:4747` in a browser. If the page doesn't load, the server isn't running, or it stopped with an error. Open the **Dayspring server** window and read the last lines.
-3. **Restart it.** Close the **Dayspring server** window, then start Dayspring again.
+1. **Is Dayspring running?** Open `http://localhost:4747` in a browser. If the page loads, it's running. If not, double-click the **Dayspring** icon to start it.
+2. **What went wrong?** Dayspring runs in the background and writes what happens to `data\logs\server.log` in the Dayspring folder. Open it with Notepad and read the last lines.
+3. **Restart it.** Double-click **Stop Dayspring.cmd**, then start Dayspring again.
 
 ## It won't start
 
 - **"node is not recognized"**: Node.js isn't installed, or Windows hasn't noticed it yet. Run **Install Dayspring.cmd** again, or install Node.js LTS from [nodejs.org](https://nodejs.org) and restart the computer.
-- **"EADDRINUSE: address already in use :::4747"**: Dayspring (or something else) is already running on port 4747. Close any other **Dayspring server** window. If it keeps happening, restart the computer.
+- **"Dayspring is already running"** in the log: that's fine. Only one Dayspring runs at a time; starting it again brings its window back instead of opening a second one. If another program uses port 4747, restart the computer.
+- **Two voices, or Dayspring answering twice**: from 1.0.1 on, only one Dayspring page speaks and listens at a time; the others show a note that another screen is listening. Close the extra pages (or tabs) if you like.
+- **Several Dayspring windows, or black command windows popping up**: that was a bug in version 1.0.0. Update Dayspring (double-click **Update Dayspring.cmd**, type **Y**). From 1.0.1 on, Dayspring runs hidden and never opens itself twice.
 - **"Cannot find module …"**: open a Command Prompt in the Dayspring folder (type `cmd` in the folder's address bar and press Enter), then run `npm install`.
-- **The window flashes and closes**: open a Command Prompt in the Dayspring folder and run `"Start Dayspring.cmd"` to see the error.
+- **Nothing happens when you start it**: open a Command Prompt in the Dayspring folder and run `"Start Dayspring.cmd"` to see the error, or read `data\logs\server.log` and `data\logs\launcher.log`.
 
 ## It doesn't hear me
 
@@ -55,7 +57,7 @@ See [Display setup](display-setup.md).
 
 ## Spotify or YouTube won't play
 
-See [Music](music.md). The usual fixes: say "sign in to Spotify"; Spotify needs Premium for full playback; the music window must be real Google Chrome for Spotify.
+See [Music](music.md). The usual fixes: say "sign in to Spotify"; Spotify needs Premium for full playback; the music window uses Google Chrome if it's installed, otherwise Microsoft Edge.
 
 ## Texts aren't announced
 
@@ -70,6 +72,6 @@ See [Your phone](phone.md#make-sure-windows-shows-the-notifications).
 
 ## Something else
 
-- **Look at the log**: the **Dayspring server** window shows what's happening. Diagnostics are also saved in `data\devlog\`, one file per day.
+- **Look at the log**: `data\logs\server.log` shows what's happening. Diagnostics are also saved in `data\devlog\`, one file per day.
 - **Start fresh, keeping your data**: re-download the latest release, extract it over your Dayspring folder (your `data` and `.env` are not in the download, so they're safe), and run **Install Dayspring.cmd**.
 - **Report a problem**: tell whoever shared Dayspring with you. Include what you said or did, what happened, and the last lines of the server window. Don't share your `.env` file, because it contains your keys.
