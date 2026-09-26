@@ -168,6 +168,7 @@ Each group has its own **Reset**, and **Reset the whole screen layout** puts eve
 | **Quick switch for everything** | Overrides them all (speak, chime only, or silent) until you choose **Use the settings above**. |
 | **Show notifications in front of every window** | Small cards at the top-right, over any app, without taking the focus. Skipped while the Dayspring window is in front. |
 | **Show them when Dayspring is off** | On by default. |
+| **Speak announcements even when the screen is closed** | Off by default. With no Dayspring screen open, notifications set to Speak are read in Windows' own voice; off, they chime instead. Alarms always ring from the desktop card. |
 | **Stay on screen for** / **Show them on** | 3–30 seconds; the main screen or screen 1–3. **Show a test notification** tries it. |
 
 ## About

@@ -2694,8 +2694,9 @@
     alarmRepeat = setInterval(() => speak(item.text, null, "notify"), 180_000);
     alarmStop = setTimeout(() => dismissAlarm(false), 30 * 60_000);
   }
-  function dismissAlarm(answered) {
+  function dismissAlarm(answered, fromElsewhere = false) {
     if (!alarmOn) return;
+    if (!fromElsewhere) post("/alarm/dismissed", { from: "screen" }).catch(() => {});
     morningRun++;                        // a wake-up song and greeting in progress stop here
     alarmOn = false; $("#alarm").hidden = true;
     clearInterval(alarmLoop); clearInterval(alarmRepeat); clearTimeout(alarmStop);
@@ -2709,6 +2710,7 @@
     clearInterval(alarmLoop); clearInterval(alarmRepeat); clearTimeout(alarmStop);
     alarmOn = false; $("#alarm").hidden = true; $("#snzOpts").hidden = true;
     stopSpeaking?.(); if (nowPlaying) stopMedia(false); post("/media/stop").catch(() => {});
+    post("/alarm/dismissed", { from: "screen" }).catch(() => {});
     const r = await post("/snooze", { item, minutes }).catch(() => null);
     playSound("soft", "notify");
     toast("💤 Snoozed", r?.text?.replace(/^Snoozed /, "") ?? `${minutes} minutes`, "", "bell");
@@ -2816,6 +2818,8 @@
       await notify(item.text, { kind: "schedule", toasted: true, sound: item.kind === "checkin" ? "checkin" : item.kind === "buffer" ? "soft" : "motif", chip: item.kind === "buffer" ? { title: "A few free minutes", category: "home" } : chip });
       if (prefs.mode === "voice") openCommandWindow(item.kind === "checkin" ? 30000 : 8000);   // he can just answer
     });
+    // the alarm was answered somewhere else (the desktop card, another screen): stop ringing here too
+    es.addEventListener("alarm-dismissed", (e) => { try { const d = JSON.parse(e.data); if (d.from !== "screen" && alarmOn) dismissAlarm(false, true); } catch { /* bad event */ } });
     es.addEventListener("media", (e) => { const c = JSON.parse(e.data); if (c.action === "play") playMedia(c); else stopMedia(false); });
     es.addEventListener("nowplaying", (e) => showNowPlaying(JSON.parse(e.data)));
     es.addEventListener("player", (e) => {

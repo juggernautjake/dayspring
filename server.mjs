@@ -338,6 +338,12 @@ async function api(req, res, url) {
   if (m === "POST" && p === "/listen") { const b = await readJSON(req).catch(() => ({})); try { return send(res, 200, await quiet.setState(String(b.state ?? ""), { from: b.from ?? "button" })); } catch (e) { return send(res, 400, { error: e.message }); } }
   // desktop notifications (top-right, in front of every window)
   if (m === "GET" && p === "/overlay") return send(res, 200, overlay.status());
+  if (m === "GET" && p === "/overlay/helper") return send(res, 200, await overlay.helperStatus());
+  // the alarm was answered on a Dayspring screen: the desktop helper stops ringing too (and the other way round)
+  if (m === "POST" && p === "/alarm/dismissed") { const b = await readJSON(req).catch(() => ({})); announcer.broadcast("alarm-dismissed", { from: String(b.from ?? "screen").slice(0, 20), at: Date.now() }); return send(res, 200, { ok: true }); }
+  // tests only (DAYSPRING_TEST_HOOKS=1): announce something now, as the schedule would
+  if (m === "POST" && p === "/test/overlay" && process.env.DAYSPRING_TEST_HOOKS === "1") { const b = await readJSON(req).catch(() => ({})); if (b.type === "alarm-stop" && !b.id) b.id = overlay._ringing()?.id; return send(res, 200, { sent: overlay._send(b) }); }
+  if (m === "POST" && p === "/test/announce" && process.env.DAYSPRING_TEST_HOOKS === "1") { const b = await readJSON(req).catch(() => ({})); return send(res, 200, { item: announcer.announce(b) }); }
   if (m === "POST" && p === "/overlay/test") {
     const st = await overlay.start({ onAction: overlayAction });
     const ok = overlay.show({ title: "Dayspring", text: "This is how desktop notifications look. They sit in front of every window and go away on their own.", kind: "schedule", snooze: false });
@@ -835,7 +841,8 @@ createServer(async (req, res) => {
   quiet._setDeps({ tunein });
   if (DISPLAY_MODE || process.env.DAYSPRING_OVERLAY === "1") {
     overlay.start({ onAction: overlayAction }).catch(() => {});
-    settings.onChange((s) => { if (s.overlay?.on) overlay.start({ onAction: overlayAction }).catch(() => {}); else overlay.stop(); });
+    // the helper keeps running with the cards off: with the screen closed it's what rings the alarm
+    settings.onChange(() => { overlay.start({ onAction: overlayAction }).catch(() => {}); });
   }
   // installs from before 1.1.3 get the "Dayspring (full screen)" and "Dayspring in browser" Start-menu shortcuts, once
   import("./lib/shortcuts.mjs").then((m) => m.ensure()).catch(() => {});
@@ -872,6 +879,9 @@ const sttJob = { running: false, error: null };
 async function overlayAction(a) {
   if (a.type === "hotkey") { await quiet.setState(quiet.state() === "off" ? "active" : "off", { from: "hotkey" }).catch(() => {}); return; }
   if (a.type === "snooze" && a.item) { try { snooze.snooze(a.item); } catch { /* nothing to snooze */ } return; }
+  // the alarm card with no screen open: Snooze 9 min / Dismiss / it rang out; every surface hears it
+  if (a.type === "alarm-snoozed") { try { snooze.snooze(a.item ?? undefined, 9); } catch { /* nothing to snooze */ } announcer.broadcast("alarm-dismissed", { from: "overlay", snoozed: true, at: Date.now() }); return; }
+  if (a.type === "alarm-dismissed" || a.type === "alarm-timeout") { announcer.broadcast("alarm-dismissed", { from: "overlay", at: Date.now() }); return; }
   if (a.type === "click") { windowRoutes.clearClosed(); await display.open().catch(() => {}); }
 }
 

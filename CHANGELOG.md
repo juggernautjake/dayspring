@@ -2,6 +2,13 @@
 
 All notable changes to Dayspring. Versions follow [semantic versioning](https://semver.org).
 
+## 1.2.1 — alarms ring even when the Dayspring window is closed
+
+**Fixed**
+- **Alarms ring even when the Dayspring window is closed.** With no Dayspring screen open, the alarm shows a larger card at the top-right of your screen, in front of every window, and rings on a loop, starting gently and rising over half a minute to your alarm volume. It has **Snooze 9 min**, **Dismiss** and **Open Dayspring**, and it stops as soon as you answer the alarm anywhere (on the card, on a Dayspring screen, or by voice). Dayspring's window is not reopened for it.
+- **Chimes with the window closed:** notifications set to **Chime** still chime, and ones set to **Speak** chime too (turn on Settings → Notifications → **Speak announcements even when the screen is closed** to hear them in Windows' own voice). **Silent** stays silent.
+- With a Dayspring screen open, the screen plays the sounds as before, so nothing sounds twice.
+
 ## 1.2.0 — your way: app window, mini, browser, quiet
 
 **New**

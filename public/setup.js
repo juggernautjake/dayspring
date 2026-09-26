@@ -771,6 +771,8 @@
         <h2>Desktop notifications</h2>
         ${toggle("ovOn", "Show notifications in front of every window", "Small cards at the top-right of the screen, even over full-screen apps. They never take the focus, and they go away by themselves. Skipped while the Dayspring window itself is in front.", S.voice?.overlay?.on !== false)}
         ${toggle("overlayWhenOff", "Show them when Dayspring is off", "Off stops listening and talking; the cards can still show.", S.voice?.overlayWhenOff !== false)}
+        <p class="hint">With the Dayspring screen closed, alarms still ring from these cards (Snooze 9 min, Dismiss, Open Dayspring), and notifications set to Chime still chime.</p>
+        ${toggle("speakWhenClosed", "Speak announcements even when the screen is closed", "Uses Windows' own voice when no Dayspring screen is open. Off: a chime instead.", S.voice?.speakWhenClosed === true)}
         <div class="field"><label for="ovSecs"><b>Stay on screen for</b> <span id="ovSecsV"></span></label><input type="range" id="ovSecs" min="3" max="30" step="1" value="${Number(S.voice?.overlay?.seconds) || 8}"></div>
         <div class="field"><label for="ovScreen"><b>Show them on</b></label> <select id="ovScreen"><option value="primary">The main screen</option><option value="1">Screen 1</option><option value="2">Screen 2</option><option value="3">Screen 3</option></select></div>
         <p><button type="button" class="btn small" id="ovTest">Show a test notification</button> <span class="hint" id="ovState"></span></p>
@@ -781,7 +783,7 @@
         if (!$("#nkinds")) return;          // left this section while loading
         pick("listenState", s.listenState ?? "active");
         const setT = (id, on) => $("#" + id)?.setAttribute("aria-checked", String(Boolean(on)));
-        setT("alarmsWhenOff", s.alarmsWhenOff !== false); setT("overlayWhenOff", s.overlayWhenOff !== false); setT("ovOn", s.overlay?.on !== false);
+        setT("alarmsWhenOff", s.alarmsWhenOff !== false); setT("overlayWhenOff", s.overlayWhenOff !== false); setT("speakWhenClosed", s.speakWhenClosed === true); setT("ovOn", s.overlay?.on !== false);
         $("#ovSecs").value = Number(s.overlay?.seconds) || 8;
         const KINDS = [["reminders", "Reminders"], ["schedule", "Schedule: start times, changes and check-ins"], ["texts", "Texts and phone"], ["lantern", "Lantern"], ["discover", "Discover"], ["system", "Updates, alerts and system"]];
         const OPTS = [["auto", "Usual (" + ({ voice: "spoken", chime: "chime", silent: "silent" }[s.mode] ?? "spoken") + ")"], ["voice", "Speak"], ["chime", "Chime only"], ["silent", "Silent"]];
@@ -795,7 +797,7 @@
       },
       save: async () => {
         const notify = Object.fromEntries($$("#nkinds select").map((x) => [x.dataset.kind, x.value]));
-        const r = await post("/settings", { notify, notifyAll: $("#nAll").value || null, alarmsWhenOff: isOn("alarmsWhenOff"), overlayWhenOff: isOn("overlayWhenOff"), overlay: { on: isOn("ovOn"), seconds: Number($("#ovSecs").value), screen: $("#ovScreen").value } });
+        const r = await post("/settings", { notify, notifyAll: $("#nAll").value || null, alarmsWhenOff: isOn("alarmsWhenOff"), overlayWhenOff: isOn("overlayWhenOff"), speakWhenClosed: isOn("speakWhenClosed"), overlay: { on: isOn("ovOn"), seconds: Number($("#ovSecs").value), screen: $("#ovScreen").value } });
         if (S.voice) Object.assign(S.voice, r.settings ?? {});
         const want = chosen("listenState"); if (want && want !== (r.settings?.listenState ?? "active")) await post("/listen", { state: want, from: "settings" });
       } },

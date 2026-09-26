@@ -60,6 +60,10 @@ Press **Ctrl+Shift+Esc**. Dayspring is listed as **Dayspring** (with **Dayspring
 ### I closed Dayspring and it opened again by itself
 From 1.2.0, when you close it, it stays closed. It only reopens itself if you turn on **Settings → Screen → Keep the Dayspring screen open** (meant for a TV). If Dayspring starts with Windows, it starts hidden unless you turn on **Open the screen when Windows starts**.
 
+### Does the alarm ring if I close the Dayspring window?
+
+Yes, from version 1.2.1. With no Dayspring screen open, the alarm shows a larger card at the top-right of your screen, in front of every window, and rings until you press **Snooze 9 min** or **Dismiss** (or answer it anywhere else). It uses your default speakers at your alarm volume. See [Quiet mode and notifications](quiet-and-notifications.md).
+
 ### Can I make it stop listening, or be quiet for a while?
 Yes. Click the coloured badge on its screen and choose **Quiet** (hears its name but says nothing) or **Off** (not listening at all; alarms still ring). **Ctrl+Alt+Shift+D** turns it off and on from anywhere. See [Compact mode, quiet mode and notifications](quiet-and-notifications.md).
 

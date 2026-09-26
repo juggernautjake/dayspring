@@ -293,7 +293,7 @@ await browser.close();
 if (!process.argv.includes("--no-overlay") && process.platform === "win32") {
   const CSC = join(process.env.WINDIR || "C:\\Windows", "Microsoft.NET", "Framework64", "v4.0.30319", "csc.exe");
   const exe = join(TMP, "overlay.exe");
-  const built = existsSync(CSC) && spawnSync(CSC, ["/nologo", "/target:winexe", "/optimize+", `/out:${exe}`, "/r:System.Windows.Forms.dll", "/r:System.Drawing.dll", "/r:System.Web.Extensions.dll", join(DESK, "scripts", "overlay.cs")], { windowsHide: true }).status === 0 && existsSync(exe);
+  const built = existsSync(CSC) && spawnSync(CSC, ["/nologo", "/target:winexe", "/optimize+", `/out:${exe}`, "/r:System.Windows.Forms.dll", "/r:System.Drawing.dll", "/r:System.Web.Extensions.dll", ...(existsSync(join(dirname(CSC), "WPF", "System.Speech.dll")) ? [`/r:${join(dirname(CSC), "WPF", "System.Speech.dll")}`] : ["/define:NOSPEECH"]), join(DESK, "scripts", "overlay.cs")], { windowsHide: true }).status === 0 && existsSync(exe);
   check("overlay helper compiles with Windows' C# compiler", built);
   if (built) {
     const fg = () => { try { return execFileSync("powershell.exe", ["-NoProfile", "-Command", "Add-Type -Name F -Namespace W -MemberDefinition '[DllImport(\"user32.dll\")] public static extern System.IntPtr GetForegroundWindow();'; [W.F]::GetForegroundWindow().ToInt64()"], { windowsHide: true, encoding: "utf8" }).trim(); } catch { return "?"; } };

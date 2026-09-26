@@ -62,7 +62,21 @@ The cards are shown by a small program called **Dayspring Notifications**, which
 
 ## When the Dayspring screen is closed
 
-Closing the Dayspring screen doesn't stop Dayspring: it keeps running in the background, and reminders and texts still arrive as desktop cards. The alarm **sound** plays from the Dayspring screen, so if you rely on Dayspring to wake you, leave the screen open (minimized or hidden is fine) or turn on Settings → **Screen** → **Keep the Dayspring screen open**.
+Closing the Dayspring screen doesn't stop Dayspring: it keeps running in the background, and reminders and texts still arrive as desktop cards.
+
+**Alarms with the screen closed.** From 1.2.1 the alarm still rings. A larger card appears at the top-right of your screen, in front of every window (full-screen apps too), and the alarm sound plays on a loop, starting at a quarter of your alarm volume and rising to the full level over about 30 seconds. The card has:
+
+- **Snooze 9 min**: it comes back in nine minutes, like the Snooze on the Dayspring screen.
+- **Dismiss**: the alarm stops.
+- **Open Dayspring**: opens the Dayspring screen (the alarm stops ringing on the card).
+
+Answering the alarm anywhere else (on a Dayspring screen, or by saying "I'm up") stops the card too. If nobody answers, it stops by itself after 30 minutes. Dayspring's window is never reopened for an alarm.
+
+The sound plays on your computer's **default** speakers, at the level set in Settings → Sound → **Alarm** (never below 20). It appears as "Dayspring Notifications" in the Windows volume mixer. If you chose a different output for Dayspring in Settings → Sound, that applies to the Dayspring screen; the closed-screen alarm uses the default speakers, so make sure they're on if you rely on the alarm.
+
+**Other notifications with the screen closed:** **Chime** chimes, **Silent** stays silent, and **Speak** chimes instead, unless you turn on Settings → **Notifications** → **Speak announcements even when the screen is closed**, which reads them in Windows' own voice. When a Dayspring screen is open (full, mini or a tab), it plays everything itself and the desktop cards stay silent, so nothing sounds twice.
+
+If Dayspring is **Off** and **Alarms still ring when Off** is off, the alarm only shows a card.
 
 ## Related
 
