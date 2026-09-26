@@ -2,6 +2,11 @@
 
 All notable changes to Dayspring. Versions follow [semantic versioning](https://semver.org).
 
+## 1.2.3 — a security fix
+
+**Fixed**
+- **Other websites can no longer control Dayspring.** Dayspring runs a small server on your computer. Before this fix, a web page open in your browser could quietly send it commands. Now Dayspring only answers its own pages and the programs on your computer, and refuses everything else.
+
 ## 1.2.2 — no more waiting on an answer
 
 **Fixed**

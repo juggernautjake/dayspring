@@ -717,12 +717,28 @@ async function serveEco(res, pathname) {
   catch { res.writeHead(404); res.end("not found"); }
 }
 
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
+function localRequest(req) {
+  const host = String(req.headers.host ?? "").toLowerCase().replace(/:\d+$/, "");
+  if (!LOCAL_HOSTS.has(host)) return false;
+  const site = String(req.headers["sec-fetch-site"] ?? "").toLowerCase();
+  if (site === "cross-site") return false;
+  const origin = req.headers.origin;
+  if (origin === undefined) return true;
+  try { const o = new URL(origin); return (o.protocol === "http:" || o.protocol === "https:") && LOCAL_HOSTS.has(o.hostname.toLowerCase() === "::1" ? "[::1]" : o.hostname.toLowerCase()) && o.port === String(PORT); }
+  catch { return false; }          // "null" (a file or sandboxed page) is refused
+}
+
 createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   // Requests arriving through the Cloudflare tunnel carry cf-connecting-ip. Only Twilio's
   // webhooks are allowed in from the internet; the UI and API stay laptop-only.
   const fromInternet = Boolean(req.headers["cf-connecting-ip"]) || /trycloudflare\.com$/i.test(req.headers.host ?? "");
   if (fromInternet && !url.pathname.startsWith("/twilio/")) { res.writeHead(403); return res.end("local only"); }
+  // Other websites open in the owner's browser must not be able to drive Dayspring. DNS rebinding: only our own host
+  // names are answered. Cross-site requests: a browser page from anywhere but Dayspring itself is refused (programs on
+  // this computer, like Lantern or the launcher, send no Origin and are unaffected).
+  if (!fromInternet && !localRequest(req)) { res.writeHead(403, { "content-type": "text/plain" }); return res.end("Dayspring only answers its own pages."); }
   try {
     if (url.pathname.startsWith("/api/")) await api(req, res, url);
     else if (url.pathname.startsWith("/twilio/") && req.method === "POST") await twilio(req, res, url);
