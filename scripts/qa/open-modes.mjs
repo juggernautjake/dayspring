@@ -201,6 +201,32 @@ for (const [w, h] of [[380, 560], [320, 480], [480, 700]]) {
   await p.context().close();
 }
 
+// C2r. After a question it waits at most 7 s for an answer, room noise can't hold it open for long, and with listening
+// stopped it doesn't wait at all (1.2.2)
+{
+  const p = await page("/display", { init: [mockSR] });
+  await p.waitForTimeout(1500);
+  const say = (t, final) => p.evaluate(([t, final]) => { const r = [{ 0: { transcript: t }, length: 1, isFinal: final }]; window.__sr?.onresult?.({ resultIndex: 0, results: r }); }, [t, final]);
+  const state = () => p.evaluate(() => ({ mode: window.__dsTest?.mode(), mic: document.getElementById("micText")?.textContent ?? "" }));
+  await p.evaluate(() => window.__dsTest.openCommandWindow(45000));           // e.g. "ready to start the day?" used to wait 45 s
+  const open = await state();
+  await p.waitForTimeout(7600);
+  const after = await state();
+  check("a question waits for an answer (listening window opens)", open.mode === "command", JSON.stringify(open));
+  check("…but gives up after 7 s and goes back to Ready", after.mode === "idle", JSON.stringify(after));
+  await p.evaluate(() => window.__dsTest.openCommandWindow(10000));
+  const t0 = Date.now(); let closedAt = 0;
+  while (Date.now() - t0 < 30000) { await say("mumble mumble tv noise", false); await p.waitForTimeout(1500); if ((await state()).mode === "idle") { closedAt = Date.now() - t0; break; } }
+  check("room noise can't hold the window open (closes within about 12 s)", closedAt > 0 && closedAt <= 13500, `closed after ${closedAt} ms`);
+  await tap(p, "#muteBtn"); await p.waitForTimeout(500);
+  await p.evaluate(() => window.__dsTest.openCommandWindow(45000));
+  const stopped = await state();
+  check("with listening stopped, a question doesn't wait at all", stopped.mode === "idle" && /Not listening/.test(stopped.mic), JSON.stringify(stopped));
+  await tap(p, "#muteBtn"); await p.waitForTimeout(500);
+  check("reply window: no page errors", p.__errors.length === 0, p.__errors.join(" | "));
+  await p.context().close();
+}
+
 // C3. the hard stop (✋ / 🎤): nothing restarts it — not the watchdog, not the end of speech, not a reconnect
 {
   const p = await page("/display", { init: [mockSR] });

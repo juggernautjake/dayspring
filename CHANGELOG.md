@@ -2,6 +2,12 @@
 
 All notable changes to Dayspring. Versions follow [semantic versioning](https://semver.org).
 
+## 1.2.2 — no more waiting on an answer
+
+**Fixed**
+- **Dayspring no longer gets stuck waiting for your answer.** After it asks a question it listens for at most 7 seconds (a few seconds more only while you are still talking), then goes back to Ready. Background noise like a TV can no longer keep it waiting.
+- **With listening stopped, it never waits for an answer.** A question it asks just goes back to "Not listening" instead of looking stuck.
+
 ## 1.2.1 — alarms ring even when the Dayspring window is closed
 
 **Fixed**

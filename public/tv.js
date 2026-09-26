@@ -2474,7 +2474,7 @@
     if (interim && (mode === "command" || utter || wakeRe.test(interim))) {
       stillTalking();
       // he started talking after just "Dayspring": the window waits for him instead of closing mid-thought
-      if (mode === "command" && !utter) { clearTimeout(commandTimer); commandTimer = setTimeout(() => { if (mode === "command" && !utter) backToIdle(); }, 9000); }
+      if (mode === "command" && !utter) { clearTimeout(commandTimer); const left = Math.max(0, windowOpenedAt + WINDOW_MAX_MS - Date.now()); commandTimer = setTimeout(() => { if (mode === "command" && !utter) backToIdle(); }, Math.min(REPLY_MS, left)); }
       const shown = ((utter?.text ?? "") + " " + interim.replace(wakeRe, "$1")).trim();
       if (!interimEl) interimEl = push("me interim", shown); else interimEl.textContent = shown;
       $("#youSaid").textContent = "You: " + shown; $("#youSaid").classList.add("interim");
@@ -2513,12 +2513,19 @@
     if (rest.length > 1) collect(rest);
     else { playSound("wake"); openCommandWindow(10000); }
   }
-  function openCommandWindow(ms) {
-    if (listenState === "off" || micMuted) return;
+  // After Dayspring asks something (or hears just its name) it listens for an answer without the wake word, but never
+  // for more than REPLY_MS: an unanswered question goes back to "Ready" instead of waiting on room noise. When
+  // listening is stopped, off or quiet, there is no window at all and it goes straight back to Ready.
+  const REPLY_MS = 7000, WINDOW_MAX_MS = 12000;   // 7 s to start answering; if someone is mid-answer, a few seconds more to finish
+  let windowOpenedAt = 0;
+  if (window.__dsAllowAutomatedListen) window.__dsTest = { openCommandWindow: (ms) => openCommandWindow(ms), mode: () => mode };   // test hook only
+  function openCommandWindow(ms = REPLY_MS) {
+    if (listenState !== "active" || micMuted || textOnly || !SR || micBlocked) { if (mode !== "thinking") backToIdle(); return; }
     mode = "command"; setMic("listen", "Listening…"); duck(true); wake();
     if (!speaking) stage("listen");
+    windowOpenedAt = Date.now();
     clearTimeout(commandTimer);
-    commandTimer = setTimeout(() => { if (mode === "command") backToIdle(); }, ms);
+    commandTimer = setTimeout(() => { if (mode === "command" && !utter) backToIdle(); }, Math.min(ms, REPLY_MS));
   }
   // ⌨ Type: a typed conversation, no audio either way
   $("#typeBtn").onclick = () => { const f = $("#typeForm"); f.hidden = !f.hidden; $("#typeBtn").classList.toggle("on", !f.hidden); if (!f.hidden) $("#typeBox").focus(); };
@@ -2559,7 +2566,13 @@
   $("#repeatBtn").onclick = repeatLast;
   if (textOnly) setTimeout(() => setTextOnly(true), 1500);
   $("#chatBtn").onclick = chatDetail;
-  function backToIdle() { mode = "idle"; stateSince = Date.now(); setMic("wait", idleText()); if (!speaking) stage("off"); duck(false); }
+  function backToIdle() {
+    mode = "idle"; stateSince = Date.now(); clearTimeout(commandTimer);
+    if (micMuted) setMic("", "Not listening · tap 🎤 to listen");
+    else if (listenState === "off") setMic("", "Dayspring is off: not listening");
+    else setMic("wait", idleText());
+    if (!speaking) stage("off"); duck(false);
+  }
 
   // Instant, on the TV itself: stop, pause, skip, volume.
   function localCommand(text) {
