@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Money review · Dayspring</title>
+<link rel="stylesheet" href="/fonts/fonts.css">
+<style>
+  :root{--bg:#070916;--panel:rgba(22,26,56,.72);--edge:rgba(160,170,255,.14);--edge2:rgba(170,180,255,.28);--ink:#eef0ff;--muted:#a4abcc;--indigo:#7c8cff;--gold:#ffd27a;--rose:#ff8fa3;--green:#7de3b0;color-scheme:dark}
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  body{margin:0;min-height:100vh;background:radial-gradient(1200px 700px at 20% -10%,rgba(124,140,255,.22),transparent 60%),var(--bg);color:var(--ink);font-family:Outfit,"Segoe UI",system-ui,sans-serif;font-size:16px}
+  button,input,select{font:inherit;color:inherit}
+  button{cursor:pointer;background:rgba(255,255,255,.07);border:1px solid var(--edge2);border-radius:.6em;padding:.4em .85em}
+  button:hover{background:rgba(124,140,255,.28)}
+  button.main{background:var(--indigo);border-color:var(--indigo);color:#0b0f22;font-weight:600}
+  button.danger{border-color:rgba(255,143,163,.6);color:var(--rose)}
+  input,select{background:rgba(255,255,255,.06);border:1px solid var(--edge2);border-radius:.6em;padding:.4em .6em}
+  input[type=number]{width:5.5em}
+  header{display:flex;gap:.8em;align-items:center;flex-wrap:wrap;padding:1em 1.2em;border-bottom:1px solid var(--edge)}
+  header h1{margin:0;font-size:1.4em}
+  .promise{color:var(--muted);font-size:.9em}
+  main{padding:1em 1.2em;max-width:1200px;margin:0 auto}
+  .panel{background:var(--panel);border:1px solid var(--edge);border-radius:1em;padding:1em 1.2em;margin:1em 0}
+  .panel h2{margin:0 0 .5em;font-size:1.15em}
+  .panel h3{margin:1.2em 0 .4em;font-size:1em;color:var(--gold)}
+  .row{display:flex;gap:.6em;flex-wrap:wrap;align-items:center;margin:.4em 0}
+  .muted{color:var(--muted)} .small{font-size:.85em}
+  .msg{color:var(--gold);min-height:1.2em;margin:.4em 0} .msg.bad{color:var(--rose)}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:.8em}
+  .tile{background:rgba(255,255,255,.05);border:1px solid var(--edge);border-radius:.8em;padding:.7em .9em}
+  .tile b{display:block;font-size:1.35em;margin-top:.15em}
+  .in{color:var(--green)} .out{color:var(--rose)}
+  table{border-collapse:collapse;width:100%;font-size:.92em}
+  th,td{padding:.35em .5em;border-bottom:1px solid var(--edge);text-align:left;vertical-align:top}
+  th{color:var(--muted);font-weight:500;user-select:none}
+  th.sort{cursor:pointer} th.sort:hover{color:var(--ink)} th .arr{opacity:.7}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  .scroll{max-height:32em;overflow:auto}
+  .drop{border:2px dashed var(--edge2);border-radius:1em;padding:1.2em;text-align:center;color:var(--muted)}
+  .drop.over{border-color:var(--indigo);color:var(--ink)}
+  .tag{display:inline-block;font-size:.75em;border:1px solid var(--edge2);border-radius:999px;padding:0 .5em;margin-left:.3em;color:var(--muted)}
+  .reason{color:var(--muted);font-size:.9em}
+  .cancel li{margin:.5em 0}
+  .explain{background:rgba(255,210,122,.08);border:1px solid rgba(255,210,122,.35);border-radius:.8em;padding:.8em 1em;margin:.6em 0}
+  .switch{display:inline-flex;align-items:center;gap:.5em}
+  details summary{cursor:pointer;color:var(--muted)}
+  .log{font-family:Consolas,monospace;font-size:.8em;color:var(--muted);white-space:pre-wrap;max-height:14em;overflow:auto}
+  @media (max-width:640px){header h1{width:100%}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Money review <span class="tag">read-only</span></h1>
+  <span class="promise">Dayspring only reads. It never sends, pays, transfers, changes settings or cancels anything, and it never types, stores or reads passwords or codes. You sign in yourself.</span>
+</header>
+<main>
+  <div class="msg" id="msg" role="status" aria-live="polite"></div>
+
+  <section class="panel" id="importPanel">
+    <h2>1. Import a statement (recommended)</h2>
+    <p class="muted">Most banks, card sites, Venmo and Cash App let you download your transactions as a CSV or OFX/QFX file. That's the most reliable way, and no website automation is involved. Download one for the months you want (three months is a good start), then drop it here.</p>
+    <div class="drop" id="drop" tabindex="0">Drop a CSV, OFX or QFX file here, or <label><u>choose a file</u><input type="file" id="file" accept=".csv,.ofx,.qfx,.qbo" multiple hidden></label></div>
+    <div class="row small muted">Or put the files in <code id="folder"></code> and <button id="importFolder">Import from the folder</button> (the plain copies there are deleted once they're kept encrypted).</div>
+  </section>
+
+  <section class="panel" id="sitePanel">
+    <h2>2. Read it from the website</h2>
+    <div id="permOff">
+      <div class="explain" id="permText"></div>
+      <label class="row"><input type="checkbox" id="understood"> I understand, and I'll prefer my bank's own download where it has one.</label>
+      <button class="main" id="permOn">Turn on Money review (read-only)</button>
+    </div>
+    <div id="permOnBox" hidden>
+      <p class="muted small">Money review is on. <button id="permOffBtn">Turn it off</button></p>
+      <div class="row"><button id="openVenmo">Open Venmo</button><button id="openCash">Open Cash App</button>
+        <input id="bankUrl" placeholder="Your bank's web address (https://…)" size="34"><button id="openBank">Open my bank</button><button id="closeBrowser">Close the money window</button></div>
+      <p class="muted small">It opens in Dayspring's own money window (its own profile, separate from everything else). Sign in there yourself, including any code the site sends, then press Review. If the site shows a sign-in, code or robot check, Dayspring stops and waits for you.</p>
+      <div class="row">Review the last <input type="number" id="months" min="1" max="24" value="3"> months <button class="main" id="review">Review my transactions</button></div>
+      <p class="small muted" id="browserState"></p>
+    </div>
+  </section>
+
+  <section class="panel" id="report" hidden>
+    <h2 id="rTitle">Your report</h2>
+    <p class="muted small" id="rSub"></p>
+    <div class="tiles" id="tiles"></div>
+    <h3>Things you might want to cancel</h3>
+    <p class="muted small">Dayspring never cancels anything itself. Each one says why it's here and how you can cancel it.</p>
+    <ul class="cancel" id="cancel"></ul>
+    <h3>Repeating charges and subscriptions</h3><div class="scroll"><table id="recurring"></table></div>
+    <h3>By month</h3><table id="months"></table>
+    <h3>Spending by category</h3><table id="cats"></table>
+    <h3>Top merchants</h3><table id="merchants"></table>
+    <h3>Price increases</h3><ul id="prices"></ul>
+    <h3>Possible duplicate charges</h3><ul id="dups"></ul>
+    <h3>Unusual or large charges</h3><ul id="unusual"></ul>
+    <h3>Fees and interest</h3><ul id="fees"></ul>
+    <div id="insightsBox" hidden><h3>Notes from your AI</h3><p id="insights" style="white-space:pre-wrap"></p></div>
+    <h3>All transactions</h3>
+    <div class="row"><input id="filter" placeholder="Filter (merchant, category…)" size="30"><span class="muted small" id="shownCount"></span></div>
+    <div class="scroll"><table id="tx"></table></div>
+    <p class="muted small" id="rNotes"></p>
+    <p class="muted small">This helps you review spending and budget. It isn't investment, tax or legal advice; for those, please talk to a qualified professional.</p>
+  </section>
+
+  <section class="panel" id="privacy">
+    <h2>Privacy</h2>
+    <p class="muted small">Transactions are kept only on this computer, encrypted with Windows' own protection for your user account. Account and card numbers are masked to their last 4 digits. Reports are saved as Markdown and CSV in Dayspring's data folder until you delete them.</p>
+    <div class="row"><span class="switch"><input type="checkbox" id="aiConsent"><label for="aiConsent" id="consentLabel"></label></span></div>
+    <div class="row small muted" id="noAi" hidden>No AI is set up, so reports are made entirely on this computer.</div>
+    <div class="row"><span class="switch"><input type="checkbox" id="visionConsent"><label for="visionConsent" id="visionLabel"></label></span></div>
+    <div class="row">Keep raw transactions for <input type="number" id="retention" min="1" max="3650"> days · Close the money window after <input type="number" id="idle" min="1" max="240"> idle minutes <button id="saveSettings">Save</button></div>
+    <h3>Saved reports</h3><ul id="reports"></ul>
+    <div class="row"><button class="danger" id="deleteAll">Delete all my money data…</button></div>
+    <details><summary>What Dayspring did (the money log)</summary><div class="log" id="log"></div></details>
+  </section>
+</main>
+<script src="/money.js"></script>
+</body>
+</html>

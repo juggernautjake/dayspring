@@ -32,6 +32,28 @@ Your schedule, reminders and alarms keep going in every state, and the choice is
 - **✋ Stop** stops Dayspring talking. Press it again (or hold it) and Dayspring stops listening too.
 - **🎤** stops listening straight away. It stays stopped, even after reloading the screen, until you tap 🎤 again or type "start listening". While it's stopped, the microphone is fully released: nothing is heard, not even "Dayspring".
 
+## Your requests come first
+
+When you start talking to Dayspring (saying "Dayspring", pressing **🎙 Talk**, typing on its screen, or sending a message from the desk panel, Discord, a text or a phone call), anything Dayspring was about to say on its own waits. That includes reminders, check-ins, "Who's in this picture?", joke offers, "Incoming text… want me to read it?", badges and update notes. Dayspring waits until your request is fully done:
+
+- its answer has been said,
+- any follow-up is finished (it asked you something and you answered, you confirmed or cancelled a change, or the answer window closed),
+- and about 4 seconds have passed without you saying anything new.
+
+Then the waiting items come out one at a time, most important first (reminders before questions, questions before jokes), with a short pause between them. If you start talking again, the rest waits again. Nothing is skipped. Anything that has gone out of date is re-worded or dropped: "leave in 10 minutes" becomes "leave at 3:15 p.m.", a late reminder says when it was due, a block that has already ended isn't announced, and a joke offer is dropped after 30 minutes.
+
+If Dayspring had just started (its chime was playing, or it had said only its first word) when you spoke, it stops and says that thing after your request instead. It only asks one question of its own at a time, and never while you're talking.
+
+While something is waiting, a small sign next to the status shows **1 thing to tell you after this**. Tap the sign, or ask **"what were you going to say?"**, to hear it straight away.
+
+Some things don't wait:
+
+- **Alarms and timers** ring on time, with their sound and their banner. Only their spoken words wait for Dayspring to finish answering you, and never more than about 20 seconds.
+- **Emergencies**: an official Extreme weather alert (a tornado warning, for example) interrupts right away.
+- **Things you asked for**: your answer, a timer you just set, music you asked for, and "What's now?".
+
+Quiet, Off, ✋ Stop, 🎤 (stop listening), meetings and calls work the same as before.
+
 ## How each kind of notification arrives
 
 Settings → **Notifications** → **How each kind arrives** has a choice for each kind:

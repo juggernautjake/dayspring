@@ -4,6 +4,7 @@
 // grouped completions, the reminder that repeats and stops, catching up after a restart, focus rounds, repeating
 // reminders). A fake clock, so nothing waits.
 //   node scripts/test-recipes-timers.mjs [--live]   (--live: one real search, skipped by default)
+import "./qa/guard-data.mjs";   // first: tests never write to the real data folder
 import { mkdtempSync, rmSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";

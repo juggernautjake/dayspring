@@ -21,7 +21,8 @@ This page lists everything Dayspring can connect to, how to set each one up, and
 | **Weather** | Forecast on screen and in the rundown | Your town (Settings) | Free, no key |
 | **Voicemeeter** | Music on several speakers at once | Optional install | [Sound](audio-devices.md) |
 | **Notion** | Search, read, create pages, add notes | A Notion token | [Notion](#notion) |
-| **Google Calendar + Gmail** | Your calendar on the schedule, add events, read mail, write drafts | Your own Google sign-in client (once) | [Google](#google-calendar--gmail) |
+| **Google Calendar + Gmail** | Your calendar on the schedule, add events, read mail, write drafts; several Google accounts at once | Your own Google sign-in client (once) | [Google](#google-calendar--gmail) |
+| **Google Drive** | Search, read and play your Drive files; upload and organise with your yes | The same Google client, plus the Drive API | [Google Drive](google-drive.md) |
 | **Outlook + Microsoft To Do** | Your calendar on the schedule, add events, read mail, write drafts, To Do tasks | A small Microsoft app registration (once) | [Outlook](#outlook--microsoft-to-do) |
 | **Calendar subscriptions** (iCloud, school, teams, holidays) | Any .ics / webcal calendar on the schedule, read-only | Paste the link | [Calendar subscriptions](#calendar-subscriptions-icloud-school-teams-holidays) |
 | **News and RSS feeds** | Headlines by topic, local news, any site's feed | Pick a topic or paste a feed | [News](#news-and-rss-feeds) |
@@ -46,15 +47,17 @@ Things you can say: "search Notion for groceries", "read my Trip plan page", "ad
 Google asks every app to use its own sign-in "client", so you create one, free, once (about 10 minutes):
 
 1. [Create a Google Cloud project](https://console.cloud.google.com/projectcreate) named "Dayspring" with the Google account you use for Calendar and Gmail.
-2. Enable the [Google Calendar API](https://console.cloud.google.com/apis/library/calendar-json.googleapis.com) and the [Gmail API](https://console.cloud.google.com/apis/library/gmail.googleapis.com).
+2. Enable the [Google Calendar API](https://console.cloud.google.com/apis/library/calendar-json.googleapis.com), the [Gmail API](https://console.cloud.google.com/apis/library/gmail.googleapis.com) and, for Drive, the [Google Drive API](https://console.cloud.google.com/apis/library/drive.googleapis.com). Under **Data Access**, add the Calendar, Gmail and Drive scopes (see [Google Drive](google-drive.md) for which).
 3. In [Google Auth Platform](https://console.cloud.google.com/auth/overview): **Get started**, app name "Dayspring", your email for support and contact, **Audience: External**.
-4. **Audience** → **Test users** → add your own Gmail address, then **Publish app**. (While an app is "Testing", Google signs you out every 7 days.) Google will call it unverified. That's expected for a personal app.
+4. **Audience** → **Test users** → add your own Gmail address (and every other Google account you'll connect), then **Publish app**. (While an app is "Testing", Google signs you out every 7 days.) Google will call it unverified. That's expected for a personal app.
 5. **Clients** → **Create client** → **Desktop app** → name "Dayspring" → **Create**. Copy the **Client ID** and **Client secret** into **Settings → Apps → Google** and press **Connect**.
 6. Sign in on the page that opens. At "Google hasn't verified this app", click **Advanced → Go to Dayspring (unsafe)**. It's your own app. Allow the permissions. You'll see "Connected".
 
 Your Google events then appear on Dayspring's schedule in their own colours, next to everything else, and Dayspring checks them for clashes (see [All your calendars in one place](schedule.md#all-your-calendars-in-one-place) and [Conflicts](schedule.md#conflicts)). Dayspring changes a Google event only when you say yes, for example to move it or decline an invitation. You can also put your Dayspring schedule on Google Calendar, which is off until you turn it on. Things you can say: "what's on my Google calendar tomorrow", "check my email", "read the email from Pat", "put the dentist on my Google calendar Friday at 3", "draft a reply saying I'll be there".
 
 **Email is never sent.** Dayspring can only save drafts in your Gmail **Drafts**; you send them yourself.
+
+**Several Google accounts.** Press **Add another Google account** to connect a work and a personal account at once. Each one has its own Calendar, Gmail and Drive switches and an optional nickname ("Work"), and one is the primary: Calendar and Gmail use it unless you name another ("check my work email"). Removing one leaves the others. Your first account became account 1 automatically, with the same access. The sign-ins are encrypted with your Windows account. Drive (search, read, play, and changes only with your yes) is on its own page: [Google Drive](google-drive.md).
 
 ## Outlook + Microsoft To Do
 

@@ -5,6 +5,7 @@
 // Sheets: badges-contact-sheet.png (everything, 18×18) · badges-<category>.png (one category, 18 tiers, big) ·
 // badges-tiers-<n>.png (one tier across the categories) · badges-frames-only.png (emblems hidden: can you tell the
 // category from the frame alone?) · badges-48px.png (legibility at 48 px).
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { mkdirSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";

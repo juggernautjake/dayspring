@@ -4,6 +4,7 @@
 // changes) · a new version that won't start (the launcher puts the old one back) · "next time I open Dayspring" ·
 // "when I'm not using it" (idle) · and, with --old, Dayspring 1.0.0's own updater installing this version.
 // Servers run hidden on spare ports; browser launches are written to a log instead of opening anything.
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { spawn, spawnSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";

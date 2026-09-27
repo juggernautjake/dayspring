@@ -69,6 +69,9 @@ import * as calendarRoutes from "./lib/calendar-routes.mjs";
 import * as fsRoutes from "./lib/fs-routes.mjs";
 import * as toolingRoutes from "./lib/tooling-routes.mjs";
 import * as welcomeRoutes from "./lib/welcome-routes.mjs";
+import * as activityRoutes from "./lib/activity-routes.mjs";   // Settings → Activity log
+import * as moneyRoutes from "./lib/money-routes.mjs";   // Money review (read-only): /money.html and /api/money (lib/money)
+import { usedSince as moneyUsedSince } from "./lib/money/index.mjs";   // (money answers are never kept in transcripts)
 import * as discoverRoutes from "./lib/discover-routes.mjs";
 import * as discover from "./lib/discover.mjs";
 import * as tunein from "./lib/tunein.mjs";
@@ -83,6 +86,15 @@ import * as timers from "./lib/timers.mjs";
 import * as recipes from "./lib/recipes.mjs";
 import * as intents from "./lib/intents/index.mjs";
 import * as web from "./lib/web.mjs";
+import * as imageRoutes from "./lib/image-routes.mjs";   // pictures from the web on the screen (lib/imagesearch)
+import * as socialRoutes from "./lib/social/index.mjs";   // sharing with friends: OFF (hidden dev switch social.enabled); inert when off (lib/social)
+import * as visionRoutes from "./lib/vision-routes.mjs";   // Settings → Photos & people, the People page (lib/vision, lib/people)
+import * as floorRoutes from "./lib/floor-routes.mjs";
+import * as devRoutes from "./lib/dev/routes.mjs";   // the developer preview: 404 unless this is the developer's own computer (lib/dev)   // the conversation floor: the owner's requests before anything planned (lib/floor.mjs)
+import * as floor from "./lib/floor.mjs";
+import * as vision from "./lib/vision/index.mjs";
+import * as medialibRoutes from "./lib/medialib/routes.mjs";   // the owner's own music and videos, and Google Drive streaming (lib/medialib)
+import * as peopleComms from "./lib/people/comms.mjs";
 // A fresh install: create the data folder and any missing data files (empty, nothing personal) before anything runs.
 firstrun.ensure();
 // What each newly connected page is told first: who has the microphone and the listening state (so a page opened while
@@ -91,7 +103,8 @@ addHello("micOwner", () => lantern.micOwner());
 addHello("listenState", () => settings.get().listenState ?? "active");
 addHello("notices", () => firstrun.notices());
 // The Settings/setup wizard, updates and the in-app guide each answer their own /api routes.
-const ROUTES = [setupRoutes, updateRoutes, helpRoutes, discordRoutes, callRoutes, callsRoutes, meetRoutes, studyRoutes, playerRoutes, ambientRoutes, windowRoutes, documentRoutes, connectorRoutes, fsRoutes, toolingRoutes, welcomeRoutes, discoverRoutes, calendarRoutes, lanternRoutes, aboutRoutes, intentRoutes, personaRoutes, xpRoutes];
+const ROUTES = [setupRoutes, updateRoutes, helpRoutes, discordRoutes, callRoutes, callsRoutes, meetRoutes, studyRoutes, playerRoutes, ambientRoutes, windowRoutes, documentRoutes, connectorRoutes, fsRoutes, toolingRoutes, welcomeRoutes, discoverRoutes, calendarRoutes, lanternRoutes, aboutRoutes, intentRoutes, personaRoutes, xpRoutes, imageRoutes, activityRoutes, moneyRoutes, visionRoutes, socialRoutes, floorRoutes, devRoutes, medialibRoutes];
+imageRoutes.setDeps({ openUrl: async (u) => (await import("./lib/browsers.mjs")).openUrl(u, owner.displayBrowser()) });
 // 🎧 Tune in: what it hears addressed to Dayspring goes through the same assistant
 tunein.setChat(chat);
 // DAYSPRING_DISPLAY=1: this computer shows the Dayspring screen (any screen: a TV, a monitor…), so it keeps it open and
@@ -259,7 +272,7 @@ function claudeEvent(ev) {
     ? `Claude's all done ${home ? "on your computer" : "with " + project}.${gist ? " " + gist : " It's ready for you to look over."}`
     : /permission/i.test(summary) ? `Claude needs a quick yes from you ${home ? "on your computer" : "on " + project}.` : `Claude's waiting on you ${home ? "on your computer" : "in " + project}.`;
   const item = { at: new Date().toISOString(), kind: "claude", event: kind, project, cwd: ev.cwd, text: spoken, summary: gist || summary.slice(0, 160), quiet };
-  announcer.broadcast("claude", item);
+  floor.offer(item, (it) => announcer.broadcast("claude", it), { expectDone: false });   // waits while he's talking (lib/floor.mjs)
   rememberSpoken(`Claude Code ${kind} in ${ev.cwd}. ${summary ? "Its last words: " + summary.slice(0, 300) : ""}`, spoken);
   return item;
 }
@@ -553,14 +566,12 @@ async function api(req, res, url) {
   // Photos: the next one for the TV (?ask=1 also says whether now is a good moment to ask about it), the image itself
   // (only files in the photo index are ever served), and which one is on screen (so "don't show that again" knows).
   if (m === "GET" && p === "/photos/next") {
-    const now = new Date(), date = store.todayISO(), hm = now.toTimeString().slice(0, 5);
-    const cur = store.blocksBetween(date, date).find((b) => b.start <= hm && hm < b.end);
-    const relaxed = now.getHours() >= 8 && now.getHours() < 21 && (!cur || ["flex", "home", "meal", "rest"].includes(cur.category));
-    const ask = q.get("ask") === "1" && relaxed && photos.canAskToday(date);
-    const photo = photos.pick({ forQuestion: ask });
-    return send(res, 200, { photo, ask: Boolean(ask && photo && !photo.description), stats: photos.stats() });
+    // relaxed moments only, Active, not in a meeting or call, within the daily question budget; "who's in it" and
+    // "what's this one" together are one question (lib/vision/ask.mjs)
+    const r = await vision.nextPhoto({ want: q.get("ask") === "1" });
+    return send(res, 200, { ...r, stats: photos.stats() });
   }
-  if (m === "POST" && p === "/photos/showing") { const { id, asked } = await readJSON(req); photoOnScreen = id ?? null; if (asked && id) photos.markAsked(id, store.todayISO()); return send(res, 200, { ok: true }); }
+  if (m === "POST" && p === "/photos/showing") { const { id, asked, kind } = await readJSON(req); photoOnScreen = id ?? null; await vision.showing({ id, asked, kind }); return send(res, 200, { ok: true }); }
   const pm = p.match(/^\/photos\/img\/([0-9a-f]{16})$/);
   if (m === "GET" && pm) {
     const f = photos.filePath(pm[1]);
@@ -681,6 +692,7 @@ async function api(req, res, url) {
   if ((mm = p.match(/^\/memories\/([^/]+)$/)) && m === "DELETE") { store.forget(mm[1]); return send(res, 200, { ok: true }); }
 
   if (m === "POST" && p === "/chat") {
+    const MONEY_NOT_KEPT = "(a money review answer; not kept)";
     const { message, surface, typed } = await readJSON(req);
     if (!message?.trim()) return send(res, 400, { error: "message is required" });
     const key = surface === "tv" ? "tv" : "desk";
@@ -692,10 +704,19 @@ async function api(req, res, url) {
     // "join my meeting", a pasted Meet link, "bring the meeting back", "let Rich ask", "mute", "leave the meeting"…
     const mc = await meetRoutes.command(message.trim()).catch((e) => { console.log(`meet: ${e.message}`); return null; });
     if (mc) { transcripts.log({ role: "dayspring", text: mc, surface: key }); return send(res, 200, { reply: mc, changes: [], usage: null }); }
+    // "what were you going to say?": what Dayspring was holding while he talked comes out now (lib/floor.mjs)
+    const fl = floor.command(message.trim());
+    if (fl) { transcripts.log({ role: "dayspring", text: fl, surface: key }); return send(res, 200, { reply: fl, changes: [], usage: null, intent: "floor.release" }); }
     const uc = await updateRoutes.command(message.trim(), { restart: restartSelf }).catch(() => null);
     if (uc) { transcripts.log({ role: "dayspring", text: uc, surface: key }); return send(res, 200, { reply: uc, changes: [], usage: null }); }
     const tc = await callRoutes.command(message.trim()).catch(() => null);
     if (tc) { transcripts.log({ role: "dayspring", text: tc, surface: key }); return send(res, 200, { reply: tc, changes: [], usage: null }); }
+    // "show me pictures of …", and while pictures are up: "show number 3", "more", "save that one", "close images"
+    const ic = await imageRoutes.command(message.trim()).catch((e) => { console.log(`images: ${e.message}`); return null; });
+    if (ic) { transcripts.log({ role: "dayspring", text: ic, surface: key }); return send(res, 200, { reply: ic, changes: [], usage: null, intent: "images" }); }
+    // his own music and videos, and Google Drive: "play … from my computer", "shuffle my music folder", "number 2" (lib/medialib)
+    const ml = await (await import("./lib/medialib/skills.mjs")).command(message.trim(), { surface: key }).catch((e) => { console.log(`media library: ${e.message}`); return null; });
+    if (ml) { transcripts.log({ role: "dayspring", text: ml.reply, surface: key }); return send(res, 200, { reply: ml.reply, changes: ml.played ? ["media"] : [], usage: null, intent: "medialib", ...(ml.listen ? { listen: true } : {}) }); }
     const t0 = Date.now();
     lastChatAt = Date.now();
     const before = chatLocks[key]; let unlock; chatLocks[key] = new Promise((r) => { unlock = r; });
@@ -707,17 +728,20 @@ async function api(req, res, url) {
       catch (err) { devlog.log("error", { where: "chat", surface: key, text: message.trim(), status: err?.status ?? null, error: String(err?.message ?? err).slice(0, 500), ms: Date.now() - t0 }); throw err; }
       histories[key] = out.history;
     } finally { unlock(); }
-    transcripts.log({ role: "dayspring", text: out.reply, surface: key });
+    // a Money review answer (amounts, payees, balances) is never kept in the conversation history on disk, the same as
+    // the activity log; the answer itself was already given
+    const moneyAnswer = out?.private === "money" || moneyUsedSince(t0);
+    transcripts.log({ role: "dayspring", text: moneyAnswer ? MONEY_NOT_KEPT : out.reply, surface: key });
     // who answered: Claude (it used tokens), a built-in skill, the offline fallback, or a local handler
     const by = out.usage ? "claude" : out.offline ? "offline(" + out.offline + ")" : out.changes?.includes("skills") ? "skill" : out.changes?.includes("offline") ? "offline" : "local";
-    devlog.log("reply", { surface: key, by, ms: Date.now() - t0, reply: out.reply, changes: out.changes, tokensIn: out.usage?.input_tokens ?? null, tokensOut: out.usage?.output_tokens ?? null, cacheRead: out.usage?.cache_read_input_tokens ?? null, historyLen: out.history?.length ?? null, open: Boolean(out.open), quiet: Boolean(out.quiet) });
+    devlog.log("reply", { surface: key, by, ms: Date.now() - t0, reply: moneyAnswer ? MONEY_NOT_KEPT : out.reply, changes: out.changes, tokensIn: out.usage?.input_tokens ?? null, tokensOut: out.usage?.output_tokens ?? null, cacheRead: out.usage?.cache_read_input_tokens ?? null, historyLen: out.history?.length ?? null, open: Boolean(out.open), quiet: Boolean(out.quiet) });
     if (out.changes.length) announcer.broadcast("refresh", { reason: "chat" });
     // conversation: the TV keeps listening (no wake phrase) while a between-blocks conversation is open;
     // quiet: he asked to stop talking, so the TV goes quiet right away
     if (out.restart) setTimeout(restartSelf, 3500);      // after "Restarting, I'll be right back" has been said
     return send(res, 200, { reply: out.reply, changes: out.changes, usage: out.usage, conversation: Boolean(key === "tv" && (session.current() || out.open)), quiet: Boolean(out.quiet), speed: out.speed ?? null, photo: out.photo ?? null, panel: out.panel ?? null,
       // what the no-AI understanding adds: a list to pick from, a help link, something for the screen to do
-      ...Object.fromEntries(["suggest", "link", "clientRun", "clientShow", "count", "timers", "cooking", "cookingDone", "recipes", "recipeView", "listen", "joke", "intent", "openPage", "offerSearch", "dismissTimers", "miss", "dictating", "webResults", "breathing", "show", "support", "offer", "trivia"].filter((k) => out[k] !== undefined).map((k) => [k, out[k]])) });
+      ...Object.fromEntries(["suggest", "link", "clientRun", "clientShow", "count", "timers", "cooking", "cookingDone", "recipes", "recipeView", "listen", "joke", "intent", "openPage", "offerSearch", "dismissTimers", "miss", "dictating", "webResults", "breathing", "show", "devVoice", "support", "offer", "trivia"].filter((k) => out[k] !== undefined).map((k) => [k, out[k]])) });
   }
   if (m === "POST" && p === "/chat/reset") { const { surface } = await readJSON(req).catch(() => ({})); histories[surface === "tv" ? "tv" : "desk"] = []; return send(res, 200, { ok: true }); }
 
@@ -837,6 +861,7 @@ createServer(async (req, res) => {
   });
   knowledge.map();   // builds the folder map if it is missing or a day old
   if (owner.feature("photos")) import("./lib/photos.mjs").then((p) => p.scan()).catch(() => {});   // the photo list, built in the background
+  if (DISPLAY_MODE) vision.start({ announce: (x) => announcer.announce(x) });   // faces in the photos (only if turned on), people questions
   // While the media browser is open, keep the screen's "now playing" card in step with Spotify.
   setInterval(async () => {
     if (!browser.isOpen() || announcer.clientCount() === 0) return;
@@ -850,6 +875,7 @@ createServer(async (req, res) => {
   if (phoneOn) phonenotify.prime();
   if (phoneOn) setInterval(() => {
     for (const n of phonenotify.poll()) {
+      peopleComms.onPhoneEvent(n);   // a copy on their profile, only with "Save my text messages" on (off: nothing is written)
       if (n.kind === "text") {
         phonenotify.announceText(n);
         const lines = [`Incoming text message from ${n.from}. Do you want me to read it to you?`, `You've got a text from ${n.from}. Want me to read it?`, `${n.from} just texted you. Should I read it?`];
@@ -865,6 +891,8 @@ createServer(async (req, res) => {
   if (DISPLAY_MODE) callbridge.resume().catch(() => {});
   // 🎧 Tune in comes back on if the owner left it on
   if (DISPLAY_MODE) setTimeout(() => tunein.resume().catch(() => {}), 4000);
+  // the display window, as it was before a restart or an update (lib/sinkfollow.mjs); guarded inside, never in tests
+  display.resumeAfterRestart();
   if (DISPLAY_MODE) {
     // Not until the guided setup is finished (the setup page is the window then), and never a second window: display.open()
     // brings back the one that's open (even minimized or loading) instead. When the chosen screen isn't connected, it
@@ -919,6 +947,9 @@ createServer(async (req, res) => {
   import("./lib/calsync.mjs").then((c) => c.startBackground()).catch(() => {});              // now and then: popular videos and articles about the owner's interests
   ambient.keepFresh();           // the living sky: sunrise/sunset, weather and wind for the owner's location
   discordRoutes.init();          // the Discord bot logs in only when a bot token is set; otherwise it stays off
+  // his own music and videos: joins the music sources now, looks through the allowed folders a little later, slowly
+  import("./lib/medialib/skills.mjs").then((m) => m.registerSources()).catch(() => {});
+  setTimeout(() => import("./lib/medialib/library.mjs").then((l) => l.scanSoon()).catch(() => {}), 90_000).unref?.();
   if (TUNNEL) startTunnel();
   else if (t.publicUrl) console.log(`Public URL (from .env): ${t.publicUrl}  → point Twilio webhooks here or run with --tunnel`);
 });
@@ -949,7 +980,7 @@ function startTimersAndRecipes() {
     announce: (item) => announcer.announce(item),
     broadcast: (type, data) => announcer.broadcast(type, data),
     blocksToday: () => { const d = store.todayISO(); return store.blocksBetween(d, d); },
-    canAsk: () => quiet.state() === "active" && announcer.displayCount() > 0 && !(callbridge.isTalking?.() || tunein.isOn?.()) && timers.ringing().length === 0,
+    canAsk: () => quiet.state() === "active" && announcer.displayCount() > 0 && floor.free() && !(callbridge.isTalking?.() || tunein.isOn?.()) && timers.ringing().length === 0,
     env: () => ({ listen: quiet.state(), mode: quiet.modeFor("schedule"), inCall: Boolean(callbridge.isTalking?.() || tunein.isOn?.()), alarm: timers.ringing().length > 0 }),
   });
   // Funny personality: now and then, "Want to hear a joke?" (never on a call, during an alarm, a timer, cooking, the

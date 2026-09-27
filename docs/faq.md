@@ -67,6 +67,9 @@ Yes, from version 1.2.1. With no Dayspring screen open, the alarm shows a larger
 ### Can I make it stop listening, or be quiet for a while?
 Yes. Click the coloured badge on its screen and choose **Quiet** (hears its name but says nothing) or **Off** (not listening at all; alarms still ring). **Ctrl+Alt+Shift+D** turns it off and on from anywhere. See [Compact mode, quiet mode and notifications](quiet-and-notifications.md).
 
+### Dayspring was about to say something when I started talking. Where did it go?
+It's waiting. Your request always comes first: anything Dayspring planned to say (a reminder, a check-in, a question, a joke offer) waits until your answer has been said, any follow-up is done, and about 4 seconds have passed. Then it comes out, one thing at a time. A sign next to the status shows **1 thing to tell you after this**. Tap it, or ask "what were you going to say?", to hear it now. Alarms and timers still ring on time. See [Your requests come first](quiet-and-notifications.md#your-requests-come-first).
+
 ### How do I uninstall it?
 Open **Settings → About → Uninstall Dayspring…** (or **Uninstall Dayspring** in the Start menu). Choose whether to keep your data, and type your name to confirm. See [Installing → Uninstalling](install.md#uninstalling-dayspring).
 
@@ -85,6 +88,38 @@ Seven at once. Each gets a name ("pasta", "laundry"), or Dayspring asks what it'
 ### Can Dayspring find recipes and help me cook?
 
 Yes. Say "find a recipe for chili", pick one of the 6 cards, and say "let's make it". Cooking mode shows big text, keeps the screen awake, and you say "next" to move on. See [Recipes and cooking](recipes-and-cooking.md).
+
+### Can it show me pictures from the web?
+
+Yes, with or without an AI. Say "show me pictures of golden retrievers". A numbered grid appears on the screen. Say "show number 3" to see one big, "more" for the next ones, "save that one" to keep it, and "close images" when you're done. See [Pictures from the web](image-search.md).
+
+### Can it play the music and videos on my computer?
+
+Yes, with or without an AI. Say "play the song Holy Forever from my computer", "play my Johnny Cash mp3s", "shuffle my music folder" or "find the video from Sarah's wedding". Dayspring looks only in folders you've allowed in Settings → Permissions (Music, Videos and Downloads by default), and plays on the Dayspring screen, on the speaker it's set to. WMA, WMV and AVI files are converted as they play, or opened in your default player. See [Your own music and videos](media-library.md).
+
+### Can it use my Google Drive? Can I connect more than one Google account?
+
+Yes to both. Turn on the Drive API in your Google Cloud project, then tick **Drive** for your account in Settings → Apps & connections → Google. Add as many Google accounts as you like (work and personal), each with its own Calendar, Gmail and Drive switches. Dayspring searches, reads and plays Drive files. It only uploads, moves or makes folders if you turn that on for a Drive, and even then it asks first; deleting only moves things to Drive's trash. See [Google Drive](google-drive.md).
+
+### Can it recognise the people in my photos?
+
+Yes, if you turn it on in Settings → Photos & people. It's off by default and runs entirely on your computer: faces are never uploaded or looked up online, and the face data is encrypted with your Windows account. It only compares faces with your own photos and the people you've named, never pictures from the web. Now and then it asks "Who's in this picture?" (once or twice a day at most, never in Quiet, meetings or calls). See [Photos and people](photos-and-people.md).
+
+### Can it describe a picture or read the text in it?
+
+Yes. Say "describe this picture" or "what does this say?" while a picture is on the screen. Windows reads the text on your computer. With an AI that can see pictures, turn on **Describe images with AI** for a much richer description; Dayspring asks before it sends any picture.
+
+### Can Dayspring keep my texts with each person?
+
+Only if you turn on **Save my text messages to people's profiles** (Settings → Photos & people). It's off by default; when it's off, nothing is written. Saved texts and calls are encrypted, you choose how long they're kept, and **Delete all saved messages** removes them. See [Photos and people](photos-and-people.md#texts-and-calls-on-peoples-pages).
+
+### Can Dayspring go through my bank, Venmo or Cash App transactions?
+
+Yes, read-only. The easiest way is to download a CSV or OFX statement from your bank and say "import my bank statement". Or turn on **Money review (read-only)** on the Money page, say "open my bank", sign in yourself, and say "review my transactions for the last three months". You get every transaction, spending by category, your subscriptions, and a list of things you might want to cancel, with how to cancel them. Dayspring never sends money, changes anything or cancels anything, and never sees your password. See [Money review](money-review.md).
+
+### Is my bank data safe with Dayspring?
+
+It stays on your computer, encrypted with your Windows account, with account numbers masked to the last 4 digits. Raw transactions are deleted after 90 days (you can change that), and **Delete all my money data** removes everything. Nothing goes to an AI unless you say yes to the question Dayspring asks first. See [Money review › Privacy](money-review.md#privacy).
 
 ## The guided setup
 
@@ -176,10 +211,16 @@ Yes: "read me that quote", "what was that proverb?", "what's on the screen?". Se
 Yes. Paste the Meet link on the Dayspring screen, or say "Dayspring, join my meeting". The meeting opens in its own window: Google doesn't allow Meet inside another page. The window shrinks to a small tile in the corner; click it (or say "bring the meeting back") to make it big. Dayspring reads Meet's captions to know who's talking and answers only the people you allow ("let Rich and Jess ask", or the **Who can ask** list). Lantern can answer course questions, with the lesson and a link. See [Meetings](meeting-demo.md).
 
 ### Can people in my meeting change my schedule or settings?
-No. People you allow can ask questions. Only you can change things. Everyone else hears "Only you can ask me to do that." Speech that isn't for Dayspring or Lantern is never kept, and what people asked is forgotten when the meeting ends.
+No. People you allow can ask questions. Only you can change things (and only you can control the notes). Everyone else hears "Only you can ask me to do that." What people asked, and who was there, is forgotten when the meeting ends; only the meeting's notes are saved.
+
+### Does Dayspring record my meetings?
+It takes **notes** (a transcript with who said what, the chat, and a summary at the end), and it tells everyone first: a "Heads up: Dayspring is taking notes…" message in the chat, said out loud too, and a **● Notes** sign. Say "Dayspring, don't record this part" for anything private, or switch notes off in the 📹 Meetings panel. Recording the **audio** is a separate choice, off unless you turn it on. Recording laws vary, so follow the rules where you and the others are. See [Meeting notes](meeting-demo.md#meeting-notes-and-the-summary).
+
+### Where are my meeting notes, and how do I delete them?
+In `data\meetings\` on your computer, one folder per meeting. Open them in the 📹 Meetings panel → **Past meetings**: read, search, copy, make an email draft, or delete (to the Recycle Bin). They're kept for 90 days unless you choose otherwise. Only the summary step sends the notes' words to your AI provider; without an AI key, the summary is made on your computer.
 
 ### Why does the meeting say "Captions detected ✗"?
-Dayspring knows who's talking from Meet's captions. Press **C** in the meeting window to turn them on. If they still can't be read, Dayspring listens with Tune in instead. It still answers, but uses no names. See [Meetings](meeting-demo.md#if-something-goes-wrong).
+Dayspring knows who's talking from Meet's captions. Press **C** in the meeting window to turn them on (if they switch off by themselves, Dayspring turns them back on). If they still can't be read, Dayspring listens with Tune in instead. It still answers, but uses no names. Who's *in* the call comes from more places (the People list, the video tiles, the join notices), so "who's in the call?" still works. See [Meetings](meeting-demo.md#if-something-goes-wrong).
 
 ## Files, documents and apps
 
@@ -187,7 +228,16 @@ Dayspring knows who's talking from Meet's captions. Press **C** in the meeting w
 Yes: Word (.docx and .doc), PDF, PowerPoint, Excel, CSV and more. "Read me the lease", "summarize my resume". See [Documents](documents.md).
 
 ### Will it change my files?
-Only where you allow it in **Settings → Permissions**. It backs up every file before changing it, and deleting always asks and goes to the Recycle Bin. See [Permissions](permissions.md).
+Only where you allow it. You choose file access during setup (it starts at none), and you can change it in **Settings → Permissions**. It backs up every file before changing it, and asks first unless you turn that off. See [Permissions](permissions.md).
+
+### Can it delete my files?
+Only if you turn on **Can delete files** in Settings → Permissions (it's off to start with, and "Read & write" never turns it on). Even then, deleted things go to the Recycle Bin, a backup copy is kept, and it always asks "Are you sure?" first. Deleting a whole folder tells you how many files are inside. See [Permissions → Changing files](permissions.md#changing-files).
+
+### Could it break Windows, or change its own rules?
+No. Whatever you allow, it never changes Windows, Program Files, boot files, the registry, other people's profiles, Dayspring's own code, its permissions or its activity log, and it never opens password or key files. It checks where shortcuts and links really lead, so they can't be used to get around this. For risky files that *are* allowed (start-up files, project settings, databases…) it explains what could break and asks "Are you sure?". See [Permissions → Always protected](permissions.md#always-protected).
+
+### How do I see what Dayspring did, or undo it?
+Ask "what did you change today?", or open **Settings → Activity log**: every command and every file it read or changed is there for at least 120 days, with backups. Say "undo that last change", or press **Restore this version** next to a change. See [Permissions → The activity log](permissions.md#the-activity-log).
 
 ### Can it open programs?
 If you allow programs in Permissions: "open Word", "open Discord". See [Files, programs and the browser](files-and-browser.md).
@@ -200,6 +250,12 @@ It announces texts and reads them to you (through Phone Link). Sending texts isn
 
 ### How do I connect Spotify?
 Make a free Spotify developer app (about 5 minutes; Premium needed for playing inside Dayspring) and paste its Client ID in Settings. See [Music and videos](music.md).
+
+### I asked for a kind of music and Spotify played something else
+Say **"not that"** or **"try another"**. Dayspring plays its next-best match and remembers, so the same request picks better next time. For genres ("christian folk", "90s country") it checks the artists' genres on Spotify and skips generic hit lists, and it tells you what it picked and whether that's what's actually playing. When it isn't sure, it shows three choices; say the number. See [Music and videos → Asking for music on Spotify](music.md#asking-for-music-on-spotify).
+
+### Spotify or a video plays on the wrong speaker
+Music and videos play on the speaker Dayspring is set to (the Sound panel's **Dayspring plays on**), not the Windows default, and move within a second when you change it. If several are ticked, music uses the first connected one: TV, then headphones, then speakers. This needs Dayspring's own window in Chrome, Edge, Brave or Vivaldi. In a browser tab or in Firefox, music and videos use the Windows default. If you just updated, close the Dayspring screen and open it again once. Dayspring never changes your Windows default. See [Sound → Music and videos play there too](audio-devices.md#music-and-videos-play-there-too).
 
 ### Do I need a YouTube API key?
 No. YouTube search and playback work with no key. A key is optional and only makes searches a little faster. See [Music and videos](music.md#do-i-need-a-youtube-api-key).

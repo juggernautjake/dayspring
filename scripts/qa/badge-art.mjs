@@ -6,6 +6,7 @@
 //   • the mystery card never contains the art
 //   • 100 animated badges on one page: the frame rate (and that the calm mode it falls back to is lighter)
 //   node scripts/qa/badge-art.mjs
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";

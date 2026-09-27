@@ -1,6 +1,7 @@
 // Meetings on the Dayspring screen: the "Meeting" chip (click: shrink the meeting to the corner or bring it back), the
 // meeting panel (controls, who may ask, Demo mode and its pre-flight checklist, the rehearsal), the card that shows who
-// is answering (the orb for Dayspring, the lantern for Lantern), and a results card with the lessons and links.
+// is answering (the orb for Dayspring, the lantern for Lantern), a results card with the lessons and links, and the
+// meeting notes (taking them, and the past meetings: summary, transcript, chat, search, copy, delete).
 // The meeting itself runs in its own window (Google doesn't allow Meet inside another page); lib/meet drives it.
 (() => {
   const $ = (s, r = document) => r.querySelector(s);
@@ -39,7 +40,19 @@
   .meetres .cites{margin-top:.6em;display:grid;gap:.35em}
   .meetres .cites a,.meetres .cites button{font:inherit;font-size:.9em;color:var(--ink);background:rgba(255,255,255,.07);border:1px solid var(--edge2);border-radius:.6em;padding:.3em .6em;cursor:pointer;text-decoration:none}
   .meetres .x{position:absolute;top:.4em;right:.5em;background:transparent;border:0;color:var(--muted);cursor:pointer}
-  html.mini .meetres{left:.6em;right:.6em;width:auto;top:auto;bottom:5em}`;
+  html.mini .meetres{left:.6em;right:.6em;width:auto;top:auto;bottom:5em}
+  .meetpop select{font:inherit;color:var(--ink);background:rgba(255,255,255,.07);border:1px solid var(--edge2);border-radius:.5em;padding:.2em .4em}
+  .meetpop .notesnow{display:flex;align-items:center;gap:.5em;flex-wrap:wrap}
+  .meetpop .recdot{display:inline-block;width:.65em;height:.65em;border-radius:50%;background:#ea4335;box-shadow:0 0 6px #ea4335}
+  .meetpop .recdot.paused{background:#9aa0a6;box-shadow:none}
+  .meetnotes{position:fixed;z-index:40;inset:4vh 4vw;display:flex;flex-direction:column;background:rgba(16,20,46,.98);border:1px solid var(--edge2);border-radius:1em;box-shadow:0 20px 70px rgba(0,0,0,.7);color:var(--ink);font-size:.92em}
+  .meetnotes header{display:flex;align-items:center;gap:.6em;flex-wrap:wrap;padding:.8em 1em;border-bottom:1px solid var(--edge2)}
+  .meetnotes header h4{margin:0;font-weight:500;flex:1;min-width:10em}
+  .meetnotes button{font:inherit;font-size:.9em;color:var(--ink);background:rgba(124,140,255,.22);border:1px solid var(--edge2);border-radius:.7em;padding:.3em .75em;cursor:pointer}
+  .meetnotes button[aria-pressed=true]{background:rgba(124,140,255,.5)}
+  .meetnotes button.warn{background:rgba(234,67,53,.25)}
+  .meetnotes .body{flex:1;overflow:auto;padding:1em 1.2em;white-space:pre-wrap;line-height:1.45;font-weight:300}
+  .meetnotes audio{width:100%}`;
   document.head.appendChild(css);
 
   const wrap = document.createElement("span");
@@ -59,6 +72,7 @@
 
   function paint() {
     chip?.update(st);
+    notesNow();
     $("#meetMore").textContent = st.stage && st.stage !== "closed" ? "▾" : "📹";
     if (pop) renderPop();
   }
@@ -86,6 +100,9 @@
     const active = st.stage && !["closed", "left"].includes(st.stage);
     const check = st.check ?? {};
     const tick = (v) => (v === true ? "✓" : v === false ? "✗" : "…");
+    // the panel is redrawn on every meeting update: what's being typed in it (and where) is kept
+    const kept = {};
+    for (const id of ["meetLink", "meetPublic", "meetNotesQ"]) { const el = pop.querySelector("#" + id); if (el) kept[id] = { v: el.value, focus: document.activeElement === el }; }
     pop.innerHTML = `<button class="x plain" aria-label="Close">✕</button>
       <h4>📹 ${active ? (st.rehearsal ? "Rehearsal meeting" : inCall ? "In a meeting" : ({ loading: "Joining…", prejoin: "At the meeting's door", "sign-in": "Sign in to Google", setup: "Meeting window" }[st.stage] ?? "Meeting")) : "Meetings"}</h4>
       ${active ? `
@@ -96,6 +113,7 @@
           <button class="warn" data-leave>Leave…</button>
         </div>
         <h5>Who can ask</h5><div id="meetPeople"></div>
+        <h5>Notes</h5><div class="notesnow" id="meetNotesNow"></div>
       ` : `
         <p>Dayspring opens your Google Meet in its own window (a small tile in the corner while you use Dayspring), reads the captions to know who's talking, and answers the people you allow. Lantern answers too.</p>
         <label for="meetLink">Meet link</label>
@@ -106,6 +124,13 @@
       <label class="switch"><input type="checkbox" id="meetDemo" ${st.demo ? "checked" : ""}> Demo mode: anyone can ask Dayspring or Lantern</label>
       <label class="switch"><input type="checkbox" id="meetRoute" ${st.routeCourseToLantern ? "checked" : ""}> Hand course questions to Lantern</label>
       <label class="switch"><input type="checkbox" id="meetAnnounce" ${st.announce !== false ? "checked" : ""}> Say hello in the meeting chat when joining</label>
+      <h5>Meeting notes</h5>
+      <label class="switch"><input type="checkbox" id="meetNotesOn" ${st.notesOn !== false ? "checked" : ""}> Take notes in meetings (everyone is told first, in the call and the chat)</label>
+      <label class="switch"><input type="checkbox" id="meetAudio" ${st.recordAudio ? "checked" : ""}> Record the audio too (off unless you choose it; saved on this computer)</label>
+      <label class="switch">Keep past meetings <select id="meetKeep">${[[30, "30 days"], [90, "90 days"], [365, "a year"], [0, "until I delete them"]].map(([v, t]) => `<option value="${v}" ${Number(st.notesKeepDays ?? 90) === v ? "selected" : ""}>${t}</option>`).join("")}</select></label>
+      <h5>Past meetings</h5>
+      <div class="row"><input type="text" id="meetNotesQ" placeholder="Search past meetings (names, words said…)"></div>
+      <ul class="check" id="meetNotesList"><li><span>…</span><span>Loading…</span><span></span></li></ul>
       <h5>Pre-flight checklist</h5><ul class="check" id="meetPre"><li><span>…</span><span>Checking…</span></li></ul>
       <p id="meetSound"></p>
       <label for="meetPublic">Public link to a lesson ({lesson} becomes the lesson, e.g. u4l2)</label>
@@ -119,10 +144,17 @@
     $("#meetDemo", pop).onchange = async (e) => { st = await api("/meet/demo", { on: e.target.checked }).catch(() => st); paint(); };
     $("#meetRoute", pop).onchange = async (e) => { await api("/meet/settings", { routeCourseToLantern: e.target.checked }).catch(() => {}); refresh(); };
     $("#meetAnnounce", pop).onchange = async (e) => { await api("/meet/settings", { announce: e.target.checked }).catch(() => {}); refresh(); };
-    $("[data-savelink]", pop).onclick = async () => { const v = $("#meetPublic", pop).value.trim(); try { await api("/meet/settings", { publicLessonUrl: v }); toast("Saved the lesson link."); loadPre(); } catch (e) { toast(e.message); } };
+    $("#meetNotesOn", pop).onchange = async (e) => { await api("/meet/settings", { notes: e.target.checked }).catch(() => {}); refresh(); };
+    $("#meetAudio", pop).onchange = async (e) => { await api("/meet/settings", { recordAudio: e.target.checked }).catch(() => {}); toast(e.target.checked ? "The audio will be recorded too (from the next time notes start). Everyone is told." : "Audio won't be recorded."); refresh(); };
+    $("#meetKeep", pop).onchange = async (e) => { await api("/meet/settings", { notesKeepDays: Number(e.target.value) }).catch(() => {}); refresh(); };
+    let qT = 0; $("#meetNotesQ", pop).oninput = (e) => { clearTimeout(qT); qT = setTimeout(() => loadNotes(e.target.value.trim()), 250); };
+    notesNow();
+    loadNotes($("#meetNotesQ", pop).value.trim());
+    $("[data-savelink]", pop).onclick = async () => { const v = $("#meetPublic", pop).value.trim(); try { cfg = await api("/meet/settings", { publicLessonUrl: v }); toast("Saved the lesson link."); loadPre(); } catch (e) { toast(e.message); } };
     const box = $("#meetPeople", pop);
     if (box) { const got = await parts; if (got) { people = got.tile.mountPeople(box, { adapter: { post: (p, b) => api(p, b) } }); people.update(st); } }
-    try { cfg ??= await api("/meet/settings"); const c = Object.values(cfg.courses ?? {})[0]; if (c?.publicLessonUrl) $("#meetPublic", pop).value = c.publicLessonUrl; } catch { /* fine */ }
+    for (const [id, k] of Object.entries(kept)) { const el = pop.querySelector("#" + id); if (el && k.v) el.value = k.v; if (el && k.focus) el.focus(); }
+    try { cfg ??= await api("/meet/settings"); const c = Object.values(cfg.courses ?? {})[0]; const el = $("#meetPublic", pop); if (c?.publicLessonUrl && el && !el.value) el.value = c.publicLessonUrl; } catch { /* fine */ }
     loadPre();
     place();
   }
@@ -143,6 +175,64 @@
     }));
     place();
   }
+  // ---- meeting notes ----
+  function notesNow() {
+    const box = pop && $("#meetNotesNow", pop); if (!box) return;
+    const n = st.notes ?? {};
+    const btn = (a, t, cls = "") => `<button data-na="${a}" class="${cls}">${t}</button>`;
+    box.innerHTML = !n.on || !n.live
+      ? `<span>Not taking notes.</span>${btn("start", "Start taking notes")}`
+      : n.paused
+        ? `<span class="recdot paused"></span><span>Notes paused${n.paused === "private" ? " (this part isn't written down)" : ""}.</span>${btn("resume", "Resume")}${btn("stop", "Stop", "plain")}`
+        : `<span class="recdot"></span><span>Taking notes${n.audio ? " and recording the audio" : ""} (${n.entries ?? 0} lines).</span>${btn("pause", "Pause")}${btn("private", "Don't record this part")}${btn("stop", "Stop", "plain")}`;
+    box.querySelectorAll("[data-na]").forEach((b) => (b.onclick = async () => { const r = await api("/meet/notes/live", { action: b.dataset.na }).catch((e) => ({ reply: e.message })); toast(r.reply); refresh(); }));
+  }
+  async function loadNotes(q = "") {
+    const ul = pop && $("#meetNotesList", pop); if (!ul) return;
+    let r; try { r = await api("/meet/notes" + (q ? "?q=" + encodeURIComponent(q) : "")); } catch { ul.innerHTML = ""; return; }
+    if (!pop || !ul.isConnected) return;
+    const when = (iso) => new Date(iso).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    ul.innerHTML = r.meetings.length ? r.meetings.slice(0, 30).map((m) => `<li><span>${m.audio ? "🎙️" : "📝"}</span><span>${esc(m.title)}<small>${esc(when(m.startedAt))} · ${esc(m.minutes)} min · ${m.people.length ? esc(m.people.slice(0, 4).join(", ")) + (m.people.length > 4 ? "…" : "") : "just you"}${m.summary === "writing" ? " · summary on its way" : m.summary === "offline" ? " · summary without AI" : ""}</small></span><span><button data-nid="${esc(m.id)}">Open</button></span></li>`).join("")
+      : `<li><span>•</span><span>${q ? "Nothing matches that." : "No saved meetings yet. Notes from your meetings appear here."}</span><span></span></li>`;
+    ul.querySelectorAll("[data-nid]").forEach((b) => (b.onclick = () => viewNotes(b.dataset.nid)));
+    place();
+  }
+  let viewer = null;
+  async function viewNotes(id) {
+    viewer?.remove();
+    let d; try { d = await api("/meet/notes/" + encodeURIComponent(id)); } catch (e) { toast(e.message); return; }
+    viewer = document.createElement("div"); viewer.className = "meetnotes"; viewer.setAttribute("role", "dialog"); viewer.setAttribute("aria-label", "Meeting notes");
+    const tabs = { summary: "Summary", transcript: "Transcript", chat: "Chat" };
+    let tab = "summary";
+    viewer.innerHTML = `<header><h4>📝 ${esc(d.meta.title)} <small>${esc(new Date(d.meta.startedAt).toLocaleString())}, ${esc(d.meta.minutes)} min</small></h4>
+      ${Object.entries(tabs).map(([k, t]) => `<button data-tab="${k}" aria-pressed="${k === tab}">${t}</button>`).join("")}
+      <button data-act="copy">Copy</button><button data-act="recap">🔊 Recap</button><button data-act="draft">✉️ Email draft</button><button data-act="folder">📂 Folder</button>
+      ${d.meta.summary !== "ai" ? `<button data-act="again">Write the summary again</button>` : ""}<button data-act="delete" class="warn">Delete…</button><button data-act="close" aria-label="Close">✕</button></header>
+      ${d.audio ? `<div style="padding:.4em 1em 0"><audio controls preload="none" src="/api/meet/notes/${encodeURIComponent(id)}/audio"></audio></div>` : ""}
+      <div class="body"></div>`;
+    document.body.appendChild(viewer);
+    const body = $(".body", viewer);
+    const show = () => { body.textContent = d[tab] || "(empty)"; viewer.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tab === tab))); };
+    show();
+    viewer.querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => { tab = b.dataset.tab; show(); }));
+    viewer.querySelectorAll("[data-act]").forEach((b) => (b.onclick = async () => {
+      const a = b.dataset.act;
+      if (a === "close") { viewer.remove(); viewer = null; }
+      else if (a === "copy") { try { await navigator.clipboard.writeText(d[tab] || ""); toast("Copied."); } catch { toast("Couldn't copy here: select the text and press Ctrl+C."); } }
+      else if (a === "recap") { const r = await api(`/meet/notes/${encodeURIComponent(id)}/recap`, {}).catch(() => null); if (r?.text) { toast(r.text); window.dsSpeak?.(r.text); } }
+      // a draft only: the mail app opens with the summary in it, and nothing is sent unless you send it
+      else if (a === "draft") { const r = await api(`/meet/notes/${encodeURIComponent(id)}/draft`, {}).catch(() => null); if (r?.mailto) { try { await navigator.clipboard.writeText(r.body); } catch { /* the draft is enough */ } location.href = r.mailto; toast("A draft is open in your mail app (the summary is also copied). Add who it's for, and send it yourself."); } }
+      else if (a === "folder") api(`/meet/notes/${encodeURIComponent(id)}/open`, {}).catch((e) => toast(e.message));
+      else if (a === "again") { b.disabled = true; toast("Writing the summary again…"); const r = await api(`/meet/notes/${encodeURIComponent(id)}/summarize`, {}).catch(() => null); if (r?.how) { viewNotes(id); toast(r.how === "ai" ? "The summary is written." : "Written without AI (no AI key is working)."); } }
+      else if (a === "delete") {
+        if (!b.dataset.armed) { b.dataset.armed = "1"; b.textContent = "Click again to delete (to the Recycle Bin)"; return; }
+        const r = await api(`/meet/notes/${encodeURIComponent(id)}/delete`, { confirm: true }).catch((e) => ({ error: e.message }));
+        toast(r.ok ? "Deleted (it's in the Recycle Bin if you change your mind)." : r.error); if (r.ok) { viewer.remove(); viewer = null; loadNotes(); }
+      }
+    }));
+  }
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && viewer) { viewer.remove(); viewer = null; } });
+
   // the same test as Settings → Calls: play a test phrase into the call mixer and listen for it (read-only)
   async function soundTest() {
     const out = $("#meetSound", pop); if (out) out.textContent = "Listening… playing a test phrase into the call mixer.";
@@ -194,6 +284,7 @@
     else if (d.kind === "handoff") parts.then(() => nameCard?.show({ as: "dayspring", text: `Dayspring — handing ${d.who}'s question to Lantern`, speaking: true, ms: 8000 }));
     else if (d.kind === "answer") { results(d); if (!d.spoken) setTimeout(() => nameCard?.hide(), 4000); }
     else if (d.kind === "notice") toast(d.text);
+    else if (d.kind === "notes") { if (d.state === "saved") toast("The meeting's notes are saved (📹 → Past meetings)."); if (pop) loadNotes($("#meetNotesQ", pop)?.value.trim() ?? ""); }
   });
   if (window.dsEvents) hook(window.dsEvents); else addEventListener("ds-events", (e) => hook(e.detail), { once: true });
   $("#meetMore").onclick = () => openPop();

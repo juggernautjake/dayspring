@@ -6,7 +6,7 @@
 //   const people = mountPeople(panelEl, { adapter })        people.update(state)
 //   const card = mountNameCard(document.body, { avatars })  card.show({ as: "lantern", text: "Lantern — answering Rich", speaking }) · card.hide()
 //
-//   state = { stage: "closed" | "loading" | "prejoin" | "sign-in" | "in-call" | "left", view: "tile" | "large",
+//   state = { stage: "closed" | "loading" | "prejoin" | "sign-in" | "in-call" | "left", view: "tile" | "large", notes: { live, paused },
 //             mode: "only-me" | "everyone" | "custom", assistants: ["dayspring", "lantern"],
 //             people: [{ name, owner, can: { dayspring, lantern } }], check: { captions, chat } }
 //   adapter.post(path, body) → Promise   ("/meet/permissions" { mode } or { name, can })
@@ -26,6 +26,10 @@ function style() {
   .eco-meet-chip .dot{width:.6em;height:.6em;border-radius:50%;background:#9aa0a6}
   .eco-meet-chip[data-stage="in-call"] .dot{background:#34d399;box-shadow:0 0 8px #34d399}
   .eco-meet-chip[data-stage="sign-in"] .dot,.eco-meet-chip[data-stage="prejoin"] .dot{background:#fbbf24}
+  .eco-meet-chip[data-notes="on"]{border-color:rgba(234,67,53,.75)}
+  .eco-meet-chip .rec{display:none;width:.55em;height:.55em;border-radius:50%;background:#ea4335}
+  .eco-meet-chip[data-notes="on"] .rec,.eco-meet-chip[data-notes="paused"] .rec{display:inline-block}
+  .eco-meet-chip[data-notes="paused"] .rec{background:#9aa0a6}
   .eco-meet-people{display:grid;gap:.5em}
   .eco-meet-people .modes{display:flex;gap:.35em;flex-wrap:wrap}
   .eco-meet-people .modes button{border-radius:999px;padding:.3em .8em;border:1px solid rgba(255,255,255,.2);background:transparent;color:inherit;cursor:pointer;font:inherit}
@@ -54,7 +58,7 @@ export function mountChip(parent, { onClick = () => {} } = {}) {
   style();
   const b = document.createElement("button");
   b.type = "button"; b.className = "eco-meet-chip"; b.hidden = true;
-  b.innerHTML = `<span class="dot"></span><span class="t">Meeting</span>`;
+  b.innerHTML = `<span class="dot"></span><span class="t">Meeting</span><span class="rec" aria-hidden="true"></span>`;
   b.addEventListener("click", () => onClick());
   parent.appendChild(b);
   return {
@@ -63,7 +67,10 @@ export function mountChip(parent, { onClick = () => {} } = {}) {
       const on = st.stage && st.stage !== "closed";
       b.hidden = !on;
       b.dataset.stage = st.stage ?? "closed";
-      b.querySelector(".t").textContent = STAGE_TEXT[st.stage] ?? "Meeting";
+      // notes being taken: a red dot and "· notes" (grey while paused), so the owner always knows
+      const n = st.stage === "in-call" && st.notes?.live ? (st.notes.paused ? "paused" : "on") : "off";
+      b.dataset.notes = n;
+      b.querySelector(".t").textContent = (STAGE_TEXT[st.stage] ?? "Meeting") + (n === "on" ? " · notes" : n === "paused" ? " · notes paused" : "");
       b.title = st.stage === "in-call" ? (st.view === "tile" ? "Enlarge the meeting" : "Shrink the meeting to the corner") : (STAGE_TEXT[st.stage] ?? "");
       b.setAttribute("aria-label", b.title || "Meeting");
     },

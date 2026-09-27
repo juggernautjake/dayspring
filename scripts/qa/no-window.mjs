@@ -6,6 +6,7 @@
 //   • a video that can't be embedded shows a "Pop it out?" card and opens nothing by itself
 //   • "pop it out" by voice/typing does the same as the button
 //   node scripts/qa/no-window.mjs [--quick] [--keep]      --quick: 60 s of background searching instead of 180 s
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";

@@ -1,6 +1,7 @@
 // How much Dayspring understands without AI: the catalogue by family, phrasings per intent, the golden set's accuracy
 // per family, and the intents that need more ways of saying them (fewer than 15 phrasings).
 //   node scripts/intents-coverage.mjs [--min=15]
+import "./qa/guard-data.mjs";   // first: tests never write to the real data folder
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";

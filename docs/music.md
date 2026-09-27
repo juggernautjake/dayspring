@@ -41,7 +41,7 @@ This is Spotify's way of letting Dayspring talk to your account. It's free and d
 
 Dayspring stays signed in. You won't need to do this again unless you disconnect it or Spotify asks you to sign in again (it tells you when).
 
-> **Note:** Spotify's sound comes from the Windows default speaker. Dayspring's own voice can go to other speakers you pick in Settings, but Spotify plays inside Spotify's own player, which always uses the Windows default. If Spotify plays on the wrong speaker, change the default in Windows (the speaker icon on the taskbar).
+> **Note:** Spotify plays on the same speaker as Dayspring's voice (the one you picked in the Sound panel), not the Windows default, and moves when you change it. With several speakers picked, it plays on the first one that's connected: TV, then headphones, then speakers. In a browser tab or in Firefox it uses the Windows default instead. See [Sound → Music and videos play there too](audio-devices.md#music-and-videos-play-there-too).
 
 > **If it doesn't work:**
 > - **"INVALID_CLIENT: Invalid redirect URI"**: the Redirect URI in your Spotify app must be exactly `http://127.0.0.1:4747/spotify/callback`, with no `/` at the end and `http`, not `https`.
@@ -173,11 +173,34 @@ If you haven't connected Spotify inside Dayspring, Spotify plays in the music wi
 
 It can play, pause, skip, go back and change the volume, but it can't jump to a point in a song, shuffle or repeat. If Chrome says **"Playback of protected content is not enabled"**, open Chrome normally, go to `chrome://components`, and click **Check for update** under **Widevine Content Decryption Module**, then restart Dayspring.
 
+## Asking for music on Spotify
+
+Ask for music the way you'd ask a friend. Dayspring works out what kind of thing you mean, searches Spotify for it, checks its pick before playing, and then checks what's actually playing. All of this works without an AI brain ⚡ once Spotify is connected inside Dayspring. Without that connection, add "on Spotify" and it uses the music window.
+
+| You can ask for | For example |
+|---|---|
+| A song | "Play *Gratitude* by Hollow Pines" · "Play the song *Way Maker*" · "Play the song that goes *way maker, miracle worker*" |
+| An artist | "Play some Johnny Cash" · "Play songs by Josh Garrels" |
+| An album | "Play the album *At Folsom Prison*" · "Play the album *Home* by Josh Garrels" |
+| A playlist | "Play the *This Is Johnny Cash* playlist" · "Play my *Road Trip* playlist" · "Play my Discover Weekly" |
+| Your Liked Songs | "Play my liked songs" · "Shuffle my favorite songs" |
+| A genre or style | "Play christian folk music" · "Put on some worship" · "Play 90s country" · "Play bluegrass gospel" · "Play lo-fi" |
+| A mood or activity | "Play something calm for studying" · "Play upbeat workout music" |
+| More like something | "Play more like this" · "Play songs like Johnny Cash" · "Play Josh Garrels radio" |
+| With changes | "Shuffle worship music" · "Play worship, but no Hillsong" · "Play only Hillsong Worship" |
+
+- **Typing and hearing mistakes are fine.** "Christian fold", "worhsip", "jonny cash" and "war ship music" still find Christian folk, worship and Johnny Cash.
+- **Genres are checked.** For a genre, Dayspring picks a playlist whose name or description says it and whose artists really are that genre on Spotify, and it skips generic hit lists. If no playlist fits, it makes a mix from that genre's top artists.
+- **It tells you what it picked**, for example: "Playing Christian Folk, a playlist with The Gray Havens and Josh Garrels." If Spotify ends up playing something else, Dayspring says so.
+- **When it isn't sure**, it doesn't guess. It says "I'm not sure which one you mean" and shows up to three choices on the screen. Say the number, or "none of these".
+- **Wrong music?** Say **"not that"**, **"that's not what I wanted"**, **"try another"** or **"skip this playlist"** ⚡. Dayspring plays its next-best match and remembers. The next time you ask for the same thing, even spelled differently, it won't pick that one again. (These corrections stay on this computer, in `data/music-prefs.json`.)
+- **Your Discover Weekly** plays only when it's saved in your Spotify library. Open Spotify, find Discover Weekly and add it to your library, then ask again.
+
 ## Things you can say
 
 **Playing** (these need an AI brain unless marked ⚡):
-- "Play *River Flows in You* on Spotify" ⚡ · "Play the album *Abbey Road*" ⚡ · "Play Yiruma" · "Play a lo-fi study playlist" ⚡
-- "Play my *Morning* playlist" ⚡ · "Shuffle my Liked Songs" ⚡ · "Play a podcast about history"
+- "Play *River Flows in You* on Spotify" ⚡ · "Play the album *Abbey Road*" ⚡ · "Play Yiruma" ⚡ · "Play a lo-fi study playlist" ⚡ · "Play christian folk music" ⚡
+- "Play my *Morning* playlist" ⚡ · "Shuffle my Liked Songs" ⚡ · "Play more like this" ⚡ · "Not that" / "Try another" ⚡ · "Play a podcast about history"
 - "Play *hymns* on YouTube" ⚡ · "Find a recent popular video about sourdough" ⚡
 - "Queue *Sweet Disposition*" ⚡ · "Add the second one to the queue" ⚡ (from a list on screen) · "Play the third one" ⚡
 
@@ -196,7 +219,7 @@ It can play, pause, skip, go back and change the volume, but it can't jump to a 
 - "Add this to the queue" · "Make a playlist called *Worship*" · "Add this video to my *Worship* playlist" · "Play my *Worship* videos"
 
 **Spotify extras** ⚡ (with Spotify inside Dayspring):
-- "Like this song" · "Add this song to my *Workout* playlist" · "Search Spotify for Yiruma" · "Start a jam"
+- "Like this song" / "Save this song" · "Add this song to my *Workout* playlist" · "Queue *Gratitude* by Hollow Pines" · "Play *Hurt* next" · "Search Spotify for Yiruma" · "Start a jam"
 
 > **Tip:** "Slow down", "speed up" and "normal speed" change the **video's** speed while a video is showing. Otherwise they change how fast **Dayspring talks**. To be clear either way, say "talk slower" or "slow the video down". The same goes for volume: while music plays, "turn it up" means the music; "turn your voice up" means Dayspring.
 

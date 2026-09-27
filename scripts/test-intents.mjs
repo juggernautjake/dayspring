@@ -4,6 +4,7 @@
 //   speed (< 20 ms a request), and the conversations: picking from the list, "None of these", the help link after
 //   repeated misses, learning a pick, confirmations, the timer's "What's it for?", knock-knock, counting, joke offers.
 //   node scripts/test-intents.mjs [--verbose] [--family=timers]
+import "./qa/guard-data.mjs";   // first: tests never write to the real data folder
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
@@ -13,7 +14,7 @@ const DESK = join(dirname(fileURLToPath(import.meta.url)), "..");
 const TMP = mkdtempSync(join(tmpdir(), "ds-intents-"));
 Object.assign(process.env, {
   DAYSPRING_TIMERS_FILE: join(TMP, "timers.json"), DAYSPRING_RECIPES_FILE: join(TMP, "recipes.json"), DAYSPRING_LISTS_FILE: join(TMP, "lists.json"),
-  DAYSPRING_INTENT_LEARNED: join(TMP, "learned.json"), DAYSPRING_JOKES_TOLD: join(TMP, "jokes-told.json"), DAYSPRING_JOKE_OFFERS: join(TMP, "offers.json"),
+  DAYSPRING_INTENT_LEARNED: join(TMP, "learned.json"), DAYSPRING_INTENT_MISSES: join(TMP, "misses.json"), DAYSPRING_JOKES_TOLD: join(TMP, "jokes-told.json"), DAYSPRING_JOKE_OFFERS: join(TMP, "offers.json"),
   DAYSPRING_RECIPE_IMAGES: join(TMP, "img"), DAYSPRING_NO_BROWSER: "1", DAYSPRING_SETTINGS_FILE: join(TMP, "settings.json"),
 });
 const imp = (p) => import(pathToFileURL(join(DESK, p)).href);

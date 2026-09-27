@@ -3,6 +3,7 @@
 // clincher and the citation, the badge case), the "?" card flipping over when a badge is earned while it's showing,
 // the reveal on the display, reduced motion, and no page errors.
 //   node scripts/qa/badges-ui.mjs [--keep]
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { spawn, spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";

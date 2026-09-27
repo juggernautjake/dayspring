@@ -1,6 +1,6 @@
 {
   "name": "ecosystem-core",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Shared building blocks for Dayspring and Lantern: AI providers, voices, web lookup, documents, updates, the local app bus and discovery, meetings (Google Meet with the assistants taking part), and the shared look (tokens, sound panel, voice orb, lantern avatar).",
   "type": "module",
   "license": "MIT",
@@ -21,7 +21,8 @@
     "./credentials": "./lib/credentials.mjs",
     "./eco": "./lib/eco.mjs",
     "./client/*": "./client/*",
-    "./meet": "./lib/meet/index.mjs"
+    "./meet": "./lib/meet/index.mjs",
+    "./social": "./lib/social/index.mjs"
   },
   "scripts": {
     "test": "node --test test/*.test.mjs",

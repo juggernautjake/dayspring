@@ -29,7 +29,18 @@ Say it however you like:
 
 Or open the **Sound panel** (see below) and tick the devices under **Dayspring plays on**. Tick several to play on all of them. **Windows default** means "whatever Windows is set to use".
 
-> **Spotify and YouTube follow Windows.** Music from Spotify inside Dayspring and YouTube always play on your **Windows default** output (a web page can't send them anywhere else). To move them, click **Open Windows sound settings** in the Sound panel and change the default there. Dayspring never changes it for you.
+### Music and videos play there too
+
+YouTube videos and music, Spotify, the morning music, your video lists and anything playing in Dayspring's music window use the **same speaker as Dayspring's voice**, not the Windows default. Change the speaker (by voice or in the Sound panel) and whatever is playing moves over within about a second.
+
+- **The exact device you picked.** If you chose "Speakers (Wireless Gaming Headset)", music plays on exactly that device. Only when it isn't plugged in does Dayspring use another device of the same kind (another headset, another TV).
+- **One device at a time.** Copy-protected music such as Spotify can play on only one device. With several ticked (for example the TV and your headset), music plays on the first one that's connected, in this order: **TV, then headphones, then speakers**. Dayspring's voice still plays on all of them. To hear music on several at once, use the mixer (below).
+- **The mixer.** With the Voicemeeter mixer on, music goes into the mixer, which sends it where you picked.
+- **Windows default** ticked: music follows Windows, like any other app.
+
+Dayspring never changes the Windows default, or Windows' per-app sound settings, to do this. It tells its own players which device to use.
+
+> **Note:** This works in Dayspring's **own window** (the app window, Dayspring mini, or full screen) in **Chrome, Edge, Brave or Vivaldi**. In a **tab of your everyday browser**, or in **Firefox**, YouTube and Spotify play on the Windows default, and Dayspring tells you so the first time. The Dayspring voice still follows your choice there. After updating from an older version, close the Dayspring screen and open it again once.
 
 ## The Sound panel
 

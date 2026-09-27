@@ -81,6 +81,7 @@
       <details class="ps-io"><summary>Export or import saved personalities</summary>
         <div class="row"><button type="button" class="btn ghost" id="ps-export">Export</button><button type="button" class="btn ghost" id="ps-import">Import</button><label><input type="checkbox" id="ps-replace"> Replace my saved ones</label></div>
         <textarea id="ps-io" rows="4" placeholder="Exported personalities appear here. Paste a file's text here to import."></textarea></details>
+      <div id="ps-lab-slot"></div>
       <div class="msg" id="m"></div>`;
   }
   const $ = (q) => root.querySelector(q);
@@ -198,11 +199,146 @@
     });
   }
 
+  // ------------------------------------------------------------------------------------------------ the Personality lab
+  // Developer preview only: /api/dev/* answers on the developer's own computer and 404s everywhere else, so nobody else
+  // ever sees this section. Hear any character (secret ones too) in its own voice without switching, unlocking or
+  // discovering anything; try one for 10 minutes; play with a slider sandbox. Unlock all / reset are separate and logged.
+  const L = { chars: [], filter: "all", sel: null, base: {}, role: {}, lines: null, trial: null, tick: 0, audio: null, gen: 0 };
+  const KIND = { preset: "Character", secret: "Secret", easter: "Easter egg" };
+  const labEl = () => root.querySelector("#ps-lab");
+  async function lab() {
+    const want = new URLSearchParams(location.search).get("lab");      // read now: Settings tidies the address after mounting
+    const st = await fetch("/api/dev/status").then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    if (!st?.dev) return;
+    const slot = root.querySelector("#ps-lab-slot"); if (!slot) return;
+    slot.innerHTML = `<section id="ps-lab" class="ps-lab" aria-labelledby="ps-lab-h">
+      <h2 id="ps-lab-h">Personality lab <span class="ps-devtag">Dev preview</span></h2>
+      <p class="hint">Only you see this: this computer holds the developer's token. Hear any character, including secret ones you haven't found, in its own voice, without switching or unlocking anything. Your unlocks, XP costs and discoveries stay exactly as they are.</p>
+      <div id="ps-lab-trial" aria-live="polite"></div>
+      <div class="row ps-lab-tools"><label>Show <select id="ps-lab-filter"><option value="all">Everyone</option><option value="preset">Characters</option><option value="secret">Secret characters</option><option value="easter">Easter egg</option></select></label>
+        <button type="button" class="btn ghost" data-lab="unlock-all">Dev: unlock all (testing)</button><button type="button" class="btn ghost" data-lab="reset-unlocks">Dev: reset unlocks</button></div>
+      <div class="ps-gallery" id="ps-lab-list"></div>
+      <div id="ps-lab-box"></div></section>`;
+    const el = labEl();
+    el.addEventListener("click", labClick);
+    el.addEventListener("input", labSlide);
+    el.querySelector("#ps-lab-filter").onchange = (e) => { L.filter = e.target.value; labList(); };
+    await labLoad();
+    // opened by voice: /setup?s=personality&lab=secrets or &lab=cowboy
+    if (want) {
+      if (["secrets", "secret"].includes(want)) { L.filter = "secret"; el.querySelector("#ps-lab-filter").value = "secret"; labList(); }
+      else if (L.chars.some((c) => c.key === want)) await labOpen(want);
+      setTimeout(() => el.scrollIntoView({ block: "start" }), 150);
+    }
+  }
+  async function labLoad() {
+    const r = await api("/dev/persona/characters");
+    L.chars = r.characters ?? []; L.trial = r.trial ?? null;
+    labList(); labTrial();
+  }
+  const charByKey = (k) => L.chars.find((c) => c.key === k);
+  function labList() {
+    const list = L.chars.filter((c) => L.filter === "all" || c.kind === L.filter);
+    labEl().querySelector("#ps-lab-list").innerHTML = list.map((c) => {
+      const state = c.kind !== "secret" ? "" : c.unlocked ? (c.devUnlocked ? "Unlocked (dev, testing)" : "Unlocked") : c.discovered ? "Found, not unlocked" : "Not found yet";
+      return `<div class="ps-card lab${L.sel === c.key ? " on" : ""}" data-lab-key="${esc(c.key)}"><span class="ps-ico">${esc(c.icon)}</span><b>${esc(c.name)}</b>
+        <small><span class="ps-devtag k-${esc(c.kind)}">${esc(KIND[c.kind])}</span>${state ? ` ${esc(state)}` : ""}</small><small>${esc(c.blurb)}</small>
+        <div class="ps-lab-acts"><button type="button" data-lab-hear="${esc(c.key)}" title="Hear sample lines in its voice">▶ Hear</button><button type="button" data-lab-open="${esc(c.key)}">Lines &amp; sliders</button><button type="button" data-lab-try="${esc(c.key)}" title="Switch to it for 10 minutes, then back">Try 10 min</button></div></div>`;
+    }).join("");
+  }
+  function labTrial() {
+    const box = labEl()?.querySelector("#ps-lab-trial"); if (!box) return;
+    clearInterval(L.tick);
+    if (!L.trial) { box.innerHTML = ""; return; }
+    const draw = () => {
+      const left = Math.max(0, L.trial.until - Date.now());
+      if (!left) { clearInterval(L.tick); L.trial = null; box.innerHTML = ""; api("/persona").then(after).catch(() => {}); labLoad().catch(() => {}); return; }
+      const m = Math.floor(left / 60000), s = Math.floor((left % 60000) / 1000);
+      box.innerHTML = `<div class="note ps-lab-trial"><span class="ps-devtag">Dev preview</span> Trying <b>${esc(L.trial.name)}</b> · ${m}:${String(s).padStart(2, "0")} left, then back to what you had. <button type="button" class="btn ghost" data-lab="end-trial">End now</button></div>`;
+    };
+    draw(); L.tick = setInterval(draw, 1000);
+  }
+  async function labPreview() {
+    const c = charByKey(L.sel); if (!c) return;
+    const r = await api("/persona/preview", { id: c.id, base: L.base, role: L.role });
+    L.lines = r;
+    const box = labEl().querySelector("#ps-lab-lines"); if (!box) return;
+    box.innerHTML = [["Hello", r.greeting], ["Okay", r.ack], ["Done", r.done], ["A reply", r.reply], ["Timer done", r.timerDone], ["Good news", r.goodNews], ["Bad news", r.badNews], ["Not sure", r.notSure]]
+      .filter(([, v]) => v).map(([k, v]) => `<div><span>${esc(k)}</span>${esc(v)}</div>`).join("");
+    const d = labEl().querySelector("#ps-lab-desc"); if (d) d.textContent = `${r.describe ?? ""}${r.sage ? " ✨ (the easter egg is awake)" : ""}`;
+  }
+  async function labOpen(key) {
+    const c = charByKey(key); if (!c) return;
+    L.sel = key; L.base = { ...c.base }; L.role = { ...Object.fromEntries((c.roles ?? []).map((r) => [r.id, r.def ?? 0])), ...(c.role ?? {}) };
+    labList();
+    const box = labEl().querySelector("#ps-lab-box");
+    box.innerHTML = `<div class="ps-lab-box"><h3>${esc(c.icon)} ${esc(c.name)} <span class="ps-devtag">Dev preview</span></h3><p class="hint" id="ps-lab-desc"></p>
+      <div class="row"><button type="button" class="btn" data-lab="hear">▶ Hear these lines</button><button type="button" class="btn ghost" data-lab="stop">■ Stop</button><button type="button" class="btn ghost" data-lab-try="${esc(c.key)}">Try it for 10 minutes</button><button type="button" class="btn ghost" data-lab="reset-sliders">Reset sliders</button></div>
+      <p class="hint">Voice: ${esc(c.voice?.name ?? "the current voice")}. Nothing here is saved: the sliders only change this preview.</p>
+      <div class="ps-preview" id="ps-lab-lines" aria-live="polite"></div>
+      <h4>Slider sandbox</h4><div class="ps-sliders">${TRAITS.map(([id, label, l, r, tl, tr]) => labSlider("base", id, label, l, r, tl, tr, L.base[id] ?? 0)).join("")}</div>
+      ${(c.roles ?? []).length ? `<h4>This character</h4><div class="ps-sliders">${c.roles.map((r) => labSlider("role", r.id, `${r.left} ↔ ${r.right}`, r.left, r.right, r.tipL, r.tipR, L.role[r.id] ?? 0)).join("")}</div>` : ""}</div>`;
+    await labPreview();
+  }
+  const labSlider = (kind, id, label, left, right, tipL, tipR, value) => `
+    <div class="ps-lab-row"><div class="ps-lbl"><span>${esc(label)}</span><output data-lab-out="${kind}-${esc(id)}">${value}</output></div>
+      <div class="ps-track"><span class="ps-end" title="${esc(tipL)}">${esc(left)}</span><input type="range" min="-100" max="100" step="1" value="${value}" data-lab-kind="${kind}" data-lab-id="${esc(id)}" aria-label="${esc(label)} (sandbox): ${esc(left)} to ${esc(right)}"><span class="ps-end r" title="${esc(tipR)}">${esc(right)}</span></div></div>`;
+  let labT = 0;
+  function labSlide(e) {
+    const inp = e.target.closest("input[type=range][data-lab-kind]"); if (!inp) return;
+    const kind = inp.dataset.labKind, id = inp.dataset.labId, v = Number(inp.value);
+    (kind === "role" ? L.role : L.base)[id] = v;
+    const o = labEl().querySelector(`[data-lab-out="${kind}-${CSS.escape(id)}"]`); if (o) o.textContent = v;
+    clearTimeout(labT); labT = setTimeout(() => labPreview().catch((err) => toast("Personality lab", err.message)), 150);
+  }
+  function stopHear() { L.gen++; try { L.audio?.pause(); } catch { /* gone */ } L.audio = null; try { window.speechSynthesis?.cancel(); } catch { /* none */ } }
+  async function hear(text, voice) {
+    stopHear(); const g = L.gen;
+    const r = await fetch("/api/tts", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text, ...(voice?.name ? { voice: voice.name } : {}) }) });
+    if (g !== L.gen) return;
+    if (r.status === 204) {                  // free voices: this page speaks, with the character's voice if Windows has it
+      const u = new SpeechSynthesisUtterance(text), vs = window.speechSynthesis?.getVoices?.() ?? [];
+      const pick = voice?.edge && vs.find((v) => v.name.toLowerCase().includes(voice.edge.toLowerCase()) && /^en/i.test(v.lang));
+      if (pick) u.voice = pick;
+      window.speechSynthesis?.speak(u); return;
+    }
+    if (!r.ok) { toast("Personality lab", (await r.json().catch(() => ({}))).error || "That voice couldn't play."); return; }
+    const url = URL.createObjectURL(await r.blob());
+    L.audio = new Audio(url); L.audio.onended = () => URL.revokeObjectURL(url);
+    await L.audio.play().catch(() => {});
+  }
+  const hearText = (p) => [p.greeting, p.ack, p.done, p.reply].filter(Boolean).join(" ");
+  async function labClick(e) {
+    const b = e.target.closest("button"); if (!b) return;
+    try {
+      if (b.dataset.labHear) { const c = charByKey(b.dataset.labHear); const p = await api("/persona/preview", { id: c.id, role: c.role ?? undefined }); await hear(hearText(p), c.voice); }
+      else if (b.dataset.labOpen) await labOpen(b.dataset.labOpen);
+      else if (b.dataset.labTry) {
+        const c = charByKey(b.dataset.labTry);
+        const r = await api("/dev/persona/try", { id: c.id, role: L.sel === c.key ? L.role : c.role ?? undefined, base: L.sel === c.key ? L.base : undefined });
+        L.trial = r.trial; after(r.view); labTrial(); toast("Dev preview", `Trying ${c.name} for 10 minutes. It changes back by itself.`);
+      }
+      else if (b.dataset.lab === "hear" && L.lines) await hear(hearText(L.lines), charByKey(L.sel)?.voice);
+      else if (b.dataset.lab === "stop") stopHear();
+      else if (b.dataset.lab === "reset-sliders" && L.sel) await labOpen(L.sel);
+      else if (b.dataset.lab === "end-trial") { const r = await api("/dev/persona/try/end", {}); L.trial = null; after(r.view); labTrial(); }
+      else if (b.dataset.lab === "unlock-all") {
+        if (!(await ask("Dev: unlock every secret character for testing? No XP is spent, nothing is announced, it's logged in the activity log, and \"Dev: reset unlocks\" takes it back."))) return;
+        const r = await api("/dev/persona/unlock-all", {}); after(r.view); await labLoad(); toast("Dev: unlock all", `${r.added.length} unlocked for testing (logged).`);
+      }
+      else if (b.dataset.lab === "reset-unlocks") {
+        if (!(await ask("Dev: take back every testing unlock? What you found or bought for real stays."))) return;
+        const r = await api("/dev/persona/reset-unlocks", {}); after(r.view); await labLoad(); toast("Dev: reset unlocks", `${r.removed.length} testing unlock${r.removed.length === 1 ? "" : "s"} taken back (logged).`);
+      }
+    } catch (err) { toast("Personality lab", err.message); }
+  }
+
   async function mount(el, o = {}) {
     root = el; opts = o;
     try { S = await api("/persona"); } catch (e) { $("#m").textContent = e.message; return; }
     paint(); counter();
-    root.addEventListener("input", (e) => { if (e.target.matches("input[type=range]")) onSlide(e); if (e.target.id === "ps-custom") counter(); });
+    root.addEventListener("input", (e) => { if (e.target.matches("input[type=range]") && !e.target.closest("#ps-lab")) onSlide(e); if (e.target.id === "ps-custom") counter(); });
+    lab().catch(() => { /* the lab is the developer's only */ });
     root.addEventListener("change", async (e) => { if (e.target.id === "ps-hints") { try { after(await api("/persona/secrets/hints", { on: e.target.checked })); } catch (err) { toast("Personality", err.message); } } });
     root.addEventListener("click", async (e) => {
       const b = e.target.closest("button"); if (!b) return;

@@ -20,7 +20,8 @@ has them installed.
 | `bus.mjs` | Server-Sent Events from an app's server to its own pages, plus an in-process hook. |
 | `credentials.mjs` | The AI key shared between the apps on one computer. Encrypted per Windows user with DPAPI, and read by an app only after the user agrees. |
 | `eco.mjs` | How the apps find each other on this computer (presence files and a token) and exchange events safely. |
-| `meet/` | Meetings: a Google Meet call the assistants take part in. The managed Meet window (Playwright is passed in; it never signs in), the caption and chat readers with fallback selectors, "Dayspring, …" / "Lantern, …" / "@Lantern" addressing, who may ask which assistant, when to use someone's name, the meeting's memory (in memory only), chat messages that fit, and a stand-in Meet page for tests. See [docs/MEET.md](docs/MEET.md). |
+| `meet/` | Meetings: a Google Meet call the assistants take part in. The managed Meet window (Playwright is passed in; it never signs in), the caption and chat readers with fallback selectors, who's in the call and who's talking (the People list, tiles, captions, chat and Meet's notices, merged), "Dayspring, …" / "Lantern, …" / "@Lantern" addressing, who may ask which assistant, when to use someone's name, the meeting's memory (in memory only), chat messages that fit, and a stand-in Meet page for tests. See [docs/MEET.md](docs/MEET.md). |
+| `social/` | **Not switched on.** The framework for sharing photos and memories between users (on a future private server): the record schema, the consent engine, pooled profiles made only of shared items, "same person" links and claims, share/revoke with tombstones, reminders, end-to-end encryption (X25519 + AES-256-GCM, device keys via DPAPI), sync, an audit log, and the `SocialAdapter` (a mock, and an HTTP stub that says "not configured"). See [docs/SOCIAL.md](docs/SOCIAL.md). |
 
 | Pages (`client/`) | What it is |
 |---|---|
@@ -65,4 +66,5 @@ The demo test and the icon script use the `playwright-core` that Dayspring alrea
 
 - [docs/ECOSYSTEM.md](docs/ECOSYSTEM.md): the contract between the apps (discovery, security, events, the shared AI key, who speaks and listens).
 - [docs/BRAND.md](docs/BRAND.md): the two identities, when to use which, do's and don'ts, measured contrast.
+- [docs/SOCIAL.md](docs/SOCIAL.md): sharing memories between users (framework only, switched off): data model, protocol, encryption, threat model.
 - [docs/MIGRATION.md](docs/MIGRATION.md): moving Dayspring, then Lantern, onto these modules.

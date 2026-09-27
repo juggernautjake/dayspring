@@ -3,6 +3,7 @@
 //     in the documented order, on the voice sets real computers have (Edge, Chrome, Windows only)
 //   • the server defaults: ElevenLabs Matilda for Dayspring, Will for the guide, OpenAI "coral"
 //   node scripts/qa/voice-defaults.mjs      (exit 0 = all good; prints each check)
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";

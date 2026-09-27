@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Cash App (mock) - Activity</title>
+<style>body{font-family:sans-serif;margin:0}header{display:flex;gap:1em;padding:1em;background:#00d632}main{max-width:640px;margin:0 auto;padding:1em}
+.row{display:flex;justify-content:space-between;border-bottom:1px solid #ddd;padding:.8em 0}</style></head>
+<body>
+<!-- A made-up Cash App-like page for scripts/qa/money.mjs: a "Load more" list with pending entries, and buttons that must never be pressed. -->
+<header>
+  <b>Cash App (mock)</b>
+  <button onclick="window.__clicked=(window.__clicked||[]).concat('cashout')">Cash Out</button>
+  <button onclick="window.__clicked=(window.__clicked||[]).concat('addcash')">Add Cash</button>
+  <button onclick="window.__clicked=(window.__clicked||[]).concat('bitcoin')">Buy Bitcoin</button>
+</header>
+<main>
+  <div><span>Cash balance</span> <strong data-testid="cash-balance" id="bal"></strong></div>
+  <h2>Activity</h2>
+  <ul role="list" id="list" style="list-style:none;padding:0"></ul>
+  <button type="button" id="more">Load more</button>
+</main>
+<script type="module">
+  import { makeData, showDate } from "./data.js";
+  const q = new URLSearchParams(location.search);
+  const today = q.get("today") || new Date().toLocaleDateString("en-CA");
+  const D = makeData(today);
+  document.getElementById("bal").textContent = `$${D.balances.cashapp.toFixed(2)}`;
+  const list = document.getElementById("list");
+  let shown = 0;
+  function more(n) {
+    for (const t of D.cashapp.slice(shown, shown + n)) {
+      const a = t.amount < 0 ? `-$${(-t.amount).toFixed(2)}` : `+$${t.amount.toFixed(2)}`;
+      list.insertAdjacentHTML("beforeend", `<li class="row" role="listitem" data-testid="activity-item">
+        <div><div data-testid="activity-title">${t.desc}</div><div data-testid="activity-date">${showDate.cashapp(t.date)}</div>
+        ${t.status === "pending" ? '<div data-testid="activity-status">Pending</div>' : ""}</div>
+        <div data-testid="activity-amount">${a}</div></li>`);
+    }
+    shown = Math.min(D.cashapp.length, shown + n);
+    document.getElementById("more").hidden = shown >= D.cashapp.length;
+  }
+  more(10);
+  document.getElementById("more").onclick = () => setTimeout(() => more(10), 100);
+</script>
+</body>
+</html>

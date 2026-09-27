@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Traps (mock)</title>
+<style>body{font-family:sans-serif}section{margin:.6em 0;padding:.4em;border:1px solid #ccc}</style></head>
+<body>
+<!-- Buttons Dayspring must refuse (renamed, nested, hidden, covered, inside payment forms), a few it may press, and
+     fields it must never type into. Every press is recorded in window.__clicked, so the test can prove nothing ran. -->
+<script>window.__clicked = []; const hit = (id) => { window.__clicked.push(id); };</script>
+<section><button id="t1" onclick="hit('t1')">Send</button></section>
+<section><button id="t2" aria-label="Pay" onclick="hit('t2')">Next</button></section>
+<section><a id="t3" href="/transfer/new" onclick="hit('t3');return false">Next</a></section>
+<section><button id="t4" onclick="hit('t4')"><span>Next</span><span style="display:none">Confirm payment</span></button></section>
+<section><div id="t5" role="button" tabindex="0" aria-label="Next" onclick="hit('t5')"><button onclick="hit('t5inner')">Cash out</button></div></section>
+<section><form id="payform" onsubmit="hit('payform-submit');return false"><label>Amount <input name="amount" id="amount"></label><label>To <input name="recipient" id="recipient"></label><input type="search" id="paysearch" placeholder="Search"><button id="t6" type="button" onclick="hit('t6')">Next</button></form></section>
+<section><button id="t7" data-testid="withdraw-btn" onclick="hit('t7')">Load more</button></section>
+<section style="position:relative;height:40px"><button id="t8" onclick="hit('t8')" style="position:absolute;left:0;top:0;width:120px;height:36px">Next</button><button id="t8o" onclick="hit('t8o')" style="position:absolute;left:0;top:0;width:120px;height:36px;opacity:0.01">Send</button></section>
+<section><button id="t9" title="Delete" onclick="hit('t9')">Next</button></section>
+<section><button id="t10" onclick="hit('t10')">Continue</button></section>
+<section><button id="t11" aria-labelledby="lbl11" onclick="hit('t11')">›</button><span id="lbl11" hidden>Send money</span></section>
+<section><a id="t12" href="/statements/2026-07.pdf" onclick="hit('t12');return false">July</a></section>
+<section><form id="f13" onsubmit="hit('f13-submit');return false"><button id="t13" onclick="hit('t13')">Next</button></form></section>
+<section>
+  <button id="t14" onclick="hit('t14')">Sign Out</button><button id="t15" onclick="hit('t15')">Lock card</button><button id="t16" onclick="hit('t16')">Add money</button>
+  <button id="t17" onclick="hit('t17')">Buy Bitcoin</button><button id="t18" onclick="hit('t18')">Link bank</button><button id="t19" onclick="hit('t19')">Settings</button>
+  <button id="t20" onclick="hit('t20')">Request</button><button id="t21" onclick="hit('t21')">Transfer</button><a id="t22" href="/account/logout" onclick="hit('t22');return false">Back</a>
+  <button id="t23" onclick="hit('t23')">Dispute</button><button id="t24" onclick="hit('t24')">Cancel</button><button id="t25" onclick="hit('t25')">Invest</button>
+  <button id="t26" data-action="submitPayment" onclick="hit('t26')">Next</button><button id="t27" onclick="hit('t27')">Pay&nbsp;now</button>
+  <button id="t28" aria-label="Next" onclick="hit('t28')">S&#8203;end</button><button id="t29" onclick="hit('t29')">Withdraw</button><button id="t30" onclick="hit('t30')">Sell stock</button>
+  <button id="t31" onclick="hit('t31')">Approve</button><button id="t32" onclick="hit('t32')">Close account</button><button id="t33" onclick="hit('t33')">Profile</button>
+  <button id="t34" onclick="hit('t34')">Security</button><button id="t35" onclick="hit('t35')">Change password</button><button id="t36" onclick="hit('t36')">Deposit</button>
+  <button id="t37" onclick="hit('t37')">Card settings</button><button id="t38" onclick="hit('t38')">Unlock card</button><button id="t39" onclick="hit('t39')">Submit</button>
+  <button id="t40" onclick="hit('t40')">Confirm</button><a id="t41" href="javascript:__doPostBack('pay','')" onclick="hit('t41');return false">Next</a>
+  <div id="t42wrap" aria-label="Send money"><button id="t42" onclick="hit('t42')">Next</button></div>
+</section>
+<!-- allowed ones -->
+<section><button id="ok1" type="button" onclick="hit('ok1')">Next page</button><button id="ok2" type="button" onclick="hit('ok2')">Load more</button><button id="ok5" type="button" onclick="hit('ok5')">Last 90 days</button></section>
+<section><button id="ok3" type="button" onclick="hit('ok3'); window.__popup = window.open(window.__otherSite || 'http://localhost:1/', '_blank')">View all</button></section>
+<section><form id="f17" onsubmit="hit('f17-submit');return false"><button id="ok4" type="button" onclick="hit('ok4'); this.form.requestSubmit()">Older</button></form></section>
+<!-- fields -->
+<section id="fields"><input type="search" id="goodsearch" aria-label="Search transactions"><input type="date" id="gooddate" aria-label="Start date"><input id="cc" autocomplete="cc-number" aria-label="Card"></section>
+<!-- a visible password or code field makes this a sign-in page, so those two only appear with ?fields=1 -->
+<script>if (new URLSearchParams(location.search).get("fields") === "1") document.getElementById("fields").insertAdjacentHTML("beforeend", '<input type="password" id="pw" aria-label="Password"><input autocomplete="one-time-code" id="otp" aria-label="Code">');</script>
+</body>
+</html>

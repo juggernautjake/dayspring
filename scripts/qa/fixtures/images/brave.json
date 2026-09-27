@@ -1,0 +1,75 @@
+{
+ "type": "images",
+ "results": [
+  {
+   "type": "image_result",
+   "title": "Brave golden retriever 1",
+   "url": "https://brave-src1.example.com/p",
+   "source": "brave-src1.example.com",
+   "thumbnail": {
+    "src": "https://img.fixture.test/img/brave-thumb-1.jpg"
+   },
+   "properties": {
+    "url": "https://img.fixture.test/img/brave-full-1.jpg",
+    "width": 1001,
+    "height": 701
+   }
+  },
+  {
+   "type": "image_result",
+   "title": "Brave golden retriever 2",
+   "url": "https://brave-src2.example.com/p",
+   "source": "brave-src2.example.com",
+   "thumbnail": {
+    "src": "https://img.fixture.test/img/brave-thumb-2.jpg"
+   },
+   "properties": {
+    "url": "https://img.fixture.test/img/brave-full-2.jpg",
+    "width": 1002,
+    "height": 702
+   }
+  },
+  {
+   "type": "image_result",
+   "title": "Brave golden retriever 3",
+   "url": "https://brave-src3.example.com/p",
+   "source": "brave-src3.example.com",
+   "thumbnail": {
+    "src": "https://img.fixture.test/img/brave-thumb-3.jpg"
+   },
+   "properties": {
+    "url": "https://img.fixture.test/img/brave-full-3.jpg",
+    "width": 1003,
+    "height": 703
+   }
+  },
+  {
+   "type": "image_result",
+   "title": "Brave golden retriever 4",
+   "url": "https://brave-src4.example.com/p",
+   "source": "brave-src4.example.com",
+   "thumbnail": {
+    "src": "https://img.fixture.test/img/brave-thumb-4.jpg"
+   },
+   "properties": {
+    "url": "https://img.fixture.test/img/brave-full-4.jpg",
+    "width": 1004,
+    "height": 704
+   }
+  },
+  {
+   "type": "image_result",
+   "title": "Brave golden retriever 5",
+   "url": "https://brave-src5.example.com/p",
+   "source": "brave-src5.example.com",
+   "thumbnail": {
+    "src": "https://img.fixture.test/img/brave-thumb-5.jpg"
+   },
+   "properties": {
+    "url": "https://img.fixture.test/img/brave-full-5.jpg",
+    "width": 1005,
+    "height": 705
+   }
+  }
+ ]
+}

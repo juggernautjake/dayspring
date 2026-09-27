@@ -30,7 +30,9 @@ export function createMeetListener({ parser = createAddressParser(), permissions
     if (!r || words(r.question) < (owner ? 1 : 2)) return;          // the owner's one-word commands ("Dayspring, mute")
     const q = norm(r.question);
     if (l.handled.some((h) => q === h || q.startsWith(h) || h.startsWith(q))) return;   // already answered (the line just grew)
-    if (owner && isEcho(r.question)) { stats.echoes++; l.handled.push(q); return; }
+    // an echo says the assistant's name too ("Lantern, want to take that one?" in a hand-off): compared with the name, so
+    // the owner saying a command the assistant just mentioned ("say 'you can record again'") is still the owner
+    if (owner && isEcho(`${r.wake} ${r.question}`)) { stats.echoes++; l.handled.push(q); return; }
     l.handled.push(q);
     dispatch({ assistant: r.assistant, question: r.question, speaker: l.speaker, via: "voice", isOwner: owner });
   }

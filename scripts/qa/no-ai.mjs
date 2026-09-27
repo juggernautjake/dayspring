@@ -6,6 +6,7 @@
 //      "Without AI" Try-it box, the Recipes page
 //   C. Stop drops a reply that's still on its way (no late answer is shown or said)
 //   node scripts/qa/no-ai.mjs [--keep]
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -91,6 +92,23 @@ try {
   check("Try it: says what it would do, and does nothing", tr.intent === "timer.start" && tr.confident && !(await api("/timers")).timers.some((t) => /pasta 2|pasta/.test(t.label) && t.ms === 480000));
   const cat = await api("/intents");
   check("the catalogue is served for the Help list (150+ intents)", cat.intents?.length >= 150, cat.intents?.length);
+
+  // questions about texts are answered and never change the "read texts aloud" setting; only an explicit request does
+  const textsMode = async () => (await api("/settings")).settings?.notify?.texts ?? "(usual)";
+  const m0 = await textsMode();
+  for (const q of ["what did Sarah text me", "any new messages", "read my messages", "read my texts", "check my messages", "who texted me"]) {
+    const r = await chat(q);
+    check(`"${q}" is answered (not a setting change)`, /\btext/i.test(r.reply ?? "") && !/will be spoken|will be silent|a chime only/.test(r.reply ?? "") && (await textsMode()) === m0, `${r.reply} · texts: ${await textsMode()}`);
+  }
+  const loud = await chat("read my texts out loud");
+  check("\"read my texts out loud\" changes it (texts spoken)", /will be spoken/.test(loud.reply) && (await textsMode()) === "voice", `${loud.reply} · ${await textsMode()}`);
+  const hush = await chat("stop reading texts");
+  check("\"stop reading texts\" changes it back (texts on screen only)", /will be silent/.test(hush.reply) && (await textsMode()) === "silent", `${hush.reply} · ${await textsMode()}`);
+  // "show number 3" with nothing numbered up: said plainly, never the book of Numbers; "read Numbers 3" still is
+  const n3 = await chat("show number 3");
+  check("\"show number 3\" with nothing numbered on screen says so (not Numbers 3)", /nothing numbered on the screen/i.test(n3.reply) && !/Numbers 3/.test(n3.reply), n3.reply);
+  const nb = await chat("read Numbers 3"), nc = await chat("Numbers chapter 3");
+  check("\"read Numbers 3\" and \"Numbers chapter 3\" read the Bible", /^Numbers 3\b/.test(nb.reply) && /^Numbers 3\b/.test(nc.reply), `${nb.reply?.slice(0, 40)} / ${nc.reply?.slice(0, 40)}`);
 
   // ---------------- B. the screen ----------------
   const browser = await chromium.launch({ channel: (await import(pathToFileURL(join(DESK, "lib", "browsers.mjs")).href)).playwrightChannel(), headless: true, args: ["--mute-audio", "--autoplay-policy=no-user-gesture-required"] });

@@ -10,6 +10,7 @@
 //   node scripts/qa/calls.mjs              (all pretend)
 //   node --env-file=.env scripts/qa/calls.mjs --live   also measures the real speech models, AI and voice on this PC
 //                                                      (no devices are touched; keys are used, never printed)
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { mkdtempSync, readFileSync, existsSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

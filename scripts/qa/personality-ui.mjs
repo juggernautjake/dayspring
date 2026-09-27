@@ -2,6 +2,7 @@
 // the character gallery, a slider drag nudging a linked slider, a pin stopping it, the preview updating, saving a
 // template, and the 300-word counter blocking at 301.
 //   node scripts/qa/personality-ui.mjs [--keep]
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { spawn, spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";

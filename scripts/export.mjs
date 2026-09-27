@@ -16,7 +16,8 @@ if (target === resolve(DESK) || target.startsWith(resolve(DESK) + "\\")) { conso
 // top-level entries never exported (personal, generated, or local tools)
 const SKIP_TOP = new Set(["data", ".env", "node_modules", "backups", "dist", "dist-out", "bin", "updates", "logs", "README.md", ".gitignore", ".env.example", ".git"]);
 // anywhere: temp files, the audit (it tests against the owner's own data), Twilio-only docs
-const SKIP_ANY = [/\.tmp\./i, /^vmswap/i, /twilio.*\.(md|html)$/i, /^audit\.mjs$/i, /\.damaged-/i, /\.log$/i];
+const SKIP_ANY = [/^DayspringFinance$/i, /\.tmp\./i,/^vmswap/i, /twilio.*\.(md|html)$/i,/\.damaged-/i, /\.log$/i, /\.onnx$/i, /^(faces|comms)\.bin$/i, /^vision-cache$/i,   // (these three: face data, saved messages, face models)
+  /^dev-(token|key)(\.|$)/i];   // the developer's token and key (they live in %LOCALAPPDATA%; never shipped even if one strays in)
 // kept in the target between exports
 const KEEP_TARGET = new Set([".git", "node_modules", "data", ".env", "dist-out"]);
 
@@ -27,7 +28,8 @@ const filter = (src) => {
   if (SKIP_ANY.some((r) => r.test(basename(src)))) return false;
   const rel = relative(DESK, src).split(/[\\/]/);
   if (rel[0] === "docs" && rel[1] === "dev" && rel[2] === "badge-previews") return false;   // badge review sheets and videos: dev only
-  if (rel[0] === "scripts" && rel[1] === "qa" && rel[2] === "private") return false;       // question banks for the owner's own courses
+  if (rel[0] === "scripts" && rel[1] === "qa" && rel[2] === "private") return false;
+  if (rel[0] === "scripts" && rel[1] === "audit.mjs" && rel.length === 2) return false;   // the owner's audit only (NOT ecosystem-core's social/audit.mjs, which the code imports)       // question banks for the owner's own courses
   return !(rel.length === 1 && SKIP_TOP.has(rel[0]));
 };
 for (const e of readdirSync(DESK)) {

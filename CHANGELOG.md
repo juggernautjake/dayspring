@@ -2,6 +2,85 @@
 
 All notable changes to Dayspring. Versions follow [semantic versioning](https://semver.org).
 
+## 1.6.0 (2026-09-27)
+
+**After you update: please confirm your file access once.** A small card on the Dayspring screen asks you to confirm what Dayspring may do with your files (or review it in Settings → Permissions). Your old setting is kept exactly as it was, nothing is widened, and **deleting files is now off until you turn it on** (Settings → Permissions → **Can delete files**).
+
+**Meetings.** Dayspring can take notes (it tells everyone first, shows a ● Notes sign, and skips anything you mark off the record) and writes a summary when the meeting ends; find them under Past meetings. It knows who's in the call and who's talking more reliably. Fixes: nothing is said or kept after leaving, no second meeting window, Tune in turns back off, and only you can give meeting commands.
+- With **Save call history** on (Settings → Photos & people; off by default), the people who were in a meeting are added to their profiles' call history when it ends. Rehearsals never are.
+
+**Money review (read-only).** Dayspring can go through your bank, Venmo or Cash App transactions and tell you where the money went. See the guide's "Money review" page.
+- Say "import my bank statement" and drop in a CSV or OFX/QFX file you downloaded from your bank (the most reliable way). Or turn on **Money review (read-only)** on the new Money page, say "open my bank", "open Venmo" or "open Cash App", sign in yourself in Dayspring's separate money window, and say "review my transactions for the last three months".
+- The report shows every transaction in a sortable table, money in and out by month, spending by category, top merchants, repeating charges and subscriptions (with the next expected date and yearly cost), price increases, possible duplicate charges, unusual charges, fees and interest, and "things you might want to cancel" with the reasons and how to cancel. It's saved as Markdown and CSV. The spoken summary is short.
+- Ask "what's my Venmo balance?", "what subscriptions do I have?", "what should I cancel?", "how much did I spend on food?", "what did I pay Josh last week?", "when did Netflix last charge me?" or "help me make a budget". All of these work without an AI.
+- It only reads, and the rules are in the code: it can't send, pay, transfer, change settings or cancel anything, never types into anything but the site's own date filter and search box, never submits forms or downloads files, and stops at sign-in pages, codes and robot checks so you can finish them. It never types, stores or reads passwords or codes.
+- Transactions stay on your computer, encrypted with your Windows account, with account numbers masked to the last 4 digits. Raw data is deleted after 90 days (a setting), and **Delete all my money data** removes everything. Nothing is sent to an AI until you say yes to a one-time question.
+- The Money review permission is off by default. Turning it on explains that some banks' terms don't allow automated access, so a downloaded statement is preferred where there is one.
+- Money answers (amounts, payees, balances) are never kept in your conversation history or the activity log; they show as "(a money review answer; not kept)".
+
+**Photos and people.** Dayspring can describe pictures, read the text in them, and (if you turn it on) recognise the people in your own photos. See the guide's "Photos and people" page.
+- "Describe this picture", "what does this say?" and "who is in this picture?" work for your photos, the photo on the screen, and pictures from a web search. Windows reads the text on your computer; with **Describe images with AI** on (it asks once), an AI that can see pictures describes the scene using the names you've taught it.
+- **Recognise faces in my photos** (Settings → Photos & people) is off by default and runs entirely on your computer: a one-time 72 MB download of open face models, checked before use, then a slow, pausable look through your photo folders. Faces are grouped as "Unknown person 1, 2…" until you name them. Face data is encrypted with your Windows account and never exported.
+- Now and then (once or twice a day, your choice; never in Quiet or Off, meetings or calls) Dayspring asks "Who's in this picture?". Answer naturally, like "me, Sarah and her husband Tom" or "Sarah's on the left". When a photo also needs a description, it's one question.
+- Naming a face names everyone in its group; likely matches are asked about ("Is this also Sarah? 74% sure"), never labelled silently. Merge, ignore, "not a person" and delete are on the new People page.
+- Each person now has a page: photos, relationship and connections, prayer requests (private ones by title), goals, past and upcoming plans, notes, and, if you turn it on, texts and calls. Say "tell me about Sarah", "when did I last talk to Mike?", "what's going on with Sarah lately?" or "remind me to check on Tom".
+- **Save my text messages to people's profiles** and **Save call history** are off by default (off means nothing is written), encrypted, with a keep-for setting and **Delete all saved messages**. When a sender is unclear, Dayspring asks instead of guessing.
+- Faces are never identified in pictures from the web, and nobody is ever looked up online.
+
+**Pictures from the web.** Say "show me pictures of golden retrievers", "image search for mid-century desk" or "find a transparent PNG of a lantern". You don't need an AI or a key.
+- A numbered grid of about 12 pictures appears on the Dayspring screen, with each picture's title and site underneath.
+- Say "show number 3" (or click it) to see it big, with a link to its page. Then "describe this picture" or "what does this say?" works on it (people in web pictures are described, never identified). Say "more" for the next ones, "more like number 4" for similar pictures, and "close images" when you're done.
+- Narrow the results by saying "only photos", "bigger ones", "only red ones" or "from Wikipedia".
+- "Save that one" puts the picture in Pictures › Dayspring if Dayspring may change files there, and otherwise in Dayspring's `data\images`. A note beside each picture says where it came from.
+- With an AI, the new `image_search` tool shows pictures while you talk. A model that can see (Claude) can answer "which of these has a red door?". It describes people but never says who they are.
+- SafeSearch is on (moderate). Say "set safe search to strict" or "turn safe search off" to change it.
+- The screen never loads pictures from other sites directly. Dayspring fetches each one itself. It refuses addresses on your computer or home network, even after a redirect or a site that changes its address mid-way, and only accepts real images up to 8 MB.
+- Searches try DuckDuckGo, then Bing, with Dayspring's hidden search browser as a last resort. A Brave, Google or Bing search key in `.env` is used first when you have one.
+
+**You choose what Dayspring may do with your files, and it keeps a log of everything.**
+- The setup's **Permissions** step can't be skipped: **Next** stays grey until you pick **No file access** (recommended), **Only the folders and files I choose**, or **Everything on this computer**. Nothing is picked for you.
+- For chosen places, type a path, use a quick pick, or **Browse…**, then set each to **Read only**, **Read & write** or **Blocked**, with or without its subfolders. "Everything" can be read only or read & write.
+- **Ask me before every change** starts on. **Can delete files** starts off: deleting is now its own permission (read & write never includes it), always goes to the Recycle Bin, and always asks. Creating, editing, and renaming or moving can each be turned off too.
+- A plain-words summary shows what Dayspring **will** and **won't** be able to do. Settings → Permissions has the same controls.
+- Updating from an older version keeps your setting exactly as it was (nothing is widened; deleting stays off until you turn it on), and a one-time **Please confirm what Dayspring may do with your files** card asks you to confirm it.
+
+**Fail-safes that hold whatever you allow.** Dayspring never changes or deletes Windows, Program Files, Windows' parts of ProgramData, boot and recovery files, the registry, page and hibernation files, files at the top of a drive, other people's profiles, `.git` internals, secret files, or Dayspring's own code, data, permissions and activity log.
+- It checks where links and junctions really lead, and refuses path tricks (`..`, network paths, `\\?\`, short names like `PROGRA~1`, names ending in a dot or space, hidden streams).
+- Important files that are allowed (start-up files, hosts, shell profiles, Git settings, `package.json` and lockfiles, project and CI files, databases, large or old files, whole project folders, anything outside your usual folders, anything you mark) get a warning that says what could break, that a backup will be made, and "Are you sure?".
+- Only your own clear yes counts, by voice or typed, for that exact change, within two minutes. The AI can't confirm for itself. The same rules apply without an AI.
+- A change that touches more than 25 files, or deleting a folder, always asks with the count.
+- Opening something that would run (a script, an installer, a `.reg` file), a terminal or Claude Code now needs the Programs permission. Dayspring's browser won't open its own Settings pages.
+
+**The activity log.** Every command (said or typed), every tool call, every file read, created, changed, moved or deleted (with size and fingerprint before and after, and the backup), programs opened, permission changes, your yeses and nos, and blocked attempts.
+- Kept on this computer for at least 120 days (180 to start with), with file backups kept as long. Keys and passwords are blanked out, and file contents are never logged.
+- Each line is chained to the one before, so **Check the log** shows if anything was changed or removed. Dayspring can't edit or erase it.
+- Settings → **Activity log**: dates, filters, search, **Export CSV**, and **Restore this version** for any backed-up change.
+- Say "what did you change today?", "undo that last change" (it asks first) or "show the activity log". With an AI, Dayspring can search the log itself to check what it changed or recall something.
+
+**Music and videos play on Dayspring's speaker, not the Windows default.** YouTube, Spotify (on the screen and in the music window), the morning music and your video lists now play on the exact device Dayspring is set to in the Sound panel. When you switch between the TV, the laptop and your headset, whatever's playing moves within a second. With several ticked, music uses the first connected one: TV, then headphones, then speakers. Dayspring never changes your Windows default to do this. It works in Dayspring's own window in Chrome, Edge, Brave or Vivaldi, not in a browser tab or Firefox. After updating, close the Dayspring screen and open it again once.
+
+**Spotify plays what you ask for.** "Play christian folk music" used to start a random pop playlist: Dayspring took Spotify's first search result without checking it (and passed typos like "christian fold" along as they were). Now it understands songs, artists, albums, playlists, your own playlists, Liked Songs, genres, moods and "more like this". It fixes typing and hearing mistakes ("christian fold", "worhsip", "jonny cash"), checks a genre playlist's artists against their Spotify genres, makes a mix from a genre's top artists when no playlist fits, and says what it picked ("Playing Christian Folk, a playlist with The Gray Havens and Josh Garrels."). Afterwards it reads what's actually playing and tells you if Spotify started something else. When it isn't sure, it offers three choices. Say "not that" or "try another" for the next-best match; it remembers for next time. Also new without an AI: "what's playing", "save this song", "add this to my Road Trip playlist", "queue Gratitude by Hollow Pines" and "play my Discover Weekly". The music window picks by the same rules. See the guide's "Asking for music on Spotify".
+
+**Your requests come first.** When you start talking to Dayspring (the wake word, 🎙 Talk, typing, or a message from the desk panel, Discord, a text or a call), anything it was about to say on its own waits until your request is fully done: the answer said, any follow-up question answered, then about 4 seconds of quiet. Reminders, check-ins, questions, joke offers and the rest then come out one at a time, most important first, and wait again if you start talking. Nothing is skipped; out-of-date items are re-worded ("leave in 10 minutes" becomes "leave at 3:15 p.m.") or dropped (a joke offer after 30 minutes). If you speak just as it starts, it stops and says it afterwards. It asks only one question of its own at a time. A sign shows **1 thing to tell you after this**; tap it or ask "what were you going to say?" to hear it now. Alarms and timers still ring on time (only their words wait for the answer, 20 seconds at most), and an official Extreme weather alert still interrupts.
+
+**Your own music and videos.** Say "play the song Holy Forever from my computer", "play my Johnny Cash mp3s", "find the video from Sarah's wedding", "play the latest video in Downloads", "shuffle my music folder" or "what audio files do I have from 2019?". No AI needed. See the guide's "Your own music and videos" page.
+- Dayspring looks in your Music, Videos and Downloads folders and the places you picked, only where file access lets it read (with file access off, it tells you how to allow a folder). It skips folders and files that look private, reads each file's tags, and keeps looking for new files in the background, slowly.
+- A numbered list shows what it found: say a number, "play them all" or "shuffle them". Music plays with the normal controls, a queue, shuffle and repeat; videos play full screen. Everything plays on Dayspring's speaker.
+- "Open it in the default app" plays a file on this PC instead (it needs the Open programs permission). WMA, WMV and AVI files are converted as they play with the ffmpeg Dayspring already has, or opened in your default player.
+- The screen only gets a numbered address, never a file path, and permissions are checked again every time a file plays. Every play is in the activity log.
+
+**Google Drive, and several Google accounts.** Connect as many Google accounts as you like (a work and a personal one), each with its own Calendar, Gmail and Drive switches and a nickname. Your existing Google account carries on as account 1 with the same access, and every Google sign-in is now encrypted with your Windows account. See the guide's "Google Drive" page.
+- Search every Drive at once or one ("search my work drive for the report"), including shared drives and files shared with you; "what changed in my Drive this week?".
+- Dayspring reads Docs, Sheets, Slides, PDFs and text files to summarise them, plays Drive's audio and video on the screen (your Google sign-in never reaches the page), and shows pictures. Drive songs and videos show up in "play …" searches, after your own files.
+- Changing a Drive is off until you turn on **Let Dayspring add and change files in this Drive** for it. Then "save this to my Drive", "make a folder" and "move it to Archive" work, each only after your yes, and deleting only moves things to Drive's trash. Downloading a Drive file to your computer needs file access and your yes. Everything is in the activity log.
+- To add Drive to an existing setup: enable the Google Drive API in your Google Cloud project, add the Drive scope on the consent screen, and tick Drive in Settings → Apps & connections → Google.
+
+**Fixes.** Asking "what did Sarah text me?" or "any new messages?" answers the question and no longer switches your texts to being read aloud (only "read my texts out loud" or "stop reading texts" changes that). "Show number 3" with nothing numbered on the screen says so instead of reading the book of Numbers (say "read Numbers 3" for that). "Play … on Spotify" is understood again.
+
+**Not switched on yet.** The groundwork for sharing memories with friends is included but switched off: none of it runs, and nothing is shared.
+
+**Developer preview tools, only for the app's developer.** On the developer's own computer (checked with a signed, computer-bound token), he can look at every badge and hear every character before earning them. Nothing changes for anyone else: you still earn every badge and find every character yourself, and none of it is shown on your computer. See the guide's "Developer preview" page.
+
 ## 1.5.0: Meetings with Dayspring and Lantern
 
 **Dayspring joins your Google Meet.** Paste the Meet link on the screen, or say "Dayspring, join my meeting".

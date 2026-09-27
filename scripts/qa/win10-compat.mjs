@@ -2,6 +2,7 @@
 // PowerShell 7-only syntax), its C# helpers must compile with the .NET Framework 4 compiler that ships with Windows
 // (C# 5: no ?. or $"" strings) and use no Windows 11-only APIs, and nothing may use another tar than Windows' own.
 //   node scripts/qa/win10-compat.mjs
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";

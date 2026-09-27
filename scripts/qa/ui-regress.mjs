@@ -7,6 +7,7 @@
 //   • the guided setup: a skipped step's delayed line never plays over a later step
 //   • Esc closes only what's on top
 //   node scripts/qa/ui-regress.mjs [--keep]
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { spawn, spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";

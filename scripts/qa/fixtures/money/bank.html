@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>First Example Bank (mock) - Account activity</title>
+<style>body{font-family:sans-serif;margin:0}nav{display:flex;gap:1em;padding:1em;background:#123;color:#fff}nav a{color:#fff}main{max-width:900px;margin:0 auto;padding:1em}
+table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid #ddd;padding:.4em;text-align:left}</style></head>
+<body>
+<!-- A made-up bank page for scripts/qa/money.mjs: a paginated table (real page loads), a date filter, a search box, an
+     unmasked account number, and links that must never be followed. ?mfa=1 shows a code page, ?captcha=1 a robot check. -->
+<nav>
+  <b>First Example Bank (mock)</b>
+  <a href="bank.html">Accounts</a>
+  <a href="/transfer" id="navTransfer">Transfer</a>
+  <a href="/billpay" id="navBillpay">Bill Pay</a>
+  <a href="/settings" id="navSettings">Settings</a>
+  <a href="/logout" id="navLogout">Sign out</a>
+</nav>
+<main id="main">
+  <h1>Everyday Checking <span id="acct"></span></h1>
+  <p>Available balance <strong id="bal"></strong></p>
+  <form id="filter" role="search" onsubmit="document.title='SUBMITTED';return false">
+    <label>From <input type="date" name="from" id="from"></label>
+    <label>To <input type="date" name="to" id="to"></label>
+    <button type="button" id="apply">Apply</button>
+    <button type="button" id="clear">Cancel</button>
+  </form>
+  <p><input type="search" id="search" aria-label="Search transactions" placeholder="Search transactions"></p>
+  <table role="table" aria-label="Transactions">
+    <thead><tr><th>Date</th><th>Description</th><th>Status</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <p id="pager"></p>
+</main>
+<script type="module">
+  import { makeData, showDate } from "./data.js";
+  const q = new URLSearchParams(location.search);
+  if (q.get("mfa") === "1") {
+    document.getElementById("main").innerHTML = '<h1>Confirm it\'s you</h1><p>We sent a verification code to your phone ending in 12. Enter the code to continue.</p><input autocomplete="one-time-code" name="otp" aria-label="Verification code"><button type="button">Verify</button>';
+  } else if (q.get("captcha") === "1") {
+    document.getElementById("main").innerHTML = '<h1>Security check</h1><p>Please verify you are human.</p><div class="g-recaptcha" data-sitekey="mock-site-key"></div>';
+  } else {
+    const today = q.get("today") || new Date().toLocaleDateString("en-CA");
+    const D = makeData(today);
+    const PER = 20;
+    const page = Math.max(1, Number(q.get("page")) || 1);
+    document.getElementById("acct").textContent = "4000123456789010";
+    document.getElementById("bal").textContent = `$${D.balances.bank.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+    let list = D.bank;
+    const render = () => {
+      const f = document.getElementById("from").value, t = document.getElementById("to").value, s = document.getElementById("search").value.toLowerCase();
+      const rows = list.filter((x) => (!f || x.date >= f) && (!t || x.date <= t) && (!s || x.desc.toLowerCase().includes(s)));
+      const pageRows = rows.slice((page - 1) * PER, page * PER);
+      document.getElementById("rows").innerHTML = pageRows.map((x) => `<tr data-id="${x.id}"><td>${showDate.bank(x.date)}</td><td>${x.desc}</td><td>${x.status === "pending" ? "Pending" : "Posted"}</td>
+        <td>${x.amount < 0 ? "$" + (-x.amount).toFixed(2) : ""}</td><td>${x.amount > 0 ? "$" + x.amount.toFixed(2) : ""}</td><td></td></tr>`).join("");
+      const pages = Math.ceil(rows.length / PER);
+      const keep = `today=${today}`;
+      document.getElementById("pager").innerHTML = `Page ${page} of ${pages} ` + (page > 1 ? `<a href="?${keep}&page=${page - 1}">Previous</a> ` : "") + (page < pages ? `<a href="?${keep}&page=${page + 1}" aria-label="Next page">Next ›</a>` : "");
+      window.__shown = pageRows.length;
+    };
+    document.getElementById("apply").onclick = render;
+    document.getElementById("clear").onclick = () => { document.getElementById("from").value = ""; document.getElementById("to").value = ""; render(); };
+    document.getElementById("search").addEventListener("input", render);
+    render();
+  }
+</script>
+</body>
+</html>

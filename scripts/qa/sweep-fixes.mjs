@@ -9,6 +9,7 @@
 //     minutes still rings, once, and not again after a restart
 //   • the desktop helper comes back after it's killed
 //   node scripts/qa/sweep-fixes.mjs [--keep]
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";

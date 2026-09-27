@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sharing (dev)</title>
+<style>
+  :root { --bg: #f7f5f0; --fg: #1d1b18; --muted: #6a655c; --card: #fff; --line: #e2ddd2; --accent: #b4561f; --warn: #8a5a00; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #171512; --fg: #eeeae2; --muted: #a49d90; --card: #22201c; --line: #37332c; --accent: #f08a4b; --warn: #f0c060; } }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 16px; }
+  .banner { border: 2px dashed var(--warn); color: var(--warn); padding: 10px 14px; border-radius: 10px; margin-bottom: 16px; }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin: 12px 0; }
+  h1 { font-size: 1.4rem; margin: 8px 0 4px; } h2 { font-size: 1.05rem; margin: 0 0 8px; }
+  button { font: inherit; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); cursor: pointer; margin: 2px 4px 2px 0; }
+  pre { white-space: pre-wrap; word-break: break-word; background: var(--bg); padding: 10px; border-radius: 8px; font-size: 13px; max-height: 320px; overflow: auto; }
+  .muted { color: var(--muted); } .chip { display: inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); font-size: 13px; margin: 2px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="banner"><strong>Developer mockup.</strong> Sharing with friends is not switched on. There is no server; nothing here reaches anyone else. This page exists only while the hidden <code>social.enabled</code> developer switch is on.</div>
+  <h1>Sharing with friends</h1>
+  <p class="muted">Private by default: only what you pick, with the people or group you pick, ever leaves this computer — encrypted so only they can read it.</p>
+
+  <section>
+    <h2>This computer</h2>
+    <button data-get="/api/social/status">Status</button>
+    <button data-post="/api/social/device">Make sharing key</button>
+    <button data-post="/api/social/register">Register (mock / local test server)</button>
+    <button data-post="/api/social/sync">Sync now</button>
+  </section>
+
+  <section>
+    <h2>What could be shared</h2>
+    <p class="muted">Everything starts private. Texts and calls are never shareable.</p>
+    <button data-get="/api/social/candidates">List</button>
+    <button data-get="/api/social/reminders">Reminders</button>
+  </section>
+
+  <section>
+    <h2>Mockup: sharing a memory</h2>
+    <p>“Lake day, 2023” <span class="chip">photo</span> <span class="chip">about: a friend</span></p>
+    <p>Share with: <span class="chip">one person you pick</span> <span class="chip">Family group</span> &nbsp; <span class="muted">(never “everyone”)</span></p>
+    <p class="muted">☐ Let it add to your friend's shared profile &nbsp; ☐ Let them save a copy &nbsp; Ends: never / 30 days</p>
+  </section>
+
+  <section>
+    <h2>Mockup: a friend's shared profile</h2>
+    <p class="muted">Made only from what friends shared with you. Your friend (if they use Dayspring) can see it, hide things, or opt out.</p>
+    <p><span class="chip">4 photos</span> <span class="chip">2 memories</span> <span class="chip">from 3 friends</span> <span class="chip">your texts: on this computer only</span></p>
+  </section>
+
+  <pre id="out" aria-live="polite">Nothing yet.</pre>
+</main>
+<script>
+  const out = document.getElementById("out");
+  async function go(url, method) {
+    try { const r = await fetch(url, { method, headers: { "content-type": "application/json" }, body: method === "POST" ? "{}" : undefined }); out.textContent = r.status + "\n" + JSON.stringify(await r.json(), null, 2); }
+    catch (e) { out.textContent = String(e); }
+  }
+  document.querySelectorAll("[data-get]").forEach((b) => b.addEventListener("click", () => go(b.dataset.get, "GET")));
+  document.querySelectorAll("[data-post]").forEach((b) => b.addEventListener("click", () => go(b.dataset.post, "POST")));
+</script>
+</body>
+</html>

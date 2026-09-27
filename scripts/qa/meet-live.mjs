@@ -1,6 +1,7 @@
 // A live check of meeting course answers with the real AI (keys from .env; never printed). No meeting is joined.
 //   node --env-file=.env scripts/qa/meet-live.mjs [bank.json] [how many, default 3] [--as lantern]
 // Prints each question's spoken answer, where it's covered, the chat detail and the lesson links.
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { readFileSync, existsSync, mkdtempSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { tmpdir } from "node:os";

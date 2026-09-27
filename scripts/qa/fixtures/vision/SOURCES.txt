@@ -1,0 +1,13 @@
+Test pictures for scripts/qa/vision.mjs. They're public-domain NASA photographs (works of the U.S. federal government,
+from the Apollo 11 press kit), downscaled copies from Wikimedia Commons. None come from anyone's own photo folders.
+
+pd-group-three.jpg      the Apollo 11 crew portrait (NASA photo S69-31740): three people, left to right
+                        https://commons.wikimedia.org/w/index.php?curid=102412        Public domain (NASA)
+pd-portrait-left.jpg    the person on the left of the group photo, a separate NASA portrait
+                        https://commons.wikimedia.org/w/index.php?curid=55244         Public domain (NASA)
+pd-portrait-middle.jpg  the person in the middle of the group photo, a separate NASA portrait (S69-31742)
+                        https://commons.wikimedia.org/w/index.php?curid=80232468      Public domain (NASA)
+pd-portrait-right.jpg   the person on the right of the group photo, a separate NASA portrait
+                        https://commons.wikimedia.org/w/index.php?curid=80478435      Public domain (NASA)
+
+The tests give these faces made-up names ("Test Alpha", "Test Bravo", "Test Charlie"); they never look anyone up.

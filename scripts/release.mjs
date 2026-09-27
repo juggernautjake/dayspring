@@ -47,7 +47,7 @@ const t = spawnSync("tar", ["-a", "-c", "-f", zip, "-C", target, ...entries, "da
 if (t.status !== 0 || !existsSync(zip)) { console.error("Zipping failed: " + (t.stderr || "").trim()); process.exit(1); }
 const list = spawnSync("tar", ["-t", "-f", zip], { encoding: "utf8" }).stdout.split(/\r?\n/).filter(Boolean);
 if (!list.includes("server.mjs") || !list.includes("package.json")) { console.error("The zip is missing server.mjs or package.json."); process.exit(1); }
-if (list.some((f) => /^(\.env$|data\/(?!\.gitkeep$).|node_modules\/)/.test(f))) { console.error("The zip contains personal or installed files; stopping."); process.exit(1); }
+if (list.some((f) => /^(\.env$|data\/(?!\.gitkeep$).|node_modules\/)|\.onnx$|(^|\/)(faces|comms)\.bin$|(^|\/)vision-cache\//.test(f))) { console.error("The zip contains personal or installed files; stopping."); process.exit(1); }
 if (bakedHub) { rmSync(hubTarget, { force: true }); console.log("Lantern hub baked into the zip only (config/lantern-hub.json): " + bakedHub); }
 else console.log("No Lantern hub baked in (invited people paste the hub address in Settings → Lantern).");
 

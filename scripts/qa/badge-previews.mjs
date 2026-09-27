@@ -3,6 +3,7 @@
 //   badges-entrance  the coin-flip entrance: tiers 3, 12 and 18
 //   badges-vs-orb    a badge beside the idle Dayspring orb (a throwaway copy of the display), to compare the feel
 //   node scripts/qa/badge-previews.mjs [--out docs/dev/badge-previews] [--only loop|entrance|orb]
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";

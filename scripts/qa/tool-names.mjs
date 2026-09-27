@@ -2,12 +2,14 @@
 // ("tools: Tool names must be unique."). Loads each module that contributes tools and checks the combined list
 // the assistant builds (listskills re-exports a few modules' tools, so it stands in for them).
 //   node scripts/qa/tool-names.mjs        exit 0 = all unique
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 process.env.DAYSPRING_NO_ECO = "1"; process.env.DAYSPRING_NO_BROWSER = "1";
 const lib = new URL("../../lib/", import.meta.url);
 const load = async (m) => (await import(new URL(m + ".mjs", lib))) ;
 const a = await load("assistant");
 const parts = { assistant: a.tools, abilities: (await load("abilities")).tools?.({ provider: "other" }) ?? [] };
-for (const m of ["studyskills", "skyskills", "connectors/index", "listskills", "discover", "conflicts", "helpskills"]) parts[m] = (await load(m)).TOOLS ?? [];
+for (const m of ["studyskills", "skyskills", "connectors/index", "listskills", "discover", "conflicts", "helpskills", "image-routes", "money/index", "vision/skills"]) parts[m] = (await load(m)).TOOLS ?? [];
+parts["medialib/skills"] = (await load("medialib/skills")).ALL_TOOLS ?? [];   // every one, including Drive's write tools (offered only when allowed)
 const abil = new Set((await load("abilities")).NAMES ?? []);
 const seen = new Map(); let bad = 0;
 for (const [m, list] of Object.entries(parts)) for (const t of list) {

@@ -1,6 +1,6 @@
 // Install-readiness check: does a brand-new copy of Dayspring install and work for someone who has never used it?
 // It does what a new user's computer would do, in a throwaway folder, and never touches your own Dayspring:
-//   1. exports the generic copy (privacy scan included) and checks it has no personal data folders
+//   1. exports the generic copy (privacy scan included) into its own temp folder and checks it has no personal data folders
 //   2. copies it to a temp folder, runs "npm install --omit=dev" and makes .env from .env.example
 //   3. starts that copy on a spare port (4730-4739) with its own empty data, a pretend home folder, and devices in
 //      dry-run mode (nothing is switched), then walks the guided setup in a headless browser (Claude and no-AI routes,
@@ -13,6 +13,7 @@
 //     --keep     leave the test copy and its server running afterwards (the address is printed)
 // Needs Google Chrome or Microsoft Edge for the browser checks. Results: the table at the end, plus qa-report.json and
 // screenshots in the test folder's qa-out\. Exit code 0 when everything passed.
+import "./qa/guard-data.mjs";   // first: tests never write to the real data folder
 import { spawn, spawnSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync, copyFileSync, openSync } from "node:fs";
 import { createServer } from "node:net";
@@ -37,16 +38,29 @@ row("Node.js 22.13 or newer", maj > 22 || (maj === 22 && min >= 13), process.ver
 // 2. export (runs the privacy scan; fails on anything personal)
 let src = fromArg;
 if (!src) {
-  const { DEFAULT_TARGET } = await import("./privacy-scan.mjs");
-  const r = run(process.execPath, [join(DESK, "scripts", "export.mjs")], { cwd: DESK });
+  // into this run's own temp folder, never the dayspring-app working tree (a stray export there looks like real changes)
+  src = join(QA, "export");
+  const r = run(process.execPath, [join(DESK, "scripts", "export.mjs"), src], { cwd: DESK });
   row("export + privacy scan", r.status === 0, (r.stdout + r.stderr).trim().split("\n").filter((l) => /privacy|FAIL|clean/i.test(l)).slice(-2).join(" · "));
   if (r.status !== 0) { console.log(r.stdout + r.stderr); await finish(1); }
-  src = DEFAULT_TARGET;
 }
 if (!existsSync(join(src, "package.json"))) { console.error(`There's no Dayspring copy at ${src}.`); process.exit(2); }
 const dataFiles = existsSync(join(src, "data")) ? readdirSync(join(src, "data")) : [];
 const extra = ["backups", "dist-out", "bin", "logs", ".env", "node_modules"].filter((d) => existsSync(join(src, d)));
 row("export has no personal data", fromArg ? null : dataFiles.every((f) => f === ".gitkeep") && !extra.filter((d) => d !== "node_modules").length, fromArg ? "skipped (testing an existing folder)" : `data/: ${dataFiles.join(", ") || "(empty)"}${extra.length ? " · also has: " + extra.join(", ") : ""}`);
+
+// every relative import in the copy points at a file that was exported (an over-eager export filter once dropped
+// ecosystem-core's lib/social/audit.mjs, which only breaks when that code is loaded)
+{
+  const walkJs = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) => ["node_modules", ".git", "data"].includes(e.name) ? [] : e.isDirectory() ? walkJs(join(d, e.name)) : /\.(mjs|js|cjs)$/.test(e.name) ? [join(d, e.name)] : []);
+  const broken = [];
+  // the code's own static imports (import/export … from "./x.mjs", import "./x.mjs"): lib/, vendor/ and server.mjs
+  const code = [join(src, "server.mjs"), ...["lib", "vendor"].flatMap((d) => existsSync(join(src, d)) ? walkJs(join(src, d)) : [])].filter((f) => /\.mjs$/.test(f));
+  for (const f of code) for (const m of readFileSync(f, "utf8").matchAll(/^\s*(?:(?:import|export)\b[^;"'`]*?\bfrom\s*|import\s*)["'](\.{1,2}\/[^"']+)["']/gm)) {
+    if (!existsSync(resolve(dirname(f), m[1]))) broken.push(`${f.slice(src.length + 1)} → ${m[1]}`);
+  }
+  row("every relative import in the export has its file", !broken.length, broken.slice(0, 3).join(" | ") || "all found");
+}
 
 // 3. fresh install in a temp folder
 cpSync(src, APP, { recursive: true, filter: (p) => { const rel = p.slice(src.length).replace(/^[\\/]/, "").split(/[\\/]/); return !["node_modules", ".git", "backups", "dist-out", "bin", "qa-out", ".env"].includes(rel[0]) && !(rel[0] === "data" && rel[1] && rel[1] !== ".gitkeep"); } });
@@ -88,7 +102,7 @@ const first = await fetch(`${BASE}/`, { redirect: "manual" });
 row("a new copy opens the guided setup", /welcome/.test(first.headers.get("location") ?? "") || /welcome/.test(await first.text().catch(() => "")), first.headers.get("location") ?? `status ${first.status}`);
 
 // 5. browser checks
-const qaEnv = { ...process.env, QA_BASE: BASE, QA_OUT: OUT, QA_APP: APP, QA_HOME: HOME };
+const qaEnv = { ...process.env, QA_BASE: BASE, QA_OUT: OUT, QA_APP: APP, QA_HOME: HOME, ...(flag("--offline") ? { QA_OFFLINE: "1" } : {}) };
 const node = (script, argv = []) => run(process.execPath, [join(APP, "scripts", "qa", script), ...argv], { cwd: APP, env: qaEnv, stdio: ["ignore", "pipe", "pipe"] });
 const summarize = (r) => { const out = (r.stdout + r.stderr).split("\n"); const fails = out.filter((l) => /^FAIL/.test(l)); return { ok: r.status === 0, note: fails.length ? fails.slice(0, 3).map((l) => l.replace(/^FAIL\s+/, "")).join(" | ") : `${out.filter((l) => /^PASS/.test(l)).length} checks passed` }; };
 const walks = flag("--quick") ? [["none", "1280x720"]] : [["claude", "1280x720"], ["none", "1280x720"], ["claude", "390x844"], ["none", "390x844"]];

@@ -11,6 +11,8 @@
 
 Long requests are fine. Dayspring waits for you to finish, even across a few sentences, before it answers.
 
+Your request always comes first. If Dayspring was about to say something on its own (a reminder, a check-in, a question), it waits until your request is done, then tells you. Ask **"what were you going to say?"** to hear it straight away. See [Your requests come first](quiet-and-notifications.md#your-requests-come-first).
+
 ### The buttons on the talk panel
 
 | Button | What it does |

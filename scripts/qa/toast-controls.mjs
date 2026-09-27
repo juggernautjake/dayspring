@@ -4,6 +4,7 @@
 // full screen, Dayspring mini and a browser tab at several sizes, that no pop-up box overlaps a control and that every
 // control is really clickable (elementFromPoint at its centre is the control itself).
 //   node scripts/qa/toast-controls.mjs [--keep]
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { spawn, spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";

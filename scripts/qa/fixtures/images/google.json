@@ -1,0 +1,37 @@
+{
+ "items": [
+  {
+   "title": "Google golden retriever 1",
+   "link": "https://img.fixture.test/img/google-full-1.jpg",
+   "displayLink": "g.example.com",
+   "image": {
+    "contextLink": "https://g.example.com/p1",
+    "thumbnailLink": "https://img.fixture.test/img/google-thumb-1.jpg",
+    "width": 900,
+    "height": 600
+   }
+  },
+  {
+   "title": "Google golden retriever 2",
+   "link": "https://img.fixture.test/img/google-full-2.jpg",
+   "displayLink": "g.example.com",
+   "image": {
+    "contextLink": "https://g.example.com/p2",
+    "thumbnailLink": "https://img.fixture.test/img/google-thumb-2.jpg",
+    "width": 900,
+    "height": 600
+   }
+  },
+  {
+   "title": "Google golden retriever 3",
+   "link": "https://img.fixture.test/img/google-full-3.jpg",
+   "displayLink": "g.example.com",
+   "image": {
+    "contextLink": "https://g.example.com/p3",
+    "thumbnailLink": "https://img.fixture.test/img/google-thumb-3.jpg",
+    "width": 900,
+    "height": 600
+   }
+  }
+ ]
+}

@@ -1,6 +1,7 @@
 // Retrieval accuracy for meeting questions against the real installed course (read-only).
 //   node scripts/qa/meet-retrieval.mjs [bank.json]      (default: scripts/qa/private/meet-bank.json; skipped if absent)
 // Passes when the expected lesson is in the top 3 for at least 90% of the questions.
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { readFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";

@@ -24,6 +24,10 @@ Dayspring can bring back memories. Now and then it shows a photo from your compu
 - "Skip" or "not now" if you don't feel like it
 - "Don't show me that one again": hides it for good
 
+## Faces, descriptions and people
+
+Dayspring can also describe a photo ("describe this picture"), read the text in it, and, if you turn it on, recognise the people in your photos and ask "Who's in this picture?". See [Photos and people](photos-and-people.md).
+
 ## Where the catalogue lives
 
 Your descriptions are saved in `data\photos.json` on your computer. The photos themselves are never copied, moved or uploaded. Dayspring shows them straight from their folders. To start the catalogue over, close Dayspring and delete that file.

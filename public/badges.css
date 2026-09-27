@@ -76,6 +76,20 @@
 .bdet-desc{color:#c9cfee}
 .bpin{font:inherit;padding:.5em 1.2em;border-radius:2em;border:1px solid rgba(255,210,122,.5);background:rgba(255,210,122,.14);color:#ffe6ae;cursor:pointer}
 .bset{display:grid;gap:8px}
+/* the developer preview (only on the developer's own computer): unearned badges, marked in the card's frame, never on the art */
+.bdev-tag{display:inline-block;padding:.08em .5em;border-radius:1em;background:rgba(126,200,255,.16);border:1px solid rgba(126,200,255,.45);color:#9edcff;font:600 .68rem/1.3 Outfit,sans-serif;letter-spacing:.06em;text-transform:uppercase;vertical-align:middle}
+.bdev-toggle{display:inline-flex;align-items:center;gap:.4em;padding:.25em .7em;border-radius:2em;border:1px dashed rgba(126,200,255,.45);cursor:pointer}
+.bdev-banner{margin:0;padding:10px 14px;border-radius:.8em;border:1px dashed rgba(126,200,255,.45);background:rgba(40,70,110,.25);color:#cfe8ff;font-size:.9em}
+.bcard.preview{border:1px dashed rgba(126,200,255,.4);background:rgba(40,70,110,.14);padding-top:18px}
+#xpPage .bcard.preview{border:1px dashed rgba(126,200,255,.4);background:rgba(40,70,110,.14);padding-top:18px}
+.bribbon{position:absolute;top:0;left:0;right:0;padding:2px 0;border-radius:.8em .8em 0 0;background:rgba(126,200,255,.2);color:#cfe8ff;font:600 .6rem/1.3 Outfit,sans-serif;letter-spacing:.05em;text-transform:uppercase;pointer-events:none}
+.bdlg-card>.bribbon,.brev-card>.bribbon{border-radius:1.1em 1.1em 0 0;padding:4px 0;font-size:.68rem}
+.brev-card{position:relative}
+.bplay{position:absolute;top:22px;right:4px;width:26px;height:26px;border-radius:50%;border:1px solid rgba(126,200,255,.5);background:rgba(13,17,40,.8);color:#cfe8ff;font-size:.7rem;cursor:pointer;display:grid;place-items:center;padding:0}
+.bplay:hover,.bplay:focus-visible{background:rgba(126,200,255,.25);outline:none}
+.bplay-big{font:inherit;padding:.5em 1.2em;margin-top:.4em;border-radius:2em;border:1px solid rgba(126,200,255,.5);background:rgba(126,200,255,.14);color:#cfe8ff;cursor:pointer}
+.bsample{display:inline-block;padding:0 .45em;border-radius:1em;background:rgba(126,200,255,.18);color:#9edcff;font:600 .7rem/1.5 Outfit,sans-serif;font-style:normal;letter-spacing:.05em;text-transform:uppercase;vertical-align:middle}
+.bpreview .bdlg-card{border-style:dashed;border-color:rgba(126,200,255,.45)}
 /* the badge case on the display: three little badges beside the XP pill */
 .xpb-case{display:inline-flex;gap:2px;margin-left:.2em}.xpb-case img{width:1.7em;height:1.7em}
 /* the tabs on the Progress page */

@@ -4,6 +4,7 @@
 //   • the guided setup's guide goes quiet once a Dayspring screen opens
 //   • stress: 50 /chat requests at once → every one answered, the server stays responsive (no freeze), no crash
 //   node scripts/qa/one-voice.mjs [--keep]
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { spawn, spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";

@@ -23,6 +23,7 @@
   let S = null;                       // the state from /api/setup/state
   const params = new URLSearchParams(location.search);
   let wizard = false, cur = 0;
+  let faPanel = null;                 // the file-access chooser on the Permissions page (file-access.js)
 
   // small building blocks -------------------------------------------------------------------------------------------
   const MAX_NICKS = 30;
@@ -249,6 +250,12 @@
     { id: "calls", icon: "🎧", title: "Calls", settingsOnly: true,
       render: () => window.DayspringCalls ? window.DayspringCalls.html() : `<h1>Calls</h1><p class="lead">This page didn't load. Reload to try again.</p>`,
       mount: () => window.DayspringCalls?.mount($("#card"), { toast }) },
+
+    // ------------------------------------------------------------------------------------------------ photos & people (public/photos-people.js)
+    // Faces in the owner's own photos (off by default, local only), "Who's in this picture?", describing pictures, saved texts and calls.
+    { id: "photos", icon: "🖼️", title: "Photos & people", settingsOnly: true,
+      render: () => window.DayspringPhotosPeople ? window.DayspringPhotosPeople.html() : `<h1>Photos &amp; people</h1><p class="lead">This page didn't load. Reload to try again.</p>`,
+      mount: () => window.DayspringPhotosPeople?.mount($("#card"), { toast, onLeave }) },
 
     // ------------------------------------------------------------------------------------------------ location
     { id: "location", icon: "📍", title: "Where you are",
@@ -638,31 +645,105 @@
       mount: () => window.DayspringApps?.mount($("#card"), { toast, openLink, keys: S.keys, owner: S.owner }) },
 
     // ------------------------------------------------------------------------------------------------ permissions
+    // The file-access chooser is file-access.js (the same one the first-run setup uses); Save sends choice: true.
     { id: "permissions", icon: "🔐", title: "Permissions",
       render: () => { const p = S.permissions; return `
         <h1>What may Dayspring do?</h1>
-        <p class="lead">You're in charge. Anything left off, Dayspring simply won't do, and it will say so if you ask. You can change these any time.</p>
+        <p class="lead">You're in charge. Anything left off, Dayspring simply won't do, and it will say so if you ask. Everything it does is kept in the <a href="?s=activity">activity log</a>.</p>
+        ${p.confirmPending ? `<div class="fa-banner" id="faConfirm"><p><b>Please check this once.</b> Dayspring now asks everyone to choose their file access. Yours was kept exactly as it was (deleting is off). If it's right, keep it; otherwise change it below and press Save.</p><button type="button" class="btn small primary" id="faKeep">Keep this setting</button></div>` : ""}
         <h2>📁 Your files and folders</h2>
-        ${choiceGroup("files", [
-          { value: "off", title: "No file access", desc: "It won't look at your files." },
-          { value: "folders", title: "Only certain folders", desc: "Just the folders you list below." },
-          { value: "all", title: "All my files", desc: "Everything you can open. Windows system folders stay read-only." },
-        ], p.files)}
-        <div id="foldersWrap" ${p.files === "folders" ? "" : "hidden"}>${field("folders", "Folders it may use (one per line)", `<textarea id="folders" placeholder="C:\\Users\\you\\Documents\nD:\\Projects">${esc((p.folders ?? []).join("\n"))}</textarea>`)}</div>
-        <div class="field"><span class="lbl" id="wf-l">Creating or changing files</span>${chipGroup("writeFiles", [["ask", "Ask me first"], ["on", "Just do it"], ["off", "Never"]], [p.writeFiles], false).replace('class="chips"', 'class="chips" role="group" aria-labelledby="wf-l"')}
-          <div class="hint">With "Ask me first", it reads back what it's about to change and waits for your OK. A backup is always saved first.</div></div>
+        <div id="faBox"></div>
+        <details class="scg"><summary><b>More file safety</b></summary>
+          ${field("p-important", "Files and folders to treat as important (one per line)", `<textarea id="p-important" placeholder="C:\\Users\\you\\Documents\\Taxes">${esc((p.important ?? []).join("\n"))}</textarea>`, "Changing or deleting anything here always gets a warning and \"Are you sure?\" first, even when you've said not to ask.")}
+          ${field("p-bulk", "Ask first when a change touches more than this many files", `<input type="number" id="p-bulk" min="2" max="1000" step="1" value="${esc(p.bulkLimit ?? 25)}" style="max-width:8em">`, "Deleting a whole folder always asks, whatever this says.")}
+        </details>
         <h2>🖥️ Programs</h2>
-        <div class="field"><span class="lbl" id="pg-l">Opening apps on this computer (for example "open Word" or "start Discord")</span>${chipGroup("programs", [["off", "Off"], ["ask", "Ask me first"], ["on", "Allowed"]], [p.programs], false).replace('class="chips"', 'class="chips" role="group" aria-labelledby="pg-l"')}</div>
+        <div class="field"><span class="lbl" id="pg-l">Opening apps, terminals and commands on this computer (for example "open Word" or "start Discord")</span>${chipGroup("programs", [["off", "Off"], ["ask", "Ask me first"], ["on", "Allowed"]], [p.programs], false).replace('class="chips"', 'class="chips" role="group" aria-labelledby="pg-l"')}</div>
         <h2>🌐 The internet</h2>
         ${toggle("p-web", "Look things up online", "Search the web and read pages to answer your questions. This works with any AI you connect.", p.web)}
         ${toggle("p-browser", "Use its own browser window", "Open websites, click, fill in simple things and read pages for you. It never types passwords or payment details; you sign in to sites yourself.", p.browser)}
-        <div class="note">You can also say it out loud: "you can read my Documents folder", "stop opening programs". <a href="/help#permissions">About permissions</a></div>
+        <div class="field"><span class="lbl">Money review (read-only): ${p.money ? "on" : "off"}</span> Reads your bank, Venmo or Cash App pages in its own window, or a statement you download, and never changes anything. It's turned on from <a href="/money.html?embed=1">the Money page</a>, which explains it first.</div>
+        <div class="note">Always, whatever you choose: Dayspring never changes Windows, Program Files, boot files, the registry, other people's profiles, its own code, these permissions or its activity log, and never opens files that hold passwords or keys. <a href="/help#permissions">About permissions</a></div>
         <div class="msg" id="m"></div>`; },
-      mount: () => { $("[data-group=files]").addEventListener("change", () => { $("#foldersWrap").hidden = chosen("files") !== "folders"; }); },
+      mount: () => {
+        faPanel = window.DayspringFileAccess.create($("#faBox"), { state: S.permissions, onChange: () => { dirty = true; } });
+        $("#faKeep")?.addEventListener("click", async () => {
+          try { S.permissions = await post("/setup/permissions/confirm", {}); $("#faConfirm")?.remove(); toast("Kept ✓"); } catch (e) { msg($("#m"), e.message, "bad"); }
+        });
+      },
       save: async () => {
-        const files = chosen("files") ?? "off", folders = ($("#folders")?.value ?? "").split(/\r?\n/).map((x) => x.trim()).filter(Boolean);
-        if (files === "folders" && !folders.length) { $("#folders").focus(); throw new Error("List at least one folder, or pick another option."); }
-        S.permissions = await post("/setup/permissions", { files, folders, writeFiles: chipsOf("writeFiles")[0] ?? "ask", programs: chipsOf("programs")[0] ?? "off", web: isOn("p-web"), browser: isOn("p-browser") });
+        const why = faPanel?.problem(); if (why) throw new Error(why);
+        const v = faPanel.value();
+        S.permissions = await post("/setup/permissions", { ...v, programs: chipsOf("programs")[0] ?? "off", web: isOn("p-web"), browser: isOn("p-browser"),
+          important: ($("#p-important")?.value ?? "").split(/\r?\n/).map((x) => x.trim()).filter(Boolean), bulkLimit: Number($("#p-bulk")?.value) || 25 });
+        $("#faConfirm")?.remove();
+      } },
+
+    // ------------------------------------------------------------------------------------------------ activity log
+    // Everything Dayspring was asked and did (lib/activity.mjs): filter, search, export, check it, put back a version.
+    { id: "activity", icon: "🧾", title: "Activity log", settingsOnly: true,
+      render: () => `
+        <h1>Activity log</h1>
+        <p class="lead">Every command, every tool Dayspring used, and every file it read, created, changed, moved or deleted, with a backup of what it replaced. Kept on this computer only. Keys and passwords are blanked out, and Dayspring itself can't change or erase this log.</p>
+        <div class="act-filters">
+          <label>From<input type="date" id="actFrom"></label><label>To<input type="date" id="actTo"></label>
+          <label>Show<select id="actKind"><option value="">Everything</option><option value="file">File changes and reads</option><option value="file.write,file.edit,file.create,file.move,file.copy,file.delete,file.undo,folder">Only changes</option><option value="command">Commands</option><option value="tool">Tool calls</option><option value="program">Programs</option><option value="permissions">Permission changes</option><option value="confirm">Confirmations</option><option value="blocked">Blocked attempts</option></select></label>
+          <label style="flex:1 1 12em">Search<input type="search" id="actQ" placeholder="Words, a file name…"></label>
+          <button type="button" class="btn small" id="actGo">Search</button>
+          <a class="btn small" id="actCsv" href="#" download>Export CSV</a>
+          <button type="button" class="btn small" id="actVerify">Check the log</button>
+        </div>
+        <p class="hint" id="actInfo"></p>
+        <div class="act-list" id="actList"><p class="hint">Loading…</p></div>
+        <h2>How long to keep it</h2>
+        <div class="row" style="align-items:flex-end;gap:.6em">${field("actDays", "Days to keep the log and file backups", `<input type="number" id="actDays" min="120" max="3650" step="1" style="max-width:8em">`, "At least 120 days (the default is 180). Older days are removed once a day.")}<button type="button" class="btn small" id="actDaysSave">Save</button></div>
+        <div class="msg" id="m"></div>`,
+      mount: async () => {
+        const d0 = new Date(Date.now() - 7 * 86400000).toLocaleDateString("en-CA"), d1 = new Date().toLocaleDateString("en-CA");
+        $("#actFrom").value = d0; $("#actTo").value = d1;
+        const qs = () => new URLSearchParams({ from: $("#actFrom").value, to: $("#actTo").value, kind: $("#actKind").value, q: $("#actQ").value.trim() }).toString();
+        const when = (iso) => new Date(iso).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", second: "2-digit" });
+        const words = (e) => {
+          const f = (p) => esc(String(p ?? "").split(/[\\/]/).pop());
+          switch (true) {
+            case e.kind === "command": return `<span class="act-kind">${e.how === "typed" ? "Typed" : "Said"}</span>“${esc(e.text)}”`;
+            case e.kind === "tool": return `<span class="act-kind">Tool</span>${esc(e.tool)} <span class="det">${esc(e.result)}${e.error ? ": " + esc(e.error) : ""}</span>`;
+            case e.kind === "blocked": return `<span class="act-kind">Blocked</span>${esc(e.text ?? e.reason)}${e.path ? ` <span class="det">${esc(e.path)}</span>` : ""}`;
+            case e.kind.startsWith("confirm"): return `<span class="act-kind">${esc({ "confirm.asked": "Asked", "confirm.given": "You said yes", "confirm.refused": "You said no", "confirm.expired": "Expired", "confirm.used": "Confirmed" }[e.kind] ?? e.kind)}</span>${esc(e.text ?? e.said ?? e.what ?? "")}`;
+            case e.kind.startsWith("permissions"): return `<span class="act-kind">Permissions</span>${esc(e.after ?? e.summary ?? "")}`;
+            case e.kind === "program": return `<span class="act-kind">Program</span>${esc(e.action)} ${esc(e.program ?? e.path ?? "")}`;
+            default: return `<span class="act-kind">${esc(e.kind.replace(/^file\./, "").replace(/^folder\./, "folder "))}</span>${f(e.path)}${e.to ? ` → ${esc(e.to)}` : ""}<div class="det">${esc(e.path ?? "")}${e.sizeBefore != null || e.sizeAfter != null ? ` · ${e.sizeBefore ?? "new"} → ${e.sizeAfter ?? "gone"} bytes` : ""}${e.backup ? " · backed up" : ""}</div>`;
+          }
+        };
+        async function load() {
+          $("#actCsv").href = `/api/activity/export.csv?${qs()}`;
+          let r; try { r = await api(`/activity?${qs()}&limit=300`); } catch (e) { $("#actList").innerHTML = `<p class="msg bad">${esc(e.message)}</p>`; return; }
+          $("#actDays").value = r.settings?.days ?? 180;
+          $("#actInfo").textContent = `${r.total} ${r.total === 1 ? "entry" : "entries"} from ${r.from} to ${r.to}${r.total > r.entries.length ? ` (showing the newest ${r.entries.length})` : ""}.`;
+          $("#actList").innerHTML = r.entries.length ? r.entries.map((e) => `<div class="act-row${e.result === "error" || e.kind === "blocked" ? " bad" : ""}"><div class="when">${esc(when(e.at))}</div><div class="what">${words(e)}</div>
+            <div>${e.restorable ? `<button type="button" class="btn small" data-restore="${esc(e.id)}" title="Put back the version from before this change">Restore this version</button>` : ""}</div></div>`).join("") : `<p class="hint">Nothing here for these dates and filters.</p>`;
+        }
+        $("#actGo").onclick = load;
+        ["actFrom", "actTo", "actKind"].forEach((i) => $("#" + i).addEventListener("change", load));
+        $("#actQ").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); load(); } });
+        $("#actList").addEventListener("click", async (ev) => {
+          const b = ev.target.closest("[data-restore]"); if (!b) return;
+          if (!confirm("Put back the version from before this change? The file as it is now is backed up first, so this can be undone too.")) return;
+          b.disabled = true;
+          try { const r = await post("/activity/restore", { id: b.dataset.restore }); toast(r.restored ? "Put back ✓" : r.movedBack ? "Moved back ✓" : "Done ✓"); load(); }
+          catch (e) { msg($("#m"), e.message, "bad"); b.disabled = false; }
+        });
+        $("#actVerify").onclick = async () => {
+          const r = await api("/activity/verify").catch((e) => ({ error: e.message }));
+          if (r.error) return msg($("#m"), r.error, "bad");
+          const bad = (r.files ?? []).filter((f) => !f.ok);
+          msg($("#m"), bad.length ? `Something changed in the log: ${bad.map((f) => `${f.date} (${f.problem}${f.line ? `, line ${f.line}` : ""})`).join("; ")}.` : `✓ The log checks out: ${(r.files ?? []).length} day${(r.files ?? []).length === 1 ? "" : "s"}, nothing changed or removed.`, bad.length ? "bad" : "ok");
+        };
+        $("#actDaysSave").onclick = async () => {
+          try { const r = await post("/activity/settings", { days: Number($("#actDays").value) }); $("#actDays").value = r.days; msg($("#m"), r.clamped ? `Saved as ${r.days} days (it can't be less than 120).` : `Saved: kept for ${r.days} days.`, "ok"); }
+          catch (e) { msg($("#m"), e.message, "bad"); }
+        };
+        await load();
       } },
 
     // ------------------------------------------------------------------------------------------------ screen
@@ -1007,7 +1088,7 @@
           <dt>Location</dt><dd>${esc(o.location?.place || "Not set")}</dd>
           <dt>Routines</dt><dd>${S.schedule.routines.length}</dd>
           <dt>Features</dt><dd>${on} turned on</dd>
-          <dt>Files</dt><dd>${esc({ off: "No access", folders: "Chosen folders", all: "All files" }[S.permissions.files] ?? "No access")}</dd>
+          <dt>Files</dt><dd>${esc({ off: "No access", folders: "Chosen folders", custom: "Chosen folders and files", all: "All files" }[S.permissions.files] ?? "No access")}${S.permissions.can?.delete ? " · can delete" : ""}</dd>
         </dl>
         <h2>Try saying</h2>
         <div class="chips">${[`"${(o.wakeWords ?? ["dayspring"])[0]}, what's on today?"`, `"Add lunch with Mom on Friday at noon"`, `"Show me my week"`, `"What's the weather?"`, `"Play some calm music"`].map((x) => `<span class="chip" style="cursor:default">${esc(x)}</span>`).join("")}</div>
@@ -1186,7 +1267,7 @@
   const GUIDE = { welcome: ["getting-started", "Getting started"], you: ["settings-reference/you", "About you"], assistant: ["settings-reference/your-assistant", "Your assistant"],
     location: ["settings-reference/where-you-are", "Where you are"], ai: ["ai-providers", "AI providers"], voice: ["voices", "Voices"], sound: ["audio-devices", "Speakers and microphones"],
     week: ["schedule/routine-and-fixed-blocks", "Your usual week"], features: ["settings-reference/features--apps", "Features & apps"], apps: ["connections", "Connecting apps"],
-    permissions: ["permissions", "Permissions"], screen: ["display-setup/fitting-dayspring-to-your-screen", "Fitting Dayspring to your screen"], sky: ["display-setup/the-living-sky", "The living sky"],
+    permissions: ["permissions", "Permissions"], photos: ["photos-and-people", "Photos & people"], activity: ["permissions/the-activity-log", "The activity log"], screen: ["display-setup/fitting-dayspring-to-your-screen", "Fitting Dayspring to your screen"], sky: ["display-setup/the-living-sky", "The living sky"],
     done: ["tutorials", "Tutorials: how do I…?"] };
   const guideLink = (id) => { const g = GUIDE[id]; if (!g) return ""; const embed = params.get("embed");
     return `<p class="hint guide-link" style="margin-top:1.4em">❓ Need help? <a href="/help${embed ? "?embed=1" : ""}#${g[0]}"${embed ? "" : ' target="_blank" rel="noopener"'}>Open the guide for this step: ${esc(g[1])}</a> · <a href="/help${embed ? "?embed=1" : ""}#settings-reference"${embed ? "" : ' target="_blank" rel="noopener"'}>every setting explained</a></p>`; };
@@ -1219,7 +1300,7 @@
     // footer
     const last = cur === list.length - 1;
     $("#back").hidden = !wizard || cur === 0;
-    $("#skip").hidden = !wizard || last || sec.id === "welcome" || sec.id === "you";
+    $("#skip").hidden = !wizard || last || sec.id === "welcome" || sec.id === "you" || sec.id === "permissions";   // file access is always chosen, never skipped
     $("#next").textContent = wizard ? (last ? "Open Dayspring →" : sec.id === "welcome" ? "Let's go →" : "Next →") : "Save";
     $("#next").hidden = !wizard && !sec.save;
     $("#where").textContent = wizard ? sec.title : "";

@@ -2,6 +2,7 @@
 // catalogue's own phrasings), one intent per line: "id: phrase | phrase | …". A line starting with "[cooking]",
 // "[results]", "[ringing]" or "[timers]" is said while that's going on. scripts/test-intents.mjs adds the everyday
 // variations (a wake word in front, "please", a small typo) and checks top-1 and top-7 accuracy per family.
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 export const GOLDEN_TEXT = `
 time.now: what time is it | what's the time | do you know what time it is | tell me the time | what time is it right now | time check | got the time | how late is it | what time do you have | is it noon yet
 date.today: what's the date | what day is it | what's today's date | what day of the week is it | what's the date today | what month is it | what year is it | is today tuesday | what is today
@@ -186,6 +187,11 @@ meta.nevermind: never mind | forget it | cancel that | start over | scratch that
 
 // Things that must NOT be read as the look-alike (the matcher's hardest confusions).
 export const NEGATIVES = [
+  // a number on a list is never the book of Numbers; the Bible needs a Bible phrasing
+  ["show number 3", "images.view", "bible.read", {}],
+  ["show me number 3", "images.view", "bible.read", {}],
+  ["numbers chapter 3", "bible.read", "images.view", {}],
+  ["show number 3", "recipe.pick", "bible.read", { recipeResults: true }],
   ["cancel the timer", "timer.cancel", "sched.delete", { timers: true }],
   ["cancel the event", "sched.delete", "timer.cancel", { timers: true }],
   ["cancel the dentist appointment", "sched.delete", "timer.cancel", { timers: true }],

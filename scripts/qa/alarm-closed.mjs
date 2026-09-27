@@ -2,6 +2,7 @@
 // helper (Dayspring Notifications.exe) in test mode: every sound is a silent file at volume 0, so nothing is heard, and
 // window launches are written to a log instead of opening. Its cards do appear briefly at the top-right of the screen.
 //   node scripts/qa/alarm-closed.mjs [--keep]
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import http from "node:http";

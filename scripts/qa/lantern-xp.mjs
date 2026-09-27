@@ -4,6 +4,7 @@
 // endpoint's guards and the xp.summary push, Dayspring's side of the ecosystem contract (SSE, 421/403/401), and the
 // Learning tab and the study-card XP chips in a headless browser.
 //   node scripts/qa/lantern-xp.mjs [--keep] [--live]      (--live: also READ the real Lantern on :4321 — GET only)
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { spawn, spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createServer, request } from "node:http";

@@ -11,6 +11,7 @@
 //     --keep    leave the throwaway copy running afterwards (the address is printed)
 //   env QA_BASE: test an already-running throwaway server instead of making one
 // Exit code 0 when everything passed.
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { spawn } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, openSync } from "node:fs";
 import { createServer } from "node:net";
@@ -154,6 +155,7 @@ if (!BASE) {
   const today = new Date().toLocaleDateString("en-CA");
   await J("/blocks", { date: today, start: "15:00", end: "15:45", title: "Dentist", category: "flex" });
   await J("/blocks", { date: today, start: "19:30", end: "20:30", title: "Call Mom", category: "flex" });
+  await J("/setup/permissions", { files: "off", choice: true });   // the setup won't finish until file access is chosen
   await J("/setup/finish", {});
 }
 

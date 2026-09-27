@@ -29,7 +29,7 @@
     { id: "ai", title: "AI tools", apps: ["claude", "codex"] },
   ];
   const SHORT = {   // the one-line description on the card (the drawer has the full "what")
-    google: "Your Google calendar events and Gmail inbox, read-only.", microsoft: "Outlook calendar and mail, and Microsoft To Do lists.",
+    google: "Google Calendar, Gmail and Drive, for one or several Google accounts.", microsoft: "Outlook calendar and mail, and Microsoft To Do lists.",
     ics: "Subscribe to iCloud, school, team or holiday calendars by link.", todoist: "Your Todoist tasks in the day plan; add tasks by voice.",
     notion: "Search and read your Notion pages; save notes to them.", homeassistant: "Lights, plugs and scenes by voice.",
     webhooks: "IFTTT, Zapier, Make or n8n: say a phrase, run an action.", feeds: "Headlines from topics and sites you choose.",
@@ -145,7 +145,7 @@
     return s.connected ? ["on", MULTI[a.id] ? `Connected · ${s.who}` : `Connected${s.who ? " as " + s.who : ""}`] : ["off", "Not connected"];
   };
   const pillOf = (id) => { const a = apps[id]; if (!a) return ["off", "…"]; if (a.loadError) return ["warn", "Couldn't check"]; return a.custom ? CUSTOM[id].pill(a.status ?? {}) : connectorPill(a); };
-  const guideUrl = (id) => (CUSTOM[id] ? CUSTOM[id].guide : `/help#connections/${anchor(apps[id]?.name ?? id)}`);
+  const guideUrl = (id) => (CUSTOM[id] ? CUSTOM[id].guide : id === "google" ? "/help#google-drive" : `/help#connections/${anchor(apps[id]?.name ?? id)}`);
 
   async function loadAll() {
     const [conn] = await Promise.all([
@@ -278,7 +278,7 @@
     const c = CUSTOM[id], s = a.status ?? {}, [kind, text] = pillOf(id);
     const steps = c ? c.steps(s) : a.steps ?? [], fields = c ? c.fields : a.fields ?? [], notes = c ? c.notes ?? [] : a.notes ?? [];
     const multi = Boolean(MULTI[id]), oauth = OAUTH.includes(id);
-    const go = c?.connectLabel ?? (multi ? (s[MULTI[id]]?.length ? "Add" : "Connect") : oauth ? (kind === "on" ? "Sign in again" : `Sign in with ${id === "google" ? "Google" : "Microsoft"}`) : id === "weatheralerts" ? "Turn on" : kind === "on" ? "Save and test" : "Connect");
+    const go = c?.connectLabel ?? (multi ? (s[MULTI[id]]?.length ? "Add" : "Connect") : oauth ? (id === "google" && s.accounts?.length ? "Add another Google account" : kind === "on" ? "Sign in again" : `Sign in with ${id === "google" ? "Google" : "Microsoft"}`) : id === "weatheralerts" ? "Turn on" : kind === "on" ? "Save and test" : "Connect");
     const focusKey = d.contains(document.activeElement) ? (document.activeElement.id || document.activeElement.dataset.act) : null;
     d.innerHTML = `
       <header class="ad-hd"><span class="app-ic" aria-hidden="true">${a.icon ?? "🔌"}</span><div class="grow"><h2 id="adTitle">${esc(c ? c.name : a.name)}</h2><span class="pill ${kind}"><i aria-hidden="true"></i>${esc(text)}</span></div>
@@ -289,6 +289,7 @@
         ${a.loadError ? `<div class="note warn">${esc(a.loadError)}</div>` : ""}
         ${c?.extra ? c.extra(s) : ""}
         ${itemsHtml(id, s)}
+        ${id === "google" ? googleHtml(s) : ""}
         ${steps.length ? `<h3>${kind === "on" && !multi ? "How it was set up" : "Step by step"}</h3><ol class="steps">${steps.map(stepHtml).join("")}</ol>` : ""}
         ${fields.length ? `<form class="ad-form" id="adForm" novalidate>${fields.map((f) => fieldHtml(f, id, id === "feeds" && f.key === "topic" ? [...(s.topics ?? []), "local"] : null)).join("")}</form>` : ""}
         <div class="ad-acts"><button type="button" class="btn primary" data-act="go" id="adGo">${esc(go)}</button>
@@ -322,7 +323,51 @@
       catch (e) { say(friendly(e), "bad"); b.disabled = false; }
     };
     $('[data-act="go"]', d).onclick = () => connect(id);
+    if (id === "google") wireGoogle(d);
     const off = $('[data-act="off"]', d); if (off) off.onclick = () => confirmOff(off, id);
+  }
+  // ---- Google: several accounts, each with its own services and Drive write switch (only emails are ever shown) ----
+  const GSVC = [["calendar", "Calendar"], ["gmail", "Gmail"], ["drive", "Drive"]];
+  function googleHtml(s) {
+    const list = s.accounts ?? [];
+    if (!list.length) return "";
+    return `<h3>Your Google accounts</h3><div class="list" role="list">${list.map((a) => `<div class="item gacct" role="listitem" data-gid="${esc(a.id)}"><div class="grow">
+      <div class="t">${esc(a.nickname ? `${a.nickname} · ${a.email ?? ""}` : a.email ?? "Google account")}${a.primary ? ` <span class="pill on"><i aria-hidden="true"></i>Primary</span>` : ""}</div>
+      <div class="s" style="display:flex;flex-wrap:wrap;gap:.2em 1em;margin:.35em 0">${GSVC.map(([k, label]) => `<label><input type="checkbox" data-gsvc="${k}"${a.services?.[k] ? " checked" : ""}> ${label}${a.services?.[k] && !a.ready?.[k] ? " (sign-in needed)" : ""}</label>`).join("")}</div>
+      <div class="s"><label><input type="checkbox" data-gwrite${a.driveWriteOn ? " checked" : ""}${a.services?.drive ? "" : " disabled"}> Let Dayspring add and change files in this Drive${a.driveWriteOn && !a.driveWrite ? " (sign-in needed)" : ""}</label></div>
+      <div class="secret-row" style="margin-top:.4em"><input type="text" data-gnick value="${esc(a.nickname ?? "")}" placeholder="Nickname (Work, Personal)" aria-label="Nickname for ${esc(a.email ?? "this account")}" maxlength="40"><button type="button" class="btn small ghost" data-gact="nick">Save name</button></div>
+      ${a.needsSignIn?.length ? `<div class="note warn">Google still needs to allow: ${esc(a.needsSignIn.join(", "))}. <button type="button" class="btn small" data-gact="signin">Sign in again</button></div>` : ""}
+      </div><div class="app-acts" style="flex-direction:column">${a.primary ? "" : `<button type="button" class="btn small ghost" data-gact="primary">Make primary</button>`}<button type="button" class="btn small ghost danger" data-gact="remove">Remove</button></div></div>`).join("")}</div>
+      <p class="hint">Calendar and Gmail use the primary account unless you name another (“check my work email”). Drive searches look in every account with Drive on. Changing Drive files always asks you first, and deleting only moves things to Drive's trash.</p>`;
+  }
+  function wireGoogle(d) {
+    const upd = async (gid, patch, what) => {
+      say("Saving…");
+      try {
+        const r = await post("/connect/google/account", { action: "update", id: gid, ...patch });
+        apps.google = { ...apps.google, status: { ...(apps.google.status ?? {}), ...r } };
+        if (r.needsSignIn) { say(`Google needs your OK for ${r.what?.join(" and ") || "that"}. The sign-in opened in your browser; this updates by itself.`, "ok"); poll("google"); }
+        else say(`${what} ✓`, "ok");
+        paintCard("google"); paintDrawer(); if (!r.needsSignIn) say(`${what} ✓`, "ok");
+      } catch (e) { say(friendly(e), "bad"); }
+    };
+    for (const row of $$(".gacct", d)) {
+      const gid = row.dataset.gid;
+      for (const cb of $$("[data-gsvc]", row)) cb.onchange = () => upd(gid, { services: { [cb.dataset.gsvc]: cb.checked } }, `${cb.checked ? "Turned on" : "Turned off"} ${cb.parentElement.textContent.trim().replace(/ \(.*$/, "")}`);
+      const w = $("[data-gwrite]", row); if (w) w.onchange = () => upd(gid, { driveWrite: w.checked }, w.checked ? "Dayspring may add and change files in this Drive (asking first each time)" : "This Drive is look-only again");
+      for (const b of $$("[data-gact]", row)) b.onclick = async () => {
+        const a = b.dataset.gact;
+        if (a === "nick") return upd(gid, { nickname: $("[data-gnick]", row).value }, "Name saved");
+        if (a === "primary") return upd(gid, { primary: true }, "Primary account changed");
+        if (a === "signin") { try { const acc = (apps.google.status?.accounts ?? []).find((x) => x.id === gid); await upd(gid, { services: { ...acc?.services }, driveWrite: Boolean(acc?.driveWriteOn) }, "Checked"); } catch (e) { say(friendly(e), "bad"); } return; }
+        if (a === "remove") {
+          if (!b.dataset.sure) { b.dataset.sure = "1"; b.textContent = "Yes, remove"; b.classList.add("sure"); setTimeout(() => { if (b.isConnected) { delete b.dataset.sure; b.textContent = "Remove"; b.classList.remove("sure"); } }, 4000); return; }
+          b.disabled = true;
+          try { const r = await post("/connect/google/account", { action: "remove", id: gid }); apps.google = { ...apps.google, status: { ...(apps.google.status ?? {}), ...r } }; paintCard("google"); paintDrawer(); say("Removed ✓ The other accounts stay connected.", "ok"); }
+          catch (e) { b.disabled = false; say(friendly(e), "bad"); }
+        }
+      };
+    }
   }
   async function copy(text, b) {
     try { await navigator.clipboard.writeText(text); }

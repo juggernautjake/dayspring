@@ -2,6 +2,7 @@
 // link ("page.md#heading", "/help#page/heading"). Pages behind a sign-in (401/403, sign-in redirects) count as OK.
 //   node scripts/qa/links.mjs [app folder] [--offline]      (--offline: only the in-app Help links)
 // Exit code: 0 when nothing is broken, 1 otherwise.
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { dirname, join, relative, extname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -37,9 +38,12 @@ console.log(`Help links: ${helpN} checked, ${helpBad.length} broken`); helpBad.f
 
 // 2. web addresses
 const found = new Map();
+// test code and its fixtures are not pages for people: saved search results (thumbnails, made-up and private addresses),
+// mock sites and the addresses the tests make sure are refused
+const TEST_FILE = (rel) => /^scripts[\\/](qa[\\/]|test-[^\\/]+$)/.test(rel);
 // not pages for people: service addresses the code calls, templates, placeholders
-const NOT_A_PAGE = /localhost|127\.0\.0\.1|\[::1\]|^https?:\/\/(192\.168|10)\.|\.local[:/]|\.local$|^https?:\/\/$|example\.(com|invalid|org)|\/\/[^/]*\.(example|invalid|test)(\/|:|$)|\/\/x\.supabase\.co|your-name|\$\{|\$\w|\{|%|<|…|^https?:\/\/[^./]+(\/|$)|^https:\/\/fonts\.(googleapis|gstatic)\.com\/?$|googleapis\.com\/(calendar|gmail|oauth2|youtube\/v3)|graph\.microsoft\.com|api\.[\w-]+\.(com|ai|org|io)|accounts\.spotify\.com\/(api|authorize)|login\.microsoftonline\.com\/.+\/oauth2|oauth2\.googleapis|accounts\.google\.com\/o\/oauth2|open-meteo\.com\/v1|geocoding-api|bible-api|youtube\.com\/(embed|iframe_api|results|watch\?)|ytimg|duckduckgo\.com\/html|bing\.com\/search|schemas\.openxmlformats|w3\.org|cdn\.sheetjs|raw\.githubusercontent|objects\.githubusercontent/;
-for (const f of files) for (const m of readFileSync(f, "utf8").matchAll(/https?:\/\/[^\s"'`<>)\]\\|]+/g)) {
+const NOT_A_PAGE = /localhost|127\.0\.0\.1|\[::1\]|^https?:\/\/(192\.168|10)\.|\.local[:/]|\.local$|^https?:\/\/$|example\.(com|invalid|org)|\/\/[^/]*\.(example|invalid|test)(\/|:|$)|\/\/x\.supabase\.co|your-name|\$\{|\$\w|\{|%|<|…|^https?:\/\/[^./]+(\/|$)|^https:\/\/fonts\.(googleapis|gstatic)\.com\/?$|googleapis\.com\/(calendar|gmail|oauth2|youtube\/v3)|graph\.microsoft\.com|api\.[\w-]+\.(com|ai|org|io)|accounts\.spotify\.com\/(api|authorize)|login\.microsoftonline\.com\/.+\/oauth2|oauth2\.googleapis|accounts\.google\.com\/o\/oauth2|open-meteo\.com\/v1|geocoding-api|bible-api|youtube\.com\/(embed|iframe_api|results|watch\?)|ytimg|duckduckgo\.com\/html|bing\.com\/search|schemas\.openxmlformats|w3\.org|cdn\.sheetjs|\/\/[\w.-]*\.googleapis\.com(\/|$)|accounts\.google\.com\/(o\/)?oauth2|api\.bing\.microsoft\.com|api\.search\.brave\.com|raw\.githubusercontent|objects\.githubusercontent/;
+for (const f of files.filter((f) => !TEST_FILE(relative(APP, f)))) for (const m of readFileSync(f, "utf8").matchAll(/https?:\/\/[^\s"'`<>)\]\\|]+/g)) {
   const u = m[0].replace(/[.,;:!?*]+$/, "");
   if (NOT_A_PAGE.test(u)) continue;
   const rel = relative(APP, f); if (!found.has(u)) found.set(u, new Set()); found.get(u).add(rel);

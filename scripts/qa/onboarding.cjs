@@ -2,7 +2,8 @@
 // The guide's voice is replaced with a silent recorder; installs, sign-ins, device changes and key checks are mocked,
 // so nothing is installed, signed in to, switched or paid for. Run it only against a throwaway copy (qa-fresh-install.mjs).
 //   node scripts/qa/onboarding.cjs [none|claude] [1280x720|390x844]
-//   env: QA_BASE (http://127.0.0.1:4731), QA_OUT (folder for screenshots + results), QA_APP (the copy's folder)
+//   env: QA_BASE (http://127.0.0.1:4731), QA_OUT (folder for screenshots + results), QA_APP (the copy's folder),
+//        QA_OFFLINE=1 (no internet: an empty place search is not a failure)
 // Exit code: 0 when every check passed, 1 otherwise.
 const path = require("path"), fs = require("fs");
 const APP = process.env.QA_APP || path.join(__dirname, "..", "..");
@@ -70,18 +71,22 @@ const launch = async () => { for (const channel of [process.env.QA_BROWSER || "c
   }
   await p.fill("#wake", "06:30"); await p.click("#workSw"); await p.fill("#place", "Denver"); await p.click("#find"); await p.waitForTimeout(2500);
   const pl = await p.locator("[data-p]").count(); if (pl) await p.locator("[data-p]").first().click();
-  rec("week and place search", pl > 0, `${pl} places found (needs internet)`); await shot("07-week"); await next();
+  if (!pl && process.env.QA_OFFLINE) rec("week (place search skipped: offline)", true, "the place search needs internet");
+  else rec("week and place search", pl > 0, `${pl} places found (needs internet)`); await shot("07-week"); await next();
   await p.waitForTimeout(600);
   let picked = 0; for (const id of ["fitness", "reading", "music"]) { const c = p.locator(`#groups [data-i="${id}"]`); if (await c.count()) { await c.first().click(); picked++; } }
   if (await p.locator("#interestFree, #freeInterest, [data-free] input, input[name=interest]").count()) { const f = p.locator("#interestFree, #freeInterest, [data-free] input, input[name=interest]").first(); await f.fill("birdwatching"); await f.press("Enter"); }
   await p.waitForTimeout(700); const sugg = await p.locator("#sugg input").count(); if (sugg) await p.locator("#sugg input").first().check();
   rec("interests and suggested routines", picked === 3, `${picked} picked, ${sugg} routines suggested`); await shot("08-interests"); await next();
   await p.waitForTimeout(800);
-  await p.click('[data-pm="custom"]'); await p.waitForTimeout(1200);
-  const q = await p.locator("[data-qa]").count(); if (q) await p.locator("[data-qa]").first().click();
-  await p.locator("#tree .node .nm").first().click().catch(() => {}); await p.waitForTimeout(1000);
-  const nodes = await p.locator("#tree .node").count(); if (nodes) await p.locator("#tree .node input").first().check().catch(() => {});
-  rec("permissions: pick folders", q > 0 && nodes > 0 && (await p.textContent("#psum")).trim().length > 10, `${q} quick picks, ${nodes} folders`);
+  // file access has to be picked (file-access.js): Next waits until one of the three options is chosen
+  await p.waitForSelector(".fa-card", { timeout: 10000 }).catch(() => {});
+  rec("permissions: Next waits for a file-access choice", await p.$eval("#next", (b) => b.disabled).catch(() => false));
+  await p.click('.fa-card:has(input[value="custom"])'); await p.waitForTimeout(1200);
+  const q = await p.locator(".fa-quick .fa-chip").count(); if (q) await p.locator(".fa-quick .fa-chip").first().click();
+  await p.click('[id$="-browsebtn"]').catch(() => {}); await p.waitForTimeout(1200);
+  const nodes = await p.locator(".fa-tree .fa-node").count(); await p.waitForTimeout(600);
+  rec("permissions: pick folders", q > 0 && nodes > 0 && (await p.locator(".fa-entry").count()) > 0 && (await p.textContent(".fa-summary")).trim().length > 10, `${q} quick picks, ${nodes} folders`);
   await shot("09-permissions"); await next();
   if (route !== "none") { await p.waitForTimeout(1500); if (await p.locator("#cliInstall").count()) { await p.click("#cliInstall"); await p.waitForTimeout(2500); } await shot("10-cli"); await next(); }
   await p.waitForTimeout(1500);

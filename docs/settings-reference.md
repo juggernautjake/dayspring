@@ -143,13 +143,28 @@ Every app Dayspring can connect to, each on its own card with its status, **Set 
 
 | Setting | What it does |
 |---|---|
-| **Your files and folders** | No file access, Only certain folders (list them, one per line), or All my files (Windows system folders stay read-only). |
-| **Creating or changing files** | Ask me first (it reads back the change and waits), Just do it, or Never. A backup is always saved first. |
-| **Programs** | Off, Ask me first, or Allowed ("open Word"). |
+| **Your files and folders** | No file access, Only the folders and files I choose (each Read only, Read & write or Blocked, with or without subfolders), or Everything on this computer (Read only or Read & write). A summary says what Dayspring will and won't be able to do. |
+| **Ask me before every change** | On: it says what it will change and waits for your yes. A backup is always saved first. |
+| **Can delete files** | Off unless you turn it on. Deleted things go to the Recycle Bin, and it always asks first. |
+| **Create / edit / rename and move** | Each kind of change on its own, where Dayspring may write. |
+| **More file safety** | Files and folders to treat as important (always a warning and "Are you sure?"), and how many files one change may touch before it asks (25). |
+| **Programs** | Off, Ask me first, or Allowed ("open Word"; also terminals and Claude Code). |
 | **Look things up online** | Web search and reading pages, with any AI. |
 | **Use its own browser window** | Opening sites, clicking and reading for you. It never types passwords or payment details. |
 
-Deleting always asks first and goes to the Recycle Bin, whatever these say.
+Whatever these say, Windows, Program Files, boot files, the registry, other people's profiles, Dayspring's own code, its permissions and its activity log are never changed. After an update from an older Dayspring, a **Keep this setting** button asks you once to confirm what you had.
+
+## Activity log
+
+`?s=activity` · Full walkthrough: [Permissions → The activity log](permissions.md#the-activity-log)
+
+| Setting | What it does |
+|---|---|
+| **From / To, Show, Search** | Which days and which kinds of entries to list: file changes and reads, only changes, commands, tool calls, programs, permission changes, confirmations, blocked attempts. |
+| **Export CSV** | Saves what's listed as a spreadsheet file. |
+| **Check the log** | Makes sure no line was changed or removed. |
+| **Restore this version** | Puts back a file as it was before that change (the current version is backed up first). |
+| **Days to keep the log and file backups** | At least 120, 180 to start with. |
 
 ## Screen
 

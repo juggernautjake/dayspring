@@ -2,6 +2,7 @@
 // private speech recognition, and the desktop-notification helper. On a throwaway copy (port 4797). Nothing is heard,
 // nothing opens on screen (browser launches are written to a log instead), and no device is touched.
 //   node scripts/qa/open-modes.mjs [--keep] [--no-overlay]
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { spawn, spawnSync, execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";

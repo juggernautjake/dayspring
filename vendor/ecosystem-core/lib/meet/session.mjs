@@ -5,6 +5,8 @@
 //   s.status() · await s.selfCheck() · await s.enableCaptions() · await s.openChat() · await s.sendChat(text)
 //   await s.toggleMic() · await s.toggleCamera() · await s.toggleCaptions() · await s.leave() · await s.close()
 //   await s.participants() · await s.tile(bounds) · await s.large(bounds) · await s.badge({ as, text } | null)
+//   await s.roster() → { tiles: [{ name, speaking }], panel, count, lang } · await s.readPeople() (opens the People list
+//   for a moment and closes it again) · await s.screenshot() → PNG (for reading names off the tiles when nothing else can)
 //
 // It never types a password or signs in: when Google wants a sign-in, stage is "sign-in" and the owner does it in the
 // window. Joining clicks "Join now" / "Ask to join" only after the owner asked Dayspring to join that meeting.
@@ -97,6 +99,25 @@ export function createMeetSession({ chromium, profileDir, channel = undefined, h
       return { open: true, stage: await stageNow(), ...(s ?? { agent: false }) };
     },
     async participants() { return page ? await page.evaluate(() => window.__ecoMeet?.participants() ?? []).catch(() => []) : []; },
+    async roster() { return page ? await page.evaluate(() => window.__ecoMeet?.roster() ?? null).catch(() => null) : null; },
+    // The People list, read once: opened if it isn't, then closed again (and the chat comes back if it was open)
+    async readPeople({ waitMs = 2500 } = {}) {
+      if (!page) return null;
+      const now = await api.roster();
+      if (now?.panel) return now;
+      const b = page.locator((registry.peopleButton ?? []).join(", ")).first();
+      if (!(await b.isVisible().catch(() => false))) return now;
+      const chatWasOpen = await page.locator((registry.chatInput ?? []).join(", ")).first().isVisible().catch(() => false);
+      await press(b);
+      let r = now;
+      const until = Date.now() + waitMs;
+      while (page && Date.now() < until) { r = await api.roster(); if (r?.panel) break; await page.waitForTimeout(250).catch(() => {}); }
+      if (!page) return r;
+      if (chatWasOpen) await api.openChat().catch(() => false);
+      else if (await page.evaluate(() => window.__ecoMeet?.panelOpen()).catch(() => false)) await press(b);
+      return r;
+    },
+    async screenshot() { return page ? await page.screenshot({ type: "png", timeout: 8000 }).catch(() => null) : null; },
     async selfName() { return page ? await page.evaluate(() => window.__ecoMeet?.selfName() ?? "").catch(() => "") : ""; },
     async enableCaptions() {
       if (!page) return false;
@@ -104,7 +125,7 @@ export function createMeetSession({ chromium, profileDir, channel = undefined, h
         if (await page.evaluate(() => window.__ecoMeet?.captionsOn()).catch(() => false)) return true;
         const b = page.locator((registry.captionsButton ?? []).join(", ")).first();
         const label = (await b.getAttribute("aria-label").catch(() => "")) ?? "";
-        if (/turn off captions/i.test(label)) return true;
+        if (/turn off captions/i.test(label) || (await b.getAttribute("aria-pressed").catch(() => null)) === "true") return true;
         if (await b.isVisible().catch(() => false)) await press(b); else await page.keyboard.press("c").catch(() => {});
         await page.waitForTimeout(1200);
       }
@@ -165,6 +186,8 @@ export function createMeetSession({ chromium, profileDir, channel = undefined, h
     },
     async setTile(on, label) { if (page) await page.evaluate(([o, l]) => window.__ecoMeet?.setTile(o, l), [on, label]).catch(() => {}); },
     async badge(b) { if (page) await page.evaluate((x) => window.__ecoMeet?.badge(x), b ?? null).catch(() => {}); },
+    // the "● Notes" sign while notes are being taken ({ text, paused } | null)
+    async rec(r) { if (page) await page.evaluate((x) => window.__ecoMeet?.rec(x), r ?? null).catch(() => {}); },
   };
   return api;
 }

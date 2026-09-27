@@ -10,11 +10,18 @@
 
     ?variant=meet     Meet's usual class names (default)
     ?variant=bare     no class names at all: only roles, aria-labels and structure (tests the fallbacks)
+    ?variant=nest     the same parts, wrapped and ordered differently (names after an extra layer or two)
+    ?variant=tiles    only the video tiles: no People list, no tile markers (a <video> and a name label each)
+    ?variant=canvas   names only as pixels (drawn on the tiles, nothing to read in the page): for reading the picture
+    ?lang=fr          Meet in French ("Vous", "Sous-titres", "Rich a rejoint l'appel")
+    ?self=Taylor Reed the owner's name, shown as "Taylor Reed (You)" in the People list (the tile and captions say "You")
+    ?speak=marker|meter|border|none   how a tile shows its person talking (default: all three)
     ?script=demo      a short scripted meeting: people join, chat, and ask the assistants a question
     ?q=…              the question the script asks (repeatable); ?who=… who asks it
     ?prejoin=0        skip the "Join now" screen
 
-  window.__mock = { say(name, text, { chunks, ms }), chat(name, text), join(name), leave(name), sent: [...], state }
+  window.__mock = { say(name, text, { chunks, ms }), chat(name, text), join(name), leave(name), present(name),
+    setCaptions(on), notice(text), sent: [...], state }
 -->
 <style>
   :root { --bg: #202124; --panel: #2d2e31; --text: #e8eaed; --muted: #9aa0a6; --accent: #8ab4f8; }
@@ -27,30 +34,32 @@
   body.incall #call { display: flex; }
   body.incall #prejoin { display: none; }
   main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-  .tiles { flex: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; padding: 12px; align-content: start; }
-  .tile { background: #3c4043; border-radius: 10px; aspect-ratio: 16/9; display: flex; align-items: flex-end; padding: 8px; }
-  .tile .zWGUib { background: rgba(0,0,0,.5); padding: 2px 8px; border-radius: 4px; }
-  [role="region"][aria-label="Captions"] { min-height: 90px; max-height: 160px; overflow: hidden; padding: 8px 24px; }
-  [role="region"][aria-label="Captions"][hidden] { display: none; }
-  .cap { display: flex; gap: 10px; margin: 4px 0; }
-  .cap img { width: 28px; height: 28px; border-radius: 50%; background: #5f6368; }
-  .cap .name { font-weight: 600; color: var(--muted); }
-  .cap .said { font-size: 18px; }
+  #tiles { flex: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; padding: 12px; align-content: start; }
+  #tiles > div { background: #3c4043; border-radius: 10px; aspect-ratio: 16/9; display: flex; flex-direction: column; justify-content: flex-end; padding: 8px; position: relative; outline: 0 solid transparent; }
+  #tiles > div.lit { outline: 3px solid #8ab4f8; }
+  #tiles video { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .15; }
+  #tiles span { position: relative; background: rgba(0,0,0,.5); padding: 2px 8px; border-radius: 4px; align-self: flex-start; font-size: 20px; font-weight: 600; }
+  #tiles [data-audio-level] { position: absolute; top: 8px; right: 8px; width: 10px; height: 10px; border-radius: 50%; background: #34d399; }
+  [role="region"]#caps { min-height: 90px; max-height: 160px; overflow: hidden; padding: 8px 24px; }
+  [role="region"]#caps[hidden] { display: none; }
+  #capsin img { width: 28px; height: 28px; border-radius: 50%; background: #5f6368; }
+  .said { font-size: 18px; }
   .bar { display: flex; gap: 10px; justify-content: center; padding: 10px; }
   .bar button { background: #3c4043; color: var(--text); border: 0; border-radius: 22px; padding: 10px 14px; cursor: pointer; }
   .bar button[aria-pressed="true"] { background: var(--accent); color: #202124; }
-  .bar button.leave { background: #ea4335; }
+  .bar button#leave { background: #ea4335; }
   aside { width: 320px; background: var(--panel); display: none; flex-direction: column; }
   aside.open { display: flex; }
   aside h2 { font-size: 16px; font-weight: 500; margin: 12px 16px; }
-  .msgs { flex: 1; overflow: auto; padding: 0 16px; }
-  .grp { margin: 10px 0; }
-  .grp .poVWob { font-weight: 600; font-size: 13px; }
-  .grp [data-message-id] { margin: 2px 0; white-space: pre-wrap; }
+  #msgs { flex: 1; overflow: auto; padding: 0 16px; }
+  #msgs > div { margin: 10px 0; }
+  [data-message-id] { margin: 2px 0; white-space: pre-wrap; }
   .composer { display: flex; gap: 6px; padding: 12px; }
   .composer textarea { flex: 1; resize: none; height: 40px; background: #3c4043; color: var(--text); border: 0; border-radius: 20px; padding: 10px 14px; font: inherit; }
   [role="list"] { list-style: none; margin: 0; padding: 0 16px; }
   [role="listitem"] { padding: 6px 0; }
+  #toasts { position: fixed; left: 16px; bottom: 80px; display: grid; gap: 6px; }
+  #toasts > div { background: #3c4043; padding: 8px 14px; border-radius: 8px; }
 </style>
 </head>
 <body>
@@ -61,20 +70,20 @@
 </div>
 <div id="call">
   <main>
-    <div class="tiles" id="tiles"></div>
+    <div id="tiles"></div>
     <div role="region" aria-label="Captions" id="caps" hidden><div id="capsin"></div></div>
     <div class="bar">
       <button id="mic" aria-label="Turn off microphone (ctrl + d)">🎙️</button>
       <button id="cam" aria-label="Turn off camera (ctrl + e)">📷</button>
       <button id="ccb" aria-label="Turn on captions (c)" aria-pressed="false">CC</button>
       <button id="chatb" aria-label="Chat with everyone">💬</button>
-      <button id="peopleb" aria-label="Show everyone">👥</button>
-      <button id="leave" class="leave" aria-label="Leave call" data-mock="leave">📞</button>
+      <button id="peopleb" aria-label="Show everyone">👥 <b id="pcount">1</b></button>
+      <button id="leave" aria-label="Leave call" data-mock="leave">📞</button>
     </div>
   </main>
   <aside id="chat" aria-label="In-call messages">
     <h2>In-call messages</h2>
-    <div class="msgs" id="msgs" aria-live="polite"></div>
+    <div id="msgs" aria-live="polite"></div>
     <div class="composer"><textarea aria-label="Send a message" placeholder="Send a message"></textarea><button aria-label="Send a message">➤</button></div>
   </aside>
   <aside id="people" aria-label="People">
@@ -82,53 +91,112 @@
     <div role="list" aria-label="Participants" id="plist"></div>
   </aside>
 </div>
+<div id="toasts" role="status" aria-live="polite"></div>
 <script>
 (() => {
   const qs = new URLSearchParams(location.search);
-  const bare = qs.get("variant") === "bare";
+  const variant = qs.get("variant") || "meet";
+  const canvas = variant === "canvas";
+  const bare = variant === "bare" || variant === "tiles" || canvas, nest = variant === "nest", tilesOnly = variant === "tiles" || canvas;
+  const fr = qs.get("lang") === "fr";
+  const selfName = qs.get("self") || "";
+  const speakHow = (qs.get("speak") || "marker,meter,border").split(",");
+  const T = fr
+    ? { you: "Vous", youMark: "(vous)", captions: "Sous-titres", ccOn: "Activer les sous-titres (c)", ccOff: "Désactiver les sous-titres (c)", joined: (n) => `${n} a rejoint l'appel`, left: (n) => `${n} a quitté l'appel`, presenting: (n) => `${n} présente`, people: "Personnes", list: "Participants" }
+    : { you: "You", youMark: "(You)", captions: "Captions", ccOn: "Turn on captions (c)", ccOff: "Turn off captions (c)", joined: (n) => `${n} joined`, left: (n) => `${n} has left the meeting`, presenting: (n) => `${n} is presenting`, people: "People", list: "Participants" };
+  if (fr) document.documentElement.lang = "fr";
   const $ = (s) => document.querySelector(s);
   const el = (tag, attrs = {}, kids = []) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) { if (k === "text") e.textContent = v; else if (k === "class") { if (!bare) e.className = v; } else e.setAttribute(k, v); } for (const c of kids) e.append(c); return e; };
-  const state = { inCall: false, mic: true, cam: true, captions: false, people: ["You"], sent: [] };
+  const wrap = (node, n) => { let x = node; for (let i = 0; i < n; i++) x = el("div", {}, [x]); return x; };
+  $("#caps").setAttribute("aria-label", T.captions);
+  const state = { inCall: false, mic: true, cam: true, captions: false, people: [T.you], presenting: null, sent: [] };
   let n = 0;
+  const idOf = (p) => "p-" + p.replace(/\W+/g, "");
 
+  // ---- people: the tiles, the People list, the count on its button ----
   function paintPeople() {
     const tiles = $("#tiles"); tiles.innerHTML = "";
-    const list = $("#plist"); list.innerHTML = "";
-    for (const p of state.people) {
-      tiles.append(el("div", { class: "tile", "data-participant-id": "p-" + p.replace(/\W+/g, "") }, [el("span", { class: "zWGUib", text: p }, [])]));
-      list.append(el("div", { role: "listitem", "aria-label": p }, [el("span", { class: "zWGUib", text: p })]));
+    const list = $("#plist"); if (list) list.innerHTML = "";
+    const shown = state.presenting ? [...state.people, `${state.presenting} (Presentation)`] : state.people;
+    for (const p of shown) {
+      const label = canvas ? drawn(p) : el("span", { class: "zWGUib notranslate", text: p });
+      const kids = [];
+      if (tilesOnly && !canvas) kids.push(el("video", { muted: "", playsinline: "" }));
+      if (speakHow.includes("meter")) kids.push(el("i", { class: "IisKdb", "data-audio-level": "0" }));
+      kids.push(nest ? wrap(label, 2) : label);
+      tiles.append(el("div", tilesOnly ? { "data-who": p } : { class: "tile", "data-participant-id": idOf(p), "data-who": p }, kids));
     }
+    if (!tilesOnly && list) for (const p of state.people) {
+      const isSelf = p === T.you;
+      const name = isSelf && selfName ? selfName : p;
+      const kids = [el("span", { class: "zWGUib", text: name })];
+      if (isSelf && selfName) kids.push(el("span", { text: T.youMark }));
+      list.append(el("div", { role: "listitem", "aria-label": name }, nest ? [wrap(el("div", {}, kids), 1)] : kids));
+    }
+    if (tilesOnly) $("#people")?.remove();
+    $("#pcount").textContent = String(state.people.length);
+  }
+  // a name drawn as pixels, the way it looks on a video tile
+  function drawn(name) {
+    const c = document.createElement("canvas"); c.width = 360; c.height = 60; c.style.cssText = "width:360px;height:60px;align-self:flex-start";
+    const g = c.getContext("2d"); g.fillStyle = "#3c4043"; g.fillRect(0, 0, 360, 60); g.fillStyle = "#ffffff"; g.font = "600 30px Segoe UI, Arial, sans-serif"; g.fillText(name, 10, 40);
+    return c;
   }
   function join() { state.inCall = true; document.body.classList.add("incall"); document.title = "Meet - rehearsal"; paintPeople(); }
   $("[data-mock=join]").onclick = join;
   if (qs.get("prejoin") === "0") join();
 
+  // Meet's short notices (they fade after a few seconds)
+  function notice(text) { const t = el("div", { text }); $("#toasts").append(t); setTimeout(() => t.remove(), 4000); }
+
+  // a tile shows its person talking while the words appear
+  const tileOf = (name) => [...document.querySelectorAll("#tiles > div")].find((t) => t.getAttribute("data-who") === name);
+  let meterT = null;
+  function lightUp(name, on) {
+    for (const t of document.querySelectorAll("#tiles > div")) {
+      const me = on && t.getAttribute("data-who") === name;
+      if (speakHow.includes("marker")) { if (me) t.setAttribute("data-speaking", "true"); else t.removeAttribute("data-speaking"); }
+      if (speakHow.includes("border")) t.classList.toggle("lit", me);
+    }
+    clearInterval(meterT);
+    const m = tileOf(name)?.querySelector("[data-audio-level]");
+    if (m && on) { let v = 1; meterT = setInterval(() => { v = (v % 5) + 1; m.setAttribute("data-audio-level", String(v)); }, 150); }
+    else if (m) m.setAttribute("data-audio-level", "0");
+  }
+
   // captions
   function setCaptions(on) {
     state.captions = on; $("#caps").hidden = !on;
-    const b = $("#ccb"); b.setAttribute("aria-pressed", String(on)); b.setAttribute("aria-label", on ? "Turn off captions (c)" : "Turn on captions (c)");
+    const b = $("#ccb"); b.setAttribute("aria-pressed", String(on)); b.setAttribute("aria-label", on ? T.ccOff : T.ccOn);
   }
   $("#ccb").onclick = () => setCaptions(!state.captions);
   let lastSpeaker = null, lastEntry = null;
   function captionEntry(name) {
     if (lastSpeaker === name && lastEntry && lastEntry.isConnected) return lastEntry;
     const said = el("div", { class: "ygicle said" });
-    const entry = el("div", { class: "nMcdL cap" }, [el("img", { alt: "" }), el("div", {}, [el("div", { class: "NWpY1d name", text: name }), said])]);
+    const who = el("div", { class: "NWpY1d name", text: name });
+    const entry = nest
+      ? el("div", { class: "nMcdL cap" }, [el("div", {}, [el("div", {}, [el("img", { alt: "" }), wrap(who, 1)]), wrap(said, 1)])])
+      : el("div", { class: "nMcdL cap" }, [el("img", { alt: "" }), el("div", {}, [who, said])]);
     $("#capsin").append(entry);
     while ($("#capsin").children.length > 4) $("#capsin").firstElementChild.remove();
     lastSpeaker = name; lastEntry = entry;
     return entry;
   }
+  // a line with no name or picture: Meet carrying on the same speaker's words
+  function sayMore(text) { const e = el("div", { class: "nMcdL cap" }, [el("div", { class: "ygicle said", text })]); $("#capsin").append(e); lastEntry = null; return e; }
   // Someone talks: the caption appears a few words at a time, like Meet's
   function say(name, text, { chunks = 3, ms = 250 } = {}) {
-    if (!state.people.includes(name) && name !== "You") joinPerson(name);
+    if (!state.people.includes(name) && name !== T.you && name !== "You") joinPerson(name);
     return new Promise((ok) => {
-      if (!state.captions) return ok(false);
+      lightUp(name, true);
+      const done = (v) => { setTimeout(() => lightUp(name, false), 600); ok(v); };
+      if (!state.captions) return done(false);
       const entry = captionEntry(name);
-      const said = entry.querySelector(".said") || entry.lastElementChild.lastElementChild;
+      const said = entry.querySelector(".said") || [...entry.querySelectorAll("div")].filter((d) => !d.children.length).pop();
       const before = said.textContent ? said.textContent + " " : "";
       const w = text.split(" "); let i = 0;
-      const step = () => { i = Math.min(w.length, i + chunks); said.textContent = before + w.slice(0, i).join(" "); if (i < w.length) setTimeout(step, ms); else ok(true); };
+      const step = () => { i = Math.min(w.length, i + chunks); said.textContent = before + w.slice(0, i).join(" "); if (i < w.length) setTimeout(step, ms); else done(true); };
       step();
     });
   }
@@ -144,11 +212,11 @@
     return m;
   }
   const box = $("textarea");
-  function send() { const t = box.value.trim(); if (!t) return; box.value = ""; state.sent.push(t); chat("You", t); }
+  function send() { const t = box.value.trim(); if (!t) return; box.value = ""; state.sent.push(t); chat(T.you, t); }
   box.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } });
   document.querySelector(".composer button").onclick = send;
-  $("#chatb").onclick = () => { $("#chat").classList.toggle("open"); $("#people").classList.remove("open"); };
-  $("#peopleb").onclick = () => { $("#people").classList.toggle("open"); $("#chat").classList.remove("open"); };
+  $("#chatb").onclick = () => { $("#chat").classList.toggle("open"); $("#people")?.classList.remove("open"); };
+  $("#peopleb").onclick = () => { if (tilesOnly) return; $("#people").classList.toggle("open"); $("#chat").classList.remove("open"); };
   $("#leave").onclick = () => { state.inCall = false; document.body.classList.remove("incall"); document.body.innerHTML = "<h1 style='margin:auto'>You left the meeting</h1>"; };
   function setMic(on) { state.mic = on; $("#mic").setAttribute("aria-label", on ? "Turn off microphone (ctrl + d)" : "Turn on microphone (ctrl + d)"); }
   function setCam(on) { state.cam = on; $("#cam").setAttribute("aria-label", on ? "Turn off camera (ctrl + e)" : "Turn on camera (ctrl + e)"); }
@@ -160,9 +228,10 @@
     else if (e.ctrlKey && e.key.toLowerCase() === "e") { e.preventDefault(); setCam(!state.cam); }
     else if (!e.ctrlKey && e.key.toLowerCase() === "c") setCaptions(!state.captions);
   });
-  function joinPerson(name) { if (!state.people.includes(name)) { state.people.push(name); if (state.inCall) paintPeople(); } }
-  function leavePerson(name) { state.people = state.people.filter((p) => p !== name); if (state.inCall) paintPeople(); }
-  window.__mock = { say, chat, join: joinPerson, leave: leavePerson, state, get sent() { return state.sent; }, joinCall: join, setCaptions };
+  function joinPerson(name, { quiet = false } = {}) { if (!state.people.includes(name)) { state.people.push(name); if (state.inCall) paintPeople(); if (!quiet && state.inCall) notice(T.joined(name)); } }
+  function leavePerson(name, { quiet = false } = {}) { state.people = state.people.filter((p) => p !== name); if (state.presenting === name) state.presenting = null; if (state.inCall) paintPeople(); if (!quiet && state.inCall) notice(T.left(name)); }
+  function present(name) { state.presenting = name; if (state.inCall) { paintPeople(); notice(T.presenting(name)); } }
+  window.__mock = { say, sayMore, chat, join: joinPerson, leave: leavePerson, present, notice, state, get sent() { return state.sent; }, joinCall: join, setCaptions };
 
   // ?script=demo: a short rehearsal
   if (qs.get("script") === "demo") {

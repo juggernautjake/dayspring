@@ -6,9 +6,9 @@ Dayspring can be a real helper on your computer. It can find a file, read you a 
 
 ### Allow it
 
-1. Open Settings → **Permissions** → **Files and folders**.
-2. Choose **Only these folders** and click **Add folder** for each one (for example `Documents`), or choose **Everything**.
-3. Choose how **changing files** works: **Ask me first** is recommended.
+1. Open Settings → **Permissions** → **Your files and folders**.
+2. Choose **Only the folders and files I choose** and add each place (for example `Documents`), setting it to **Read only** or **Read & write**; or choose **Everything on this computer**.
+3. Keep **Ask me before every change** on (recommended). Turn on **Can delete files** only if you want Dayspring to be able to move things to the Recycle Bin.
 
 ### Things you can say (with an AI brain)
 

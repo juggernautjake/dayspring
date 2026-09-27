@@ -290,8 +290,8 @@
       },
       next: async () => { await api("/welcome/interests", { ids: $$("#groups .chip.on").map((c) => c.dataset.i), other: W.other?.values() ?? [], addRoutines: $$("#sugg input:checked").map((x) => x.value) }); return true; } },
 
-    { id: "permissions", title: "Permissions",
-      say: () => "Now, privacy. What should I be allowed to look at on this computer? You can let me see everything, just the folders and files you choose, or nothing for now. And for each, decide whether I may only read, or also make changes. I'll never touch passwords, keys or Windows' own files either way.",
+    { id: "permissions", title: "Permissions", required: true, blocked: () => !P.fa?.chosen(),
+      say: () => "Now, privacy. What may I do with the files on this computer? Please pick one: no file access, which I recommend if you're not sure, only the folders and files you choose, or everything. You also decide whether I may only read, or also make changes, and whether I may delete anything. I'll never touch passwords, keys, Windows or other people's files, and I keep a log of everything I do.",
       render: () => permHtml(), mount: (root) => permMount(root), next: async () => permSave() },
 
     { id: "cli", title: "AI coding tool", show: () => W.ai !== "none",
@@ -313,7 +313,12 @@
     { id: "done", title: "All set", nextLabel: "Open Dayspring →",
       say: () => `That's it${who()}! You're all set. Here's a quick summary. Press Open Dayspring to start. Say "Dayspring" any time you need me, and you can change anything in Settings. It's good to meet you.`,
       render: () => doneHtml(), mount: () => doneMount(),
-      next: async () => { await api("/setup/finish", {}).catch(() => {}); await saveState({ finished: true }); await openDayspring(); return false; } },
+      next: async () => {
+        // file access must have been chosen: if it wasn't, back to that step (nothing else is decided for them)
+        const f = await api("/setup/finish", {}).catch((e) => e);
+        if (f instanceof Error && f.data?.need === "files") { toast(f.message); const i = STEPS.findIndex((s) => s.id === "permissions"); if (i >= 0) await show(i); return false; }
+        await saveState({ finished: true }); await openDayspring(); return false;
+      } },
   ];
 
   /* ---------------- step helpers ---------------- */
@@ -405,126 +410,35 @@
   }
 
   // ---- permissions ----
-  const P = { mode: "custom", allAccess: "read", entries: [], writeConfirm: "ask", programs: "ask", browser: false, web: true, cwd: null, roots: null };
+  // File access is chosen here, never left to a default: Next stays off until one of the three options is picked (the
+  // chooser itself is file-access.js, the same one Settings → Permissions uses). The other abilities follow.
+  const P = { fa: null, state: null, programs: "ask", browser: false, web: true };
   function permHtml() {
-    return `<div class="eyebrow">Privacy</div><h1>What may Dayspring look at?</h1>
-      <p class="lead">Choose what I can see on this computer, and whether I may only <b>read</b> or also <b>change</b> things. Passwords, keys and Windows' own files are always off limits.</p>
-      <div class="choices" role="radiogroup" aria-label="File access">
-        <button class="choice" data-pm="all" type="button"><span class="ic">🖥️</span><b>Everything on this computer</b><small>All your files and drives. Handy if you want me to find anything.</small></button>
-        <button class="choice" data-pm="custom" type="button"><span class="tag">Recommended</span><span class="ic">📁</span><b>Only what I choose</b><small>Pick folders or single files, each read-only or changeable.</small></button>
-        <button class="choice" data-pm="off" type="button"><span class="ic">🔒</span><b>Nothing for now</b><small>I won't look at any files. You can change this later.</small></button></div>
-      <div id="pAll" hidden><h2>For everything, I may…</h2>${seg("allAccess", [["read", "Only read"], ["readwrite", "Read and change"]], P.allAccess)}</div>
-      <div id="pCustom" hidden>
-        <div class="picker"><section class="pane" aria-label="Browse"><header><div class="crumbs" id="crumbs"></div><span style="flex:1"></span><input id="pFilter" type="search" placeholder="Filter" style="max-width:10em;min-height:2.1em;padding:.25em .6em"></header>
-            <div class="quick" id="quick"></div><div class="tree" id="tree"><p class="empty">Loading…</p></div></section>
-          <section class="pane" aria-label="Chosen"><header><b style="font-weight:500">Dayspring may use</b></header><div class="chosen" id="chosen"></div></section></div></div>
-      <div id="pWrite"><div class="toggle"><div class="txt"><b>Ask me before changing any file</b><div>When I'm allowed to change things, I'll say what I'll change and wait for your OK. A backup is always made first.</div></div>${sw("wcSw", P.writeConfirm !== "on")}</div></div>
+    return `<div class="eyebrow">Privacy</div><h1>What may Dayspring do on this computer?</h1>
+      <p class="lead">You choose what I can see and change. Nothing is picked for you: choose one of the three below to go on. Passwords, keys, Windows and other people's files are always off limits, and I keep a log of everything I do.</p>
+      <div id="faBox"></div>
       <h2>Other abilities</h2>
-      <div class="toggle"><div class="txt"><b>Open programs</b><div>"Open Spotify", "start Word"…</div></div>${seg("programs", [["off", "Off"], ["ask", "Ask first"], ["on", "On"]], P.programs)}</div>
+      <div class="toggle"><div class="txt"><b>Open programs</b><div>"Open Spotify", "start Word", and opening a terminal.</div></div>${seg("programs", [["off", "Off"], ["ask", "Ask first"], ["on", "On"]], P.programs)}</div>
       <div class="toggle"><div class="txt"><b>Use a web browser for you</b><div>Open sites, click and read pages in my own browser window. I never type passwords or payment details.</div></div>${sw("brSw", P.browser)}</div>
-      <div class="toggle"><div class="txt"><b>Look things up on the internet</b><div>Search the web when you ask a question.</div></div>${sw("webSw", P.web)}</div>
-      <div class="summary" id="psum" aria-live="polite"></div>`;
+      <div class="toggle"><div class="txt"><b>Look things up on the internet</b><div>Search the web when you ask a question.</div></div>${sw("webSw", P.web)}</div>`;
   }
   async function permMount(root) {
     const cur = await api("/setup/permissions", undefined, "GET").catch(() => null);
-    if (cur) {
-      P.mode = cur.files === "all" ? "all" : cur.files === "off" ? "off" : "custom";
-      P.allAccess = cur.allAccess ?? (cur.writeFiles && cur.writeFiles !== "off" ? "readwrite" : "read");
-      P.entries = Array.isArray(cur.entries) ? cur.entries.map((e) => ({ path: e.path, kind: e.kind ?? "folder", access: e.access ?? "read" })) : (cur.folders ?? []).map((f) => ({ path: f, kind: "folder", access: "read" }));
-      P.writeConfirm = cur.writeConfirm ?? (cur.writeFiles === "on" ? "on" : "ask"); P.programs = cur.programs ?? "ask"; P.browser = Boolean(cur.browser); P.web = cur.web !== false;
-      root.innerHTML = permHtml();
-    }
+    P.state = cur ?? {};
+    if (cur) { P.programs = cur.programs ?? "ask"; P.browser = Boolean(cur.browser); P.web = cur.web !== false; root.innerHTML = permHtml() + guideLink("permissions"); }
     wireSw(root);
-    wireSeg(root, (name, v) => { if (name === "allAccess") P.allAccess = v; if (name === "programs") P.programs = v; permPaint(); });
-    $$("[data-pm]", root).forEach((b) => (b.onclick = () => { P.mode = b.dataset.pm; permPaint(); if (P.mode === "custom" && !P.roots) loadRoots(); }));
-    ["wcSw", "brSw", "webSw"].forEach((id) => $("#" + id).addEventListener("change", permPaint));
-    $("#pFilter").oninput = () => { const f = $("#pFilter").value.toLowerCase(); $$("#tree .node").forEach((n) => (n.hidden = f && !n.dataset.name.toLowerCase().includes(f))); };
-    $("#pFilter").placeholder = "Filter · Enter to search";
-    $("#pFilter").onkeydown = async (e) => { if (e.key !== "Enter") return; e.preventDefault(); e.stopPropagation(); const q = $("#pFilter").value.trim(); if (q.length < 2) return;
-      $("#tree").innerHTML = `<p class="empty">Searching…</p>`;
-      const r = await api(`/fs/search?q=${encodeURIComponent(q)}${P.cwd ? `&under=${encodeURIComponent(P.cwd)}` : ""}`, undefined, "GET").catch((err) => ({ error: err.message }));
-      const items = r.items ?? r.results ?? r.matches ?? [];
-      $("#tree").innerHTML = r.error ? `<p class="empty">${esc(r.error)}</p>` : items.length ? items.map(nodeHtml).join("") : `<p class="empty">Nothing found for “${esc(q)}”.</p>`;
-      $$("#tree .node").forEach((n) => { n.querySelector("input").onchange = (ev) => { if (ev.target.checked) addEntry(n.dataset.path, n.dataset.kind); else removeEntry(n.dataset.path); }; if (n.dataset.kind === "folder") n.querySelector(".nm").onclick = () => browse(n.dataset.path); }); };
-    permPaint(); if (P.mode === "custom") loadRoots();
-  }
-  function permPaint() {
-    $$("[data-pm]").forEach((b) => b.classList.toggle("on", b.dataset.pm === P.mode));
-    $("#pAll").hidden = P.mode !== "all"; $("#pCustom").hidden = P.mode !== "custom";
-    const canWrite = (P.mode === "all" && P.allAccess === "readwrite") || (P.mode === "custom" && P.entries.some((e) => e.access === "readwrite"));
-    $("#pWrite").hidden = !canWrite;
-    P.writeConfirm = isOn($("#wcSw")) ? "ask" : "on"; P.browser = isOn($("#brSw")); P.web = isOn($("#webSw"));
-    drawChosen(); $("#psum").innerHTML = "✓ " + permSummary();
-  }
-  const short = (p) => { const parts = String(p).split(/[\\/]/).filter(Boolean); return parts.length > 3 ? `…\\${parts.slice(-2).join("\\")}` : p; };
-  function permSummary() {
-    const extra = [P.programs === "on" ? "open programs" : P.programs === "ask" ? "open programs (asking first)" : null, P.browser ? "use a browser for you" : null, P.web ? "look things up online" : null].filter(Boolean);
-    let files;
-    if (P.mode === "off") files = "Dayspring won't look at any of your files";
-    else if (P.mode === "all") files = `Dayspring can ${P.allAccess === "readwrite" ? `read and change${P.writeConfirm === "ask" ? " (asking first)" : ""}` : "read"} everything on this computer`;
-    else if (!P.entries.length) files = "Dayspring won't look at any files yet (pick some on the left)";
-    else { const r = P.entries.filter((e) => e.access === "read").map((e) => short(e.path)), w = P.entries.filter((e) => e.access === "readwrite").map((e) => short(e.path)), n = P.entries.filter((e) => e.access === "none").map((e) => short(e.path));
-      files = [r.length ? `read ${r.join(", ")}` : "", w.length ? `read and change ${w.join(", ")}${P.writeConfirm === "ask" ? " (asking first)" : ""}` : ""].filter(Boolean).join("; ") ; files = "Dayspring can " + files + (n.length ? `, but not ${n.join(", ")}` : ""); }
-    return `${files}.${extra.length ? ` It may also ${extra.join(", ")}.` : ""} Passwords, keys and Windows' own files are always off limits.`;
-  }
-  async function loadRoots() {
-    const r = await api("/fs/roots", undefined, "GET").catch(() => null);
-    P.roots = r ?? { roots: [], places: [] };
-    const places = (r?.places ?? []).slice(0, 10);
-    $("#quick").innerHTML = places.length ? places.map((pl, i) => `<button class="chip" type="button" data-qa="${i}" title="${esc(pl.path)}">＋ ${esc(pl.icon ?? "")} ${esc(pl.label ?? pl.name)}</button>`).join("") : `<span class="hint">Quick picks aren't available.</span>`;
-    $$("[data-qa]").forEach((b) => (b.onclick = () => { const pl = places[Number(b.dataset.qa)]; addEntry(pl.path, "folder"); }));
-    browse(null);
-  }
-  async function browse(path) {
-    P.cwd = path;
-    const tree = $("#tree");
-    if (!path) {
-      const rs = [...(P.roots?.users ?? []), ...(P.roots?.places ?? []), ...(P.roots?.drives ?? []), ...(P.roots?.roots ?? [])].map((x) => ({ ...x, name: `${x.icon ? x.icon + " " : ""}${x.label ?? x.name}` }));
-      crumbs(null);
-      tree.innerHTML = rs.length ? rs.map((x) => nodeHtml({ name: x.name, path: x.path, kind: "folder" })).join("") : `<p class="empty">Nothing to browse. (The file browser needs the latest Dayspring.)</p>`;
-    } else {
-      tree.innerHTML = `<p class="empty">Loading…</p>`;
-      const r = await api(`/fs/list?path=${encodeURIComponent(path)}`, undefined, "GET").catch((e) => ({ error: e.message }));
-      crumbs(path);
-      tree.innerHTML = r.error ? `<p class="empty">${esc(friendlyFs(r.error))}</p>` : (r.items ?? r.children ?? []).length ? (r.items ?? r.children).map(nodeHtml).join("") : `<p class="empty">This folder is empty.</p>`;
-    }
-    $$("#tree .node").forEach((n) => {
-      n.querySelector("input").onchange = (e) => { if (e.target.checked) addEntry(n.dataset.path, n.dataset.kind); else removeEntry(n.dataset.path); };
-      if (n.dataset.kind === "folder") n.querySelector(".nm").onclick = () => browse(n.dataset.path);
-    });
-    $("#pFilter").value = "";
-  }
-  const friendlyFs = (t) => (/EPERM|EACCES|denied/i.test(t) ? "Windows doesn't let anyone look in this folder." : /ENOENT/i.test(t) ? "That folder isn't there any more." : t);
-  function nodeHtml(x) {
-    const on = P.entries.some((e) => e.path.toLowerCase() === String(x.path).toLowerCase());
-    const meta = x.kind === "file" ? [x.size != null ? sizeText(x.size) : "", x.modified ? new Date(x.modified).toLocaleDateString() : ""].filter(Boolean).join(" · ") : "";
-    const icon = /^\p{Extended_Pictographic}/u.test(x.name) ? "" : x.kind === "file" ? "📄 " : "📁 ";
-    return `<div class="node" data-path="${esc(x.path)}" data-kind="${x.kind === "file" ? "file" : "folder"}" data-name="${esc(x.name)}"><input type="checkbox" aria-label="Allow ${esc(x.name)}"${on ? " checked" : ""}><span class="nm${x.kind === "file" ? " file" : ""}" title="${esc(x.path)}">${icon}${esc(x.name)}${x.kind === "file" ? "" : " ›"}</span><span class="meta">${esc(meta)}</span></div>`;
-  }
-  const sizeText = (b) => (b > 1e9 ? (b / 1e9).toFixed(1) + " GB" : b > 1e6 ? (b / 1e6).toFixed(1) + " MB" : b > 1e3 ? Math.round(b / 1e3) + " KB" : b + " B");
-  function crumbs(path) {
-    const el = $("#crumbs");
-    if (!path) { el.innerHTML = `<button type="button" data-cr="">🏠 This computer</button>`; }
-    else { const parts = path.split(/[\\/]/).filter(Boolean); let acc = "";
-      el.innerHTML = `<button type="button" data-cr="">🏠</button>` + parts.map((p, i) => { acc = i === 0 ? (/:$/.test(p) ? p + "\\" : "\\\\" + p) : acc.replace(/\\?$/, "\\") + p; return `<span>›</span><button type="button" data-cr="${esc(acc)}">${esc(p)}</button>`; }).join(""); }
-    $$("[data-cr]", el).forEach((b) => (b.onclick = () => browse(b.dataset.cr || null)));
-  }
-  function addEntry(path, kind) { if (!P.entries.some((e) => e.path.toLowerCase() === path.toLowerCase())) P.entries.push({ path, kind, access: "read" }); $$(`#tree .node`).forEach((n) => { if (n.dataset.path.toLowerCase() === path.toLowerCase()) n.querySelector("input").checked = true; }); permPaint(); }
-  function removeEntry(path) { P.entries = P.entries.filter((e) => e.path.toLowerCase() !== path.toLowerCase()); $$(`#tree .node`).forEach((n) => { if (n.dataset.path.toLowerCase() === path.toLowerCase()) n.querySelector("input").checked = false; }); permPaint(); }
-  function drawChosen() {
-    const el = $("#chosen"); if (!el) return;
-    el.innerHTML = P.entries.length ? P.entries.map((e, i) => `<div class="pick"><div class="p"><span title="${esc(e.path)}">${e.kind === "file" ? "📄" : "📁"} ${esc(e.path)}</span><button class="rm" type="button" data-rmi="${i}" aria-label="Remove">✕</button></div>
-      ${seg("acc" + i, [["read", "Read"], ["readwrite", "Read & change"], ["none", "Keep out"]], e.access)}${e.kind === "folder" && e.access !== "none" ? `<span class="hint">Includes everything inside</span>` : ""}</div>`).join("") : `<p class="empty">Tick folders or files on the left, or use the quick picks. Nothing is chosen yet.</p>`;
-    wireSeg(el, (name, v) => { const i = Number(name.slice(3)); P.entries[i].access = v; permPaint(); });
-    $$("[data-rmi]", el).forEach((b) => (b.onclick = () => removeEntry(P.entries[Number(b.dataset.rmi)].path)));
+    wireSeg(root, (name, v) => { if (name === "programs") P.programs = v; });
+    P.fa = window.DayspringFileAccess.create($("#faBox", root), { state: P.state, onChange: () => { $("#next").disabled = !P.fa.chosen(); } });
+    $("#next").disabled = !P.fa.chosen();
   }
   async function permSave() {
-    permPaint();
-    const body = { files: P.mode, allAccess: P.allAccess, entries: P.mode === "custom" ? P.entries.map((e) => ({ ...e, subfolders: true })) : [], writeConfirm: P.writeConfirm, programs: P.programs, browser: P.browser, web: P.web,
+    const why = P.fa?.problem();
+    if (why) { toast(why); say(why); throw new Error(why); }
+    const v = P.fa.value();
+    const body = { ...v, programs: P.programs, browser: isOn($("#brSw")), web: isOn($("#webSw")),
       // older Dayspring versions understand these
-      folders: P.mode === "custom" ? P.entries.filter((e) => e.access !== "none").map((e) => e.path) : [], writeFiles: P.writeConfirm === "on" ? "on" : "ask" };
-    if (P.mode === "custom" && !P.entries.length) body.files = "off";
-    await api("/setup/permissions", body);
+      folders: v.files === "custom" ? v.entries.filter((e) => e.access !== "none").map((e) => e.path) : [], writeFiles: v.writeConfirm };
+    P.state = await api("/setup/permissions", body);
     return true;
   }
 
@@ -747,7 +661,7 @@
       <div class="note"><b>Getting around:</b> say <b>“Dayspring”</b> and ask anything${W.ai === "none" ? " from the built-in commands" : ""}. Everything you chose can be changed in <a href="/setup" target="_blank" rel="noopener">Settings</a>, and the <a href="/help" target="_blank" rel="noopener">Guide</a> explains every feature.</div>
       <p><a class="btn" href="/setup?s=apps" target="_blank" rel="noopener">🔌 Apps &amp; connections</a> <span class="hint">Connect calendars, music, smart home and more any time.</span></p>`;
   }
-  const permSummaryShort = () => (P.mode === "off" ? "No file access" : P.mode === "all" ? `Everything (${P.allAccess === "readwrite" ? "read & change" : "read only"})` : P.entries.length ? `${P.entries.length} chosen place${P.entries.length === 1 ? "" : "s"}` : "No file access");
+  const permSummaryShort = () => { const q = W.setup?.permissions ?? P.state ?? {}; const n = (q.entries ?? []).length; return q.files === "all" ? `Everything (${q.allAccess === "readwrite" ? "read & change" : "read only"})${q.can?.delete ? ", can delete" : ""}` : q.files === "custom" && n ? `${n} chosen place${n === 1 ? "" : "s"}${q.can?.delete ? ", can delete" : ""}` : "No file access"; };
   function doneMount() { /* nothing */ }
   // Dayspring opens in its own window (full screen on a TV or second screen, an app window here), in the browser chosen
   // on the Screen step. This setup tab can be closed then. If that can't happen, this tab becomes the Dayspring screen.
@@ -789,7 +703,7 @@
     card.style.animation = "none"; void card.offsetWidth; card.style.animation = "";
     card.innerHTML = (s.render ? s.render() : "") + guideLink(s.id);
     $("#back").hidden = i === 0; $("#skip").hidden = Boolean(s.required) || s.id === "welcome" || s.id === "done";
-    $("#next").textContent = s.nextLabel ?? "Next →"; $("#next").disabled = false;
+    $("#next").textContent = s.nextLabel ?? "Next →"; $("#next").disabled = Boolean(s.blocked?.());
     paintRail();
     $("#main").scrollTop = 0;
     try { await s.mount?.(card); } catch (e) { console.error(e); }
@@ -809,7 +723,7 @@
       if (dir > 0) { await api("/welcome/state", { done: { [s.id]: !skip } }).catch(() => {}); W.state.done = { ...(W.state.done ?? {}), [s.id]: !skip }; }
       const j = dir > 0 ? nextIdx(W.idx) : prevIdx(W.idx);
       if (j !== W.idx) { stopTalking(); await show(j, { speak: !(dir > 0 && skip && s.skip) }); if (dir > 0 && skip && s.skip) { clearTimeout(W.sayT); W.sayT = setTimeout(() => { if (W.idx === j) say(STEPS[j].say?.()); }, 4200); } }
-    } finally { busy = false; $("#next").disabled = false; }
+    } finally { busy = false; $("#next").disabled = Boolean(STEPS[W.idx].blocked?.()); }
   }
   $("#next").onclick = () => go(1);
   $("#back").onclick = () => go(-1);

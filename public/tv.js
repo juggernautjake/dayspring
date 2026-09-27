@@ -12,7 +12,7 @@
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   // Esc closes only what's on top. Every open overlay is found here and the top one (highest layer, then the one
   // added last) is marked on the key event (e.dsTop); each overlay's own Esc handler only acts when it's the one.
-  const ESC_ROOTS = ".wconfirm, .fitcal, #dsUpdate, .stpop, .tunepop, .morebox, #soundPanel, .fyl, #lib, .rpanel, #reader, #detail, #media.video, #calwrap, #pagewrap";
+  const ESC_ROOTS = ".wconfirm, .fitcal, #dsUpdate, .stpop, .tunepop, .morebox, #soundPanel, .fyl, #lib, .rpanel, #reader, #detail, #media.video, #calwrap, #pagewrap, #dsImages";
   const shown = (el) => el.isConnected && !el.hidden && !el.closest("[hidden]") && getComputedStyle(el).display !== "none" && getComputedStyle(el).visibility !== "hidden";
   const layerOf = (el) => { for (let x = el; x && x !== document.body; x = x.parentElement) { const z = parseInt(getComputedStyle(x).zIndex, 10); if (!Number.isNaN(z)) return z; } return 0; };
   window.dsTopOverlay = () => {
@@ -497,11 +497,12 @@
     const p = r.photo;
     renderPhoto(p);
     setCalView("photo", { pin });
-    const asking = r.ask && !speaking && mode === "idle" && prefs.mode === "voice";
-    post("/photos/showing", { id: p.id, asked: asking }).catch(() => {});
+    const asking = r.ask && !speaking && mode === "idle" && prefs.mode === "voice" && !window.dsFloor?.busy();   // never while he's talking or something's waiting
+    post("/photos/showing", { id: p.id, asked: asking, kind: r.askKind ?? null }).catch(() => {});
     if (asking) {
       pinnedUntil = Date.now() + 180_000;
-      const qx = PHOTO_ASKS[Math.floor(Math.random() * PHOTO_ASKS.length)];
+      // "Who's in this picture?" (faces nobody named yet) comes from the server, combined with "what's this one?" when both apply
+      const qx = r.question || PHOTO_ASKS[Math.floor(Math.random() * PHOTO_ASKS.length)];
       push("ai", qx);
       await speak(qx, { title: "From your photos", category: "home" });
       openCommandWindow(60_000);
@@ -1646,6 +1647,7 @@
   // kind: reminders | schedule | texts | lantern | discover | system (Settings → Notifications sets each one)
   async function notify(text, { sound = "motif", chip = null, bus = "notify", polite = true, voice = {}, kind = null, toasted = false } = {}) {
     const m = kind ? modeForKind(kind) : listenState !== "active" ? "silent" : prefs.mode;
+    if (window.dsFloor?.tokFor(text)?.cls === "emergency") polite = false;   // an emergency doesn't wait for a pause (floor.js)
     window.__dsNotified = (window.__dsNotified ?? 0) + 1; window.__dsLastNotify = { kind, mode: m };
     // chime and silent: shown on screen (a toast), unless the caller already showed one
     if (m !== "voice" && !toasted) toast(chip?.title ?? "Dayspring", text.length > 140 ? text.slice(0, 137) + "…" : text, "", "bell");
@@ -1658,9 +1660,12 @@
       const moment = await politeMoment();
       if (moment.mode === "timeout") said = "Hey, don't mean to interrupt anything if I did, but I need to let you know: " + text.replace(new RegExp("^(hey|hi|alright)( " + (config.ownerName || "there").replace(/[^\w ]/g, "") + ")?[,!.]?\\s*", "i"), "").replace(/^./, (c) => c.toLowerCase());
     }
+    // the conversation floor (floor.js): he started talking before the chime or in the first words → called back (throws)
+    const fl = window.dsFloor?.tokFor(text) ?? null, gate = (stage) => window.dsFloor?.gate(fl, stage);
+    gate("chime");
     if (m === "voice" && isSpeaker) prefetch(said, voice).catch(() => {});   // fetch the voice while the chime plays (only the screen that speaks)
     playSound(m === "chime" ? "soft" : sound, bus);
-    if (m === "voice") { await sleep(700); await speak(said, chip, bus, voice); }
+    if (m === "voice") { await sleep(700); gate("speech"); await speak(said, chip, bus, voice); gate("after"); }
   }
 
   /* ---------------- listening before speaking ---------------- */
@@ -1816,7 +1821,7 @@
     if ($("#npTitle").textContent !== title) { card.classList.remove("swap"); void card.offsetWidth; card.classList.add("swap"); }
     $("#npTitle").textContent = title;
     $("#npArtist").textContent = P.artist || (P.playing ? "Playing" : "Paused");
-    $("#npSource").textContent = P.source === "youtube" ? (P.video ? "YouTube" : "YouTube · music") : P.source === "spotify" ? "Spotify · in Dayspring" : "Spotify";
+    $("#npSource").textContent = P.source === "youtube" ? (P.video ? "YouTube" : "YouTube · music") : P.source === "spotify" ? "Spotify · in Dayspring" : P.source === "file" ? P.sourceLabel || "On this computer" : "Spotify";
     card.classList.toggle("playing", P.playing);
     const img = $("#npArt");
     img.onerror = () => { img.removeAttribute("src"); img.classList.add("none"); card.style.setProperty("--npbg", "none"); };
@@ -1825,7 +1830,7 @@
     const win = P.source === "spotify-window";
     $("#npSeek").closest(".pbar").hidden = win;
     for (const id of ["#npPlay", "#vPlay"]) { const b = $(id); b.innerHTML = P.playing ? IC.pause : IC.play; b.title = P.playing ? "Pause (Space)" : "Play (Space)"; b.setAttribute("aria-label", P.playing ? "Pause" : "Play"); }
-    const shufOk = P.source === "spotify" || (P.source === "youtube" && P.playlist);
+    const shufOk = P.source === "spotify" || (P.source === "youtube" && P.playlist) || (P.source === "file" && P.playlist);
     $("#npShuf").hidden = !shufOk; $("#npShuf").classList.toggle("on", P.shuffle); $("#npShuf").setAttribute("aria-pressed", String(P.shuffle)); $("#npShuf").title = P.shuffle ? "Shuffle: on" : "Shuffle: off";
     $("#npRep").hidden = win; $("#npRep").innerHTML = P.repeat === "track" ? IC.repeat1 : IC.repeat; $("#npRep").classList.toggle("on", P.repeat !== "off"); $("#npRep").setAttribute("aria-pressed", String(P.repeat !== "off"));
     $("#npRep").title = { off: "Repeat: off", context: "Repeat: all", track: "Repeat: this one" }[P.repeat] ?? "Repeat";
@@ -1937,6 +1942,7 @@
     }
     if (P.source === "spotify") sp?.pause().catch(() => {});
     if (P.source === "spotify-window") post("/player/window", { action: "pause" }).catch(() => {});
+    if (P.source === "file") window.dsLocalPlayer?.stop(false);          // his own files (public/medialib.js)
     if (P.source === "youtube" && P.videoId) VPOS[P.videoId] = posNow();
     nowPlaying = cmd;
     if (!fromHistory) videoHistoryPush(cmd);
@@ -1947,7 +1953,7 @@
     $("#np2").textContent = cmd.title ? `♪ ${cmd.title}` : "";
     Object.assign(P, { source: "youtube", title: cmd.title ?? "", artist: cmd.channel || "YouTube", art: cmd.videoId ? `https://i.ytimg.com/vi/${cmd.videoId}/mqdefault.jpg` : "", playing: false, pos: 0, dur: 0, at: Date.now(),
       shuffle: Boolean(cmd.shuffle), repeat: "off", rate: 1, rates: [1], video: !cmd.audioOnly, playlist: Boolean(cmd.playlistId), videoId: cmd.videoId ?? null });
-    renderPlayer(); showCtl();
+    renderPlayer(); showCtl(); mediaFollowNote();
     const start = cmd.videoId && VPOS[cmd.videoId] > 15 && fromHistory ? Math.floor(VPOS[cmd.videoId]) : 0;   // going back: pick up where they left off
     const vars = { autoplay: 1, controls: 0, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, disablekb: 1, fs: 0, ...(start ? { start } : {}) };
     if (cmd.playlistId) Object.assign(vars, { listType: "playlist", list: cmd.playlistId });
@@ -2004,6 +2010,7 @@
     nowPlaying = null;
   }
   function stopMedia(tell = true) {
+    if (P.source === "file") window.dsLocalPlayer?.stop(false);
     stopYT();
     if (P.source === "spotify") sp?.pause().catch(() => {});
     clearPlayer();
@@ -2012,9 +2019,18 @@
 
   // ---- Spotify inside Dayspring (Web Playback SDK) ----------------------------------------------------------------------
   // Once the owner connects Spotify (Settings, or "sign in to Spotify"), this page registers as a Spotify device called
-  // "Dayspring" and music plays right here. Spotify's own frame does the playing, so its sound follows the Windows default
-  // output, not the speaker choice for Dayspring's voice.
+  // "Dayspring" and music plays right here. Spotify's own frame does the playing; in Dayspring's app window the server
+  // steers that frame (and YouTube's) to the same output as Dayspring's voice (lib/sinkfollow.mjs sets
+  // window.__dsMediaFollows). A browser tab or Firefox can't be steered, so there it plays on the Windows default and
+  // the owner is told once (mediaFollowNote).
   let sp = null, spDevice = null, spStarting = false;
+  let followNoted = false;
+  function mediaFollowNote() {
+    if (followNoted || window.__dsMediaFollows || navigator.webdriver) return;
+    if ((prefs.audioOutputs ?? ["default"]).includes("default")) return;      // Windows default is what was asked for
+    followNoted = true;
+    push("sys", "Videos and Spotify are playing on the Windows default output here, not the speaker Dayspring is set to: only Dayspring's own window (Chrome, Edge or Brave) can send them there. If this is Dayspring's window, close it and open it again once.");
+  }
   async function initSpotify() {
     if (sp || spStarting) return;
     if (navigator.webdriver && !window.Spotify) return;            // automated checks never touch the owner's Spotify
@@ -2042,7 +2058,9 @@
   function spState(st) {
     if (!st) { if (P.source === "spotify") { P.pos = posNow(); P.playing = false; renderPlayer(); reportState(); } return; }
     const t = st.track_window?.current_track;
+    if (!st.paused) mediaFollowNote();
     if (!st.paused && P.source === "youtube") stopYT();
+    if (!st.paused && P.source === "file") window.dsLocalPlayer?.stop(false);
     if (!st.paused && P.source === "spotify-window") post("/player/window", { action: "pause" }).catch(() => {});
     if (P.source && P.source !== "spotify" && st.paused) return;      // a paused Spotify doesn't take the card away from YouTube
     Object.assign(P, { source: "spotify", title: t?.name ?? "", artist: (t?.artists ?? []).map((a) => a.name).join(", ") || t?.show?.name || "", art: t?.album?.images?.[0]?.url ?? "",
@@ -2051,10 +2069,14 @@
     renderPlayer(); reportState();
   }
 
+  // his own music and videos, and Google Drive's (public/medialib.js): it plays them itself and shares this card and ctl()
+  window.dsPlayerHost = { P, render: () => { renderPlayer(); reportState(); }, musicVol: () => musicVol(), ducked: () => ducked, clear: () => clearPlayer(), push: (k, t) => push(k, t), toast: (...a) => toast(...a),
+    stopOthers: () => { stopYT(); if (P.source === "spotify") sp?.pause().catch(() => {}); if (P.source === "spotify-window") post("/player/window", { action: "pause" }).catch(() => {}); } };
   // ---- controls ---------------------------------------------------------------------------------------------------------
   // Every control goes through here. Returns a short line to show (or "" when there's nothing to say).
   async function ctl(a, v) {
     const src = P.source;
+    if (src === "file" && window.dsLocalPlayer && !["volume", "volumeBy", "mute", "unmute"].includes(a)) return window.dsLocalPlayer.ctl(a, v);
     if (!src) return a === "stop" ? "" : "Nothing's playing right now.";
     const yt1 = src === "youtube" && yt, spot = src === "spotify" && sp, win = src === "spotify-window";
     const winCtl = (action, value) => post("/player/window", { action, value });
@@ -2148,6 +2170,7 @@
     prefs[key] = n;
     if (!ducked) { try { yt?.setVolume?.(ytFull()); } catch { /* gone */ } if (key === "musicVolume") sp?.setVolume(n / 100).catch(() => {}); }
     if (P.source === "spotify-window") post("/player/window", { action: "volume", value: n }).catch(() => {});
+    window.dsLocalPlayer?.volume();
     clearTimeout(volTimer); volTimer = setTimeout(() => post("/settings", { [key]: n }).catch(() => {}), 400);
     renderPlayer(); renderMixer();
   }
@@ -2233,6 +2256,7 @@
       if (sp && P.source === "spotify" && (tick++ % 2 === 0 || k === target)) sp.setVolume(fullSp * k).catch(() => {});
     }, 60);
     if (P.source === "spotify-window" || !on) post("/media/duck", { on }).catch(() => {});
+    window.dsLocalPlayer?.duck(on);
   }
 
   // ---- music and video by voice or typing, answered right here (no AI needed) ----------------------------------------
@@ -2523,6 +2547,7 @@
     interim = interim.trim();
     if (interim && wakeRe.test(interim) && mode === "idle") { duck(true); wake(); }
     if (interim && (mode === "command" || utter || wakeRe.test(interim))) {
+      window.dsFloor?.owner("voice");        // he's talking to Dayspring: a planned line just starting is called back (floor.js)
       stillTalking();
       // he started talking after just "Dayspring": the window waits for him instead of closing mid-thought
       if (mode === "command" && !utter) { clearTimeout(commandTimer); const left = Math.max(0, windowOpenedAt + WINDOW_MAX_MS - Date.now()); commandTimer = setTimeout(() => { if (mode === "command" && !utter) backToIdle(); }, Math.min(REPLY_MS, left)); }
@@ -2549,6 +2574,7 @@
     if (!text) return;
     if (isOwnEcho(text) && !wakeRe.test(text)) { dlog("ignored-echo", { words: text.split(/\s+/).length }); return; }
     const m = wakeRe.exec(text);
+    if (m || mode === "command" || utter) window.dsFloor?.owner("voice");
     // privacy: speech that isn't for Dayspring (room conversation) is logged only as a word count, never the words;
     // "nearWake" flags things that sounded close to the wake word, to catch missed "Dayspring"s
     if (m || mode === "command" || utter || alarmOn) dlog("heard", { how: "voice", text, mode, gathering: Boolean(utter), wake: Boolean(m), speaking });
@@ -2614,7 +2640,7 @@
     speak, notify, stopSpeaking, playSound, toast, push, openPage, sleep, post, json, ask, backToIdle, wake, esc,
     openCommandWindow: (ms) => openCommandWindow(ms), cancelAsk,
     get listenState() { return listenState; }, get prefs() { return prefs; }, get textOnly() { return textOnly; }, get micMuted() { return micMuted; },
-    get mode() { return mode; }, get speaking() { return speaking; }, get isSpeaker() { return isSpeaker; }, get askGen() { return askGen; }, get speechGen() { return speechGen; },
+    get mode() { return mode; }, get speaking() { return speaking; }, get utter() { return Boolean(utter); }, get alarmOn() { return alarmOn; }, get isSpeaker() { return isSpeaker; }, get askGen() { return askGen; }, get speechGen() { return speechGen; },
     REPLY_MS,
   };
   function repeatLast() { if (lastSaid) speak(lastSaid.text, null, "general", lastSaid.v); else speak("I haven't said anything yet."); }
@@ -2679,6 +2705,7 @@
     const silent = typed || textOnly || listenState !== "active";
     const say = (t, ...rest) => (silent ? Promise.resolve() : speak(t, ...rest));
     cancelAsk(); const gen = askGen;
+    if (!internal) window.dsFloor?.owner(typed ? "typed" : "voice");   // his turn: anything planned waits (floor.js)
     window.dsExtras?.asking?.(text, { internal });
     clearTimeout(commandTimer);
     if (utter) { clearTimeout(utter.timer); utter = null; }
@@ -2769,8 +2796,10 @@
     const ov = $("#alarm"); ov.hidden = false; ov.style.animation = "none"; void ov.offsetWidth; ov.style.animation = "";
     wake(30 * 60_000);
     // starts gentle and grows over the first minute and a half
+    // his reply being said (floor.js): the alarm rings over it right away, and its words wait for the reply (at most 20 s)
+    const replying = () => Boolean(window.dsFloor?.replyActive());
     const ring = () => {
-      if (speaking) return;
+      if (speaking && !replying()) return;
       if (!isSpeaker) return;
       const k = Math.min(1, (Date.now() - alarmStart) / 90_000);
       const notes = k < 0.3 ? [784, 988, 1175] : k < 0.7 ? [659, 784, 988, 1319] : [659, 784, 988, 1319, 988, 784];
@@ -2780,8 +2809,12 @@
       }, { alarm: true });
     };
     ring(); alarmLoop = setInterval(ring, 5200);
-    stopSpeaking();                    // the alarm is urgent: whatever was being said stops, then the alarm speaks
-    setTimeout(() => speak(item.text, null, "notify"), 2500);
+    const waitReply = replying();
+    if (!waitReply) stopSpeaking();    // the alarm is urgent: whatever was being said stops, then the alarm speaks
+    setTimeout(async () => {
+      if (waitReply) { const w = await window.dsFloor.afterReply(); if (w.capped) stopSpeaking(); }
+      if (alarmOn && alarmItem === item) speak(item.text, null, "notify");
+    }, 2500);
     alarmRepeat = setInterval(() => speak(item.text, null, "notify"), 180_000);
     alarmStop = setTimeout(() => dismissAlarm(false), 30 * 60_000);
   }
@@ -2841,8 +2874,14 @@
       else { el.hidden = false; el.textContent = `⚙ Claude Code · ${c.kind === "started" ? "starting…" : c.text}`; }
       fitBox(el, 0.8);
     });
-    es.addEventListener("announce", async (e) => {
+    // the conversation floor (floor.js): each announcement is reported when it's done; one he talked over as it began
+    // ("called back") skips the rest of its handler and goes back in the server's line
+    es.addEventListener("announce", (e) => {
       const item = JSON.parse(e.data);
+      window.dsFloor?.present(item);
+      onAnnounce(item).catch((x) => { if (!x?.floorCancel) dlog("error", { where: "announce", error: String(x?.message ?? x).slice(0, 200) }); }).finally(() => window.dsFloor?.done(item));
+    });
+    const onAnnounce = async (item) => {
       push("ann", item.text);
       energy = 1; wake();
       loadDay(); loadLearning();
@@ -2910,12 +2949,12 @@
       toast(item.kind === "checkin" ? `Time's up · ${item.ended?.title ?? ""}` : item.started?.title ?? "Dayspring", item.text, "", item.started?.category ?? "bell", { snooze: ["start", "checkin"].includes(item.kind) ? item : null });
       await notify(item.text, { kind: "schedule", toasted: true, sound: item.kind === "checkin" ? "checkin" : item.kind === "buffer" ? "soft" : "motif", chip: item.kind === "buffer" ? { title: "A few free minutes", category: "home" } : chip });
       if (prefs.mode === "voice") openCommandWindow(item.kind === "checkin" ? 30000 : 8000);   // he can just answer
-    });
+    };
     // the alarm was answered somewhere else (the desktop card, another screen): stop ringing here too
     // answered anywhere else (another Dayspring page, the desktop card, the server): stop ringing here too
     es.addEventListener("alarm-dismissed", (e) => { try { const d = JSON.parse(e.data); if (d.from !== PAGE_ID && alarmOn) dismissAlarm(false, true); } catch { /* bad event */ } });
     // music and video the server starts play on the speaking page only (the others would play it twice)
-    es.addEventListener("media", (e) => { const c = JSON.parse(e.data); if (c.action === "play") { if (isSpeaker) playMedia(c); } else stopMedia(false); });
+    es.addEventListener("media", (e) => { const c = JSON.parse(e.data); if (c.action === "play") { if (isSpeaker) { if (c.provider === "local") window.dsLocalPlayer?.play(c); else playMedia(c); } } else stopMedia(false); });
     // what the server says first: who has the microphone, the listening state, one-time notices
     es.addEventListener("hello", (e) => {
       try {
@@ -2947,6 +2986,8 @@
     es.addEventListener("sound", (e) => { if (prefs.mode !== "silent") playSound(JSON.parse(e.data).name); });
     // the assistant's help_guide (or "how do I …" from the desk or phone): show that part of the guide here
     es.addEventListener("help", (e) => { const h = JSON.parse(e.data); if (/^\/help\b/.test(h.url ?? "")) openPage(h.url); });
+    // Money review: the report (or the Money page) opens here (lib/money)
+    es.addEventListener("money", (e) => { try { const h = JSON.parse(e.data); if (/^\/money\.html\?/.test(h.url ?? "")) openPage(h.url); } catch { /* bad event */ } });
     // a notification on his iPhone: a quiet toast with just the app/title (others may see the screen)
     es.addEventListener("calendar", (e) => { const c = JSON.parse(e.data); if (c.close) closeCalendar(); else openCalendar(c.view ?? "week", c.date ?? todayISO()); });
     es.addEventListener("phonenote", (e) => { const n = JSON.parse(e.data); if (prefs.mode !== "silent") toast("📱 " + (n.title || "Your phone"), "", "", "bell"); });

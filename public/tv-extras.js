@@ -152,13 +152,16 @@
   }
   async function timerDone(item) {
     // a focus round moving on, or "time to drink water": said once, nothing to dismiss
-    if (item.timer?.once) { core.toast("⏲ " + (item.timer.labels?.[0] ?? "Timer"), item.text, "", "bell"); if (core.listenState === "active" && !core.textOnly) await core.notify(item.text, { kind: "reminders", sound: "ding", chip: { title: "⏲ Timer", category: "flex" }, polite: false, toasted: true }); return; }
+    // his reply being said (the conversation floor, floor.js): it rings and shows now; its words wait for the reply (≤ 20 s)
+    const afterReply = async () => { if (!window.dsFloor?.replyActive()) return; const w = await window.dsFloor.afterReply(); if (w.capped) core.stopSpeaking(); };
+    if (item.timer?.once) { core.toast("⏲ " + (item.timer.labels?.[0] ?? "Timer"), item.text, "", "bell"); await afterReply(); if (core.listenState === "active" && !core.textOnly) await core.notify(item.text, { kind: "reminders", sound: "ding", chip: { title: "⏲ Timer", category: "flex" }, polite: false, toasted: true }); return; }
     showRing(item);
     core.wake(10 * 60_000);
     const quietNow = core.listenState !== "active";
     if (quietNow && core.prefs.timersWhenQuiet === false) return;          // Quiet/Off, and timers follow it: shown only
     if (core.textOnly) { core.playSound("ding", "alarm"); return; }
     if (quietNow) { core.playSound("alarm", "alarm"); await core.sleep(900); await core.speak(item.text, { title: "Timer", category: "flex" }, "alarm"); return; }
+    if (window.dsFloor?.replyActive()) { core.playSound("alarm", "alarm"); await afterReply(); }
     await core.notify(item.text, { kind: "reminders", sound: "alarm", chip: { title: "⏲ Timer", category: "flex" }, polite: false, toasted: true });
     if (core.prefs.mode === "voice" && !item.timer?.repeat) core.openCommandWindow(core.REPLY_MS);   // "dismiss" / "five more minutes"
   }
@@ -349,6 +352,27 @@
     core.openCommandWindow(core.REPLY_MS);
   }
 
+  // ---------------------------------------------------------------- the developer preview's voices
+  // "let me hear the cowboy voice" (only ever answered on the developer's own computer: lib/dev/voice.mjs) is said in that
+  // character's own voice, in the one speaking queue; nothing is switched. If that voice can't play, the usual one says it.
+  async function devVoice(v, gen) {
+    if (!window.dsVoiceLock || core.listenState !== "active") return false;
+    const cap = 8000 + v.text.length * 90;
+    await window.dsVoiceLock.run(async () => {
+      if (!gen()) return;
+      const r = await fetch("/api/tts", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: v.text, ...(v.voice ? { voice: v.voice } : {}) }) }).catch(() => null);
+      if (r && r.status === 204 && window.speechSynthesis) {
+        await new Promise((ok) => { const u = new SpeechSynthesisUtterance(v.text), vs = speechSynthesis.getVoices(); const pick = v.edge && vs.find((x) => x.name.toLowerCase().includes(String(v.edge).toLowerCase()) && /^en/i.test(x.lang)); if (pick) u.voice = pick; u.onend = u.onerror = ok; speechSynthesis.speak(u); setTimeout(ok, cap); });
+        return;
+      }
+      if (!r?.ok) { core.speak(v.text); return; }
+      const url = URL.createObjectURL(await r.blob()), a = new Audio(url);
+      await new Promise((ok) => { a.onended = a.onerror = ok; a.play().catch(ok); setTimeout(ok, cap); });
+      a.removeAttribute("src"); URL.revokeObjectURL(url);
+    });
+    return true;
+  }
+
   // ---------------------------------------------------------------- what tv.js calls
   window.dsExtras = {
     asking(text, { internal }) { if (!internal || !/^(\d|none)/.test(text)) hideSuggest(); },
@@ -365,6 +389,9 @@
       if (r.webResults) showWeb(r.webResults);
       if (r.show === "personality") core.openPage("/setup?embed=1&s=personality");
       if (r.show === "badges") core.openPage("/progress?embed=1#badges");   // XP: "open my badge gallery"
+      // the developer preview (only ever sent on the developer's own computer: lib/dev/voice.mjs)
+      if (typeof r.show === "string" && r.show.startsWith("badges:preview")) { const cat = r.show.split(":")[2]; core.openPage(`/progress?embed=1&preview=1${cat ? "&cat=" + encodeURIComponent(cat) : ""}#badges`); }
+      if (typeof r.show === "string" && r.show.startsWith("personality:lab")) core.openPage(`/setup?embed=1&s=personality&lab=${encodeURIComponent(r.show.split(":")[2] || "1")}`);
       if (typeof r.show === "string" && r.show.startsWith("toast:")) core.toast(r.show.slice(6), "", "", "bell");
       return null;
     },
@@ -384,6 +411,7 @@
       if (r.count?.numbers?.length) { await count(r.count.numbers, gen); if (gen()) core.backToIdle(); return true; }
       if (r.breathing) { await breathe(r, gen, rv); if (gen()) core.backToIdle(); return true; }
       if (r.joke && !r.joke.straight && await deliverJoke(r, { gen, rv })) return true;
+      if (r.devVoice?.text && await devVoice(r.devVoice, gen)) { if (gen()) core.backToIdle(); return true; }
       return false;
     },
     async announce(item) {

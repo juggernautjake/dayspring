@@ -10,11 +10,22 @@
 //     never in both the voice and the chat; the meeting's memory is gone when it ends
 //   • Tune in stands down while the meeting reads captions (no double answers)
 //   • the selector fallbacks (a Meet page with no class names at all)
+//   • who is in the call and who is talking: the People list, tiles, notices, the count, a presenter, Meet in French,
+//     names read off a picture of the window (Windows' own text recognition), a guest who calls themselves "You"
+//   • meeting notes: the heads-up (chat and voice) before anything is written, the "● Notes" sign, the transcript with
+//     who said what, "don't record this part", "what did Rich say about…", "summarize so far", only the owner controls
+//     them, and the saved meetings through the routes (list, read, draft, delete)
+//   • the review fixes: nothing is said or kept after leaving, two joins share one browser, Tune in switched on by the
+//     meeting is switched off with it, the window closes when the call ends in it, typed text survives panel updates
 //   node scripts/qa/meet.mjs
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { createServer } from "node:http";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
+import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
+const DESK = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 const TMP = mkdtempSync(join(tmpdir(), "ds-meet-"));
 process.env.DAYSPRING_MEET_FILE = join(TMP, "meet.json");
@@ -24,6 +35,8 @@ process.env.DAYSPRING_MEET_NO_WINDOW = "1";
 process.env.AI_PROVIDER = "none";
 process.env.TTS_PROVIDER = "browser";
 process.env.DS_CALLS_FILE = join(TMP, "calls.json");
+process.env.DAYSPRING_MEETINGS_DIR = join(TMP, "meetings");      // meeting notes (never the owner's data/meetings)
+process.env.DAYSPRING_TEST_RECYCLE = join(TMP, "recycle");       // "deleted" notes land here, not in the Recycle Bin
 
 let fail = 0;
 const check = (name, ok, got = "") => { if (!ok) fail++; console.log(`${ok ? "PASS" : "FAIL"}  ${name}${got !== "" ? "  (" + String(got).slice(0, 220) + ")" : ""}`); };
@@ -45,6 +58,12 @@ const server = createServer(async (req, res) => {
   const send = (r, code, body) => { r.writeHead(code, { "content-type": "application/json" }); r.end(JSON.stringify(body)); };
   const readJSON = (r) => new Promise((ok) => { let b = ""; r.on("data", (c) => (b += c)); r.on("end", () => { try { ok(JSON.parse(b || "{}")); } catch { ok({}); } }); });
   if (url.pathname.startsWith("/api/") && await routes.handle(req, res, { m: req.method, p: url.pathname.slice(4), q: url.searchParams, send, readJSON })) return;
+  // the meeting panel on a bare page (public/meet.js with the shared parts), for the panel checks
+  const files = { "/meet-ui-test": null, "/meet.js": join(DESK, "public", "meet.js"), "/eco/client/meet-tile.js": join(DESK, "vendor", "ecosystem-core", "client", "meet-tile.js") };
+  if (url.pathname in files) {
+    const body = url.pathname === "/meet-ui-test" ? `<!doctype html><meta charset="utf-8"><div class="talktools"></div><script>window.dsEvents = new EventTarget();</script><script src="/meet.js"></script>` : readFileSync(files[url.pathname]);
+    res.writeHead(200, { "content-type": url.pathname.endsWith(".js") ? "text/javascript" : "text/html" }); return res.end(body);
+  }
   res.writeHead(404); res.end();
 });
 await new Promise((ok) => server.listen(0, "127.0.0.1", ok));
@@ -59,7 +78,15 @@ const since = (n) => events.slice(n);
 const voiceOf = (evs, as = null) => evs.filter((e) => e.type === "tunein" && e.kind === "reply-part" && !e.final && (as === null || (e.as ?? "dayspring") === as)).map((e) => e.text).join(" ");
 
 let persona = "default";
-host.setDeps({ persona: async () => persona, lanternSpeaking: async () => false });
+// Tune in is never really switched on here (no microphone): the meeting's calls to it are counted instead
+const tuneinCalls = { on: false, start: 0, stop: 0 };
+host.setDeps({ persona: async () => persona, lanternSpeaking: async () => false,
+  tuneinOn: () => tuneinCalls.on, tuneinStart: async () => { tuneinCalls.start++; tuneinCalls.on = true; }, tuneinStop: async () => { tuneinCalls.stop++; tuneinCalls.on = false; } });
+const realGeneral = async ({ text, who, onSentence, signal }) => { const p = await import("../../lib/calls/pipeline.mjs"); return p.reply({ text, who, via: "meet", surface: "call", onSentence, signal }); };
+const pwChromium = createRequire(import.meta.url)("playwright-core").chromium;
+let launches = 0;
+host.setDeps({ chromium: () => { launches++; return pwChromium; } });
+const waitFor = async (fn, ms = 6000) => { const until = Date.now() + ms; while (Date.now() < until) { if (await fn()) return true; await sleep(150); } return Boolean(await fn()); };
 let lanternApi = null;       // null → Lantern has no /ask (404)
 lanternAsk._setCall(async (path, opts) => {
   if (path === "/api/local/ask") return lanternApi ? { ok: true, status: 200, data: lanternApi(opts.body) } : { ok: false, status: 404 };
@@ -94,6 +121,8 @@ try {
     await sleep(500);
     const s = await sent();
     check("says hello in the meeting chat (who can ask, how)", s.some((m) => /^Dayspring: Hi everyone! I'm Dayspring/.test(m) && /@Lantern/.test(m)), s[0]);
+    check("tells everyone it's taking notes (in the chat), before anything is written down", s.some((m) => /^Dayspring: Heads up: Dayspring is taking notes in this meeting, for a summary\./.test(m)) && host._notes()._current()?.entries[0]?.kind === "mark" && host.status().notes.live === true, s.join(" | ").slice(0, 200));
+    check("…and the meeting window shows “● Notes”", await page().evaluate(() => document.querySelector("[data-eco-rec]")?.textContent) === "Notes");
     check("the meeting went to the corner after joining", st.view === "tile");
     const big = await call("/meet/view", { view: "large" });
     const small = await call("/meet/view", { view: "tile" });
@@ -106,6 +135,29 @@ try {
     check("Tune in stands down while the meeting reads captions", tunein.standingDown() === true);
     await page().evaluate(() => { for (const p of ["Rich Alvarez", "Jess Park", "Sam Lee"]) window.__mock.join(p); });
     await sleep(1200);
+  }
+
+  console.log("\n— who is in the call, who is talking —");
+  {
+    const ok = await waitFor(() => host.status().people.length === 3);
+    const st = host.status();
+    check("everyone in the call is known (the tiles and the People list, merged)", ok && ["Rich Alvarez", "Jess Park", "Sam Lee"].every((n) => st.people.some((p) => p.name === n)), st.people.map((p) => `${p.name}[${p.sources}]`).join(", "));
+    check("…each once, and not the owner", st.people.length === 3 && !st.people.some((p) => /^you$/i.test(p.name)));
+    check("…and the count on Meet's People button agrees", st.roster?.expected === 4 && st.roster?.agrees === true, JSON.stringify(st.roster && { count: st.roster.count, expected: st.roster.expected }));
+    check("Meet's join notices are read", Boolean(st.roster?.sources?.toast), JSON.stringify(st.roster?.sources));
+    const here = await host.command("who's in the call?");
+    check("“who's in the call?”", /^In the meeting: Rich Alvarez, Jess Park and Sam Lee, and you\.$/.test(here), here);
+    await page().evaluate(() => window.__mock.say("Jess Park", "so I think we should start", { chunks: 2, ms: 60 }));
+    const talk = await host.command("who's talking?");
+    check("“who's talking?” (the caption's speaker)", /^Jess Park is talking\.$/.test(talk), talk);
+    const pf = await call("/meet/preflight");
+    const pi = pf.items.find((i) => i.id === "people");
+    check("the checklist's “People detected” line says how", pi?.ok === true && /the People list|the video tiles/.test(pi.detail), pi?.detail);
+    const said = await host.command("is the meeting working?");
+    check("“is the meeting working?” reports captions, chat and people", /Captions detected ✓, chat ready ✓, people detected ✓/.test(said), said);
+    await page().evaluate(() => window.__mock.setCaptions(false));
+    check("captions switched off by themselves are switched back on", await waitFor(() => page().evaluate(() => window.__mock.state.captions)));
+    await sleep(2000);                                 // (the lines above settle: they aren't questions)
   }
 
   console.log("\n— who may ask —");
@@ -273,15 +325,115 @@ try {
   console.log("\n— the meeting ends —");
   {
     check("this meeting's answers are kept while it runs", host.recent().length >= 3);
+    // captions that can't be read at all: Tune in listens instead (switched on by the meeting, so off with it)
+    await page().evaluate(() => { document.querySelector("[role=region]")?.remove(); document.querySelector("#ccb")?.remove(); });
+    await host._captionsLost();
+    check("captions unreadable: Tune in listens instead", tuneinCalls.start === 1 && host.status().fallbackTunein === true);
+    // an answer still being written when the meeting ends
+    let release; const gate = new Promise((r) => { release = r; });
+    host.setDeps({ generalReply: async ({ onSentence }) => { await gate; onSentence?.("A late answer."); return { reply: "A late answer." }; } });
+    const n = events.length;
+    await chat("You", "@Dayspring tell me something interesting");
+    await waitFor(() => since(n).some((e) => e.type === "meet" && e.kind === "asked"));
     const r = await call("/meet/leave", {});
+    release(); await sleep(600);
+    host.setDeps({ generalReply: realGeneral });
     check("leaving", r.ok && ["left", "closed"].includes(host.status().stage));
-    check("the meeting's memory is gone (answers, people)", host.recent().length === 0 && host.status().people.length === 0);
+    check("an answer still being written when it ends: nothing of it is said, posted or kept", host.recent().length === 0 && !since(n).some((e) => (e.type === "meet" && e.kind === "answer") || (e.type === "tunein" && /late answer/i.test(e.text ?? e.full ?? ""))));
+    check("the meeting's memory is gone (answers, people, who could ask)", host.recent().length === 0 && host.status().people.length === 0 && host._people().people().length === 0 && host._people().status().expected === null);
     check("Tune in is back on duty", tunein.standingDown() === false);
+    check("…and the Tune in the meeting switched on is switched off again", tuneinCalls.stop === 1 && tuneinCalls.on === false && host.status().fallbackTunein === false);
+  }
+
+  console.log("\n— the meeting's notes —");
+  {
+    const nm = host._notes();
+    const saved = nm.list();
+    check("the notes were saved when the meeting ended", saved.length === 1 && saved[0].title === "Rehearsal", JSON.stringify(saved.map((m) => m.title)));
+    await waitFor(() => nm.read(saved[0].id)?.meta.summary !== "writing");
+    const r = nm.read(saved[0].id);
+    const lines = r.transcript.split("\n").filter((l) => /^\[/.test(l));
+    check("the transcript starts when everyone had been told", /— Notes started \(everyone in the meeting was told\) —/.test(lines[0]), lines[0]);
+    check("…who came", /→ Rich Alvarez joined/.test(r.transcript) && /→ Jess Park joined/.test(r.transcript));
+    check("…what they said, by name (from the captions)", /\] Rich Alvarez: Dayspring, what time is it\?/.test(r.transcript), lines.slice(1, 6).join(" / "));
+    check("…the chat", /\(chat\) Jess Park: @Dayspring what's 2 plus 2\?/.test(r.transcript) && /Jess Park: @Dayspring what's 2 plus 2/.test(r.chat));
+    if (course) check("…Lantern's answer with its lesson link", /Lantern \(answering Rich Alvarez\): .*\[Unit \d+, Lesson \d+: .+ https:\/\/example\.test\/course-artifact#/.test(r.transcript));
+    check("…nothing from the answer still being written when it ended", !/late answer|something interesting/i.test(r.transcript.split("\n").slice(-4).join("\n")) || !/A late answer/.test(r.transcript));
+    check("…and Dayspring's own voice isn't written down as the owner talking", !/\] [^:]+: Great question, Sam\. Lantern, want to take that one\?/.test(r.transcript.replace(/Dayspring[^:]*: Great question/g, "")));
+    check("the summary (no AI here): who was there, and what was asked of Dayspring and Lantern", /## Who was there/.test(r.summary) && /\| Rich Alvarez \|/.test(r.summary) && /## Asked of Dayspring and Lantern/.test(r.summary), r.summary.slice(0, 200));
+    check("meta.json: who, when, how long", r.meta.people.some((p) => p.name === "Jess Park" && p.joinedAt) && r.meta.minutes >= 1 && r.meta.rehearsal === true && r.meta.link === null);
+  }
+
+  console.log("\n— meeting notes: said out loud first, off the record, what Rich said, so far, only the owner —");
+  {
+    // a pretend Dayspring screen, so the heads-up is said out loud into the call too
+    const bus2 = await import("../../lib/bus.mjs");
+    const { EventEmitter } = await import("node:events");
+    const screen = Object.assign(new EventEmitter(), { writeHead() {}, write() { return true; } });
+    bus2.addClient(screen, { page: "display", id: "qa-screen" });
+    const n0 = events.length;
+    await host.join(`http://localhost:${PORT}/api/meet/mock?prejoin=0`, { isRehearsal: true });
+    const heads = since(n0).filter((e) => e.type === "tunein" && e.kind === "reply-part" && /Heads up: I'm taking notes/.test(e.text ?? ""));
+    const first = host._notes()._current()?.entries[0];
+    check("with the Dayspring screen open, the heads-up is also said out loud, before the notes start", heads.length === 1 && first && Date.parse(first.at) >= heads[0].t - 5, `${heads.length} spoken`);
+    await host.setPermission({ mode: "everyone" });
+    await page().evaluate(() => window.__mock.join("Rich Alvarez"));
+    await waitFor(() => host.status().people.length === 1);
+    while (host.status().speaking) await sleep(200);
+    await say("Rich Alvarez", "The launch budget is five thousand dollars for the spring.");
+    await sleep(1600);
+    let n = events.length;
+    await say("You", "Dayspring, don't record this part.");
+    const off = await answered(n);
+    check("“don't record this part”: the notes pause, and the sign says so (the heads-up in the chat quoted it: chat isn't Dayspring's voice, so it's no echo)", host.status().notes.paused === "private" && await page().evaluate(() => document.querySelector("[data-eco-rec]")?.textContent) === "Notes paused", `${off[0]?.question} → ${off[0]?.spoken}`);
+    while (host.status().speaking) await sleep(200);
+    await say("Rich Alvarez", "My password is hunter two, keep that between us.");
+    await sleep(1600);
+    n = events.length;
+    await say("You", "Dayspring, you can record again.");
+    await answered(n);
+    check("“you can record again”", host.status().notes.live === true && !host.status().notes.paused);
+    while (host.status().speaking) await sleep(200);
+    await say("Rich Alvarez", "Okay, back to the plan for the launch.");
+    await sleep(1600);
+    const w = await host.command("what did Rich say about the budget?");
+    check("“what did Rich say about the budget?”", /Rich Alvarez said “The launch budget is five thousand dollars for the spring\.”/.test(w), w);
+    const so = await host.command("summarize the meeting so far");
+    check("“summarize so far”", /so far, \d+ things said/.test(so), so);
+    n = events.length;
+    await say("Rich Alvarez", "Dayspring, pause the notes please.");
+    const a = await answered(n);
+    check("a participant can't pause the notes (or ask what someone said)", new RegExp(`only ${OWNER} can ask me to do that`, "i").test(a[0]?.spoken ?? "") && host.status().notes.live && !host.status().notes.paused, a[0]?.spoken);
+    const before = (await sent()).length;
+    const st = await call("/meet/notes/live", { action: "stop" });
+    await sleep(300);
+    check("stopping the notes (the panel's button): the meeting is told, the sign goes", /stopped taking notes/.test(st.reply) && (await sent()).slice(before).some((m) => /^Dayspring: Dayspring has stopped taking notes\./.test(m)) && await page().evaluate(() => !document.querySelector("[data-eco-rec]")));
+    await host.leave();
+    screen.emit("close");
+    const list = await call("/meet/notes");
+    const mine = list.meetings[0];
+    await waitFor(async () => (await call(`/meet/notes/${mine.id}`)).meta.summary !== "writing");
+    const r = await call(`/meet/notes/${mine.id}`);
+    check("saved: the budget is in it, the part off the record isn't (a gap is marked)", /five thousand dollars/.test(r.transcript) && !/hunter/i.test(r.transcript + r.summary) && /Not recorded from .+ \(asked not to\)/.test(r.transcript));
+    check("…nor the request to go off the record", !/don't record this part/i.test(r.transcript));
+    const d = await call(`/meet/notes/${mine.id}/draft`, {});
+    check("“email the summary” is a draft only (mailto, nobody in it)", /^mailto:\?subject=/.test(d.mailto ?? ""));
+    const rc = await call(`/meet/notes/${mine.id}/recap`, {});
+    check("a spoken recap of it", /^Rehearsal: /.test(rc.text ?? ""), rc.text);
+    const no = await fetch(`http://localhost:${PORT}/api/meet/notes/${mine.id}/delete`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
+    check("deleting needs a confirmation", no.status === 400 && (await call("/meet/notes")).meetings.some((m) => m.id === mine.id));
+    const del = await call(`/meet/notes/${mine.id}/delete`, { confirm: true });
+    check("…and then it's gone (to the Recycle Bin)", del.ok && del.recycled && !(await call("/meet/notes")).meetings.some((m) => m.id === mine.id));
+    const bad = await fetch(`http://localhost:${PORT}/api/meet/notes/..%2F..%2Fsecrets`);
+    check("an id that isn't a saved meeting reaches nothing", bad.status === 404 || bad.status === 400 || !(await bad.json().catch(() => ({}))).transcript);
   }
 
   console.log("\n— Meet's markup changed: the fallbacks —");
   {
-    const r = await host.join(`http://localhost:${PORT}/api/meet/mock?variant=bare&prejoin=0`, { isRehearsal: true });
+    const launched = launches;
+    const bareUrl = `http://localhost:${PORT}/api/meet/mock?variant=bare&prejoin=0`;
+    const [r, r2] = await Promise.all([host.join(bareUrl, { isRehearsal: true }), host.join(bareUrl, { isRehearsal: true })]);
+    check("two joins at once: one meeting window, never two browsers on one profile", launches - launched === 1 && r.ok && r2.ok, `${launches - launched} launches`);
     check("a Meet page with no class names: still joined, captions still read", r.ok && host.status().check.captions === true, JSON.stringify(host.status().check.used));
     await page().evaluate(() => window.__mock.join("Pat Quill"));
     await host.setPermission({ mode: "everyone" });
@@ -295,7 +447,59 @@ try {
     await answered(n2);
     await sleep(300);
     check("…and the chat too (@Lantern answers as Lantern)", (await sent()).slice(before).some((m) => /^Lantern: /.test(m)));
+    // the call ends inside the meeting window (Leave pressed there): its window closes with it
+    const was = page();
+    await was.evaluate(() => document.querySelector("#leave").click());
+    const gone = await waitFor(() => host.status().stage !== "in-call" && was.isClosed(), 14_000);
+    check("left from the meeting window itself: the meeting ends and its window closes", gone && !host._session(), host.status().stage);
     await host.leave();
+  }
+
+  console.log("\n— Meet in French; a guest who calls themselves “You” —");
+  {
+    const r = await host.join(`http://localhost:${PORT}/api/meet/mock?lang=fr&prejoin=0`, { isRehearsal: true });
+    await page().evaluate(() => { for (const p of ["Rich Alvarez", "Jess Park"]) window.__mock.join(p); });
+    await waitFor(() => host.status().people.length === 2);
+    check("Meet in French: joined, captions read, people found", r.ok && host.status().check.captions === true && host.status().people.length === 2, host.status().people.map((p) => p.name).join(", "));
+    check("…the “joined” notices in French too", Boolean(host.status().roster?.sources?.toast));
+    const n = events.length;
+    await say("Vous", "Dayspring, mute.");
+    await answered(n);
+    check("…and the owner (“Vous”) can still give meeting commands", await page().evaluate(() => window.__mock.state.mic) === false);
+    await host.command("unmute");
+    await host.leave();
+
+    await host.join(`http://localhost:${PORT}/api/meet/mock?prejoin=0`, { isRehearsal: true });
+    await host.setPermission({ mode: "everyone" });
+    const n2 = events.length;
+    await page().evaluate(() => { window.__mock.join("Rich Alvarez"); window.__mock.join("You "); });
+    const warned = await waitFor(() => since(n2).some((e) => e.type === "meet" && e.kind === "notice" && /named “You”/.test(e.text)));
+    check("a guest named “You”: noticed, and the owner is told", warned && host.status().roster?.impostor === true);
+    while (host.status().speaking) await sleep(200);
+    const n3 = events.length;
+    await say("You ", "Dayspring, unmute me please.");
+    const a = await answered(n3);
+    check("…and “You” can't give the owner's commands any more (the mic isn't touched)", new RegExp(`only ${OWNER} can ask me to do that`, "i").test(a[0]?.spoken ?? "") && await page().evaluate(() => window.__mock.state.mic) === true, a[0]?.spoken);
+    await host.leave();
+  }
+
+  console.log("\n— nothing on the page names anyone: names read off a picture of the window —");
+  {
+    const ocr = await import("../../lib/meet/ocr.mjs");
+    check("picking name labels from what the picture says", JSON.stringify(ocr.pickNames([
+      { text: "Rich Alvarez", x: 348, y: 134, w: 164, h: 23 }, { text: "You", x: 30, y: 136, w: 49, h: 21 }, { text: "Lantern, what is a struct and how do I loop over it?", x: 25, y: 718, w: 311, h: 13 },
+      { text: "4", x: 732, y: 767, w: 8, h: 10 }, { text: "Leave call", x: 900, y: 500, w: 60, h: 14 }, { text: "Jess Park", x: 662, y: 780, w: 122, h: 23 }], { width: 1280, height: 800 })) === JSON.stringify(["Rich Alvarez", "You"]));
+    if (ocr.available()) {
+      await host.join(`http://localhost:${PORT}/api/meet/mock?variant=canvas&prejoin=0`, { isRehearsal: true });
+      await page().evaluate(() => { for (const p of ["Rich Alvarez", "Jess Park", "Sam Lee"]) window.__mock.join(p, { quiet: true }); });
+      await sleep(800);
+      check("names only as pixels: the page itself shows nobody", host.status().people.length === 0);
+      const names = await host._peopleFromPicture();
+      const st = host.status();
+      check("…read off a picture of the window (Windows' own text recognition, on this computer)", ["Rich Alvarez", "Jess Park", "Sam Lee"].every((x) => st.people.some((p) => p.name === x && p.sources.includes("ocr"))), JSON.stringify(names));
+      check("…the owner's own tile isn't a guest", !st.people.some((p) => /^you$/i.test(p.name)));
+      await host.leave();
+    } else console.log("(skipped: reading pictures needs Windows)");
   }
 
   console.log("\n— pre-flight and the course question tester —");
@@ -311,6 +515,32 @@ try {
     }
     const bad = await call("/meet/settings", { publicLessonUrl: "javascript:alert(1)" });
     check("the public link must be https", /https/.test(bad.error ?? ""));
+    // a lesson link from Lantern's search that isn't https is dropped (it's shown on the screen and posted in the chat)
+    if (course) {
+      courseAnswer.setDeps({ lanternCall: async () => ({ ok: true, status: 200, data: { results: [{ lessonId: "u1l1", title: "x", publicUrl: "javascript:alert(1)" }, { lessonId: "u1l2", title: "y", publicUrl: "https://example.test/ok#u1l2" }] } }) });
+      const f = await courseAnswer.retrieve("anything at all", { course });
+      check("a lesson link from Lantern must be https too", f.hits[0]?.publicUrl === null && f.hits[1]?.publicUrl === "https://example.test/ok#u1l2", JSON.stringify(f.hits.map((h) => h.publicUrl)));
+      courseAnswer.setDeps({ lanternCall: async () => ({ ok: false, status: 0 }) });
+    }
+  }
+
+  console.log("\n— the meeting panel —");
+  {
+    const browser = await pwChromium.launch({ channel: "chrome", headless: true, args: ["--mute-audio"] }).catch(() => pwChromium.launch({ headless: true, args: ["--mute-audio"] }));
+    try {
+      const ui = await browser.newPage();
+      await ui.goto(`http://localhost:${PORT}/meet-ui-test`);
+      await ui.click("#meetMore");
+      await ui.waitForSelector("#meetPublic");
+      await ui.fill("#meetPublic", "https://typed.example/#{lesson}");
+      await ui.focus("#meetPublic");
+      await ui.evaluate(() => window.dsEvents.dispatchEvent(new MessageEvent("meet", { data: JSON.stringify({ kind: "state", stage: "closed", view: "large" }) })));
+      await sleep(600);
+      check("what's being typed in the panel survives a meeting update", await ui.inputValue("#meetPublic") === "https://typed.example/#{lesson}" && await ui.evaluate(() => document.activeElement?.id === "meetPublic"));
+      await ui.evaluate(() => window.dsEvents.dispatchEvent(new MessageEvent("meet", { data: JSON.stringify({ kind: "notice", text: "<img src=x onerror=window.__xss=1> Rich" }) })));
+      await sleep(200);
+      check("…and a name or notice with markup in it is shown as text", await ui.evaluate(() => !window.__xss && !document.querySelector(".tunecard img")));
+    } finally { await browser.close(); }
   }
 } catch (e) {
   fail++; console.log("FAIL  unexpected: " + (e.stack ?? e.message));

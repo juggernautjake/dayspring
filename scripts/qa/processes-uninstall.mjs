@@ -2,6 +2,7 @@
 // Uninstall (both ways) on a THROWAWAY copy with stand-in shortcut and profile folders. Never touches the real install,
 // the real shortcuts or registry, or any other program (other node.exe servers, other browser windows).
 //   node scripts/qa/processes-uninstall.mjs [--keep]
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { execFileSync, spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";

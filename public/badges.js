@@ -2,12 +2,15 @@
 // the mystery "next badge" cards, the coin-flip entrance, the award reveal, and the badge case (3 pinned badges).
 // Only earned badges' art is ever fetched (/api/xp/badge.svg refuses the rest); the next badge is a "?" card.
 //   window.dsBadges = { gallery(root), reveal(record), flip(host, opts), refresh() }
+// Developer preview (only on the developer's own computer: /api/dev/status answers there and nowhere else): a "Preview
+// all" switch shows every badge, earned or not, with its art, name, description and a SAMPLE citation, clearly marked
+// "Preview · not earned". Previewing never records, awards or marks anything seen. (/progress?preview=1&cat=workout)
 (() => {
   const $ = (s, r = document) => r.querySelector(s);
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const api = (p, body) => fetch("/api" + p, body ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : {}).then((r) => r.json());
   const reduced = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-  const artURL = (key, { mode = "static", size = 120, face = "", style = 1 } = {}) => { const [cat, tier] = key.split(":"); return `/api/xp/badge.svg?cat=${encodeURIComponent(cat)}&tier=${tier}&mode=${mode}&size=${size}${face ? "&face=" + face : ""}${style ? "" : "&style=0"}`; };
+  const artURL = (key, { mode = "static", size = 120, face = "", style = 1, dev = false } = {}) => { const [cat, tier] = key.split(":"); return `/api/xp/badge.svg?cat=${encodeURIComponent(cat)}&tier=${tier}&mode=${mode}&size=${size}${face ? "&face=" + face : ""}${style ? "" : "&style=0"}${dev ? "&dev=1" : ""}`; };
   const mysteryURL = (cat, tier, size = 120) => `/api/xp/mystery.svg?cat=${encodeURIComponent(cat)}&tier=${tier}&size=${size}`;
   const svgCache = new Map();
   const svgText = (url) => { if (!svgCache.has(url)) svgCache.set(url, fetch(url).then((r) => (r.ok ? r.text() : ""))); return svgCache.get(url); };
@@ -71,10 +74,12 @@
       const r = queue.shift();
       const [cat] = r.key.split(":");
       const pal = V?.palettes?.[cat] ?? null;
-      const ov = document.createElement("div"); ov.className = "brev"; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-label", `New badge: ${r.name}`);
-      ov.innerHTML = `<div class="brev-card"><div class="brev-art"></div><p class="brev-kicker">🏅 New badge${r.of > 1 ? ` · ${r.seq + 1} of ${r.of}` : ""}</p><h2>${esc(r.name)}</h2><p class="brev-with">Earned with: ${esc(r.polished ?? r.clincher?.summary ?? "")}</p><p class="brev-cite">${esc(r.citation)}</p><button type="button" class="brev-ok">Wonderful</button></div>`;
+      const ov = document.createElement("div"); ov.className = "brev" + (r.preview ? " preview" : ""); ov.setAttribute("role", "dialog"); ov.setAttribute("aria-label", `${r.preview ? "Preview of the reveal" : "New badge"}: ${r.name}`);
+      ov.innerHTML = r.preview
+        ? `<div class="brev-card"><span class="bribbon">Preview · not earned</span><div class="brev-art"></div><p class="brev-kicker">🏅 New badge <span class="bdev-tag">Dev preview</span></p><h2>${esc(r.name)}</h2><p class="brev-with">${r.earned ? `Earned with: ${esc(r.summary ?? "")}` : "This is how the reveal looks when it's earned."}</p><p class="brev-cite">${r.earned ? "" : `<span class="bsample">Sample</span> `}${esc(r.citation)}</p><button type="button" class="brev-ok">Close</button></div>`
+        : `<div class="brev-card"><div class="brev-art"></div><p class="brev-kicker">🏅 New badge${r.of > 1 ? ` · ${r.seq + 1} of ${r.of}` : ""}</p><h2>${esc(r.name)}</h2><p class="brev-with">Earned with: ${esc(r.polished ?? r.clincher?.summary ?? "")}</p><p class="brev-cite">${esc(r.citation)}</p><button type="button" class="brev-ok">Wonderful</button></div>`;
       document.body.appendChild(ov);
-      const [front, back] = await Promise.all([svgText(artURL(r.key, { mode: "full", size: 220 })), svgText(artURL(r.key, { face: "back", size: 220 }))]);
+      const [front, back] = await Promise.all([svgText(artURL(r.key, { mode: "full", size: 220, dev: r.preview })), svgText(artURL(r.key, { face: "back", size: 220, dev: r.preview }))]);
       const shown = flip($(".brev-art", ov), { front, back, tier: r.tier, palette: pal });
       await new Promise((ok) => { const close = () => { clearTimeout(t); ov.classList.add("out"); setTimeout(() => { ov.remove(); ok(); }, 350); }; const t = setTimeout(close, 9000); $(".brev-ok", ov).onclick = close; ov.onclick = (ev) => { if (ev.target === ov) close(); }; });
       void shown;
@@ -83,8 +88,10 @@
   }
 
   // ---------------------------------------------------------------------------------------- the gallery
-  let G = { root: null, filter: "all", sort: "category", io: null, es: null };
-  async function load() { V = await api("/xp/badges"); return V; }
+  let G = { root: null, filter: "all", sort: "category", io: null, es: null, dev: false, preview: false };
+  async function load() { V = await api(G.dev && G.preview ? "/xp/badges?dev=1" : "/xp/badges"); if (!V.preview) G.preview = false; return V; }
+  // the developer's own computer? (404 everywhere else, so there's no switch and nothing to preview)
+  const devStatus = () => fetch("/api/dev/status").then((r) => (r.ok ? r.json() : null)).then((j) => Boolean(j?.dev)).catch(() => false);
   function ringSVG(p, col) { const r = 26, c = 2 * Math.PI * r; return `<svg class="bring" viewBox="0 0 60 60" aria-hidden="true"><circle cx="30" cy="30" r="${r}" class="bring-bg"/><circle cx="30" cy="30" r="${r}" class="bring-fg" style="stroke:${col}" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${(c * (1 - p)).toFixed(1)}"/></svg>`; }
   const stagger = (i) => `--d:-${((i * 0.9) % 7).toFixed(2)}s;--d2:${((i * 1.37) % 9).toFixed(2)}s`;
   function earnedCard(c, t, i) {
@@ -99,6 +106,20 @@
       <span class="bname">${x.name ? esc(x.name) : "Mystery badge"}</span><span class="bmeta">${n(x.have)} / ${n(x.need)} XP</span><span class="bmeta">${n(x.toGo)} XP to go</span>${x.eta ? `<span class="beta">${esc(x.eta)}</span>` : ""}</button>`;
   }
   const lockedCard = (t) => `<div class="bcard locked" aria-label="Locked badge, tier ${t.tier}"><span class="block">🔒</span><span class="bmeta">${t.tier} of 18</span></div>`;
+  // developer preview: a badge that isn't earned, with its real art (marked in the card's frame, never on the art)
+  function previewCard(c, t, i) {
+    return `<div class="bcard preview" role="button" tabindex="0" data-pkey="${esc(t.key)}" aria-label="${esc(`${t.name}, ${c.label} ${t.tier} of 18. Preview, not earned`)}">
+      <span class="bribbon" aria-hidden="true">Preview · not earned</span>
+      <span class="bart"${t.tier >= 4 ? " data-sheen" : ""} style="${stagger(i)}"><img src="${artURL(t.key, { size: 120, dev: true })}" alt="" width="96" height="96" loading="lazy" decoding="async"></span>
+      <span class="bname">${esc(t.name)}</span><span class="bmeta">${t.tier} of 18 · ${n(t.need)} XP</span>
+      <button type="button" class="bplay" data-play="${esc(t.key)}" title="Play the reveal animation" aria-label="${esc(`Play the reveal animation for ${t.name}`)}">▶</button></div>`;
+  }
+  const findTier = (key) => { for (const c of V.categories) { const t = c.tiers.find((y) => y.key === key); if (t) return { c, t }; } return null; };
+  function playReveal(key) {
+    const f = findTier(key); if (!f) return;
+    const { t } = f, earned = t.state === "earned";
+    reveal({ key, tier: t.tier, name: t.name, preview: true, earned, summary: earned ? t.summary : "", citation: earned ? t.citation : t.sampleCitation });
+  }
   function shelf(c, idx) {
     const pal = V.palettes[c.cat], x = c.next;
     const head = x.done ? "All 18 earned!" : `${c.earned} of 18 · next${x.name ? `: ${esc(x.name)}` : ""} in ${n(x.toGo)} XP`;
@@ -106,7 +127,7 @@
     return `<section class="bshelf" data-cat="${esc(c.cat)}" style="--bc:${pal.p};--bs:${pal.s}">
       <header><span class="bchip" style="background:linear-gradient(135deg,${pal.s},${pal.p})"></span><h3>${esc(c.label)}</h3><span class="bhead">${head}</span></header>
       <div class="bbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round((x.pct ?? 1) * 100)}"><i style="width:${Math.round((x.done ? 1 : x.pct ?? 0) * 100)}%"></i></div>
-      <div class="bcards">${tiers.map((t, i) => (t.state === "earned" ? earnedCard(c, t, idx * 18 + i) : t.state === "next" ? nextCard(c) : lockedCard(t))).join("")}</div></section>`;
+      <div class="bcards">${tiers.map((t, i) => (t.state === "earned" ? earnedCard(c, t, idx * 18 + i) : t.preview ? previewCard(c, t, idx * 18 + i) : t.state === "next" ? nextCard(c) : lockedCard(t))).join("")}</div></section>`;
   }
   function render() {
     const root = G.root; if (!root || !V) return;
@@ -114,7 +135,9 @@
     const pins = V.pins.map((k) => { for (const c of V.categories) { const t = c.tiers.find((t) => t.key === k); if (t) return { c, t }; } return null; }).filter(Boolean);
     const summary = `<div class="bsum"><div><b>${V.total}</b> of ${V.of} badges</div>${V.rarest ? `<div>Rarest: <b>${esc(V.rarest.name)}</b> <span class="xp-muted">(tier ${V.rarest.tier})</span></div>` : ""}${V.latest ? `<div>Newest: <b>${esc(V.latest.name)}</b> <span class="xp-muted">${shortDate(V.latest.at)}</span></div>` : ""}</div>`;
     const controls = `<div class="bctl"><label>Show <select id="bFilter"><option value="all">All</option><option value="earned">Earned</option>${V.categories.map((c) => `<option value="${esc(c.cat)}">${esc(c.label)}</option>`).join("")}</select></label>
-      <label>Sort <select id="bSort"><option value="category">By category</option><option value="recent">Most recent</option></select></label></div>`;
+      <label>Sort <select id="bSort"><option value="category">By category</option><option value="recent">Most recent</option></select></label>
+      ${G.dev ? `<label class="bdev-toggle"><input type="checkbox" id="bPreview"${G.preview ? " checked" : ""}> Preview all <span class="bdev-tag">Dev</span></label>` : ""}</div>
+      ${G.preview ? `<p class="bdev-banner" role="note"><span class="bdev-tag">Dev preview</span> Every badge is shown, earned or not, with its art and a sample citation. Only you see this, and nothing here is recorded, earned or marked as seen.</p>` : ""}`;
     const caseEl = `<section class="bcase"><h2>Badge case</h2>${pins.length ? `<div class="bcards">${pins.map(({ c, t }, i) => earnedCard(c, { ...t, isNew: false }, i)).join("")}</div>` : `<p class="xp-muted">Pin up to 3 favourite badges here: open a badge and choose “Pin to badge case”. They also show on the display.</p>`}</section>`;
     let body;
     if (!V.total && G.filter === "earned") body = `<p class="bempty">No badges yet. Check in on a task (a workout, a study session, a chore) and your first one comes within a few days.</p>`;
@@ -129,8 +152,13 @@
     $("#bSort", root).onchange = (e) => { G.sort = e.target.value; render(); };
     for (const b of root.querySelectorAll(".bcard.earned")) b.onclick = () => detail(b.dataset.key);
     for (const b of root.querySelectorAll(".bcard.next")) b.onclick = () => nextDetail(b.dataset.next);
+    const pv = $("#bPreview", root); if (pv) pv.onchange = async () => { G.preview = pv.checked; await refresh(); };
+    for (const b of root.querySelectorAll(".bcard.preview")) {
+      b.onclick = (e) => { if (e.target.closest(".bplay")) { playReveal(e.target.closest(".bplay").dataset.play); return; } previewDetail(b.dataset.pkey); };
+      b.onkeydown = (e) => { if ((e.key === "Enter" || e.key === " ") && e.target === b) { e.preventDefault(); previewDetail(b.dataset.pkey); } };
+    }
     observe(root);
-    newFlips(root);
+    if (!G.preview) newFlips(root);            // previewing never marks anything as seen
   }
   // pause badges off-screen
   function observe(root) {
@@ -191,7 +219,8 @@
       <div class="bdet-act"><h4>The activity that earned it</h4><p><b>${esc(t.summary)}</b> <span class="xp-muted">+${t.clincher.amount} XP · ${shortDate(t.clincher.at)}</span></p>
       ${along.count > 1 ? `<p class="xp-muted">Along the way: ${along.count} ${esc(along.noun)} from ${shortDate(along.from)} to ${shortDate(along.to)}</p>` : ""}</div>
       <p class="bdet-desc">${esc(t.description)}</p>
-      <button type="button" class="bpin">${pinned ? "Remove from badge case" : "Pin to badge case"}</button>`, "bdet");
+      <button type="button" class="bpin">${pinned ? "Remove from badge case" : "Pin to badge case"}</button>${G.dev && G.preview ? ` <button type="button" class="bplay-big">▶ Play reveal animation <span class="bdev-tag">Dev</span></button>` : ""}`, "bdet");
+    const pb = $(".bplay-big", d); if (pb) pb.onclick = () => playReveal(key);
     const artEl = $(".bdet-art", d);
     const [front, back] = await Promise.all([svgText(artURL(key, { mode: "full", size: 240 })), svgText(artURL(key, { face: "back", size: 240 }))]);
     await flip(artEl, { front, back, tier: t.tier, palette: V.palettes[c.cat] });
@@ -203,6 +232,26 @@
     // legendary badges tilt gently in 3D under the pointer
     if (t.tier >= 16 && !reduced()) artEl.addEventListener("pointermove", (e) => { if (busy) return; const r = artEl.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5; const coin = $(".bflip-coin", artEl); if (coin) coin.style.transform = `rotateY(${(x * 14).toFixed(1)}deg) rotateX(${(-y * 14).toFixed(1)}deg)`; });
     $(".bpin", d).onclick = async () => { const r = await api(pinned ? "/xp/badges/unpin" : "/xp/badges/pin", { key }); if (r.ok) { d.remove(); await refresh(); } };
+  }
+  // developer preview: an unearned badge up close (the same flip, tilt and art as an earned one; nothing is recorded)
+  async function previewDetail(key) {
+    const f = findTier(key); if (!f) return;
+    const { c, t } = f;
+    const d = dialog(`<span class="bribbon">Preview · not earned</span><div class="bdet-art${t.tier >= 16 ? " tilt" : ""}"></div>
+      <p class="bdet-cite"><span class="bsample">Sample</span> ${esc(t.sampleCitation)}</p>
+      <h2>${esc(t.name)}</h2><p class="xp-muted">${esc(c.label)} · ${t.tier} of 18 · earned at ${n(t.need)} badge XP · <span class="bdev-tag">Dev preview</span></p>
+      <p class="bdet-desc">${esc(t.description)}</p>
+      <p class="xp-muted">Only you see this preview. The citation is a sample: the real one describes the check-in that earns it.</p>
+      <button type="button" class="bplay-big">▶ Play reveal animation</button>`, "bdet bpreview");
+    $(".bplay-big", d).onclick = () => playReveal(key);
+    const artEl = $(".bdet-art", d);
+    const [front, back] = await Promise.all([svgText(artURL(key, { mode: "full", size: 240, dev: true })), svgText(artURL(key, { face: "back", size: 240, dev: true }))]);
+    await flip(artEl, { front, back, tier: t.tier, palette: V.palettes[c.cat] });
+    let busy = false;
+    const again = () => { if (busy || reduced()) return; busy = true; flip(artEl, { front, back, tier: t.tier, quick: true }).then(() => (busy = false)); };
+    artEl.addEventListener("click", again);
+    artEl.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") again(); });
+    if (t.tier >= 16 && !reduced()) artEl.addEventListener("pointermove", (e) => { if (busy) return; const r = artEl.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5; const coin = $(".bflip-coin", artEl); if (coin) coin.style.transform = `rotateY(${(x * 14).toFixed(1)}deg) rotateX(${(-y * 14).toFixed(1)}deg)`; });
   }
   function nextDetail(cat) {
     const c = V.categories.find((x) => x.cat === cat); if (!c) return;
@@ -236,6 +285,10 @@
   async function gallery(root) {
     G.root = root;
     root.innerHTML = `<p class="xp-muted">Loading your badges…</p>`;
+    // "show me all the badges" / "preview the running badges" open /progress?preview=1[&cat=workout]#badges
+    const qs = new URLSearchParams(location.search);
+    G.dev = await devStatus();
+    if (G.dev && qs.get("preview") === "1") { G.preview = true; if (qs.get("cat")) G.filter = qs.get("cat"); }
     try { await load(); } catch { root.innerHTML = `<p class="xp-err">Badges couldn't load. Is Dayspring running?</p>`; return; }
     paint();
     listen();
@@ -253,5 +306,5 @@
     if (window.dsEvents) { G.es = window.dsEvents; on(G.es); } else { try { G.es = new EventSource("/api/events"); on(G.es); } catch { /* fine without */ } }
   }
 
-  window.dsBadges = { gallery, reveal, flip, refresh, _view: () => V };
+  window.dsBadges = { gallery, reveal, flip, refresh, _view: () => V, _dev: () => ({ dev: G.dev, preview: G.preview }) };
 })();

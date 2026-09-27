@@ -74,13 +74,13 @@ Pick anything that fits (Faith, Fitness, Studying, Music, Cooking, Family, Gamin
 
 ## 7. Permissions: what Dayspring may look at
 
-Three simple choices:
+This step can't be skipped: **Next** stays grey until you pick one of three options. Nothing is picked for you.
 
-- **Everything on this computer**, then **Only read** or **Read and change**.
-- **Only what I choose** (recommended): a file browser on the left (with quick picks like Documents, Desktop and Downloads). Tick folders or single files; on the right, set each one to **Read**, **Read & change**, or **Keep out** (to exclude a folder inside one you allowed).
-- **Nothing for now.**
+- **No file access** (recommended if you're not sure): Dayspring won't look at any of your files. It still needs a click.
+- **Only the folders and files I choose**: type or paste a path, use a quick pick (Documents, Desktop, Downloads…), or press **Browse…**. Set each place to **Read only**, **Read & write** or **Blocked** (to keep a folder out of one you allowed), and choose whether it **includes subfolders**.
+- **Everything on this computer**, then **Read only** or **Read & write**.
 
-When changing is allowed, **Ask me before changing any file** is on by default (a backup is always made first). You also choose whether Dayspring may **open programs** (off / ask first / on), **use a web browser** for you, and **look things up online**. A plain-English summary shows exactly what you've allowed. Passwords, keys and Windows' own files are always off limits. See [Permissions](permissions.md).
+When Dayspring may write somewhere, **Ask me before every change** is on and **Can delete files** is off (deleting always goes to the Recycle Bin and always asks). You can also turn creating, editing, and renaming or moving on or off one at a time. A summary shows in plain words what Dayspring **will** and **won't** be able to do. You also choose whether Dayspring may **open programs** (off / ask first / on), **use a web browser** for you, and **look things up online**. Passwords, keys, Windows and other people's files are always off limits, and everything Dayspring does goes in its activity log. See [Permissions](permissions.md).
 
 ## 8. An AI coding tool (optional, with an AI)
 

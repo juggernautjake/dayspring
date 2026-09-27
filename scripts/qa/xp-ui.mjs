@@ -2,6 +2,7 @@
 // a typed check-in ("I finished studying" → "What's one thing you learned?" → an answer → XP), the badge on the
 // display updating, and the XP answers in the chat.
 //   node scripts/qa/xp-ui.mjs [--keep]
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { spawn, spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";

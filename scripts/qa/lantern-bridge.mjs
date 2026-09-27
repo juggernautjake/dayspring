@@ -3,6 +3,7 @@
 // against Lantern's fake hub. Nothing is heard, no device is touched, nothing opens on screen, nothing real is installed.
 //   node scripts/qa/lantern-bridge.mjs [--keep] [--no-real]
 //   (the real-Lantern part needs ..\..\..\lantern\dist-out\Lantern.zip and ..\..\..\lantern\server\test\fake-hub.mjs)
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { spawn, spawnSync } from "node:child_process";
 import { createServer, request } from "node:http";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -74,8 +75,11 @@ const sse = [];
 async function listen() {
   const r = await fetch(BASE + "/api/events?page=test&id=t1");
   const rd = r.body.getReader(); const dec = new TextDecoder(); let buf = "";
-  (async () => { try { for (;;) { const { value, done } = await rd.read(); if (done) break; buf += dec.decode(value, { stream: true }); let i; while ((i = buf.indexOf("\n\n")) >= 0) { const chunk = buf.slice(0, i); buf = buf.slice(i + 2); const ev = /^event: (.+)$/m.exec(chunk)?.[1], data = /^data: (.+)$/m.exec(chunk)?.[1]; if (ev) sse.push({ ev, data: data ? JSON.parse(data) : null }); } } } catch { /* closed */ } })();
+  (async () => { try { for (;;) { const { value, done } = await rd.read(); if (done) break; buf += dec.decode(value, { stream: true }); let i; while ((i = buf.indexOf("\n\n")) >= 0) { const chunk = buf.slice(0, i); buf = buf.slice(i + 2); const ev = /^event: (.+)$/m.exec(chunk)?.[1], data = /^data: (.+)$/m.exec(chunk)?.[1]; if (ev) { const d = data ? JSON.parse(data) : null; sse.push({ ev, data: d }); if (ev === "announce" && d?.fid) floorDone(d.fid); } } } } catch { /* closed */ } })();
 }
+// this test stands in for the Dayspring screen: it tells the conversation floor (lib/floor.mjs) each announcement was
+// said, as public/floor.js does, so the next one isn't held waiting for a screen that isn't there
+const floorDone = (fid) => fetch(BASE + "/api/floor", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ type: "done", fid, outcome: "spoken", tv: "idle" }) }).catch(() => {});
 const seenSse = (ev, pred = () => true) => sse.find((x) => x.ev === ev && pred(x.data));
 
 try {
@@ -164,9 +168,12 @@ try {
   check("someone not found → it asks for an email", /don't see jordan|What's their email/i.test(q3), q3);
 
   // ---- offers and friend requests from Lantern ----------------------------------------------------------------------------
+  // the last reply asked the owner something ("What's their email?"), so the floor gives him a minute to answer before
+  // anything planned is said; the test moves on at once, as "what were you going to say?" does
+  await fetch(BASE + "/api/floor", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ type: "release" }) }).catch(() => {});
   await toDs("course.offered", { course: "py101", courseTitle: "Intro to Python 101", from: "Riley", message: "Have fun", offerId: "off-1" });
   check("course.offered → a Lantern card with the sender and the note", await until(() => seenSse("lantern", (d) => d.kind === "card" && d.card?.type === "offer" && /Riley/.test(d.card.text) && d.card.note === "Have fun")));
-  check("… and it's said out loud (announce, kind lantern)", await until(() => seenSse("announce", (d) => d.kind === "lantern" && /Want to accept it\?/.test(d.text))));
+  check("… and it's said out loud (announce, kind lantern)", await until(() => seenSse("announce", (d) => d.kind === "lantern" && /Want to accept it\?/.test(d.text))), await fetch(BASE + "/api/floor").then((r) => r.json()).catch((e) => e.message));
   const acc = await chat("yes");
   check("… 'yes' accepts it through Lantern (with the token)", /downloading/i.test(acc) && mock.calls.some((c) => c.path === "/api/local/offers/off-1/accept" && c.token === mock.token), acc);
   await toDs("course.offered", { course: "py101", courseTitle: "Intro to Python 101", from: "Riley", offerId: "off-1" });
@@ -180,6 +187,8 @@ try {
   await until(() => seenSse("lantern", (d) => d.card?.id === "friend-fr-2"));
   const r2 = await j("/lantern/action", { action: "accept-friend", data: { requestId: "fr-2" } });
   check("the card's Accept button accepts through Lantern", r2.status === 200 && mock.calls.some((c) => c.path === "/api/local/friend-requests/fr-2/accept"), r2);
+  // (the friend request just asked him something; the floor waits for that answer, the test doesn't)
+  await fetch(BASE + "/api/floor", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ type: "release" }) }).catch(() => {});
   await toDs("friend.accepted", { name: "Sam", userId: "u-sam" });
   check("friend.accepted → 'Sam accepted … Want to send Sam a course?' (the owner)", await until(() => seenSse("announce", (d) => /Sam accepted your friend request/.test(d.text) && /send Sam a course/.test(d.text))));
   await chat("no");

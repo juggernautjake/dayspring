@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Venmo (mock) - Activity</title>
+<style>body{font-family:sans-serif;margin:0}header{display:flex;gap:1em;padding:1em;background:#3d95ce;color:#fff}main{max-width:640px;margin:0 auto;padding:1em}
+[data-testid=feed-story]{display:flex;justify-content:space-between;border-bottom:1px solid #ddd;padding:1em 0;min-height:130px}</style></head>
+<body>
+<!-- A made-up Venmo-like page for scripts/qa/money.mjs: an infinite-scroll feed, a balance, and money buttons that must never be pressed. -->
+<header>
+  <b>venmo (mock)</b>
+  <button id="payreq" onclick="window.__clicked=(window.__clicked||[]).concat('payreq')">Pay or Request</button>
+  <a href="/settings" onclick="window.__clicked=(window.__clicked||[]).concat('settings');return false">Settings</a>
+  <button onclick="window.__clicked=(window.__clicked||[]).concat('transfer')">Transfer to bank</button>
+</header>
+<main>
+  <section aria-label="Your balance"><h2>Venmo balance</h2><div data-testid="venmo-balance" id="bal"></div></section>
+  <h2>Transactions</h2>
+  <div role="feed" id="feed"></div>
+  <p id="end" hidden>No more transactions</p>
+</main>
+<script type="module">
+  import { makeData, showDate } from "./data.js";
+  const q = new URLSearchParams(location.search);
+  const today = q.get("today") || new Date().toLocaleDateString("en-CA");
+  const D = makeData(today);
+  document.getElementById("bal").textContent = `$${D.balances.venmo.toFixed(2)}`;
+  const feed = document.getElementById("feed");
+  let shown = 0;
+  const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+  function more(n) {
+    for (const t of D.venmo.slice(shown, shown + n)) {
+      const a = t.amount < 0 ? `- $${(-t.amount).toFixed(2)}` : `+ $${t.amount.toFixed(2)}`;
+      feed.insertAdjacentHTML("beforeend", `<div data-testid="feed-story" role="article" data-transaction-id="${t.id}">
+        <div><div data-testid="story-title">${esc(t.desc)}</div><div data-testid="story-note">${esc(t.note)}</div>
+        <div data-testid="story-date">${t.status === "pending" ? "Pending · " : ""}${showDate.venmo(t.date)}</div></div>
+        <div data-testid="story-amount">${a}</div></div>`);
+    }
+    shown = Math.min(D.venmo.length, shown + n);
+    document.getElementById("end").hidden = shown < D.venmo.length;
+  }
+  more(8);
+  // infinite scroll: more stories when the bottom comes into view
+  addEventListener("scroll", () => { if (innerHeight + scrollY >= document.body.scrollHeight - 40 && shown < D.venmo.length) setTimeout(() => more(8), 150); });
+</script>
+</body>
+</html>

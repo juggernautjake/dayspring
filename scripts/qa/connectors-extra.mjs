@@ -1,6 +1,7 @@
 // Tests for the extra connectors (calendar subscriptions, news feeds, Home Assistant, webhooks, Todoist, weather alerts)
 // against a local stub server. Nothing real is called: every fetch to anything but 127.0.0.1 fails the test, and
 // connector files go to a temporary folder. Run: node scripts/qa/connectors-extra.mjs
+import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { createServer } from "node:http";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";

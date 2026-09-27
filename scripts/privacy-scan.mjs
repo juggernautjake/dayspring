@@ -19,6 +19,16 @@ const COMMON = new Set(("hope joy grace faith mark will may june april august ri
   "guy pat sue drew chase hunter carter mason cole grant dean wade lane reese miles king bishop page major rusty sunny august autumn winter angel " +
   "christian son sons mom dad brother sister wife husband friend friends family church pastor team mike max rob bob tom tim jim ben sam dan ed al").split(" "));
 const SKIP_DIRS = new Set(["node_modules", ".git", "data", "backups", "dist-out"]);
+// Money review keeps bank data in data/finance (encrypted) and its browser profile in %LOCALAPPDATA%\DayspringFinance.
+// Neither is ever read by the scan, and either one turning up inside an export is a failure on its own.
+const FINANCE_DIRS = /^(DayspringFinance|finance-profile)$/i;
+const financeFound = [];
+// faces and people (lib/vision, lib/people): face fingerprints and thumbnails, saved texts and calls, the face models
+const PEOPLE_DATA = /^(faces\.bin|comms\.bin|vision\.json|vision-cache|people)$|\.onnx$/i;
+const peopleFound = [];
+// the developer's dev token and private key (lib/dev, scripts/dev): they live in %LOCALAPPDATA%, never in an export
+const DEV_SECRETS = /^dev-(token|key)(\.|$)/i;
+const devFound = [];
 const TEXT = new Set([".js", ".mjs", ".cjs", ".json", ".md", ".html", ".css", ".txt", ".cmd", ".bat", ".ps1", ".example", ".yml", ".yaml", ".gitignore", ""]);
 
 const KEYS = [
@@ -30,6 +40,8 @@ const KEYS = [
   ["AWS key", /\bAKIA[0-9A-Z]{16}\b/],
   ["Twilio SID", /\bAC[0-9a-f]{32}\b/],
   ["GitHub token", /\bgh[pousr]_[A-Za-z0-9]{30,}/],
+  ["private key", /-----BEGIN (?:[A-Z]+ )*PRIVATE KEY-----/],
+  ["Ed25519 private key", /MC4CAQAwBQYDK2VwBCIEI[A-Za-z0-9+/]{20,}/],
   ["phone number", /(?<![\w.-])\+1\d{10}\b|\(\d{3}\)\s?\d{3}-\d{4}\b|\b\d{3}-\d{3}-\d{4}\b/],
   ["email address", /\b[A-Za-z0-9._%+-]+@(?:gmail|yahoo|outlook|hotmail|icloud|live|aol)\.com\b/i],
   ["user folder path", /[A-Za-z]:[\\/]{1,2}Users[\\/]{1,2}(?!Public|Default|<|\$|%|you|YOU|Name|name|USERNAME|\.\.\.)[A-Za-z][^\\/"'`\s]*/],
@@ -106,7 +118,10 @@ export function terms(dataDir = join(DESK, "data")) {
 
 function* walk(dir) {
   for (const e of readdirSync(dir, { withFileTypes: true })) {
+    if (e.isDirectory() && (FINANCE_DIRS.test(e.name) || (e.name === "finance" && /[\\/]data$/i.test(dir)))) { financeFound.push(join(dir, e.name)); continue; }
     if (SKIP_DIRS.has(e.name) || e.isSymbolicLink()) continue;   // junctions/symlinks (e.g. a linked node_modules) aren't ours
+    if (DEV_SECRETS.test(e.name)) { devFound.push(join(dir, e.name)); continue; }
+    if (PEOPLE_DATA.test(e.name) && !(e.name === "people" && !/[\\/]data$/i.test(dir))) { peopleFound.push(join(dir, e.name)); continue; }
     if (e.isDirectory()) yield* walk(join(dir, e.name));
     else if (e.isFile()) yield join(dir, e.name);
   }
@@ -130,6 +145,9 @@ export function scan(target, { dataDir } = {}) {
       for (const [t, level, r] of rx) if (level === "warn" && r.test(l)) { hits.push({ level, file: rel, line: i + 1, what: `first name "${t}"`, text: l.trim().slice(0, 160) }); return; }
     });
   }
+  for (const d of peopleFound.splice(0)) hits.push({ level: "fail", file: relative(target, d), line: 0, what: "Face data, saved messages or face models", text: "people data must never be exported" });
+  for (const d of devFound.splice(0)) hits.push({ level: "fail", file: relative(target, d), line: 0, what: "Developer token or key", text: "the dev token and key never leave the developer's computer" });
+  for (const d of financeFound.splice(0)) hits.push({ level: "fail", file: relative(target, d), line: 0, what: "Money review data or browser profile", text: "financial data must never be exported" });
   return hits;
 }
 

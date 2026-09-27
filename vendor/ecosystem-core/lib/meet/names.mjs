@@ -35,6 +35,21 @@ export const nameKey = (raw) => displayName(raw).toLowerCase();
 export function isUnknown(raw) { const d = displayName(raw); return !d || UNKNOWN.test(d); }
 export function isSelf(raw) { return SELF.test(displayName(raw)); }
 
+// How Meet labels the owner's own captions, tiles and chat messages in its interface language ("You" in English,
+// "Vous" in French…). Only English and the page's own language count, so a guest called "Du" in an English meeting is
+// just a guest.   isSelfLabel("Vous", "fr-FR") → true · isSelfLabel("Du", "en") → false
+export const SELF_LABELS = {
+  en: ["you"], fr: ["vous", "moi"], es: ["tú", "tu", "yo"], de: ["du", "sie", "ich"], pt: ["você", "voce", "eu"], it: ["tu", "io"], nl: ["jij", "u", "ik"],
+};
+export function isSelfLabel(raw, lang = "en") {
+  const d = displayName(raw).toLowerCase();
+  if (!d) return false;
+  const l = String(lang ?? "en").toLowerCase().split(/[-_]/)[0];
+  return SELF_LABELS.en.includes(d) || Boolean(SELF_LABELS[l]?.includes(d));
+}
+// "Rich Alvarez (You)", "Taylor Reed (vous)": the owner's own entry in the People list, marked by Meet itself
+export const SELF_MARK = /\((?:you|vous|t[uú]|du|sie|voc[eê]|jij|u|me|moi|yo|ich|io|eu|ik)\)/i;
+
 // What to call this person, or null when it isn't safe to use a name at all.
 // roster: the display names of everyone in the meeting (so two people called Jess are told apart by full name).
 export function callName(raw, roster = [], { selfName = "" } = {}) {
