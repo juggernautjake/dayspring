@@ -6,6 +6,7 @@ There are two ways to bring it in:
 
 - **🎧 Tune in** (this page): Dayspring listens to what plays in your headset and, if you like, talks into the call through your microphone. It works in every call app, including Discord DMs and group calls.
 - **The Discord bot**: Dayspring joins a Discord **server** as its own member, and you can also chat with it in text. See [The Discord bot](discord-bot.md).
+- **📹 Meetings (Google Meet)**: Dayspring opens your Meet in its own window, reads the captions to know who is talking, and answers the people you allow, with Lantern answering course questions. See [Meetings: Dayspring and Lantern in a Google Meet call](meeting-demo.md). While it's in a meeting, Tune in stands down, so nobody gets two answers.
 
 > **Note:** Nothing anyone says is saved. Dayspring checks what it hears for its name, then throws it away. Only a request addressed to Dayspring and its answer are kept in the diagnostics log. While it listens, the 🎧 button reads **Listening in this call**. Let the people on your call know Dayspring is listening.
 

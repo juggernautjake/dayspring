@@ -172,6 +172,15 @@ Yes: press **⌨ Type** on the talk panel.
 ### Can it read me something that was on the screen?
 Yes: "read me that quote", "what was that proverb?", "what's on the screen?". See [Talking to Dayspring](talking-to-dayspring.md#ask-about-whats-on-the-screen).
 
+### Can Dayspring join my Google Meet call?
+Yes. Paste the Meet link on the Dayspring screen, or say "Dayspring, join my meeting". The meeting opens in its own window: Google doesn't allow Meet inside another page. The window shrinks to a small tile in the corner; click it (or say "bring the meeting back") to make it big. Dayspring reads Meet's captions to know who's talking and answers only the people you allow ("let Rich and Jess ask", or the **Who can ask** list). Lantern can answer course questions, with the lesson and a link. See [Meetings](meeting-demo.md).
+
+### Can people in my meeting change my schedule or settings?
+No. People you allow can ask questions. Only you can change things. Everyone else hears "Only you can ask me to do that." Speech that isn't for Dayspring or Lantern is never kept, and what people asked is forgotten when the meeting ends.
+
+### Why does the meeting say "Captions detected ✗"?
+Dayspring knows who's talking from Meet's captions. Press **C** in the meeting window to turn them on. If they still can't be read, Dayspring listens with Tune in instead. It still answers, but uses no names. See [Meetings](meeting-demo.md#if-something-goes-wrong).
+
 ## Files, documents and apps
 
 ### Can it read my Word documents and PDFs?

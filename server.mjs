@@ -47,6 +47,7 @@ import * as permissions from "./lib/permissions.mjs";
 import * as discordRoutes from "./lib/discord-routes.mjs";
 import * as callRoutes from "./lib/call-routes.mjs";
 import * as callsRoutes from "./lib/calls-routes.mjs";   // Settings → Calls: call apps, latency, the Discord chat companion
+import * as meetRoutes from "./lib/meet-routes.mjs";   // meetings: Dayspring and Lantern in a Google Meet call (lib/meet)
 import * as studyRoutes from "./lib/study-routes.mjs";
 import * as playerRoutes from "./lib/player-routes.mjs";
 import * as ambientRoutes from "./lib/ambient-routes.mjs";
@@ -90,7 +91,7 @@ addHello("micOwner", () => lantern.micOwner());
 addHello("listenState", () => settings.get().listenState ?? "active");
 addHello("notices", () => firstrun.notices());
 // The Settings/setup wizard, updates and the in-app guide each answer their own /api routes.
-const ROUTES = [setupRoutes, updateRoutes, helpRoutes, discordRoutes, callRoutes, callsRoutes,studyRoutes, playerRoutes, ambientRoutes, windowRoutes, documentRoutes, connectorRoutes, fsRoutes, toolingRoutes, welcomeRoutes, discoverRoutes, calendarRoutes, lanternRoutes, aboutRoutes, intentRoutes, personaRoutes, xpRoutes];
+const ROUTES = [setupRoutes, updateRoutes, helpRoutes, discordRoutes, callRoutes, callsRoutes, meetRoutes, studyRoutes, playerRoutes, ambientRoutes, windowRoutes, documentRoutes, connectorRoutes, fsRoutes, toolingRoutes, welcomeRoutes, discoverRoutes, calendarRoutes, lanternRoutes, aboutRoutes, intentRoutes, personaRoutes, xpRoutes];
 // 🎧 Tune in: what it hears addressed to Dayspring goes through the same assistant
 tunein.setChat(chat);
 // DAYSPRING_DISPLAY=1: this computer shows the Dayspring screen (any screen: a TV, a monitor…), so it keeps it open and
@@ -688,6 +689,9 @@ async function api(req, res, url) {
     // "minimize", "hide yourself", "show yourself", "close the screen": the display window, right away
     const wc = await windowRoutes.command(message.trim()).catch(() => null);
     if (wc) { transcripts.log({ role: "dayspring", text: wc, surface: key }); return send(res, 200, { reply: wc, changes: [], usage: null }); }
+    // "join my meeting", a pasted Meet link, "bring the meeting back", "let Rich ask", "mute", "leave the meeting"…
+    const mc = await meetRoutes.command(message.trim()).catch((e) => { console.log(`meet: ${e.message}`); return null; });
+    if (mc) { transcripts.log({ role: "dayspring", text: mc, surface: key }); return send(res, 200, { reply: mc, changes: [], usage: null }); }
     const uc = await updateRoutes.command(message.trim(), { restart: restartSelf }).catch(() => null);
     if (uc) { transcripts.log({ role: "dayspring", text: uc, surface: key }); return send(res, 200, { reply: uc, changes: [], usage: null }); }
     const tc = await callRoutes.command(message.trim()).catch(() => null);

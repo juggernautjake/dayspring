@@ -2,6 +2,48 @@
 
 All notable changes to Dayspring. Versions follow [semantic versioning](https://semver.org).
 
+## 1.5.0: Meetings with Dayspring and Lantern
+
+**Dayspring joins your Google Meet.** Paste the Meet link on the screen, or say "Dayspring, join my meeting".
+- The meeting opens in its own window. Google doesn't allow Meet inside another page.
+- While you use Dayspring, it sits as a small tile in the bottom-right corner, in front of other windows. Click it, press the **Meeting** chip, or say "bring the meeting back" to make it big.
+- Your commands work by voice: "mute", "unmute", "turn off my camera", "turn on captions", "open the chat", "who's in the meeting?", "share my screen" (it explains Meet's picker), and "leave the meeting" (it asks first).
+- Dayspring never signs in for you: sign in to Google once in the meeting window.
+
+**It knows who's talking.** Dayspring turns on Meet's captions and reads them, so it knows who asked.
+- The Meetings panel shows **Captions detected ✓**. If captions can't be read, Tune in listens instead.
+- While the meeting reads captions, Tune in stands down, so nobody gets two answers.
+
+**You choose who can ask.**
+- Say "let Rich and Jess ask", "let Rich ask Lantern", "let everyone ask" or "only listen to me".
+- Or use the **Who can ask** list: **Can ask Dayspring** and **Can ask Lantern** for each person.
+- You can always ask. Everyone else can ask questions, but can't change anything.
+- Speech that isn't for Dayspring or Lantern is never kept. What people asked is forgotten when the meeting ends.
+
+**Answers out loud and in the chat.**
+- People say "Dayspring, …" or "Lantern, …", or type @Dayspring or @Lantern in Meet's chat.
+- Spoken answers go into the call. A spoken course question also gets a detailed answer in the chat, signed "Dayspring:" or "Lantern:".
+- One voice at a time.
+
+**Lantern answers course questions**, in its own voice (warm, male) and its own style.
+- It finds the lessons that teach the answer in your installed course.
+- It answers from them, then says where it's covered: "It's covered in Unit 4, Lesson 2, …, and I've put the link in the chat."
+- The chat gets the detail and a link to each lesson. The screen shows a results card with **Open in Lantern**.
+- When Lantern offers its own answers, it answers itself. Otherwise Dayspring answers for it from the installed course.
+- In Demo mode, course questions asked of Dayspring are handed over: "Great question, Jess. Lantern, want to take that one?"
+
+**Names, now and then.**
+- Dayspring and Lantern use people's names: the first time they answer someone, then about one answer in three. Never twice in a row within two minutes, and never in both the voice and the chat.
+- Names are said exactly as Meet shows them, in your personality's style ("Well howdy, Rich!").
+- When two people share a first name, it uses their full name. When it can't tell who's talking, it doesn't guess.
+- In a meeting it remembers who asked what, so it can say "Building on Jess's question about sessions…". That memory is gone when the meeting ends.
+
+**Demo mode and a rehearsal.** The Meetings panel (📹 on the talk bar) has:
+- **Demo mode**: anyone can ask, and course questions go to Lantern.
+- A **pre-flight checklist**: Google sign-in, Meet's microphone, a sound test, captions, Lantern and the course, the course index, the AI, the public lesson link, and the Dayspring screen.
+- **▶ Rehearse**: a pretend meeting with pretend people, captions, chat and a scripted course question.
+- The step-by-step script with fixes is in [Meetings](docs/meeting-demo.md).
+
 ## 1.4.0: Personalities, XP and badges
 
 **Give Dayspring a personality.** In Settings → Personality, pick a character:

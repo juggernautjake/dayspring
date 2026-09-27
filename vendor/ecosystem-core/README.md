@@ -20,6 +20,7 @@ has them installed.
 | `bus.mjs` | Server-Sent Events from an app's server to its own pages, plus an in-process hook. |
 | `credentials.mjs` | The AI key shared between the apps on one computer. Encrypted per Windows user with DPAPI, and read by an app only after the user agrees. |
 | `eco.mjs` | How the apps find each other on this computer (presence files and a token) and exchange events safely. |
+| `meet/` | Meetings: a Google Meet call the assistants take part in. The managed Meet window (Playwright is passed in; it never signs in), the caption and chat readers with fallback selectors, "Dayspring, …" / "Lantern, …" / "@Lantern" addressing, who may ask which assistant, when to use someone's name, the meeting's memory (in memory only), chat messages that fit, and a stand-in Meet page for tests. See [docs/MEET.md](docs/MEET.md). |
 
 | Pages (`client/`) | What it is |
 |---|---|
@@ -28,6 +29,7 @@ has them installed.
 | `voice-orb.js` | Dayspring's face: the living ring and glassy orb, with moods. |
 | `audio-chain.js` | Web Audio: a level for voice, chimes, alarm, music and video; a clearer voice; media that ducks under the voice. |
 | `sound-panel.js` | The Sound panel: levels, mute, test, speakers and microphone (the device lists come from the app). |
+| `meet-tile.js` | The meeting's page parts: the "Meeting" chip, the people panel ("Can ask Dayspring" / "Can ask Lantern") and the name card ("Lantern — answering Rich") with the lantern or the orb. |
 | `layout-core.js` | Screen fitting: TV margins, UI and text scale, the Fit-to-screen calibration, and the hover window bar. |
 | `icons/` | The two app marks (SVG, PNG 16–256 px, .ico), drawn as siblings on the same grid. |
 

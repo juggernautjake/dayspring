@@ -27,6 +27,7 @@ const filter = (src) => {
   if (SKIP_ANY.some((r) => r.test(basename(src)))) return false;
   const rel = relative(DESK, src).split(/[\\/]/);
   if (rel[0] === "docs" && rel[1] === "dev" && rel[2] === "badge-previews") return false;   // badge review sheets and videos: dev only
+  if (rel[0] === "scripts" && rel[1] === "qa" && rel[2] === "private") return false;       // question banks for the owner's own courses
   return !(rel.length === 1 && SKIP_TOP.has(rel[0]));
 };
 for (const e of readdirSync(DESK)) {

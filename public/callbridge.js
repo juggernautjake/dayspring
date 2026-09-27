@@ -185,8 +185,15 @@
     playing.delete(a);
   }
   const browserVoice = () => st.tts === "browser";
-  function browserSay(text) {
-    return new Promise((ok) => { const u = new SpeechSynthesisUtterance(text); u.onend = u.onerror = () => ok(); speechSynthesis.speak(u); setTimeout(ok, 8000 + text.length * 90); });
+  // as "lantern" (a meeting answer Dayspring gives for Lantern): a warm male voice, Lantern's own, never Dayspring's
+  const LANTERN_VOICES = ["Andrew", "Brian", "Guy", "Christopher", "Eric", "Roger", "Steffan", "Ryan", "David"];
+  function lanternVoice() {
+    const vs = speechSynthesis.getVoices().filter((v) => /^en/i.test(v.lang));
+    for (const natural of [true, false]) for (const n of LANTERN_VOICES) { const v = vs.find((x) => x.name.split(/[^A-Za-z]+/).includes(n) && /natural|online|neural/i.test(x.name) === natural); if (v) return v; }
+    return null;
+  }
+  function browserSay(text, as = null) {
+    return new Promise((ok) => { const u = new SpeechSynthesisUtterance(text); if (as === "lantern") { const v = lanternVoice(); if (v) u.voice = v; } u.onend = u.onerror = () => ok(); speechSynthesis.speak(u); setTimeout(ok, 8000 + text.length * 90); });
   }
 
   // ✋ Stop (tv.js stopSpeaking) ends a call answer too: the one playing stops and any still waiting are dropped
@@ -220,7 +227,7 @@
   function onPart(d) {
     if (stopped.has(d.id)) return;
     let t = turns.get(d.id);
-    if (!t) { t = { parts: [], final: false, wake: null }; turns.set(d.id, t); playTurn(d.id, t); }
+    if (!t) { t = { parts: [], final: false, wake: null, as: d.as === "lantern" ? "lantern" : null }; turns.set(d.id, t); playTurn(d.id, t); }
     if (d.final) {
       t.final = true;
       if (d.full) card(d.full, d.heard ? `“${d.heard}”` : "");
@@ -233,7 +240,9 @@
     const run = async () => {
       const sink = browserVoice() ? null : await callSink();
       const loaded = new Map();                    // index → Audio (loading)
-      const load = (i) => { if (browserVoice() || t.parts[i] == null || loaded.has(i)) return; loaded.set(i, newAudio("/api/tts/stream?text=" + encodeURIComponent(t.parts[i]))); };
+      const load = (i) => { if (browserVoice() || t.parts[i] == null || loaded.has(i)) return; loaded.set(i, newAudio("/api/tts/stream?text=" + encodeURIComponent(t.parts[i]) + (t.as ? "&as=" + t.as : ""))); };
+      // who is talking (the meeting's name card glows while it does)
+      const said = (on) => { try { dispatchEvent(new CustomEvent("ds-call-speaking", { detail: { id, on, as: t.as ?? "dayspring" } })); } catch { /* old browser */ } };
       let i = 0; const deadline = Date.now() + 60_000;
       try {
         while (g === callGen && Date.now() < deadline) {
@@ -244,7 +253,8 @@
           }
           const text = t.parts[i];
           api("/tunein/speaking", { on: true, ms: 2500 + text.length * 75 }).catch(() => {});
-          if (browserVoice()) { if (i === 0) api("/calls/latency/mark", { id, name: "firstAudio" }).catch(() => {}); await browserSay(text); }
+          if (i === 0) said(true);
+          if (browserVoice()) { if (i === 0) api("/calls/latency/mark", { id, name: "firstAudio" }).catch(() => {}); await browserSay(text, t.as); }
           else {
             load(i); load(i + 1);
             const a = loaded.get(i);
@@ -258,6 +268,7 @@
       } finally {
         for (const a of loaded.values()) { try { a.removeAttribute("src"); a.load(); } catch { /* gone */ } }
         turns.delete(id); stopped.delete(id);
+        said(false);
         api("/tunein/speaking", { on: false }).catch(() => {});
       }
     };
