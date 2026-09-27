@@ -2,6 +2,51 @@
 
 All notable changes to Dayspring. Versions follow [semantic versioning](https://semver.org).
 
+## 1.3.0: Dayspring works great without an AI key
+
+**Understands hundreds of everyday requests without AI.** A built-in understanding of 185 kinds of request, in 29 groups, spelled out in more than 8,000 ways. It copes with small slips and sound-alikes ("calender", "set a time her") and picks out the details ("in a bit", "first thing tomorrow", "after lunch", "the end of the month", "Romans 8 28"). It answers in a few milliseconds, on your computer. When an AI brain is set up, the quick things (timers, math, jokes) are still answered instantly, at no cost.
+
+- **When it isn't sure**, it shows "Here's what I can do that sounds close:" with up to 7 numbered choices and **None of these**, and reads out the first three. Answer by number, by the words, with a tap or with keys 1–7. It learns from your picks. After a few misses in a row, it links to how to add AI.
+- **Teach it:** Settings → AI brain → **Without AI** has a **Try it** box and the phrases it didn't understand (words only, on this computer, and you can turn the list off). Pick what a phrase means and press Teach, or use **Forget what you learned**.
+
+**Timers**
+- Up to 7 at once, each with a name.
+- A timer without a name starts right away, then Dayspring asks "What's it for?".
+- Say "how long left on the pasta", "add 2 minutes to the oven timer", "pause all timers" or "call the second timer oven".
+- When one finishes, Dayspring says its name. Timers that finish together are said together. A card appears with Dismiss / +5 min / Snooze, and there's a reminder every minute (5 at most).
+- They ring with the window closed. They also ring when Dayspring is Quiet or Off, unless you turn that off in Settings.
+- There's a compact countdown stack on the screen and in the mini.
+- Also new: a stopwatch; alarms by voice; repeating reminders ("every Tuesday night"); medicine and water reminders; stretch breaks; a guided breathing exercise; and focus sessions (25/5 pomodoro rounds that switch between focus and break by themselves).
+
+**Recipes and cooking**
+- A new Recipes page. Add a recipe by pasting it, from a web address, or by voice. Tags, favourites and search. Five example recipes to start.
+- **Find recipes online:** "find a recipe for chili" shows up to 6 cards with photos, then "the second one", "the quickest one", "save the first one" or "more options". Pictures are saved on your computer. Pages on your own network are never read.
+- **Easy steps:** Prep / Cooking / Finish, with a timer button for each time mentioned, °F/°C, and the ingredients each step uses.
+- **Cooking mode:** big text, and the screen stays awake. "next", "go back", "how much flour", "double the recipe", "start the timer" (several step timers can run at once).
+
+**Jokes and fun**
+- More than a thousand jokes in 38 categories. You can tell Dayspring a knock-knock joke, and it can tell you one.
+- A pause before the punchline. A typed joke comes all at once.
+- With a playful personality (Humour 60+), a joke offer now and then: 3 a day at most, and never during calls, alarms, timers, cooking or focus time.
+- "Count to 100" (by twos, backwards), trivia, rock paper scissors, would you rather, the magic 8-ball.
+
+**Everyday and small talk**
+- Calculator, unit and cooking conversions, spelling, coin, dice, random numbers.
+- Time around the world. Days until a date, the day of the week for a date, leap years, US holidays.
+- Capitals of US states and countries, the planets, times tables.
+- Shopping and other lists, notes, to-dos. "What should I have for dinner?"
+- Kind replies when you're tired, stressed, sad or lonely. If you say something that sounds like you might hurt yourself, Dayspring gives you the 988 Suicide and Crisis Lifeline.
+- "What did you hear?", "That's wrong" (undoes the last thing it did), "Never mind".
+
+**Fixes**
+- ✋ Stop now also cancels an answer that's still on its way, so a late answer is never shown or spoken. Saying "Dayspring" while it's thinking no longer gives two answers.
+- Stop also ends an answer playing into a call.
+- Only the Dayspring screen that speaks fetches the voice.
+- Questions to the same screen are answered one at a time, so two answers can't overwrite each other's conversation.
+- An address that isn't this computer gets 421 (Misdirected Request), as the ecosystem contract says.
+
+**Guide:** new pages [Using Dayspring without AI](docs/using-without-ai.md) (with the full, searchable list of what you can say) and [Recipes and cooking](docs/recipes-and-cooking.md), plus new FAQ answers and new Settings entries.
+
 ## 1.2.3 — a security fix
 
 **Fixed**

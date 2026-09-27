@@ -229,3 +229,13 @@ Keys you paste in Settings are saved in the `.env` file in the Dayspring folder.
 - [Tutorials: how do I…?](tutorials.md), a task-by-task index
 - [The guided setup](setup-wizard.md)
 - [Troubleshooting](troubleshooting.md)
+
+## New in 1.3.0
+
+| Setting | Where | What it does | Default |
+|---|---|---|---|
+| **Timers still ring when Dayspring is quiet or off** | Notifications | A timer you set rings like an alarm (with its name) even when Dayspring is Quiet or Off. Off: a finished timer only shows a card. | On |
+| **Offer a joke now and then** / **At most … a day** | Notifications | With a playful personality (Humour 60+), Dayspring may offer a joke when someone's around. Never during calls, alarms, timers, cooking or focus time. | On, 3 a day |
+| **Without AI → Try it** | AI brain | Shows what Dayspring would do with a phrase, without doing it. | |
+| **Keep phrases I didn't understand** | AI brain → Without AI | Keeps the words (never audio, only on this computer) so you can teach what they mean. | On |
+| **Forget what you learned** | AI brain → Without AI | Clears the phrasings Dayspring learned from your picks and teaching. | |

@@ -1,0 +1,37 @@
+/* XP: the display badge and the Progress page (dark glass, like the rest of Dayspring) */
+.xp-badge{position:fixed;left:max(12px,var(--sl,0px));bottom:max(12px,var(--sb,0px));z-index:40;display:flex;align-items:center;gap:.45em;
+  padding:.3em .75em .3em .3em;border-radius:2em;border:1px solid rgba(160,170,255,.22);background:rgba(20,24,50,.55);color:#eef0ff;
+  font:500 .8rem/1 Outfit,"Segoe UI",sans-serif;cursor:pointer;backdrop-filter:blur(10px);opacity:.82;transition:opacity .2s}
+.xp-badge:hover,.xp-badge:focus-visible{opacity:1;outline:2px solid #ffd27a;outline-offset:2px}
+.xp-badge svg{width:1.9em;height:1.9em}
+.xp-badge .xpb-lv{position:absolute;left:.3em;width:1.9em;text-align:center;font-weight:700;font-size:.78rem}
+.xpr-bg{fill:none;stroke:rgba(255,255,255,.14);stroke-width:4}
+.xpr-fg{fill:none;stroke:#ffd27a;stroke-width:4;stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dashoffset .6s}
+.xp-spark{animation:xpspark 1.1s ease-out}
+@keyframes xpspark{0%{box-shadow:0 0 0 0 rgba(255,210,122,.8)}100%{box-shadow:0 0 0 1.2em rgba(255,210,122,0)}}
+html.mini .xp-badge{font-size:.72rem;left:8px;bottom:8px}
+@media (prefers-reduced-motion:reduce){.xp-spark{animation:none}.xpr-fg{transition:none}}
+
+#xpPage{max-width:760px;margin:0 auto;padding:24px 16px 60px;color:#eef0ff;font:400 15px/1.55 Outfit,"Segoe UI",sans-serif}
+#xpPage h1{font:600 1.7rem/1.1 Outfit,"Segoe UI",sans-serif;margin:0}
+#xpPage h2{font:600 .78rem/1 Outfit,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#ffd27a;margin:0 0 .7em}
+#xpPage section{background:rgba(20,24,50,.5);border:1px solid rgba(160,170,255,.16);border-radius:.9em;padding:16px 18px;margin:0 0 14px}
+#xpPage .xp-hero{display:flex;gap:18px;align-items:center}
+.xp-lvring{position:relative;width:72px;height:72px;flex:none}.xp-lvring svg{width:72px;height:72px}
+.xp-lvring span{position:absolute;inset:0;display:grid;place-items:center;font:700 1.4rem Outfit,sans-serif}
+.xp-hero p{margin:.3em 0 0;color:#c9cfee}.xp-streak{color:#ffd27a!important}
+.xp-chart{width:100%;height:auto}.xpc-bar{fill:#7c8cff}.xpc-zero{fill:rgba(255,255,255,.1)}.xpc-lbl{fill:#a4abcc;font-size:8px;text-anchor:middle}
+.xpc-cap{stroke:#ff8fa3;stroke-dasharray:3 3;stroke-width:1}.xpc-caplbl{fill:#ff8fa3;font-size:8px;text-anchor:end}
+.xp-check label{display:block;margin-bottom:.4em;color:#c9cfee}
+.xp-row{display:flex;gap:8px;flex-wrap:wrap}.xp-row input{flex:1 1 14em;min-width:0;padding:.6em .8em;border-radius:.6em;border:1px solid rgba(160,170,255,.3);background:#0d1128;color:#eef0ff;font:inherit}
+#xpPage button{font:inherit;padding:.5em 1em;border-radius:2em;border:1px solid rgba(255,210,122,.5);background:rgba(255,210,122,.14);color:#ffe6ae;cursor:pointer}
+#xpPage button:disabled{opacity:.45;cursor:default}
+#xpPage button.xp-link{border:none;background:none;color:#a4b2ff;padding:.3em 0;text-decoration:underline}
+.xp-reply{min-height:1.4em;color:#ffe6ae;margin:.6em 0 0}
+.xp-unl,.xp-recent,.xp-rules{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.xp-unl li{display:flex;gap:.6em;align-items:center;flex-wrap:wrap}.xp-unl li.hidden{color:#a4abcc}.xp-unl em{color:#7ee3b0;font-style:normal}
+.xp-recent li{border-bottom:1px solid rgba(160,170,255,.12);padding-bottom:6px;overflow-wrap:anywhere}.xp-recent li.rev{opacity:.55;text-decoration:line-through}
+.xp-recent time{float:right;color:#a4abcc;font-size:.85em}.xp-ev{color:#c9cfee;font-size:.9em;margin-top:2px}
+.xp-muted,.xp-hint{color:#a4abcc;font-size:.92em}.xp-off,.xp-err{color:#ff8fa3}
+.xp-rem{border:none;margin:.6em 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(12em,1fr));gap:4px}
+.xp-rem legend{color:#c9cfee;margin-bottom:.4em}.xp-sw{display:flex;gap:.5em;align-items:center}

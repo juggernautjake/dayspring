@@ -3,7 +3,7 @@
 // ships with Windows (.NET Framework 4), started hidden by the Dayspring server, and fed one JSON object per line on stdin:
 //   {"type":"show","id":"…","title":"…","text":"…","kind":"reminders","snooze":true,"seconds":8}
 //   {"type":"dismiss","id":"…"}   {"type":"config","screen":"primary"|"2","seconds":8}
-//   {"type":"alarm","id","title","text","time","sound":"<wav>","volume":0-100,"rampSeconds":30,"timeoutMinutes":30}
+//   {"type":"alarm","id","title","text","time","sound":"<wav>","volume":0-100,"rampSeconds":30,"timeoutMinutes":30,"snoozeLabel":"+5 min"}
 //       a larger alarm card that stays until answered, and the sound on a loop, rising gently to the volume
 //   {"type":"alarm-stop","id"?}   {"type":"sound","name","path","volume"}   {"type":"speak","text","volume"}   {"type":"status"}
 // It answers on stdout, one JSON object per line: {"type":"ready"} {"type":"shown","id"} {"type":"skipped","id","why"}
@@ -91,11 +91,12 @@ class Card : Form {
 // The alarm: bigger, stays until answered (Snooze 9 min, Dismiss, Open Dayspring), never takes the focus
 class AlarmCard : Form {
   const int WS_EX_TOPMOST = 0x8, WS_EX_TOOLWINDOW = 0x80, WS_EX_NOACTIVATE = 0x08000000;
-  public string Id; readonly string title, text, time;
+  public string Id; readonly string title, text, time, snoozeLabel;
   Rectangle snoozeBox, dismissBox, openBox;
   public event Action<AlarmCard, string> Act;
   static readonly Font TimeFont = new Font("Segoe UI Light", 30f), TitleFont = new Font("Segoe UI Semibold", 11f), BodyFont = new Font("Segoe UI", 10f), BtnFont = new Font("Segoe UI Semibold", 9.5f);
-  public AlarmCard(string id, string title, string text, string time) {
+  public AlarmCard(string id, string title, string text, string time, string snoozeLabel = null) {
+    this.snoozeLabel = string.IsNullOrEmpty(snoozeLabel) ? "Snooze 9 min" : snoozeLabel;
     Id = id; this.title = title ?? "Alarm"; this.text = text ?? ""; this.time = time ?? DateTime.Now.ToString("h:mm");
     FormBorderStyle = FormBorderStyle.None; ShowInTaskbar = false; TopMost = true; StartPosition = FormStartPosition.Manual;
     BackColor = Color.FromArgb(30, 22, 12); DoubleBuffered = true; Width = 420; Opacity = 0.98;
@@ -122,7 +123,7 @@ class AlarmCard : Form {
     using (var b = new SolidBrush(Color.FromArgb(240, 232, 216))) g.DrawString(text, BodyFont, b, new RectangleF(18, 92, Width - 36, Height - 92 - 48));
     int y = Height - 42, w = (Width - 36 - 16) / 3;
     snoozeBox = new Rectangle(18, y, w, 30); dismissBox = new Rectangle(18 + w + 8, y, w, 30); openBox = new Rectangle(18 + 2 * (w + 8), y, w, 30);
-    Button(g, snoozeBox, "Snooze 9 min", Color.FromArgb(255, 210, 122), Color.FromArgb(40, 26, 8));
+    Button(g, snoozeBox, snoozeLabel, Color.FromArgb(255, 210, 122), Color.FromArgb(40, 26, 8));
     Button(g, dismissBox, "Dismiss", Color.FromArgb(70, 255, 255, 255), Color.White);
     Button(g, openBox, "Open Dayspring", Color.FromArgb(40, 255, 255, 255), Color.FromArgb(230, 230, 240));
   }
@@ -206,7 +207,7 @@ static class Program {
     rampSeconds = m.ContainsKey("rampSeconds") ? Math.Max(0, Convert.ToInt32(m["rampSeconds"])) : 30;
     int minutes = m.ContainsKey("timeoutMinutes") ? Math.Max(1, Convert.ToInt32(m["timeoutMinutes"])) : 30;
     alarmStart = DateTime.Now; alarmUntil = alarmStart.AddMinutes(minutes);
-    alarm = new AlarmCard(id, m.ContainsKey("title") ? Convert.ToString(m["title"]) : "Alarm", m.ContainsKey("text") ? Convert.ToString(m["text"]) : "", m.ContainsKey("time") ? Convert.ToString(m["time"]) : null);
+    alarm = new AlarmCard(id, m.ContainsKey("title") ? Convert.ToString(m["title"]) : "Alarm", m.ContainsKey("text") ? Convert.ToString(m["text"]) : "", m.ContainsKey("time") ? Convert.ToString(m["time"]) : null, m.ContainsKey("snoozeLabel") ? Convert.ToString(m["snoozeLabel"]) : null);
     alarm.Act += (card, what) => {
       if (what == "open") { Send(Msg("click", card.Id)); StopAlarm("opened"); }
       else StopAlarm(what);

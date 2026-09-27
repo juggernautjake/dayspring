@@ -1490,7 +1490,7 @@
   }
   // speechGen: "stop" (and anything urgent) bumps it, so the sentence being said ends AND everything queued before it is dropped
   let speechGen = 0;
-  function speak(text, chip, bus = "general", v = {}) { const g = speechGen; prefetch(text, v).catch(() => {}); speakQueue = speakQueue.then(() => (g === speechGen ? speakOne(text, chip, bus, v) : null)).catch(() => {}); return speakQueue; }
+  function speak(text, chip, bus = "general", v = {}) { const g = speechGen; if (isSpeaker) prefetch(text, v).catch(() => {}); speakQueue = speakQueue.then(() => (g === speechGen ? speakOne(text, chip, bus, v) : null)).catch(() => {}); return speakQueue; }
   // Tune in (listening to calls in the headset) ignores Dayspring's own voice and music: tell it when they start and stop
   function tuneIn(on, ms, kind = "voice") { post("/tunein/speaking", { on, kind, ...(ms ? { ms: Math.round(ms) } : {}) }).catch(() => {}); }
   let lastSaid = null;      // { text, v } — "say that again"
@@ -1591,7 +1591,11 @@
       next();
     });
   }
-  function stopSpeaking() { speechGen++; if (current) { current.pause(); current.onended?.(); } window.speechSynthesis?.cancel(); }
+  function stopSpeaking() { speechGen++; if (current) { current.pause(); current.onended?.(); } window.speechSynthesis?.cancel(); try { window.dsStopCall?.(); } catch { /* no call bridge */ } }
+  // askGen: ✋ Stop and every new question bump it; a reply that arrives for an older question is dropped (and its
+  // request aborted), so waking Dayspring while it's thinking never gives two answers
+  let askGen = 0, askCtl = null;
+  function cancelAsk() { askGen++; try { askCtl?.abort(); } catch { /* done already */ } askCtl = null; removeTyping(); }
 
   // Deliver something the server wants said, the way notifications are set: voice, chime or silent.
   // kind: reminders | schedule | texts | lantern | discover | system (Settings → Notifications sets each one)
@@ -1609,7 +1613,7 @@
       const moment = await politeMoment();
       if (moment.mode === "timeout") said = "Hey, don't mean to interrupt anything if I did, but I need to let you know: " + text.replace(new RegExp("^(hey|hi|alright)( " + (config.ownerName || "there").replace(/[^\w ]/g, "") + ")?[,!.]?\\s*", "i"), "").replace(/^./, (c) => c.toLowerCase());
     }
-    if (m === "voice") prefetch(said, voice).catch(() => {});   // fetch the voice while the chime plays
+    if (m === "voice" && isSpeaker) prefetch(said, voice).catch(() => {});   // fetch the voice while the chime plays (only the screen that speaks)
     playSound(m === "chime" ? "soft" : sound, bus);
     if (m === "voice") { await sleep(700); await speak(said, chip, bus, voice); }
   }
@@ -2529,7 +2533,7 @@
   }
   // ⌨ Type: a typed conversation, no audio either way
   $("#typeBtn").onclick = () => { const f = $("#typeForm"); f.hidden = !f.hidden; $("#typeBtn").classList.toggle("on", !f.hidden); if (!f.hidden) $("#typeBox").focus(); };
-  $("#typeForm").onsubmit = (e) => { e.preventDefault(); const t = $("#typeBox").value.trim(); if (!t) return; $("#typeBox").value = ""; stopListeningNow(); ask(t, { typed: true }); };
+  $("#typeForm").onsubmit = (e) => { e.preventDefault(); const t = $("#typeBox").value.trim(); if (!t) return; $("#typeBox").value = ""; stopListeningNow({ keepAsk: true }); ask(t, { typed: true }); };
   // 🔇 Text only: no mic and no voice at all (for calls); stays that way until he turns it off
   function setTextOnly(on) {
     textOnly = on;
@@ -2540,7 +2544,9 @@
   }
   $("#quietBtn").onclick = () => setTextOnly(!textOnly);
   // ✋ Stop: stop talking and listening right now; only "Dayspring" starts it again
-  function stopListeningNow() {
+  function stopListeningNow({ keepAsk = false } = {}) {
+    if (!keepAsk) cancelAsk();
+    window.dsExtras?.stop?.();
     if (utter) { clearTimeout(utter.timer); utter = null; }
     clearInterim(); clearTimeout(commandTimer);
     if (speaking) stopSpeaking();
@@ -2555,6 +2561,14 @@
     stopListeningNow();
     if (busy && !long) { toast("Stopped talking", "Tap ✋ again to stop listening too.", "", "bell"); return; }
     setStopped(true);
+  };
+  // what tv-extras.js (timers, recipes, cooking, suggestions, counting, jokes) uses from this page
+  window.dsCore = {
+    speak, notify, stopSpeaking, playSound, toast, push, openPage, sleep, post, json, ask, backToIdle, wake, esc,
+    openCommandWindow: (ms) => openCommandWindow(ms), cancelAsk,
+    get listenState() { return listenState; }, get prefs() { return prefs; }, get textOnly() { return textOnly; }, get micMuted() { return micMuted; },
+    get mode() { return mode; }, get speaking() { return speaking; }, get isSpeaker() { return isSpeaker; }, get askGen() { return askGen; }, get speechGen() { return speechGen; },
+    REPLY_MS,
   };
   function repeatLast() { if (lastSaid) speak(lastSaid.text, null, "general", lastSaid.v); else speak("I haven't said anything yet."); }
   function chatDetail() {
@@ -2614,13 +2628,15 @@
   }
   const settle = (ms) => new Promise((r) => setTimeout(r, ms));
 
-  async function ask(text, { typed = false } = {}) {
+  async function ask(text, { typed = false, internal = false } = {}) {
     const silent = typed || textOnly || listenState !== "active";
     const say = (t, ...rest) => (silent ? Promise.resolve() : speak(t, ...rest));
+    cancelAsk(); const gen = askGen;
+    window.dsExtras?.asking?.(text, { internal });
     clearTimeout(commandTimer);
     if (utter) { clearTimeout(utter.timer); utter = null; }
     if (typed) dlog("heard", { how: "typed", text });
-    push("me", text);
+    if (!internal) push("me", text);
     if (localCommand(text)) { dlog("local-reply", { heard: text, said: "(local command)", handler: "localCommand" }); backToIdle(); return; }
     const mc = musicCommand(text);
     if (mc) { dlog("local-reply", { heard: text, said: mc.say || "(music control)", handler: "musicCommand" }); if (mc.say) push("ai", mc.say); if (mc.speak) await say(mc.say); backToIdle(); return; }
@@ -2645,7 +2661,10 @@
     mode = "thinking"; stateSince = Date.now(); setMic("think", editing ? "Making the change…" : "Thinking…"); stage("think"); showTyping();
     try {
       const ctl = new AbortController(), tmo = setTimeout(() => ctl.abort(), 75_000);
-      const r = await json("/chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ message: text, surface: "tv" }), signal: ctl.signal }).finally(() => clearTimeout(tmo));
+      askCtl = ctl;
+      const r = await json("/chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ message: text, surface: "tv", typed: silent }), signal: ctl.signal }).finally(() => clearTimeout(tmo));
+      if (gen !== askGen) { dlog("dropped-reply", { heard: text }); return; }     // stopped, or a newer question: this answer isn't wanted
+      askCtl = null;
       // "offline"/"done" are broad (any quick reply), so they count only when it was clearly a schedule edit
       const changedSchedule = r.changes?.some((c) => SCHED_CHANGES.has(c) || (editing && (c === "offline" || c === "done")));
       if (editing || changedSchedule) {
@@ -2656,25 +2675,34 @@
           await settle(900);                                          // let the schedule redraw before confirming
         }
       }
-      push("ai", r.reply);
+      const ex = window.dsExtras;
+      const shown = ex?.before?.(r, { silent, typed, internal }) ?? null;      // lists, links, timers, recipes, cooking
+      const msgEl = push("ai", r.reply);
+      ex?.decorate?.(msgEl, r);
       if (r.photo === "next") showPhoto({ pin: true }).catch(() => {});
       if (r.panel === "voices") voicesDetail().catch(() => {});
       if (r.panel === "devices") devicesDetail().catch(() => {});
       if (r.changes?.length) { loadDay(); loadLearning(); }
       mode = "replying";
       const rv = r.speed ? { speed: r.speed } : {};
-      if (silent) { lastSaid = { text: r.reply, v: rv }; backToIdle(); if (typed) $("#typeBox").focus(); return; }   // typed: read, not heard
+      // counting, jokes with a pause before the punchline, knock-knock: said in their own rhythm
+      if (ex?.deliver && await ex.deliver(r, { silent, typed, gen: () => gen === askGen, rv })) { if (r.clientRun && !internal) ask(r.clientRun, { typed, internal: true }); return; }
+      if (silent) { lastSaid = { text: r.reply, v: rv }; backToIdle(); if (typed) $("#typeBox").focus(); if (r.clientRun && !internal) ask(r.clientRun, { typed, internal: true }); return; }   // typed: read, not heard
       if (r.quiet) {                       // "I'm ready, don't want to talk": two words, then quiet
         await speak(r.reply, null, "general", rv);
         backToIdle(); playSound("done");
         return;
       }
-      await speak(r.reply, null, "general", rv);   // a direct answer is always spoken, whatever the notification mode
+      await speak(r.reply, ex?.chipFor?.(r) ?? null, "general", rv);   // a direct answer is always spoken, whatever the notification mode
+      if (gen !== askGen) return;                  // stopped while speaking
+      if (r.clientRun && !internal) { ask(r.clientRun, { typed, internal: true }); return; }
       // In a between-blocks conversation he just keeps talking — no wake phrase — until it wraps up.
       if (r.conversation) openCommandWindow(30000);
+      else if (r.listen || r.suggest) openCommandWindow(REPLY_MS);   // Dayspring asked something: 7 s to answer
       else openCommandWindow(10000);       // a follow-up needs no wake phrase
       if (!r.conversation && /good luck,? [\w']+!|let'?s get to it/i.test(r.reply)) { burst(250, 70); playSound("levelup"); }
     } catch (e) {
+      if (gen !== askGen) return;          // stopped (or asked again): no apology for an answer nobody wants now
       const msg = e.name === "AbortError" ? "Sorry, that took too long. Could you ask me again?" : "Sorry, I couldn't get an answer just then.";
       dlog("error", { where: "ask", heard: text, name: e.name, error: String(e.message).slice(0, 300), said: msg });
       push("sys", msg); mode = "replying"; await say(msg).catch(() => {});
@@ -2770,6 +2798,7 @@
       if (item.started?.category === "study" && nowPlaying && !nowPlaying.audioOnly) stopMedia(true);   // study time: videos give way
       // Off with "Alarms still ring when Off" turned off: the alarm only shows
       const alarmMuted = listenState === "off" && prefs.alarmsWhenOff === false;
+      if (window.dsExtras?.announce && await window.dsExtras.announce(item)) return;     // timers, joke offers
       if (item.kind === "morning") { if (alarmMuted) { toast("⏰ Alarm (Dayspring is off)", item.text, "wait", "bell"); return; } startMorning(item); return; }
       if (item.alarm) { if (alarmMuted) { toast("⏰ Alarm (Dayspring is off)", item.text, "wait", "bell"); return; } startAlarm(item); return; }
       if (item.kind === "ready" || item.kind === "rundown") {

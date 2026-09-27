@@ -2,6 +2,9 @@
 
 ## The basics
 
+> **No AI brain yet?** Dayspring still understands hundreds of everyday requests (timers, your schedule, recipes, the Bible, math, jokes and more). See [Using Dayspring without AI](using-without-ai.md). When it isn't sure what you meant, it shows a short numbered list: say the number.
+
+
 1. Say the wake word, then what you want, in one breath: **"Dayspring, what's on tomorrow?"**
 2. The ring in the corner of the Dayspring screen changes while it listens, thinks and talks. What it heard appears under the ring.
 3. After it answers, you have about **10 seconds** to follow up *without* the wake word ("and Friday?").

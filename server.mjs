@@ -74,10 +74,16 @@ import * as callbridge from "./lib/callbridge.mjs";
 import * as stt from "./lib/stt.mjs";
 import * as lantern from "./lib/lantern.mjs";
 import * as lanternRoutes from "./lib/lantern-routes.mjs";
+import * as intentRoutes from "./lib/intent-routes.mjs";
+import * as personaRoutes from "./lib/persona-routes.mjs";   // Settings → Personality (lib/persona)
+import * as timers from "./lib/timers.mjs";
+import * as recipes from "./lib/recipes.mjs";
+import * as intents from "./lib/intents/index.mjs";
+import * as web from "./lib/web.mjs";
 // A fresh install: create the data folder and any missing data files (empty, nothing personal) before anything runs.
 firstrun.ensure();
 // The Settings/setup wizard, updates and the in-app guide each answer their own /api routes.
-const ROUTES = [setupRoutes, updateRoutes, helpRoutes, discordRoutes, callRoutes, studyRoutes, playerRoutes, ambientRoutes, windowRoutes, documentRoutes, connectorRoutes, fsRoutes, toolingRoutes, welcomeRoutes, discoverRoutes, calendarRoutes, lanternRoutes, aboutRoutes];
+const ROUTES = [setupRoutes, updateRoutes, helpRoutes, discordRoutes, callRoutes, studyRoutes, playerRoutes, ambientRoutes, windowRoutes, documentRoutes, connectorRoutes, fsRoutes, toolingRoutes, welcomeRoutes, discoverRoutes, calendarRoutes, lanternRoutes, aboutRoutes, intentRoutes, personaRoutes];
 // 🎧 Tune in: what it hears addressed to Dayspring goes through the same assistant
 tunein.setChat(chat);
 // DAYSPRING_DISPLAY=1: this computer shows the Dayspring screen (any screen: a TV, a monitor…), so it keeps it open and
@@ -150,6 +156,10 @@ const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; cha
 
 // In-memory conversations, one per surface (desk panel, Dayspring screen). Restarting starts fresh; the schedule persists.
 const histories = { desk: [], tv: [] };
+// one conversation turn at a time per surface: a second question waits for the first, so neither answer overwrites the
+// other's history (the screen drops a reply it no longer wants)
+const chatLocks = { desk: Promise.resolve(), tv: Promise.resolve() };
+let lastChatAt = 0;
 
 // Everything the Dayspring screen says on its own (check-ins, alarms, Claude Code alerts) goes into its
 // conversation too, so "it went fine" or "yes, I'm ready" is understood as an answer to it.
@@ -658,7 +668,7 @@ async function api(req, res, url) {
   if ((mm = p.match(/^\/memories\/([^/]+)$/)) && m === "DELETE") { store.forget(mm[1]); return send(res, 200, { ok: true }); }
 
   if (m === "POST" && p === "/chat") {
-    const { message, surface } = await readJSON(req);
+    const { message, surface, typed } = await readJSON(req);
     if (!message?.trim()) return send(res, 400, { error: "message is required" });
     const key = surface === "tv" ? "tv" : "desk";
     transcripts.log({ role: "user", text: message.trim(), surface: key });
@@ -671,11 +681,16 @@ async function api(req, res, url) {
     const tc = await callRoutes.command(message.trim()).catch(() => null);
     if (tc) { transcripts.log({ role: "dayspring", text: tc, surface: key }); return send(res, 200, { reply: tc, changes: [], usage: null }); }
     const t0 = Date.now();
-    devlog.log("sent", { surface: key, text: message.trim(), historyLen: histories[key].length });
+    lastChatAt = Date.now();
+    const before = chatLocks[key]; let unlock; chatLocks[key] = new Promise((r) => { unlock = r; });
     let out;
-    try { out = await chat(histories[key], message.trim(), key === "tv" ? { surface: "tv", photo: photoOnScreen } : {}); }
-    catch (err) { devlog.log("error", { where: "chat", surface: key, text: message.trim(), status: err?.status ?? null, error: String(err?.message ?? err).slice(0, 500), ms: Date.now() - t0 }); throw err; }
-    histories[key] = out.history;
+    try {
+      await before.catch(() => {});
+      devlog.log("sent", { surface: key, text: message.trim(), historyLen: histories[key].length });
+      try { out = await chat(histories[key], message.trim(), key === "tv" ? { surface: "tv", photo: photoOnScreen, typed: Boolean(typed) } : { surface: "desk", typed: true }); }
+      catch (err) { devlog.log("error", { where: "chat", surface: key, text: message.trim(), status: err?.status ?? null, error: String(err?.message ?? err).slice(0, 500), ms: Date.now() - t0 }); throw err; }
+      histories[key] = out.history;
+    } finally { unlock(); }
     transcripts.log({ role: "dayspring", text: out.reply, surface: key });
     // who answered: Claude (it used tokens), a built-in skill, the offline fallback, or a local handler
     const by = out.usage ? "claude" : out.offline ? "offline(" + out.offline + ")" : out.changes?.includes("skills") ? "skill" : out.changes?.includes("offline") ? "offline" : "local";
@@ -684,7 +699,9 @@ async function api(req, res, url) {
     // conversation: the TV keeps listening (no wake phrase) while a between-blocks conversation is open;
     // quiet: he asked to stop talking, so the TV goes quiet right away
     if (out.restart) setTimeout(restartSelf, 3500);      // after "Restarting, I'll be right back" has been said
-    return send(res, 200, { reply: out.reply, changes: out.changes, usage: out.usage, conversation: Boolean(key === "tv" && (session.current() || out.open)), quiet: Boolean(out.quiet), speed: out.speed ?? null, photo: out.photo ?? null, panel: out.panel ?? null });
+    return send(res, 200, { reply: out.reply, changes: out.changes, usage: out.usage, conversation: Boolean(key === "tv" && (session.current() || out.open)), quiet: Boolean(out.quiet), speed: out.speed ?? null, photo: out.photo ?? null, panel: out.panel ?? null,
+      // what the no-AI understanding adds: a list to pick from, a help link, something for the screen to do
+      ...Object.fromEntries(["suggest", "link", "clientRun", "clientShow", "count", "timers", "cooking", "cookingDone", "recipes", "recipeView", "listen", "joke", "intent", "openPage", "offerSearch", "dismissTimers", "miss", "dictating", "webResults", "breathing", "show", "support", "offer", "trivia"].filter((k) => out[k] !== undefined).map((k) => [k, out[k]])) });
   }
   if (m === "POST" && p === "/chat/reset") { const { surface } = await readJSON(req).catch(() => ({})); histories[surface === "tv" ? "tv" : "desk"] = []; return send(res, 200, { ok: true }); }
 
@@ -692,7 +709,7 @@ async function api(req, res, url) {
 }
 
 // Page names: /display (the Dayspring screen; /tv is its older name), /setup (first-run wizard and Settings), /help (the guide)
-const PAGES = { "/": "/index.html", "/tv": "/tv.html", "/display": "/tv.html", "/mini": "/tv.html", "/history": "/history.html", "/setup": "/setup.html", "/settings": "/setup.html", "/help": "/help.html", "/welcome": "/welcome.html" };
+const PAGES = { "/": "/index.html", "/tv": "/tv.html", "/display": "/tv.html", "/mini": "/tv.html", "/history": "/history.html", "/setup": "/setup.html", "/settings": "/setup.html", "/help": "/help.html", "/welcome": "/welcome.html", "/recipes": "/recipes.html" };
 async function serveStatic(res, pathname) {
   // until setup is done, the Dayspring screen (and the plain address, which a new user is most likely to type) sends people to the wizard
   if ((pathname === "/" || pathname === "/tv" || pathname === "/display" || pathname === "/mini" || pathname === "/setup" || pathname === "/settings") && !owner.setupDone()) { res.writeHead(302, { location: "/welcome" }); return res.end(); }
@@ -738,7 +755,8 @@ createServer(async (req, res) => {
   // Other websites open in the owner's browser must not be able to drive Dayspring. DNS rebinding: only our own host
   // names are answered. Cross-site requests: a browser page from anywhere but Dayspring itself is refused (programs on
   // this computer, like Lantern or the launcher, send no Origin and are unaffected).
-  if (!fromInternet && !localRequest(req)) { res.writeHead(403, { "content-type": "text/plain" }); return res.end("Dayspring only answers its own pages."); }
+  // (a name that isn't this computer is a misdirected request, 421, as the ecosystem contract says; a page from elsewhere is 403)
+  if (!fromInternet && !localRequest(req)) { const misdirected = !LOCAL_HOSTS.has(String(req.headers.host ?? "").toLowerCase().replace(/:\d+$/, "")); res.writeHead(misdirected ? 421 : 403, { "content-type": "text/plain" }); return res.end("Dayspring only answers its own pages."); }
   try {
     if (url.pathname.startsWith("/api/")) await api(req, res, url);
     else if (url.pathname.startsWith("/twilio/") && req.method === "POST") await twilio(req, res, url);
@@ -876,6 +894,7 @@ createServer(async (req, res) => {
   // the speakers and mics are looked up once in the background, so the Sound panel opens straight away
   setTimeout(() => devices.list().catch(() => {}), 8000);
   snooze.start();                // snoozed alarms and reminders come back, even after a restart
+  startTimersAndRecipes();
   discover.start();
   // connected apps that work in the background: weather alerts, calendar subscriptions, news feeds
   connectors.startBackground({ announce: (x) => announcer.announce(x) });
@@ -891,8 +910,49 @@ createServer(async (req, res) => {
 // Installing the private speech recognition (whisper.cpp) from the Dayspring screen, with the owner's OK
 const sttJob = { running: false, error: null };
 
+// Timers (lib/timers.mjs) ring through the same announcements as everything else; recipes search the web the same way
+// Dayspring's own search does. A timer that ended while Dayspring was closed rings once it's back (the first tick).
+function startTimersAndRecipes() {
+  timers.setDeps({
+    emit: (type, data) => announcer.broadcast(type, data),
+    // (a focus round ending, or "time to drink water", is said once: text given, nothing to dismiss)
+    ring: ({ labels, ids, repeat, text, once }) => announcer.announce({ kind: "timer", text: text ?? timers.doneLine(labels, repeat), timer: { labels, ids, repeat, once: Boolean(once) } }),
+    alarm: (a) => {
+      const d = new Date(a.at), hm = d.toTimeString().slice(0, 5);
+      if (a.kind === "reminder") return announcer.announce({ kind: "reminder", hm, text: `Reminder: ${a.label}.`, reminder: { id: a.id, text: a.label } });
+      announcer.announce({ kind: "alarm", alarm: true, hm, text: a.label ? `It's time: ${a.label}.` : "It's time. This is your alarm." });
+    },
+  });
+  timers.startTicking();
+  // the no-AI understanding is indexed once, now, so no one waits for it on their first request (about a second)
+  setTimeout(() => { try { intents.stats(); } catch (e) { console.log(`intents: ${e.message}`); } }, 300);
+  recipes.setDeps({ search: (query, o) => web.search(query, o), emit: (type, data) => announcer.broadcast(type, data) });
+  // Funny personality: now and then, "Want to hear a joke?" (never on a call, during an alarm, a timer, cooking, the
+  // morning routine, a meeting or a focus block, and only when someone's been around in the last 45 minutes)
+  setInterval(() => {
+    try {
+      const nowHM = new Date().toTimeString().slice(0, 5), today = store.todayISO();
+      const cur = store.blocksBetween(today, today).find((b) => b.start <= nowHM && nowHM < b.end);
+      const env = {
+        lastActivity: lastChatAt, stopped: false, inCall: callbridge.isTalking?.() || tunein.isOn?.(), timerRinging: timers.ringing().length > 0,
+        cooking: Boolean(recipes.cookingNow()), morning: Boolean(morning.current?.()), meeting: cur && (cur.category === "work" || /meeting|call|class|exam/i.test(cur.title)), speaking: false,
+        textOnly: false, muted: announcer.displayCount() === 0,
+      };
+      if (cur && ["study", "work"].includes(cur.category)) env.meeting = true;
+      if (intents.jokeOfferDue(env)) announcer.announce({ kind: "jokeoffer", text: intents.makeJokeOffer("tv") });
+    } catch (e) { console.log(`joke offer: ${e.message}`); }
+  }, 60_000).unref?.();
+}
+
 // What the desktop notification cards do when clicked
 async function overlayAction(a) {
+  // a finished timer's card: +5 min / Dismiss (it running out on its own leaves the minute-by-minute reminders going)
+  if (a.item?.kind === "timer") {
+    if (a.type === "alarm-snoozed") timers.snooze("", 5 * 60_000);
+    else if (a.type === "alarm-dismissed") timers.dismiss("");
+    else if (a.type === "click") { windowRoutes.clearClosed(); await display.open().catch(() => {}); }
+    return;
+  }
   if (a.type === "hotkey") { await quiet.setState(quiet.state() === "off" ? "active" : "off", { from: "hotkey" }).catch(() => {}); return; }
   if (a.type === "snooze" && a.item) { try { snooze.snooze(a.item); } catch { /* nothing to snooze */ } return; }
   // the alarm card with no screen open: Snooze 9 min / Dismiss / it rang out; every surface hears it

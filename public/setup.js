@@ -91,6 +91,34 @@
   }
   const toggle = (id, title, desc, on, sub = "") => `<div class="toggle"><div class="txt"><b id="${id}-l">${title}</b><div>${desc}</div>${sub}</div>${sw(id, on).replace('role="switch"', `role="switch" aria-labelledby="${id}-l"`)}</div>`;
   const isOn = (id) => $("#" + id)?.getAttribute("aria-checked") === "true";
+  // Settings → AI brain → Without AI: try a phrase, teach the ones it missed, forget what it learned
+  async function mountWithoutAi() {
+    if (!$("#tryGo")) return;
+    let intents = [];
+    try { const r = await api("/intents"); intents = r.intents ?? []; $("#learnedN").textContent = r.learned ? `(${r.learned} learned)` : ""; } catch { /* older server */ }
+    try { const s = (await api("/settings")).settings ?? {}; $("#logMisses")?.setAttribute("aria-checked", String(s.logMisses !== false)); } catch { /* default on */ }
+    const opts = intents.slice().sort((a, b) => a.label.localeCompare(b.label)).map((i) => `<option value="${esc(i.id)}">${esc(i.label)}</option>`).join("");
+    const go = async () => {
+      const t = $("#tryText").value.trim(); if (!t) return;
+      try {
+        const r = await post("/intents/try", { text: t });
+        $("#tryOut").textContent = r.confident ? `✓ ${r.label}` : r.options?.length ? `Not sure. It would offer: ${r.options.slice(0, 7).map((o, i) => `${i + 1}. ${o.label}`).join("  ")}` : "It wouldn't understand that without AI.";
+      } catch (e) { $("#tryOut").textContent = e.message; }
+    };
+    $("#tryGo").onclick = go;
+    $("#tryText").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); go(); } });
+    const drawMisses = async () => {
+      let m = []; try { m = (await api("/intents/misses")).misses ?? []; } catch { /* none */ }
+      const el = $("#missList"); if (!el) return;
+      if (!m.length) { el.textContent = "None yet."; return; }
+      el.innerHTML = m.slice(0, 30).map((x, k) => `<div class="row" style="gap:.5em;align-items:center;flex-wrap:wrap;margin:.3em 0"><span style="flex:1 1 12em">“${esc(x.text)}”${x.count > 1 ? ` ×${x.count}` : ""}</span><label class="sr" for="mt${k}">This means</label><select id="mt${k}" data-text="${esc(x.text)}"><option value="">This means…</option>${opts}</select><button type="button" class="btn small" data-teach="${k}">Teach</button></div>`).join("") + `<p><button type="button" class="btn small" id="missClear">Clear the list</button></p>`;
+      el.querySelectorAll("[data-teach]").forEach((b) => b.onclick = async () => { const sel = $("#mt" + b.dataset.teach); if (!sel.value) return; try { await post("/intents/teach", { text: sel.dataset.text, id: sel.value }); drawMisses(); } catch (e) { msg($("#m"), e.message, "bad"); } });
+      $("#missClear").onclick = async () => { await post("/intents/misses/clear", {}); drawMisses(); };
+    };
+    drawMisses();
+    $("#logMisses")?.addEventListener("click", () => setTimeout(() => post("/settings", { logMisses: isOn("logMisses") }).catch(() => {}), 0));
+    $("#forgetLearned").onclick = async () => { await post("/intents/forget", {}); $("#learnedN").textContent = "Forgotten."; };
+  }
   const val = (id) => ($("#" + id)?.value ?? "").trim();
   const choiceGroup = (name, items, current) => `<div class="choices" role="radiogroup" data-group="${name}">${items.map((it) => `<button type="button" class="choice${it.value === current ? " on" : ""}" role="radio" aria-checked="${it.value === current}" data-value="${esc(it.value)}">${it.tag ? `<span class="tag${it.paid ? " paid" : ""}">${it.tag}</span>` : ""}<b>${it.title}</b><small>${it.desc ?? ""}</small></button>`).join("")}</div>`;
   const chosen = (name) => $(`[data-group="${name}"] .choice.on`)?.dataset.value ?? null;
@@ -210,6 +238,12 @@
         S.owner = r.owner; $("#brandName").textContent = S.owner.assistantName || "Dayspring";
       } },
 
+    // ------------------------------------------------------------------------------------------------ personality (public/personality.js)
+    // Characters, saved personalities, sliders and a custom persona. Everything saves as you go, so no Save button.
+    { id: "personality", icon: "🎭", title: "Personality", settingsOnly: true,
+      render: () => window.DayspringPersonality ? window.DayspringPersonality.html() : `<h1>Personality</h1><p class="lead">This page didn't load. Reload to try again.</p>`,
+      mount: () => window.DayspringPersonality?.mount($("#card"), { toast }) },
+
     // ------------------------------------------------------------------------------------------------ location
     { id: "location", icon: "📍", title: "Where you are",
       render: () => { const l = S.owner.location ?? {}; return `
@@ -255,7 +289,14 @@
           { value: "ollama", title: "Ollama (on this computer)", desc: "A free model that runs on your own computer. It's private, but needs a fairly strong PC.", tag: "Free" },
         ], cur)}
         <div id="aiDetail"></div>
-        <div class="msg" id="m" aria-live="polite"></div>`; },
+        <div class="msg" id="m" aria-live="polite"></div>
+        <h2 id="without-ai">Without AI</h2>
+        <p class="hint">Even with no AI brain, Dayspring understands hundreds of everyday requests: timers, the time, math, your schedule, recipes, the Bible, jokes and more. <a href="/help#using-without-ai">Everything you can say</a></p>
+        <div class="field"><label for="tryText"><b>Try it</b></label><div class="row" style="gap:.5em;align-items:center"><input type="text" id="tryText" placeholder="e.g. set a pasta timer for 8 minutes" style="flex:1 1 16em" autocomplete="off"><button type="button" class="btn small" id="tryGo">Try</button></div>
+          <div class="hint" id="tryOut" aria-live="polite">Nothing is done here; it only shows what Dayspring would do.</div></div>
+        ${toggle("logMisses", "Keep phrases I didn't understand", "Only the words (never audio), only on this computer, so you can teach Dayspring what they mean below.", true)}
+        <div class="field"><b>Phrases Dayspring didn't understand</b><div id="missList" class="hint">Loading…</div></div>
+        <p><button type="button" class="btn small" id="forgetLearned">Forget what you learned</button> <span class="hint" id="learnedN"></span></p>`; },
       mount: (sec) => {
         const draw = async () => {
           const p = chosen("provider"), info = S.ai.providers[p], el = $("#aiDetail");
@@ -290,6 +331,7 @@
         };
         $("[data-group=provider]").addEventListener("change", draw);
         draw();
+        mountWithoutAi();
       },
       save: async () => {
         const p = chosen("provider");
@@ -764,6 +806,8 @@
           { value: "off", title: "Off", desc: "Not listening at all (the microphone is released) and says nothing. The schedule and alarms keep going." },
         ], ["active", "quiet", "off"].includes(S.voice?.listenState) ? S.voice.listenState : "active")}
         ${toggle("alarmsWhenOff", "Alarms still ring when Off", "Your wake-up alarm and alarm reminders ring even when Dayspring is off.", S.voice?.alarmsWhenOff !== false)}
+        ${toggle("timersWhenQuiet", "Timers still ring when Dayspring is quiet or off", "A timer you set rings like an alarm (with its name) even when Dayspring is Quiet or Off. Turn this off and a finished timer only shows a card.", S.voice?.timersWhenQuiet !== false)}
+        ${toggle("jokeOffersOn", "Offer a joke now and then", "Only with a playful personality (Humour 60 or more in Settings → Personality), when someone's around, never during calls, alarms, timers, cooking or focus time.", S.voice?.jokeOffersOn !== false, `<div class="row" style="gap:.5em;align-items:center;margin-top:.3em"><label for="jokeOffers">At most</label><select id="jokeOffers">${[0, 1, 2, 3, 4, 5].map((n) => `<option value="${n}"${(S.voice?.jokeOffers ?? 3) === n ? " selected" : ""}>${n}</option>`).join("")}</select><span>a day</span></div>`)}
         <p class="hint">Shortcuts: the coloured badge on the Dayspring screen, <b>Ctrl+Alt+Shift+D</b> anywhere in Windows (off / back on), or say “Dayspring, go quiet”.</p>
         <h2>How each kind arrives</h2>
         <div class="field" id="nkinds"></div>
@@ -783,9 +827,9 @@
         if (!$("#nkinds")) return;          // left this section while loading
         pick("listenState", s.listenState ?? "active");
         const setT = (id, on) => $("#" + id)?.setAttribute("aria-checked", String(Boolean(on)));
-        setT("alarmsWhenOff", s.alarmsWhenOff !== false); setT("overlayWhenOff", s.overlayWhenOff !== false); setT("speakWhenClosed", s.speakWhenClosed === true); setT("ovOn", s.overlay?.on !== false);
+        setT("alarmsWhenOff", s.alarmsWhenOff !== false); setT("timersWhenQuiet", s.timersWhenQuiet !== false); setT("jokeOffersOn", s.jokeOffersOn !== false); if ($("#jokeOffers")) $("#jokeOffers").value = String(s.jokeOffers ?? 3); setT("overlayWhenOff", s.overlayWhenOff !== false); setT("speakWhenClosed", s.speakWhenClosed === true); setT("ovOn", s.overlay?.on !== false);
         $("#ovSecs").value = Number(s.overlay?.seconds) || 8;
-        const KINDS = [["reminders", "Reminders"], ["schedule", "Schedule: start times, changes and check-ins"], ["texts", "Texts and phone"], ["lantern", "Lantern"], ["discover", "Discover"], ["system", "Updates, alerts and system"]];
+        const KINDS = [["reminders", "Reminders"], ["schedule", "Schedule: start times, changes and check-ins"], ["texts", "Texts and phone"], ["lantern", "Lantern"], ["discover", "Discover"], ["system", "Updates, alerts and system"], ["discoveries", "Secret characters found"]];
         const OPTS = [["auto", "Usual (" + ({ voice: "spoken", chime: "chime", silent: "silent" }[s.mode] ?? "spoken") + ")"], ["voice", "Speak"], ["chime", "Chime only"], ["silent", "Silent"]];
         $("#nkinds").innerHTML = KINDS.map(([k, t]) => `<div class="row" style="display:flex;gap:.6em;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:.25em 0"><label for="nk-${k}">${t}</label><select id="nk-${k}" data-kind="${k}">${OPTS.map(([v, l]) => `<option value="${v}"${(s.notify?.[k] ?? "auto") === v ? " selected" : ""}>${l}</option>`).join("")}</select></div>`).join("");
         $("#nAll").value = s.notifyAll ?? "";
@@ -797,7 +841,7 @@
       },
       save: async () => {
         const notify = Object.fromEntries($$("#nkinds select").map((x) => [x.dataset.kind, x.value]));
-        const r = await post("/settings", { notify, notifyAll: $("#nAll").value || null, alarmsWhenOff: isOn("alarmsWhenOff"), overlayWhenOff: isOn("overlayWhenOff"), speakWhenClosed: isOn("speakWhenClosed"), overlay: { on: isOn("ovOn"), seconds: Number($("#ovSecs").value), screen: $("#ovScreen").value } });
+        const r = await post("/settings", { notify, notifyAll: $("#nAll").value || null, alarmsWhenOff: isOn("alarmsWhenOff"), timersWhenQuiet: isOn("timersWhenQuiet"), jokeOffersOn: isOn("jokeOffersOn"), jokeOffers: Number($("#jokeOffers")?.value ?? 3), overlayWhenOff: isOn("overlayWhenOff"), speakWhenClosed: isOn("speakWhenClosed"), overlay: { on: isOn("ovOn"), seconds: Number($("#ovSecs").value), screen: $("#ovScreen").value } });
         if (S.voice) Object.assign(S.voice, r.settings ?? {});
         const want = chosen("listenState"); if (want && want !== (r.settings?.listenState ?? "active")) await post("/listen", { state: want, from: "settings" });
       } },

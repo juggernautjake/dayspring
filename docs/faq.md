@@ -73,6 +73,19 @@ Open **Settings → About → Uninstall Dayspring…** (or **Uninstall Dayspring
 ### Does it work on Windows 10?
 Yes: Windows 10 version 1809 or newer, or Windows 11, 64-bit. Everything it needs comes with Windows except Node.js, which the installer sets up.
 
+
+### What can Dayspring do without an AI brain?
+
+A lot: timers (up to 7, each with a name), alarms and reminders, your schedule, recipes and step-by-step cooking, the Bible, the weather, music, math and conversions, lists and notes, jokes, games and quick facts. See [Using Dayspring without AI](using-without-ai.md) for the full list. When it isn't sure what you meant, it offers up to 7 choices; say the number.
+
+### How many timers can I set?
+
+Seven at once. Each gets a name ("pasta", "laundry"), or Dayspring asks what it's for. See [Using Dayspring without AI → Timers](using-without-ai.md#timers).
+
+### Can Dayspring find recipes and help me cook?
+
+Yes. Say "find a recipe for chili", pick one of the 6 cards, and say "let's make it". Cooking mode shows big text, keeps the screen awake, and you say "next" to move on. See [Recipes and cooking](recipes-and-cooking.md).
+
 ## The guided setup
 
 ### Can I skip steps and come back later?

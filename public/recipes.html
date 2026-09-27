@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dayspring Recipes</title>
+<link rel="stylesheet" href="/fonts/fonts.css">
+<style>
+  :root{--bg:#070916;--panel:rgba(22,26,56,.72);--edge:rgba(160,170,255,.14);--edge2:rgba(170,180,255,.28);--ink:#eef0ff;--muted:#a4abcc;--indigo:#7c8cff;--gold:#ffd27a;--rose:#ff8fa3;color-scheme:dark}
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  body{margin:0;min-height:100vh;background:radial-gradient(1200px 700px at 20% -10%,rgba(124,140,255,.22),transparent 60%),var(--bg);color:var(--ink);font-family:Outfit,"Segoe UI",system-ui,sans-serif;font-size:16px}
+  button,input,textarea,select{font:inherit;color:inherit}
+  button{cursor:pointer;background:rgba(255,255,255,.07);border:1px solid var(--edge2);border-radius:.6em;padding:.4em .85em}
+  button:hover{background:rgba(124,140,255,.28)}
+  button.main{background:var(--indigo);border-color:var(--indigo);color:#0b0f22;font-weight:600}
+  input,textarea{background:rgba(255,255,255,.06);border:1px solid var(--edge2);border-radius:.6em;padding:.45em .7em}
+  textarea{width:100%;min-height:12em}
+  .bar{display:flex;gap:.6em;align-items:center;flex-wrap:wrap;padding:1em 1.2em;border-bottom:1px solid var(--edge)}
+  .bar h1{margin:0 1em 0 0;font-size:1.4em}
+  .bar input{flex:1 1 14em}
+  main{padding:1em 1.2em;max-width:1200px;margin:0 auto}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1em}
+  .card{background:var(--panel);border:1px solid var(--edge);border-radius:1em;overflow:hidden;display:flex;flex-direction:column;cursor:pointer}
+  .card:focus-visible{outline:2px solid var(--indigo)}
+  .img{aspect-ratio:4/3;background:#1b2140;display:grid;place-items:center;font-size:2.6em}
+  .img img{width:100%;height:100%;object-fit:cover}
+  .card .bd{padding:.7em .9em}
+  .card h3{margin:0 0 .2em;font-size:1.05em}
+  .meta{color:var(--muted);font-size:.85em}
+  .tag{display:inline-block;font-size:.75em;border:1px solid var(--edge2);border-radius:999px;padding:0 .5em;margin:.2em .2em 0 0;color:var(--muted)}
+  .panel{background:var(--panel);border:1px solid var(--edge);border-radius:1em;padding:1em 1.2em;margin:1em 0}
+  .phase{margin:1em 0 .3em;font-size:.8em;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .chip{display:inline-block;margin:.2em .3em 0 0;padding:.05em .6em;border-radius:999px;border:1px solid rgba(124,140,255,.5);background:rgba(124,140,255,.18);font-size:.85em}
+  .chip.temp{border-color:rgba(255,179,107,.5);background:rgba(255,179,107,.15)}
+  .row{display:flex;gap:.5em;flex-wrap:wrap;align-items:center}
+  .msg{color:var(--gold);min-height:1.2em}
+  .msg.bad{color:var(--rose)}
+  @media (max-width:600px){.bar h1{width:100%}}
+</style>
+</head>
+<body>
+<div class="bar">
+  <h1>🍳 Recipes</h1>
+  <label for="q" hidden>Search</label><input id="q" type="search" placeholder="Search by name, tag or ingredient" autocomplete="off">
+  <button type="button" id="addBtn" class="main">+ Add a recipe</button>
+  <button type="button" id="findBtn">🔎 Find online</button>
+</div>
+<main>
+  <div class="msg" id="msg" aria-live="polite"></div>
+  <section class="panel" id="add" hidden aria-label="Add a recipe">
+    <h2 style="margin-top:0">Add a recipe</h2>
+    <p class="meta">Paste a recipe (title first, then the ingredients, then the steps), or paste the address of a recipe page.</p>
+    <div class="row"><label for="url">From a web page</label><input id="url" type="url" placeholder="https://…" style="flex:1 1 20em"><button type="button" id="importBtn">Import</button></div>
+    <p><label for="text">Or paste it here</label></p>
+    <textarea id="text" placeholder="Grandma's Cookies&#10;Serves 12&#10;Ingredients&#10;2 cups flour&#10;…&#10;Instructions&#10;1. Cream the butter…"></textarea>
+    <div class="row" style="margin-top:.6em"><button type="button" id="saveText" class="main">Save</button><button type="button" id="cancelAdd">Cancel</button></div>
+  </section>
+  <section class="panel" id="find" hidden aria-label="Find recipes online">
+    <div class="row"><label for="dish">Find recipes for</label><input id="dish" placeholder="chili, banana bread, chicken and rice…" style="flex:1 1 16em"><button type="button" id="searchBtn" class="main">Search</button></div>
+    <div class="grid" id="found" style="margin-top:1em"></div>
+  </section>
+  <section class="panel" id="view" hidden aria-label="Recipe"></section>
+  <div class="grid" id="list"></div>
+</main>
+<script src="/recipes.js"></script>
+</body>
+</html>

@@ -143,7 +143,10 @@
     return outs.find((d) => d.label.toLowerCase().startsWith(label.toLowerCase()))?.deviceId ?? null;
   }
   navigator.mediaDevices?.addEventListener?.("devicechange", () => { outs = null; });
-  function speak(text) { return window.dsVoiceLock ? window.dsVoiceLock.run(() => speakNow(text)) : speakNow(text); }
+  // ✋ Stop (tv.js stopSpeaking) ends a call answer too: the one playing stops and any still waiting are dropped
+  let callGen = 0;
+  window.dsStopCall = () => { callGen++; try { audioEl?.pause(); } catch { /* gone */ } api("/tunein/speaking", { on: false }).catch(() => {}); };
+  function speak(text) { const g = callGen; const run = () => (g === callGen ? speakNow(text) : null); return window.dsVoiceLock ? window.dsVoiceLock.run(run) : run(); }
   async function speakNow(text) {
     // ask the server where answers go right now (the call mixer may have come up after this page loaded)
     try { const fresh = await api("/tunein"); st = { ...st, ...fresh }; } catch { /* use what we have */ }
@@ -166,7 +169,8 @@
         const set = await audioEl.setSinkId(sink).then(() => true).catch(() => false);
         if (!set) card("Couldn't reach the call", "Chrome wouldn't send my voice to the call mixer, so I answered in your headset only.");
       }
-      await new Promise((ok) => { audioEl.onended = audioEl.onerror = () => { URL.revokeObjectURL(url); done(); ok(); }; audioEl.play().catch(() => { done(); ok(); }); setTimeout(ok, 8000 + text.length * 90); });
+      const mine = audioEl;
+      await new Promise((ok) => { mine.onended = mine.onerror = mine.onpause = () => { URL.revokeObjectURL(url); done(); ok(); }; mine.play().catch(() => { done(); ok(); }); setTimeout(ok, 8000 + text.length * 90); });
     } catch { done(); }
   }
 
