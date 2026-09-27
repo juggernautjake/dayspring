@@ -102,7 +102,9 @@
 
   // ---------------------------------------------------------------- timers
   let snap = { timers: [], ringing: [], stopwatch: { running: false, elapsed: 0 }, now: Date.now() }, skew = 0, ringCard = null;
-  const box = el("div"); box.id = "dsxTimers"; box.setAttribute("aria-live", "polite"); document.body.appendChild(box);
+  const box = el("div"); box.id = "dsxTimers"; box.setAttribute("aria-live", "polite");
+  // the countdowns live at the top of the notification stack, so together they stay clear of the talk controls
+  { const rail = document.getElementById("toasts"); if (rail) rail.insertBefore(box, rail.firstChild); else document.body.appendChild(box); }
   const fmt = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; return h ? `${h}:${String(m).padStart(2, "0")}:${String(x).padStart(2, "0")}` : `${m}:${String(x).padStart(2, "0")}`; };
   const leftOf = (t) => (t.paused || !t.endsAt ? t.left : t.endsAt - (Date.now() + skew));
   const act = (action, ref, extra = {}) => core.post("/timers", { action, ref, ...extra }).then(setTimers).catch((e) => core.toast("Timer", e.message, "", "bell"));
@@ -362,6 +364,7 @@
       if (r.openPage) core.openPage(r.openPage);
       if (r.webResults) showWeb(r.webResults);
       if (r.show === "personality") core.openPage("/setup?embed=1&s=personality");
+      if (r.show === "badges") core.openPage("/progress?embed=1#badges");   // XP: "open my badge gallery"
       if (typeof r.show === "string" && r.show.startsWith("toast:")) core.toast(r.show.slice(6), "", "", "bell");
       return null;
     },

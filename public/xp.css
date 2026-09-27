@@ -22,6 +22,8 @@ html.mini .xp-badge{font-size:.72rem;left:8px;bottom:8px}
 .xp-hero p{margin:.3em 0 0;color:#c9cfee}.xp-streak{color:#ffd27a!important}
 .xp-chart{width:100%;height:auto}.xpc-bar{fill:#7c8cff}.xpc-zero{fill:rgba(255,255,255,.1)}.xpc-lbl{fill:#a4abcc;font-size:8px;text-anchor:middle}
 .xpc-cap{stroke:#ff8fa3;stroke-dasharray:3 3;stroke-width:1}.xpc-caplbl{fill:#ff8fa3;font-size:8px;text-anchor:end}
+.xpc-learn{fill:#5fd4a8}.xpc-legend{display:flex;flex-wrap:wrap;gap:4px 14px;margin:6px 0 0;font-size:.85em;color:#a4abcc}.xpc-legend span{display:inline-flex;align-items:center;gap:6px}
+.xpc-key{display:inline-block;width:10px;height:10px;border-radius:3px}.xpc-key.xpc-bar{background:#7c8cff}.xpc-key.xpc-learn{background:#5fd4a8}
 .xp-check label{display:block;margin-bottom:.4em;color:#c9cfee}
 .xp-row{display:flex;gap:8px;flex-wrap:wrap}.xp-row input{flex:1 1 14em;min-width:0;padding:.6em .8em;border-radius:.6em;border:1px solid rgba(160,170,255,.3);background:#0d1128;color:#eef0ff;font:inherit}
 #xpPage button{font:inherit;padding:.5em 1em;border-radius:2em;border:1px solid rgba(255,210,122,.5);background:rgba(255,210,122,.14);color:#ffe6ae;cursor:pointer}

@@ -46,6 +46,7 @@ import * as updater from "./lib/updater.mjs";
 import * as permissions from "./lib/permissions.mjs";
 import * as discordRoutes from "./lib/discord-routes.mjs";
 import * as callRoutes from "./lib/call-routes.mjs";
+import * as callsRoutes from "./lib/calls-routes.mjs";   // Settings → Calls: call apps, latency, the Discord chat companion
 import * as studyRoutes from "./lib/study-routes.mjs";
 import * as playerRoutes from "./lib/player-routes.mjs";
 import * as ambientRoutes from "./lib/ambient-routes.mjs";
@@ -58,7 +59,7 @@ import * as quiet from "./lib/quiet.mjs";
 import { release as osRelease } from "node:os";
 import * as aboutRoutes from "./lib/about-routes.mjs";
 import * as overlay from "./lib/overlay.mjs";
-import { claim as claimSpeaker } from "./lib/bus.mjs";
+import { claim as claimSpeaker, addHello } from "./lib/bus.mjs";
 import * as screenlog from "./lib/screenlog.mjs";
 import * as documentRoutes from "./lib/document-routes.mjs";
 import * as connectorRoutes from "./lib/connector-routes.mjs";
@@ -75,6 +76,7 @@ import * as stt from "./lib/stt.mjs";
 import * as lantern from "./lib/lantern.mjs";
 import * as lanternRoutes from "./lib/lantern-routes.mjs";
 import * as intentRoutes from "./lib/intent-routes.mjs";
+import * as xpRoutes from "./lib/xp-routes.mjs";   // XP: earned by checking in on real tasks (lib/xp)
 import * as personaRoutes from "./lib/persona-routes.mjs";   // Settings → Personality (lib/persona)
 import * as timers from "./lib/timers.mjs";
 import * as recipes from "./lib/recipes.mjs";
@@ -82,8 +84,13 @@ import * as intents from "./lib/intents/index.mjs";
 import * as web from "./lib/web.mjs";
 // A fresh install: create the data folder and any missing data files (empty, nothing personal) before anything runs.
 firstrun.ensure();
+// What each newly connected page is told first: who has the microphone and the listening state (so a page opened while
+// Lantern listens doesn't listen too), and any one-time notices (e.g. a damaged file that was restored from a backup).
+addHello("micOwner", () => lantern.micOwner());
+addHello("listenState", () => settings.get().listenState ?? "active");
+addHello("notices", () => firstrun.notices());
 // The Settings/setup wizard, updates and the in-app guide each answer their own /api routes.
-const ROUTES = [setupRoutes, updateRoutes, helpRoutes, discordRoutes, callRoutes, studyRoutes, playerRoutes, ambientRoutes, windowRoutes, documentRoutes, connectorRoutes, fsRoutes, toolingRoutes, welcomeRoutes, discoverRoutes, calendarRoutes, lanternRoutes, aboutRoutes, intentRoutes, personaRoutes];
+const ROUTES = [setupRoutes, updateRoutes, helpRoutes, discordRoutes, callRoutes, callsRoutes,studyRoutes, playerRoutes, ambientRoutes, windowRoutes, documentRoutes, connectorRoutes, fsRoutes, toolingRoutes, welcomeRoutes, discoverRoutes, calendarRoutes, lanternRoutes, aboutRoutes, intentRoutes, personaRoutes, xpRoutes];
 // 🎧 Tune in: what it hears addressed to Dayspring goes through the same assistant
 tunein.setChat(chat);
 // DAYSPRING_DISPLAY=1: this computer shows the Dayspring screen (any screen: a TV, a monitor…), so it keeps it open and
@@ -196,6 +203,9 @@ settings.onChange((s, patch) => {
   if ((patch.musicVolume !== undefined || patch.musicVolumeDelta !== undefined) && browser.isOpen()) browser.spotifyFade((s.musicVolume ?? 100) / 100, 800).catch(() => {});
 });
 settings.onChange((s, patch) => { if (patch.audioOutputs && browser.isOpen() && !mixer.isActive()) browser.spotifySink(spotifyRoles(s)).then((l) => l && console.log(`spotify output → ${l}`)).catch(() => {}); });
+// "silent for an hour" (and a two-hour conversation mode) end on the minute even if nobody asks: the screen is told
+settings.onChange((s, patch) => { if (patch?.expired) announcer.broadcast("settings", s); });
+setInterval(() => { try { settings.get(); } catch { /* next minute */ } }, 60_000).unref?.();
 // Something unexpected (a network hiccup in a callback, a bug in one feature) is written down and Dayspring keeps going,
 // instead of the whole server stopping and the screen going quiet.
 process.on("unhandledRejection", (e) => { console.error("unexpected (kept running):", e?.stack ?? e); try { devlog.log("error", { where: "unhandledRejection", error: String(e?.message ?? e).slice(0, 500) }); } catch { /* logging only */ } });
@@ -350,7 +360,9 @@ async function api(req, res, url) {
   if (m === "GET" && p === "/overlay") return send(res, 200, overlay.status());
   if (m === "GET" && p === "/overlay/helper") return send(res, 200, await overlay.helperStatus());
   // the alarm was answered on a Dayspring screen: the desktop helper stops ringing too (and the other way round)
-  if (m === "POST" && p === "/alarm/dismissed") { const b = await readJSON(req).catch(() => ({})); announcer.broadcast("alarm-dismissed", { from: String(b.from ?? "screen").slice(0, 20), at: Date.now() }); return send(res, 200, { ok: true }); }
+  // `from` is the page's own id (so every OTHER Dayspring page stops ringing too), "overlay" or "screen" (older pages)
+  if (m === "POST" && p === "/alarm/dismissed") { const b = await readJSON(req).catch(() => ({})); announcer.broadcast("alarm-dismissed", { from: String(b.from ?? "screen").slice(0, 64), snoozed: Boolean(b.snoozed), at: Date.now() }); return send(res, 200, { ok: true }); }
+  if (m === "GET" && p === "/notices") return send(res, 200, { notices: firstrun.notices() });
   // tests only (DAYSPRING_TEST_HOOKS=1): announce something now, as the schedule would
   if (m === "POST" && p === "/test/overlay" && process.env.DAYSPRING_TEST_HOOKS === "1") { const b = await readJSON(req).catch(() => ({})); if (b.type === "alarm-stop" && !b.id) b.id = overlay._ringing()?.id; return send(res, 200, { sent: overlay._send(b) }); }
   if (m === "POST" && p === "/test/announce" && process.env.DAYSPRING_TEST_HOOKS === "1") { const b = await readJSON(req).catch(() => ({})); return send(res, 200, { item: announcer.announce(b) }); }
@@ -709,7 +721,7 @@ async function api(req, res, url) {
 }
 
 // Page names: /display (the Dayspring screen; /tv is its older name), /setup (first-run wizard and Settings), /help (the guide)
-const PAGES = { "/": "/index.html", "/tv": "/tv.html", "/display": "/tv.html", "/mini": "/tv.html", "/history": "/history.html", "/setup": "/setup.html", "/settings": "/setup.html", "/help": "/help.html", "/welcome": "/welcome.html", "/recipes": "/recipes.html" };
+const PAGES = { "/": "/index.html", "/tv": "/tv.html", "/display": "/tv.html", "/mini": "/tv.html", "/history": "/history.html", "/setup": "/setup.html", "/settings": "/setup.html", "/help": "/help.html", "/welcome": "/welcome.html", "/recipes": "/recipes.html", "/progress": "/progress.html" };
 async function serveStatic(res, pathname) {
   // until setup is done, the Dayspring screen (and the plain address, which a new user is most likely to type) sends people to the wizard
   if ((pathname === "/" || pathname === "/tv" || pathname === "/display" || pathname === "/mini" || pathname === "/setup" || pathname === "/settings") && !owner.setupDone()) { res.writeHead(302, { location: "/welcome" }); return res.end(); }
@@ -884,7 +896,7 @@ createServer(async (req, res) => {
   updater.startAuto({
     announce: (text) => announcer.announce({ kind: "update", text }),
     notify: (info) => announcer.broadcast("update", info),
-    busy: () => tunein.isOn() || callbridge.isTalking() || snooze.list_().some((x) => Date.parse(x.until) - Date.now() < 30 * 60_000) || alarmSoon(),
+    busy: () => tunein.isOn() || callbridge.isTalking() || snooze.list_().some((x) => (Number(x.until) || Date.parse(x.until)) - Date.now() < 30 * 60_000) || alarmSoon(),
     restart: restartSelf,
   });
   // older shortcuts started "Start Dayspring.cmd" (a command window); point them at the windowless starter
@@ -927,6 +939,15 @@ function startTimersAndRecipes() {
   // the no-AI understanding is indexed once, now, so no one waits for it on their first request (about a second)
   setTimeout(() => { try { intents.stats(); } catch (e) { console.log(`intents: ${e.message}`); } }, 300);
   recipes.setDeps({ search: (query, o) => web.search(query, o), emit: (type, data) => announcer.broadcast(type, data) });
+  // XP: when a scheduled block ends, "Did you finish your workout?" (never on a call, while ringing, Off or Quiet,
+  // or with listening stopped on the screen), and the badge and Progress page kept up to date
+  xpRoutes.wire({
+    announce: (item) => announcer.announce(item),
+    broadcast: (type, data) => announcer.broadcast(type, data),
+    blocksToday: () => { const d = store.todayISO(); return store.blocksBetween(d, d); },
+    canAsk: () => quiet.state() === "active" && announcer.displayCount() > 0 && !(callbridge.isTalking?.() || tunein.isOn?.()) && timers.ringing().length === 0,
+    env: () => ({ listen: quiet.state(), mode: quiet.modeFor("schedule"), inCall: Boolean(callbridge.isTalking?.() || tunein.isOn?.()), alarm: timers.ringing().length > 0 }),
+  });
   // Funny personality: now and then, "Want to hear a joke?" (never on a call, during an alarm, a timer, cooking, the
   // morning routine, a meeting or a focus block, and only when someone's been around in the last 45 minutes)
   setInterval(() => {

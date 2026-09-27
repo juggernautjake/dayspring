@@ -27,6 +27,28 @@ Most settings can also be changed by voice, for example "make everything bigger"
 | **Wake words** | What you say to get its attention, separated by commas. "Hey …" works automatically. |
 | **Sense of humor** | Just the facts, Light and friendly, Dry and witty, Goofy and playful, or describe your own. |
 
+## Calls
+
+`?s=calls` · Full walkthrough: [Dayspring in calls](discord-calls.md) and [Discord bot](discord-bot.md)
+
+Everything here saves as you change it (in `data\calls.json`), so there's no Save button. At the top: whether Tune in is listening (and in which call app), whether answers go into the call, and whether the Discord bot is online.
+
+| Setting | What it does | Default |
+|---|---|---|
+| **Call apps** (Discord, Zoom, Google Meet, Teams, Any other app) | For each app, the exact **Microphone** and **Speaker** to pick on this computer, where that setting is in the app, and recommended extras. Dayspring never changes them. A table of all apps is underneath. | — |
+| **▶ Test** | Plays a test phrase into the call mixer and checks it arrived, that Voicemeeter is running, and that Dayspring can hear your speaker. | — |
+| **Speed** | How long the last 10 answers took, from the end of the question to the first sound. | — |
+| **Wait after someone stops talking** | How much quiet ends a question. Shorter answers sooner; too short cuts people off mid-pause. | 450 ms |
+| **While thinking** | Nothing, a soft blip, or a short "mm-hm" (Discord bot). | Nothing |
+| **Quick listening** | Uses the fast speech model's words when they're clear, instead of a second, slower pass. | On |
+| **Stop when someone talks over me** | Talking over Dayspring for about half a second stops it (Discord bot). **…with Tune in too** does the same for Tune in. | On · Off |
+| **When the Discord bot and Tune in are both in the call** | Who answers, so nobody hears two answers. | The bot |
+| **Direct messages from** | Who can DM the Discord bot: anyone, people in a server with the bot, only you, or nobody. | People in a server with the bot |
+| **Dayspring's channel ID** | A Discord channel where every message is for Dayspring. | — |
+| **Personality in Discord** | A different personality just for Discord, or the same as everywhere. | The same |
+| **Share my schedule with Discord** | Lets friends ask what you're up to today. Files, texts and the prayer list stay private either way. | Off |
+| **Copy invite link** | The link that adds the bot (with its slash commands) to a server you manage. | — |
+
 ## Where you are
 
 `?s=location`

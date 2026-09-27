@@ -49,8 +49,12 @@ export const EVENT_TYPES = {
   "user.signed_in": { from: ["lantern", "dayspring"], data: [] },
   "user.signed_out": { from: ["lantern", "dayspring"], data: [] },
   "schedule.block.request": { from: ["lantern"], data: ["title", "time", "minutes"] },
+  // verified learning, for Dayspring's XP (key: "lantern:<course>:<kind>:<ref>", or ":practice:<sessionId>"; one award per key)
+  "xp.earned": { from: ["lantern"], data: ["key", "kind", "course", "ref"] },
   // Dayspring → Lantern
   "schedule.block.started": { from: ["dayspring"], data: ["title"] },
+  // Dayspring's XP at a glance (after any change), so Lantern's hub can show it
+  "xp.summary": { from: ["dayspring"], data: ["balance", "level"] },
   "schedule.block.ended": { from: ["dayspring"], data: ["title"] },
   "alarm": { from: ["dayspring"], data: [] },
   "dnd": { from: ["dayspring"], data: ["on"] },

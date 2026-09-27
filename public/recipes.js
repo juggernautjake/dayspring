@@ -58,7 +58,9 @@
     v.appendChild(act);
     v.scrollIntoView({ behavior: "smooth", block: "start" });
   }
-  async function open(id) { try { const { recipe } = await api(`/recipes/${encodeURIComponent(id)}`); renderRecipe(recipe); } catch (e) { say(e.message, true); } }
+  // only the newest open() renders, so a slow earlier answer can't paint over the recipe just tapped
+  let openSeq = 0;
+  async function open(id) { const n = ++openSeq; try { const { recipe } = await api(`/recipes/${encodeURIComponent(id)}`); if (n === openSeq) renderRecipe(recipe); } catch (e) { if (n === openSeq) say(e.message, true); } }
 
   $("#q").addEventListener("input", () => { clearTimeout(load.t); load.t = setTimeout(load, 200); });
   $("#addBtn").onclick = () => { $("#add").hidden = false; $("#find").hidden = true; $("#url").focus(); };

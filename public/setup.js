@@ -244,6 +244,12 @@
       render: () => window.DayspringPersonality ? window.DayspringPersonality.html() : `<h1>Personality</h1><p class="lead">This page didn't load. Reload to try again.</p>`,
       mount: () => window.DayspringPersonality?.mount($("#card"), { toast }) },
 
+    // ------------------------------------------------------------------------------------------------ calls (public/calls.js)
+    // Dayspring in Discord, Zoom, Google Meet and Teams: each app's microphone and speaker, speed, the Discord chat companion.
+    { id: "calls", icon: "🎧", title: "Calls", settingsOnly: true,
+      render: () => window.DayspringCalls ? window.DayspringCalls.html() : `<h1>Calls</h1><p class="lead">This page didn't load. Reload to try again.</p>`,
+      mount: () => window.DayspringCalls?.mount($("#card"), { toast }) },
+
     // ------------------------------------------------------------------------------------------------ location
     { id: "location", icon: "📍", title: "Where you are",
       render: () => { const l = S.owner.location ?? {}; return `

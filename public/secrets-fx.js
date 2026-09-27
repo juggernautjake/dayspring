@@ -23,7 +23,7 @@
   function card(d) {
     const el = document.createElement("div");
     el.setAttribute("role", "status");
-    el.style.cssText = "position:fixed;top:max(16px,var(--st,0px));right:16px;z-index:2147483001;display:flex;gap:.7em;align-items:center;max-width:min(26em,calc(100vw - 32px));padding:.8em 1em;border-radius:.9em;background:rgba(20,24,50,.96);color:#eef0ff;border:1px solid #ffd27a;box-shadow:0 14px 44px rgba(0,0,0,.55),0 0 30px rgba(255,210,122,.3);font:inherit";
+    el.style.cssText = "position:fixed;top:max(16px,var(--st,0px),var(--pop-top,0px));right:16px;z-index:2147483001;display:flex;gap:.7em;align-items:center;max-width:min(26em,calc(100vw - 32px));padding:.8em 1em;border-radius:.9em;background:rgba(20,24,50,.96);color:#eef0ff;border:1px solid #ffd27a;box-shadow:0 14px 44px rgba(0,0,0,.55),0 0 30px rgba(255,210,122,.3);font:inherit";
     el.innerHTML = `<span style="font-size:1.8em;line-height:1">${esc(d.icon)}</span><div>${d.unlockedNow ? `<b>🔓 Unlocked: ${esc(d.name)}!</b><br>${esc(d.reveal)}` : `<b>✨ Secret character discovered</b><br>${esc(d.name)}: ${esc(d.reveal)}<br><small style="opacity:.75">${esc(d.found)} of ${esc(d.total)} found · Settings → Personality</small>`}</div><button type="button" aria-label="Close" style="background:none;border:0;color:inherit;font-size:1.2em;cursor:pointer">✕</button>`;
     el.querySelector("button").onclick = () => el.remove();
     document.body.appendChild(el);

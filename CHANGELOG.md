@@ -2,6 +2,64 @@
 
 All notable changes to Dayspring. Versions follow [semantic versioning](https://semver.org).
 
+## 1.4.0: Personalities, XP and badges
+
+**Give Dayspring a personality.** In Settings → Personality, pick a character:
+- 20 cards, from Cowboy, Pirate and Noble Knight to Grandma, Robot, Zen Monk and Bard.
+- Each has its own sliders and dozens of lines that change with them.
+- Fine-tune twelve sliders (Warmth, Humour, Bite…), or describe your own ("a grumpy lighthouse keeper who secretly loves people").
+- Save up to 50 favourites.
+- Say "be a cowboy", "be more brief", or "be normal".
+- Times, alarms, health and your schedule always come first and plain.
+
+**15 secret characters to find.** Say the right thing, set the sliders just so, or use Dayspring at the right time. The cards show a riddle until you find one. Then unlock it with XP.
+
+**XP: earned for real.** Tell Dayspring what you finished ("I did the dishes", "I studied for an hour", "I went to church"), or answer when a scheduled block ends. One quick question makes it count; for studying, it's one thing you learned. Prayer and worship are never quizzed.
+- 18 kinds of task.
+- At most 80 XP a day.
+- Check-ins you start yourself count 70%; scheduled ones count in full.
+- Today or yesterday only.
+- Undo within 10 minutes.
+- Levels every 300 XP, and streaks with a +10% bonus from day 7.
+- The first secret character costs 500 XP: at least a week of real effort.
+
+**Badges.** 18 badges in each of 18 categories (Fitness, Prayer, Reading, Cooking, Service…), collected over years of steady habits. The first comes within a week.
+- **Unique art:** all 324 are different, and every part carries its category: the emblem's story, an engraved rim (chain links, a musical staff, stained glass, moon phases…), little category tokens instead of stars, and frames that grow from a plain disc to winged legends.
+- **Gentle motion,** like Dayspring's orb at rest.
+- **Coin-flip entrance:** a new badge spins in, lands with a gleam, and tells its story: "Jordan achieved this milestone by running for 30 minutes on July 2nd, 2027!"
+- **The next badge is a mystery:** a "?" card with how close you are and about how long at your recent pace.
+- **Kind nudges** when you're close: at most once a day per category, never when Off or Quiet.
+- **Progress → Badges:** the gallery and a badge case of 3 favourites, which also shows on the screen.
+- **Ask:** "what badges do I have?", "how close am I to my next fitness badge?", "what did I do to earn my last badge?"
+
+**Lantern learning counts.** Every lesson, exercise, practice session, unit check, project milestone and finished unit or course that Lantern verifies becomes XP, once, even when finished on another computer.
+- It fills your Study & Learning badges.
+- "I finished lesson 3" is checked with Lantern first.
+- **Progress → Learning** shows each course's progress, the XP it has earned, the week's learning and recent completions. The study cards on the screen show XP too.
+- Ask: "how much XP have I earned from Python?", "what did I finish this week?"
+
+**Calls are much quicker.** On a call, Dayspring now starts answering about 1.3 seconds after you stop talking (it used to be about 4.4). It hears each person separately, notices the end of a sentence sooner, and starts speaking the first sentence of its answer while it's still thinking of the rest. Talk over it for a moment and it stops to listen.
+
+**Dayspring on Discord.** Add Dayspring as a bot (Settings → Discord) and it becomes someone to chat with:
+- @mention it, send it a direct message, or give it its own channel. Answers appear as they're written.
+- Quick commands: /ask, /joke, /time, /weather, /remind and /help.
+- Say "Dayspring, join my Discord" and it joins your voice channel, says hello, and answers out loud when someone says its name.
+- You get the full assistant. Friends get friendly general answers, with no access to your schedule, files or personal details.
+- Nothing anyone says on a call is saved.
+
+**Call setup, step by step.** Settings → Calls shows a card for Discord, Zoom, Google Meet, Microsoft Teams and any other app, with exactly where to pick the microphone and speaker in that app. Dayspring notices which one you're using.
+
+**Fixes**
+- **Crash-safe saving.** Your schedule, settings and progress are written safely, so a crash or power cut can't leave a half-written file. If a file is ever damaged, Dayspring restores the last good copy by itself and tells you.
+- **More than one screen:** sound plays in the right place, and an alarm rings, snoozes and stops together on every Dayspring screen.
+- **Snooze** works reliably for alarms, timers and reminders, for the time you picked.
+- **Timed modes** ("quiet for an hour", "off until 3") end on time, even across a restart.
+- **Tune-in privacy:** tuning in to Dayspring from another device is tighter about who can see and hear what.
+- **Missed reminders:** if the computer was asleep or off, the reminders you missed are shown when it comes back, instead of being skipped.
+- **Helpers restart themselves:** if a background helper (voice, sound, the window) stops, Dayspring starts it again.
+- **XP is fair:** closed loopholes that could earn the same XP twice, earn XP for future days, or go past the daily limit.
+- **Notifications never cover the talk buttons.** Pop-ups like "Night mode", timers, XP and badge cards now stay clear of ✋ Stop, 🎤, ⌨ Type, 🎙 Talk and the Active/Quiet/Off badge on the full screen, in Dayspring mini and in a browser tab, at any window size. A long stack scrolls instead.
+
 ## 1.3.0: Dayspring works great without an AI key
 
 **Understands hundreds of everyday requests without AI.** A built-in understanding of 185 kinds of request, in 29 groups, spelled out in more than 8,000 ways. It copes with small slips and sound-alikes ("calender", "set a time her") and picks out the details ("in a bit", "first thing tomorrow", "after lunch", "the end of the month", "Romans 8 28"). It answers in a few milliseconds, on your computer. When an AI brain is set up, the quick things (timers, math, jokes) are still answered instantly, at no cost.

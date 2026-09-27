@@ -801,7 +801,7 @@
   function playVoice(n) { return window.dsVoiceLock ? window.dsVoiceLock.run(() => playVoiceNow(n)) : playVoiceNow(n); }
   async function playVoiceNow(n) {
     if (voiceProvider === "browser") return browserSpeak(VOICE_LINE(String(n).replace(/^Microsoft |^Google /, "").replace(/ Online \(Natural\)| - English.*$/, "")), {}, { voiceName: n });
-    try { const r = await api("/tts", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: VOICE_LINE(n), voice: n }) }); const url = URL.createObjectURL(await r.blob()); const a = new Audio(url); try { audioCtx().createMediaElementSource(a).connect(CH.general.voice); } catch { /* plays direct */ } await a.play(); await new Promise((res) => { a.onended = res; a.onerror = res; }); URL.revokeObjectURL(url); } catch { /* skip that one */ }
+    try { const r = await api("/tts", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: VOICE_LINE(n), voice: n }) }); const url = URL.createObjectURL(await r.blob()); const a = new Audio(url); let node = null; try { node = audioCtx().createMediaElementSource(a); node.connect(CH.general.voice); } catch { /* plays direct */ } try { await a.play(); await new Promise((res) => { a.onended = res; a.onerror = res; }); } finally { try { node?.disconnect(); } catch { /* gone */ } a.onended = a.onerror = null; a.removeAttribute("src"); a.load(); URL.revokeObjectURL(url); } } catch { /* skip that one */ }
   }
   // clicks inside the viewer
   $("#dBody").addEventListener("click", async (e) => {
@@ -1038,6 +1038,40 @@
     el.classList.add("out"); setTimeout(() => { el.remove(); syncToastClear(); }, 450);
   }
   function clearToasts() { $("#toasts").querySelectorAll(".toast").forEach(dismissToast); }
+  // Pop-ups never cover the talk controls (✋ Stop, 🎤, ⌨ Type, 🎙 Talk, the Active/Quiet/Off badge). Where the control
+  // strip sits changes with the layout (top of the talk panel on a wide screen, the middle on a tall one, the top of
+  // Dayspring mini), so it's measured and every pop-up uses the space above or below it:
+  //   --pop-top / --pop-max: where the top-right stack (toasts, timers, discoveries) starts, and how tall it may grow
+  //   --pop-bottom-inset: how far up from the bottom centred cards must stay (when the controls sit low)
+  //   --ctl-bottom: stacks anchored to the bottom may grow up to here
+  (function keepControlsClear() {
+    const root = document.documentElement, SEL = ["#stateBtn", "#stopBtn", "#muteBtn", "#typeBtn", "#pttBtn", ".talktools"];
+    let last = "";
+    function measure() {
+      let top = Infinity, bottom = 0, left = Infinity, right = 0;
+      for (const q of SEL) for (const e of document.querySelectorAll(q)) {
+        const r = e.getBoundingClientRect(); if (r.width < 1 || r.height < 1 || e.closest("[hidden]")) continue;
+        top = Math.min(top, r.top); bottom = Math.max(bottom, r.bottom); left = Math.min(left, r.left); right = Math.max(right, r.right);
+      }
+      const H = innerHeight, gap = 8;
+      if (!Number.isFinite(top)) { const k = "none"; if (k !== last) { last = k; for (const v of ["--pop-top", "--pop-max", "--pop-bottom-inset", "--ctl-bottom"]) root.style.removeProperty(v); } return; }
+      const upper = top < H * 0.45;
+      const vars = { "--ctl-bottom": Math.round(bottom + gap) + "px", "--pop-top": (upper ? Math.round(bottom + gap) : 0) + "px", "--pop-bottom-inset": (upper ? 0 : Math.round(H - top + gap)) + "px" };
+      // the top stack: below the controls when they're high up; when they're lower down, it ends just above them
+      const t = $("#toasts"); let stackTop = upper ? bottom + gap : 0;
+      if (t) { const cs = getComputedStyle(t), base = parseFloat(cs.top) || 0; if (!upper) stackTop = base; else stackTop = Math.max(base, bottom + gap);
+        const tr = t.getBoundingClientRect(), overlapsX = tr.left < right && left < tr.right;
+        if (!overlapsX && tr.width > 0) { vars["--pop-top"] = "0px"; stackTop = base; } }
+      vars["--pop-max"] = Math.max(80, Math.round((upper ? H - gap : top - gap) - stackTop)) + "px";
+      const k = JSON.stringify(vars); if (k === last) return; last = k;
+      for (const [n, v] of Object.entries(vars)) root.style.setProperty(n, v);
+    }
+    addEventListener("resize", measure);
+    try { new ResizeObserver(measure).observe(document.body); } catch { /* old browser: the interval covers it */ }
+    setInterval(measure, 1500);
+    requestAnimationFrame(measure);
+    window.dsMeasureControls = measure;
+  })();
   function syncToastClear() {
     let b = $("#toastsClear");
     if (!b) { b = document.createElement("button"); b.id = "toastsClear"; b.className = "clearall"; b.textContent = "Clear all"; b.onclick = clearToasts; $("#toasts").appendChild(b); }
@@ -1225,13 +1259,19 @@
   let soundFiles = {};
   function playSound(name, bus = "general") {
     const n = String(name || "").toLowerCase();
+    // one Dayspring page makes sound (the speaker); the others keep their sparkle but stay silent
+    if (window.dsIsSpeaker === false) { try { if (BURST_HUE[n] !== undefined) burst(BURST_HUE[n], 30); } catch { /* visuals only */ } return; }
     try {
       if (SOUNDS[n]) { energy = Math.min(1, energy + 0.4); if (BURST_HUE[n] !== undefined) burst(BURST_HUE[n], n === "motif" || n === "checkin" ? 30 : 80); return onBus(bus, SOUNDS[n]); }
       const f = soundFiles[n];
       if (f) {
         const a = new Audio(f); a.volume = 0.85;
-        try { onBus(bus, () => actx.createMediaElementSource(a).connect(sfxIn())); } catch { /* plays direct */ }
-        a.play().catch(() => {}); return;
+        let node = null;
+        try { onBus(bus, () => { node = actx.createMediaElementSource(a); node.connect(sfxIn()); }); } catch { /* plays direct */ }
+        // let go of the element and its audio node when it finishes (a screen left on for weeks mustn't pile them up)
+        const release = () => { try { node?.disconnect(); } catch { /* gone */ } node = null; a.onended = a.onerror = null; try { a.removeAttribute("src"); a.load(); } catch { /* gone */ } };
+        a.onended = a.onerror = release;
+        a.play().catch(release); return;
       }
       onBus(bus, SOUNDS.chime);
     } catch { /* audio not allowed yet */ }
@@ -1475,8 +1515,9 @@
   vizRaf = requestAnimationFrame(drawViz);   // alive from the moment the page opens
 
   /* ================================================================ speaking (fetched ahead, played through the chain) */
-  let speaking = false, speakQueue = Promise.resolve(), current = null;
+  let speaking = false, speakQueue = Promise.resolve(), current = null, voiceNode = null;
   const PAGE_ID = (crypto.randomUUID?.() ?? String(Math.random()).slice(2)) + "";
+  window.dsPageId = PAGE_ID;             // xp.js reports "stop listening" per page with it
   let isSpeaker = true; window.dsIsSpeaker = true;
   // everything that talks on this page (replies, announcements, call answers) goes through this one queue
   window.dsVoiceLock = { run: (fn) => (speakQueue = speakQueue.then(() => (isSpeaker ? fn() : null)).catch(() => {})) };
@@ -1527,7 +1568,7 @@
         const done = () => { clearTimeout(guard); resolve(); };
         current = new Audio(url);
         current.onloadedmetadata = () => { if (isFinite(current.duration)) { tuneIn(true, current.duration * 1000 + 300); clearTimeout(guard); guard = setTimeout(() => { try { current?.pause(); } catch { /* gone */ } resolve(); }, current.duration * 1000 + 4000); } };
-        try { const ctx = audioCtx(); ctx.createMediaElementSource(current).connect((CH[bus] ?? CH.general).voice); } catch { /* plays direct */ }
+        try { const ctx = audioCtx(); voiceNode = ctx.createMediaElementSource(current); voiceNode.connect((CH[bus] ?? CH.general).voice); } catch { /* plays direct */ }
         current.onended = done; current.onerror = (e) => { clearTimeout(guard); reject(e); };
         current.onplay = () => followCaption(current);
         current.play().catch(reject);
@@ -1540,6 +1581,10 @@
       if (!e?.browserVoice) dlog("error", { where: "tts", error: String(e?.message ?? e).slice(0, 200), fallback: "browser voice" });
       await browserSpeak(text, v);
     } finally {
+      // let go of this clip's element and audio node (a screen on for weeks would otherwise keep every one)
+      try { voiceNode?.disconnect(); } catch { /* gone */ }
+      voiceNode = null;
+      try { if (current) { current.onended = current.onerror = current.onloadedmetadata = current.onplay = null; current.removeAttribute("src"); current.load(); } } catch { /* gone */ }
       current = null; speaking = false;
       tuneIn(false);
       await sleep(250);
@@ -1682,23 +1727,25 @@
   // Song first; ~30 s in it dips and the greeting comes, slowly; the song fades; then each part of time with God,
   // with room between them; then he answers (soft music, quiet, worship later) without the wake phrase.
   async function startMorning(item) {
+    clearAlarmTimers();                                  // a second alarm never leaves the first one's timers ringing
     alarmOn = true; alarmStart = Date.now(); alarmItem = item; const run = ++morningRun; $("#snzOpts").hidden = true;
+    const speakerHere = window.dsIsSpeaker !== false;    // only the Dayspring page that speaks plays the song and the ring
     $("#alarmTime").textContent = hm12(item.hm || new Date().toTimeString().slice(0, 5));
     $("#alarmText").textContent = item.greeting;
     const ov = $("#alarm"); ov.hidden = false; ov.style.animation = "none"; void ov.offsetWidth; ov.style.animation = "";
     wake(60 * 60_000);
     const slow = { tone: "soothing", speed: item.speed ?? 0.9 };
-    [item.greeting, item.wish, ...item.segments].filter(Boolean).forEach((t) => prefetch(t, slow).catch(() => {}));
+    if (speakerHere) [item.greeting, item.wish, ...item.segments].filter(Boolean).forEach((t) => prefetch(t, slow).catch(() => {}));
     // the wake song: his curated Spotify track, or YouTube, or (if neither plays) the soft alarm chime
     let src = null;
-    if (item.song) {
+    if (item.song && speakerHere) {
       try {
         const r = await post("/morning/music", {});
         if (r.provider === "spotify") { src = "spotify"; $("#alarmText").textContent = `♪ ${r.title}${r.artist ? " · " + r.artist : ""}`; }
         else if (r.provider === "youtube" && r.cmd) { src = "youtube"; playMedia(r.cmd); }
       } catch { /* no music: the chime below */ }
     }
-    if (!src) { const ring = () => onBus("notify", () => SOUNDS.alarm(), { alarm: true }); ring(); alarmLoop = setInterval(() => { if (!speaking) ring(); }, 6000); }
+    if (!src && speakerHere) { const ring = () => { if (window.dsIsSpeaker !== false) onBus("notify", () => SOUNDS.alarm(), { alarm: true }); }; ring(); alarmLoop = setInterval(() => { if (!speaking) ring(); }, 6000); }
     await sleep((item.lead ?? 20) * 1000);
     if (run !== morningRun) return;                      // snoozed
     clearInterval(alarmLoop);
@@ -2712,7 +2759,10 @@
 
   /* ================================================================ alarm: a sunrise that builds */
   let alarmOn = false, alarmLoop = null, alarmRepeat = null, alarmStop = null, alarmStart = 0, alarmItem = null, morningRun = 0;
+  // every alarm timer on this page, stopped (a second alarm arriving while one rings, a dismiss, a snooze)
+  function clearAlarmTimers() { clearInterval(alarmLoop); clearInterval(alarmRepeat); clearTimeout(alarmStop); alarmLoop = alarmRepeat = alarmStop = null; }
   function startAlarm(item) {
+    clearAlarmTimers();
     alarmOn = true; alarmStart = Date.now(); alarmItem = item; $("#snzOpts").hidden = true;
     $("#alarmTime").textContent = hm12(item.hm || item.started?.start || new Date().toTimeString().slice(0, 5));
     $("#alarmText").textContent = item.text;
@@ -2737,10 +2787,11 @@
   }
   function dismissAlarm(answered, fromElsewhere = false) {
     if (!alarmOn) return;
-    if (!fromElsewhere) post("/alarm/dismissed", { from: "screen" }).catch(() => {});
+    // our own page id: every OTHER open Dayspring page stops ringing too (they ignore only their own id)
+    if (!fromElsewhere) post("/alarm/dismissed", { from: PAGE_ID }).catch(() => {});
     morningRun++;                        // a wake-up song and greeting in progress stop here
     alarmOn = false; $("#alarm").hidden = true;
-    clearInterval(alarmLoop); clearInterval(alarmRepeat); clearTimeout(alarmStop);
+    clearAlarmTimers();
     playSound("done", "notify"); burst(40, 70);
     if (answered !== false) speak("Good morning. Let's go.", null, "notify");
   }
@@ -2748,10 +2799,10 @@
   async function snoozeAlarm(minutes = 9) {
     const item = alarmItem;
     morningRun++;                                        // a wake-up song in progress stops here
-    clearInterval(alarmLoop); clearInterval(alarmRepeat); clearTimeout(alarmStop);
+    clearAlarmTimers();
     alarmOn = false; $("#alarm").hidden = true; $("#snzOpts").hidden = true;
     stopSpeaking?.(); if (nowPlaying) stopMedia(false); post("/media/stop").catch(() => {});
-    post("/alarm/dismissed", { from: "screen" }).catch(() => {});
+    post("/alarm/dismissed", { from: PAGE_ID, snoozed: true }).catch(() => {});
     const r = await post("/snooze", { item, minutes }).catch(() => null);
     playSound("soft", "notify");
     toast("💤 Snoozed", r?.text?.replace(/^Snoozed /, "") ?? `${minutes} minutes`, "", "bell");
@@ -2861,8 +2912,20 @@
       if (prefs.mode === "voice") openCommandWindow(item.kind === "checkin" ? 30000 : 8000);   // he can just answer
     });
     // the alarm was answered somewhere else (the desktop card, another screen): stop ringing here too
-    es.addEventListener("alarm-dismissed", (e) => { try { const d = JSON.parse(e.data); if (d.from !== "screen" && alarmOn) dismissAlarm(false, true); } catch { /* bad event */ } });
-    es.addEventListener("media", (e) => { const c = JSON.parse(e.data); if (c.action === "play") playMedia(c); else stopMedia(false); });
+    // answered anywhere else (another Dayspring page, the desktop card, the server): stop ringing here too
+    es.addEventListener("alarm-dismissed", (e) => { try { const d = JSON.parse(e.data); if (d.from !== PAGE_ID && alarmOn) dismissAlarm(false, true); } catch { /* bad event */ } });
+    // music and video the server starts play on the speaking page only (the others would play it twice)
+    es.addEventListener("media", (e) => { const c = JSON.parse(e.data); if (c.action === "play") { if (isSpeaker) playMedia(c); } else stopMedia(false); });
+    // what the server says first: who has the microphone, the listening state, one-time notices
+    es.addEventListener("hello", (e) => {
+      try {
+        const d = JSON.parse(e.data);
+        if (d.micOwner && d.micOwner !== window.dsMicOwner) { window.dsMicOwner = d.micOwner; if (d.micOwner !== "dayspring") { pauseListening(); setMic("", "Lantern is listening."); } }
+        let seen = []; try { seen = JSON.parse(localStorage.getItem("ds-notices-seen") || "[]"); } catch { /* private mode */ }
+        for (const n of d.notices ?? []) { if (seen.includes(n.id)) continue; toast("Dayspring", n.text, "wait", "bell"); seen.push(n.id); }
+        try { localStorage.setItem("ds-notices-seen", JSON.stringify(seen.slice(-50))); } catch { /* private mode */ }
+      } catch { /* bad event */ }
+    });
     es.addEventListener("nowplaying", (e) => showNowPlaying(JSON.parse(e.data)));
     es.addEventListener("player", (e) => {
       const c = JSON.parse(e.data);

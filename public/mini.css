@@ -72,3 +72,16 @@ html[data-listen=off] .wbar .wstate i{background:#ff8fa3;box-shadow:none}
 /* a newer Dayspring is waiting */
 .wbar .wupd{color:#7ee3b0;font-weight:700}
 .wbar .wupd[hidden]{display:none}
+
+/* ---- pop-ups keep clear of the talk controls (measured by keepControlsClear in tv.js) ----
+   Every notification, stack and card uses the space above or below the ✋ Stop / 🎤 / ⌨ / 🎙 / Active strip, and
+   scrolls if it runs out of room, so the controls are always visible and clickable. */
+html body .toasts{top:max(calc(1em + var(--st, var(--sy, 0px))), var(--pop-top, 0px));max-height:var(--pop-max, calc(100vh - 2em));overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;overscroll-behavior:contain}
+html.mini body .toasts{top:max(.5em, var(--pop-top, 0px))}
+html body .toasts #dsxTimers{position:static;inset:auto;width:auto}
+html body .lnstack,html body .sttcard{max-height:calc(100vh - var(--ctl-bottom, 0px) - 2.5em);overflow-y:auto}
+html body .brev{top:var(--pop-top, 0px);bottom:var(--pop-bottom-inset, 0px)}
+html body #dsxCook{top:max(4vh, var(--pop-top, 0px));bottom:max(4vh, var(--pop-bottom-inset, 0px))}
+html body #dsxRecipes{top:max(5vh, var(--pop-top, 0px));bottom:max(5vh, var(--pop-bottom-inset, 0px))}
+html body .dsx-card{bottom:max(12vh, var(--pop-bottom-inset, 0px));max-height:calc(100vh - max(12vh, var(--pop-bottom-inset, 0px)) - var(--pop-top, 0px) - 1em);overflow-y:auto}
+html body #dsUpdate{bottom:max(calc(var(--sb, 3vh) + 1.2em), var(--pop-bottom-inset, 0px));max-height:calc(100vh - max(calc(var(--sb, 3vh) + 1.2em), var(--pop-bottom-inset, 0px)) - var(--pop-top, 0px) - 1em)}

@@ -56,7 +56,9 @@ POST <api>/event   (x-eco-token required)
 | `app.update.available` | both | app, version | The other app can show the shared "What's new" card |
 | `user.signed_in` / `user.signed_out` | both | — | Refresh anything account-related |
 | `schedule.block.request` | lantern | title, time, minutes | "Add study times to your Dayspring schedule" |
+| `xp.earned` | lantern | key, kind, course, ref (+ courseTitle, title, authoredXp, score, minutes, at, verified) | Dayspring awards XP once per `key` (see Dayspring's docs/dev/lantern-xp.md) |
 | `schedule.block.started` / `ended` | dayspring | title | Lantern can offer to open the matching lesson |
+| `xp.summary` | dayspring | balance, level (+ title, streak, badges, perCourse) | Lantern's hub can show Dayspring's XP, level and badges |
 | `alarm` | dayspring | — | Lantern goes quiet |
 | `dnd` | dayspring | on | Lantern respects quiet hours |
 | `call.state` | dayspring | inCall | Lantern stays silent during calls |

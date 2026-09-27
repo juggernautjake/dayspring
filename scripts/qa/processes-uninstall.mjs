@@ -5,6 +5,7 @@
 import { execFileSync, spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
+import { connect } from "node:net";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -27,11 +28,14 @@ function makeCopy(tag) {
 }
 const baseEnv = (port, extra = {}) => ({ ...process.env, PORT: String(port), DAYSPRING_TV: "", DAYSPRING_NO_BROWSER: "1", DS_LAUNCH_LOG: join(tmpdir(), `ds-launch-${port}.log`), DS_PROFILE: "DayspringQA", DAYSPRING_DEVICES_DRYRUN: "1", DAYSPRING_NO_OVERLAY: "1", DAYSPRING_NO_ECO: "1", DAYSPRING_NO_KEEPAWAKE: "1", ANTHROPIC_API_KEY: "", OPENAI_API_KEY: "", XAI_API_KEY: "", ELEVENLABS_API_KEY: "", AI_PROVIDER: "", DAYSPRING_REMINDER_CHANNEL: "off", ...extra });
 const up = async (port) => { try { return (await fetch(`http://127.0.0.1:${port}/api/build`, { signal: AbortSignal.timeout(2000) })).ok; } catch { return false; } };
+// the preferred port, or the next free one: another program on this computer may already be using it
+const taken = (p) => new Promise((r) => { const c = connect(p, "127.0.0.1").once("connect", () => { c.destroy(); r(true); }).once("error", () => r(false)); c.setTimeout(1500, () => { c.destroy(); r(true); }); });
+const freePort = async (want) => { for (let p = want; p < want + 50; p++) if (!(await taken(p))) return p; throw new Error("no free port near " + want); };
 const others0 = otherNodes();
 
 // ---------------- 1. "Dayspring" in Task Manager, and Stop Dayspring ----------------
 {
-  const { TMP, APP } = makeCopy("proc"), PORT = 4791;
+  const { TMP, APP } = makeCopy("proc"), PORT = await freePort(4791);
   const r = spawnSync(process.execPath, [join(APP, "scripts", "launch.mjs")], { cwd: APP, env: baseEnv(PORT), windowsHide: true, encoding: "utf8", timeout: 240_000 });
   for (let i = 0; i < 60 && !(await up(PORT)); i++) await sleep(500);
   const exe = join(APP, "bin", "Dayspring.exe");
@@ -55,7 +59,7 @@ const others0 = otherNodes();
 
 // ---------------- 2. Uninstall, both ways, on throwaway copies ----------------
 for (const way of ["keep", "remove"]) {
-  const { TMP, APP } = makeCopy(`un-${way}`), PORT = way === "keep" ? 4789 : 4788;
+  const { TMP, APP } = makeCopy(`un-${way}`), PORT = await freePort(way === "keep" ? 4789 : 4788);
   const fake = { StartMenu: join(TMP, "StartMenu", "Dayspring"), Desktop: join(TMP, "Desktop"), Startup: join(TMP, "Startup"), LocalAppData: join(TMP, "LocalAppData"), RecycleTo: join(TMP, "Recycle") };
   for (const d of [fake.StartMenu, fake.Desktop, fake.Startup, join(fake.LocalAppData, "DayspringDisplay"), join(fake.LocalAppData, "Ecosystem", "apps"), join(fake.LocalAppData, "SomethingElse")]) mkdirSync(d, { recursive: true });
   writeFileSync(join(fake.LocalAppData, "Ecosystem", "apps", "dayspring.json"), "{}");

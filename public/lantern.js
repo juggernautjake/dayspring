@@ -91,6 +91,7 @@
 
   // ---- Lantern's courses among the study rings ----
   let courses = [];
+  let xpFor = {};            // XP: what each course has earned in Dayspring (lib/xp/learning.mjs), for the chips
   const C = 2 * Math.PI * 42;
   function drawCourses() {
     const box = $("#courses"); if (!box) return;
@@ -101,7 +102,7 @@
       el.title = `Open ${short(c.title)} in Lantern`;
       const pct = Math.max(0, Math.min(100, Math.round(c.percent ?? 0)));
       el.innerHTML = `<div class="gauge"><svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="42"/><circle class="fill" cx="50" cy="50" r="42" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pct / 100)}"/></svg><span class="pct">${pct}%</span></div>
-        <div class="info"><div class="label">${esc(short(c.title))}</div><b style="font-size:.8em;font-weight:500">${esc(c.measure || `${pct}%`)}</b>
+        <div class="info"><div class="label">${esc(short(c.title))}${xpFor[c.id] ? `<span class="xpchip" title="XP earned in Dayspring from this course">${xpFor[c.id]} XP</span>` : ""}</div><b style="font-size:.8em;font-weight:500">${esc(c.measure || `${pct}%`)}</b>
           <div class="nx">Next: ${esc(c.next?.title ?? (pct >= 100 ? "all done" : "—"))}</div></div>`;
       const go = (e) => { e.preventDefault(); e.stopPropagation(); post("/lantern/open", { course: c.id, lesson: c.next?.id ?? null }).catch((x) => showCard({ id: "open-err", type: "info", title: "Lantern", text: x.message })); };
       el.addEventListener("click", go, true);
@@ -118,6 +119,7 @@
       const s = await (await fetch("/api/lantern/status")).json();
       window.dsMicOwner = s.micOwner || "dayspring";
       courses = s.running && s.status?.courses ? s.status.courses.filter((c) => c.installed !== false) : [];
+      try { const lx = await (await fetch("/api/xp/learning")).json(); xpFor = Object.fromEntries(Object.entries(lx.perCourse ?? {}).map(([k, v]) => [k, v.xpAwarded])); } catch { xpFor = {}; }
       drawCourses();
       if (s.install && !["done"].includes(s.install.step) && Date.now() - (s.install.at ?? 0) < 30 * 60_000) installCard(s.install);
     } catch { /* Dayspring is restarting */ }

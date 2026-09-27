@@ -157,10 +157,12 @@ try {
   } else check("Settings: the Without AI section is there", false, "no #tryText");
   const rp = await ctx.newPage(); const rpErr = [];
   rp.on("pageerror", (e) => rpErr.push(e.message));
-  await rp.goto(BASE + "/recipes"); await rp.waitForTimeout(1500);
+  await rp.goto(BASE + "/recipes"); await rp.waitForFunction(() => document.querySelectorAll("#list .card").length >= 5, null, { timeout: 10000 }).catch(() => {});
   check("Recipes page: the 5 examples are listed", (await rp.$$eval("#list .card", (x) => x.length)) >= 5);
-  await rp.click("#list .card"); await rp.waitForTimeout(800);
-  check("Recipes page: a recipe opens with its easy steps", !(await rp.$eval("#view", (v) => v.hidden)) && (await rp.$$eval("#view li", (x) => x.length)) >= 3);
+  // wait for the recipe to actually render (a fixed pause flaked when the machine was busy running other suites)
+  await rp.click("#list .card");
+  const opened = await rp.waitForFunction(() => { const v = document.querySelector("#view"); return v && !v.hidden && v.querySelectorAll("li").length >= 3; }, null, { timeout: 10000 }).then(() => true, () => false);
+  check("Recipes page: a recipe opens with its easy steps", opened);
   check("no script errors on Settings or Recipes", spErr.length === 0 && rpErr.length === 0, [...spErr, ...rpErr].join(" | "));
   await browser.close();
   check("the server logged no errors", !/TypeError|ReferenceError|Unhandled|intents: /.test(serverLog), serverLog.split("\n").filter((l) => /Error|intents:/.test(l)).slice(0, 3).join(" | "));

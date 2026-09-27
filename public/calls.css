@@ -1,0 +1,27 @@
+/* Settings → Calls (public/calls.js). Uses the settings page's own colours and type. */
+.cl-status { display: flex; flex-wrap: wrap; gap: .4em .6em; margin: .4em 0 1.1em; }
+.cl-status span { padding: .35em .7em; border-radius: .7em; background: rgba(20, 24, 50, .55); border: 1px solid rgba(160, 170, 255, .18); font-size: .9em; overflow-wrap: anywhere; }
+.cl-tabs { display: flex; flex-wrap: wrap; gap: .35em; margin: .3em 0 .6em; }
+.cl-tabs button { font: inherit; font-size: .9em; color: inherit; background: rgba(20, 24, 50, .5); border: 1px solid rgba(160, 170, 255, .2); border-radius: .7em; padding: .35em .8em; cursor: pointer; }
+.cl-tabs button[aria-selected="true"] { border-color: #ffd27a; box-shadow: 0 0 0 1px #ffd27a inset; }
+.cl-card { padding: .8em 1em; border-radius: .9em; background: rgba(20, 24, 50, .55); border: 1px solid rgba(160, 170, 255, .18); margin-bottom: .8em; }
+.cl-dev { display: grid; gap: .15em; margin: 0 0 .6em; padding: .55em .7em; border-radius: .7em; background: rgba(255, 255, 255, .05); border: 1px solid rgba(94, 234, 212, .35); }
+.cl-dev span { font-size: .85em; color: var(--muted, #a4abcc); }
+.cl-dev code { font-size: 1.05em; color: #bff7ee; overflow-wrap: anywhere; }
+.cl-dev small { color: var(--muted, #a4abcc); }
+.cl-card ul { margin: .3em 0 .5em 1.2em; padding: 0; }
+.cl-card li { margin: .2em 0; }
+.cl-card .warn { color: #ffd27a; }
+.cl-table { width: 100%; border-collapse: collapse; margin: .8em 0; font-size: .9em; display: block; overflow-x: auto; }
+.cl-table th, .cl-table td { text-align: left; padding: .35em .5em; border-bottom: 1px solid rgba(160, 170, 255, .12); vertical-align: top; }
+.cl-table th { color: var(--muted, #a4abcc); font-weight: 500; }
+.cl-table code { overflow-wrap: anywhere; }
+.cl-hud p { margin: .3em 0; }
+.cl-bar { position: relative; width: 8em; height: .55em; border-radius: .3em; background: rgba(255, 255, 255, .06); overflow: hidden; }
+.cl-bar i { position: absolute; top: 0; bottom: 0; }
+.cl-bar i.s { left: 0; background: #7c8cff; }
+.cl-bar i.t { background: #ffd27a; }
+.cl-bar i.a { background: #5eead4; }
+.cl-grid { gap: .8em; flex-wrap: wrap; }
+.cl-grid .field { flex: 1 1 14em; min-width: 0; }
+.cl-toggles { margin: .4em 0 .8em; }

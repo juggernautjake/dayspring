@@ -202,7 +202,16 @@ Update to Dayspring 1.1.1 or newer (it updates itself; or Settings → Updates �
 Sign in to YouTube in Dayspring's music window with a YouTube Premium account. See [Music and videos](music.md).
 
 ### Can it hear my Discord calls?
-Yes, with **🎧 Tune in**. It listens to what plays in your headset and answers when someone says its name. See [Tune in to calls](discord-calls.md).
+Yes, with **🎧 Tune in**. It listens to what plays in your headset and answers when someone says its name. See [Dayspring in calls](discord-calls.md).
+
+### Does it work in Zoom, Google Meet or Teams?
+Yes. Tune in works with any call app, with no bot or add-on. For people to hear Dayspring, set the app's **microphone** to **Voicemeeter Out B1** and keep its **speaker** on your headset. **Settings → Calls** shows the exact names for each app, or ask "Dayspring, what mic should Zoom use?". See [The two settings each call app needs](discord-calls.md#the-two-settings-each-call-app-needs).
+
+### Can my friends chat with Dayspring on Discord?
+Yes, with the [Discord bot](discord-bot.md): @mention it, start a message with "Dayspring", use `/ask` or `/joke`, or talk in its own channel. Friends get fun and quick answers; your schedule, files and texts stay private unless you turn on **Share my schedule with Discord**.
+
+### How fast does it answer on a call?
+Usually a second or so after the question ends. **Settings → Calls → Speed** shows the last 10 answers. See [How quickly it answers](discord-calls.md#how-quickly-it-answers).
 
 ## The screen
 
@@ -220,6 +229,32 @@ Yes. The living sky follows the real weather and time of day, and you can choose
 
 ### Can I turn off the faith features?
 They're off unless you turn them on in **Settings → Features & apps**.
+
+## XP and badges
+
+### What is XP, and how do I earn it?
+Points for things you really did: tell Dayspring "I finished my workout", "I did the dishes" or "I studied for an hour", or answer when it asks at the end of a scheduled block. It asks one quick question so it counts (for studying: one thing you learned). At most 80 a day. See [XP and badges](xp.md).
+
+### Why did my check-in only get 70%?
+Check-ins you start yourself count 70%. Put the task on your schedule and check in when the block ends (or finish a Dayspring focus timer) and it counts in full. See [XP and badges](xp.md#what-things-are-worth).
+
+### What are badges?
+18 badges in each of 18 kinds of habit (Fitness, Prayer, Reading, Cooking, Service…), collected over years of steady effort. The first comes within about a week. Open **Progress → Badges**, or say "what badges do I have?". See [Badges](xp.md#badges).
+
+### Why can't I see what my next badge looks like?
+It's a surprise: the next one shows as a **?** card with how close you are. You see it the moment you earn it, when it flips in like a coin.
+
+### Can I change the name on my badges?
+Yes: **Progress → Badges → Badge settings → Name on badges** (your name, your nickname, or none), then **Update the names on my badges**.
+
+### How do I stop the badge reminders?
+Say "stop badge reminders", or turn them off in **Badge settings** (for everything or just some categories). They're never spoken while Dayspring is Off or Quiet, on a call, or while an alarm rings.
+
+### Does my Lantern learning count?
+Yes, automatically, once per lesson, exercise or practice session that Lantern has verified, even if you did it on another computer. It fills your Study & Learning badges. See [Learning in Lantern](xp.md#learning-in-lantern).
+
+### I studied a lot today but my balance stopped going up
+At most 80 XP a day can be added to what you spend (so a secret character always takes at least a week). Everything past that still counts toward your level, your badges and your lifetime total.
 
 ## Privacy and data
 
