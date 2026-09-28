@@ -8,7 +8,7 @@ const lib = new URL("../../lib/", import.meta.url);
 const load = async (m) => (await import(new URL(m + ".mjs", lib))) ;
 const a = await load("assistant");
 const parts = { assistant: a.tools, abilities: (await load("abilities")).tools?.({ provider: "other" }) ?? [] };
-for (const m of ["studyskills", "skyskills", "connectors/index", "listskills", "discover", "conflicts", "helpskills", "image-routes", "gifs/routes", "money/index", "vision/skills", "remote/skills", "devices/skills", "printers/skills"]) parts[m] = (await load(m)).TOOLS ?? [];
+for (const m of ["studyskills", "skyskills", "connectors/index", "listskills", "discover", "conflicts", "helpskills", "image-routes", "gifs/routes", "video/index", "money/index", "vision/skills", "remote/skills", "devices/skills", "printers/skills"]) parts[m] = (await load(m)).TOOLS ?? [];
 parts["medialib/skills"] = (await load("medialib/skills")).ALL_TOOLS ?? [];   // every one, including Drive's write tools (offered only when allowed)
 const abil = new Set((await load("abilities")).NAMES ?? []);
 const seen = new Map(); let bad = 0;

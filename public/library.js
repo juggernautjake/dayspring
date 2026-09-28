@@ -268,6 +268,8 @@
   async function playVideoList(id, { shuffle = false } = {}) {
     const l = (await api("/player/videolists")).lists.find((x) => x.id === id || x.name === id);
     if (!l?.items.length) { note("Playlist", "That playlist is empty."); return; }
+    // with the video queue (lib/video): the whole list goes into it, in order, and plays from the first
+    if (window.dsFeatures?.on && window.dsFeatures.on("videosearch") !== false) { const r = await post("/video/playlists", { action: shuffle ? "shuffle" : "play", name: l.name }).catch((e) => ({ reply: e.message })); note("Playing", r.reply ?? l.name); return; }
     const items = shuffle ? [...l.items].sort(() => Math.random() - 0.5) : l.items;
     V()?.play(items[0]);
     items.slice(1).reverse().forEach((x) => V()?.add(x, { next: true }));
@@ -384,16 +386,19 @@
     // the same words with their capitals kept, for names ("make a playlist called Morning Hymns")
     const orig = String(text).replace(/[!?,]/g, "").replace(/\.(?!\d)/g, "").replace(/\s+/g, " ").trim().replace(/^(please |can you |could you |hey |dayspring )+/i, "").replace(/ please$/i, "");
     const named = (re) => re.exec(orig);
+    // with video search on (lib/video), finding and browsing videos and the video queue are the server's: it ranks, knows
+    // creators' channels, and keeps the queue (public/videos.js shows them)
+    const vs = window.dsFeatures?.on ? window.dsFeatures.on("videosearch") !== false : false;
     let m;
     if (/^(close|hide|exit)( the| my)? (library|browser|video browser|queue)$/.test(t) && isOpen()) { close(); return r(""); }
-    if ((m = /^(?:browse|search|find|look up|show me|pull up)(?: youtube| some)?(?: for)? (videos?|playlists?) (?:about|of|on|for|with) (.+)$|^what'?s on youtube (?:about|for) (.+)$|^search youtube for (.+)$|^browse videos$/.exec(t))) {
+    if (!vs && (m = /^(?:browse|search|find|look up|show me|pull up)(?: youtube| some)?(?: for)? (videos?|playlists?) (?:about|of|on|for|with) (.+)$|^what'?s on youtube (?:about|for) (.+)$|^search youtube for (.+)$|^browse videos$/.exec(t))) {
       const q = (m[2] ?? m[3] ?? m[4] ?? "").trim();
       open("videos", { q, kind: /playlist/.test(m[1] ?? "") ? "playlist" : "video" });
       return r(q ? `Here are videos about ${q}.` : "Here are your videos.", true);
     }
     if (/^(show|open|pull up)( me)? (my )?(recent|last|previous) videos$|^(what did i|what have i) (watch|watched)( lately| recently)?$/.test(t)) { open("videos", { focus: "recent" }); return r("Here are your recent videos.", true); }
     if (/^(show|open|pull up)( me)? (my |the )?(library|music library|playlists|spotify playlists)$|^open my music$/.test(t)) { open("music", { focus: "playlists" }); return r("Here's your library.", true); }
-    if (/^(show|open)( me)? (the |my )?(queue|up next|video queue)$|^what'?s (in|on) (the|my) queue$|^what'?s (up next|coming up)$/.test(t)) {
+    if (!(vs && P.source !== "spotify") && /^(show|open)( me)? (the |my )?(queue|up next|video queue)$|^what'?s (in|on) (the|my) queue$|^what'?s (up next|coming up)$/.test(t)) {
       open("queue");
       const up = P.source === "spotify" ? (P.upNext ?? []).map((x) => x.title) : (V()?.queue() ?? []).map((x) => x.title);
       return r(up.length ? `Next up: ${up.slice(0, 3).join(", then ")}.` : "Nothing's lined up right now.", true);
@@ -438,7 +443,7 @@
       post("/player/videolists", { action: "create", name: m[1] }).then(() => { if (isOpen() && tab === "videos") renderVideos(); }).catch((e) => note("Couldn't make it", e.message));
       return r(`Made a video playlist called ${m[1]}. Say “add this video to my ${m[1]} playlist” while one is playing.`);
     }
-    if ((m = /^(?:play|shuffle|put on) (?:my |the )?(.+?) (?:videos? playlist|video list|videos)$/.exec(t))) {
+    if (!vs && (m = /^(?:play|shuffle|put on) (?:my |the )?(.+?) (?:videos? playlist|video list|videos)$/.exec(t))) {
       const name = m[1], shuffle = /^shuffle/.test(t);
       api("/player/videolists").then((res) => {
         const l = res.lists.find((x) => x.name.toLowerCase() === name) ?? res.lists.find((x) => x.name.toLowerCase().includes(name));
@@ -472,7 +477,7 @@
   command = (text) => {
     const t = String(text).toLowerCase().replace(/[!?,.]/g, "").trim().replace(/^(please |hey |dayspring )+/, "");
     const m = /^(play|shuffle|put on) (?:my |the )?(.+?) playlist$/.exec(t);
-    if (m && vlCache.length) {
+    if (m && vlCache.length && !(window.dsFeatures?.on && window.dsFeatures.on("videosearch") !== false)) {
       const name = m[2].replace(/\bvideos?\b/g, "").trim();
       const l = vlCache.find((x) => x.name.toLowerCase() === name) ?? vlCache.find((x) => name && x.name.toLowerCase().includes(name));
       if (l) { playVideoList(l.id, { shuffle: m[1] === "shuffle" }); return { say: "", speak: false }; }

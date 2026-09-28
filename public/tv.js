@@ -1844,7 +1844,13 @@
     const upn = P.source === "spotify" ? P.upNext?.[0] : nx;
     $("#npNext").hidden = !upn;
     if (upn) $("#npNext").innerHTML = `<b>Next</b>${esc(upn.title || "Video")}${upn.artist ? " · " + esc(upn.artist) : upn.channel ? " · " + esc(upn.channel) : ""}`;
-    $("#vNext").hidden = !(yt1 && (P.playlist || nx)); $("#vPrev").hidden = !(yt1 && (P.playlist || VH.i > 0));
+    $("#vNext").hidden = !(yt1 && (P.playlist || nx)); $("#vPrev").hidden = !(yt1 && (P.playlist || VH.i > 0 || (P.fromQueue && SQ.index > 0)));
+    const vcc = $("#vCC"); if (vcc) { vcc.hidden = !yt1; vcc.classList.toggle("on", Boolean(P.captions)); vcc.setAttribute("aria-pressed", String(Boolean(P.captions))); vcc.title = P.captions ? "Captions: on (C)" : "Captions: off (C)"; }
+    const vrp = $("#vRep"); if (vrp) { vrp.hidden = !(yt1 || (P.source === "file" && P.video)); vrp.innerHTML = P.repeat === "track" ? IC.repeat1 : IC.repeat; vrp.classList.toggle("on", P.repeat !== "off"); vrp.setAttribute("aria-pressed", String(P.repeat !== "off")); vrp.title = { off: "Repeat: off (R)", context: "Repeat: all (R)", track: "Repeat: this one (R)" }[P.repeat] ?? "Repeat (R)"; }
+    const vsh = $("#vShuf"); if (vsh) { vsh.hidden = !(yt1 && (P.playlist || (P.fromQueue && (SQ.total ?? 0) > 1))); vsh.innerHTML = IC.shuffle; vsh.classList.toggle("on", Boolean(P.shuffle)); vsh.setAttribute("aria-pressed", String(Boolean(P.shuffle))); vsh.title = P.shuffle ? "Shuffle: on (S)" : "Shuffle: off (S)"; }
+    const vqb = $("#vQueueBtn"); if (vqb) { vqb.hidden = !vsOn(); const left = SQ.upcoming?.length ?? 0; vqb.textContent = left ? `☰ ${left}` : "☰"; vqb.title = left ? `The queue: ${left} up next (Q)` : "The queue (Q)"; }
+    const vql = $("#vQual"); if (vql) { vql.closest(".vqual").hidden = !yt1; if (document.activeElement !== vql) vql.value = ({ hd2160: "2160p", hd1440: "1440p", hd1080: "1080p", hd720: "720p", large: "480p", medium: "360p" })[P.quality] ?? "auto"; }
+    const vmn = $("#vMin"); if (vmn) { vmn.classList.toggle("on", Boolean(P.mini)); vmn.title = P.mini ? "Make the video big again (I)" : "Minimize to the corner (I)"; }
     const v = musicVol();
     for (const id of ["#npVol", "#vVol"]) { const r = $(id); if (document.activeElement !== r) r.value = v; r.style.setProperty("--pct", v + "%"); }
     document.querySelectorAll(".pvol .vi").forEach((i) => (i.innerHTML = v === 0 ? IC.mute : IC.vol));
@@ -1874,7 +1880,7 @@
     clearTimeout(reportTimer);
     const on = Boolean(P.source && P.playing);
     if (on !== musicOn) { musicOn = on; tuneIn(on, 0, "music"); }       // Tune in's echo guard: our own music is playing (or stopped)
-    const send = () => { lastReport = Date.now(); post("/player/state", P.source ? { source: P.source, title: P.title, artist: P.artist, playing: P.playing, position: Math.round(posNow()), duration: Math.round(P.dur), volume: musicVol(), shuffle: P.shuffle, repeat: P.repeat, rate: P.rate, video: P.video, videoId: P.videoId } : {}).catch(() => {}); };
+    const send = () => { lastReport = Date.now(); post("/player/state", P.source ? { source: P.source, title: P.title, artist: P.artist, playing: P.playing, position: Math.round(posNow()), duration: Math.round(P.dur), volume: musicVol(), shuffle: P.shuffle, repeat: P.repeat, rate: P.rate, video: P.video, videoId: P.videoId, fromQueue: Boolean(P.fromQueue), captions: Boolean(P.captions) } : {}).catch(() => {}); };
     if (Date.now() - lastReport > 1500) send(); else reportTimer = setTimeout(send, 1500);
   }
 
@@ -1891,8 +1897,21 @@
     const keep = new Set(VH.list.map((x) => x.videoId)); for (const k of Object.keys(VPOS)) if (!keep.has(k)) delete VPOS[k];
     try { localStorage.setItem("ds-video-history", JSON.stringify({ list: VH.list.slice(-50), pos: VPOS })); localStorage.setItem("ds-video-queue", JSON.stringify(VQ)); } catch { /* storage off */ }
   }
-  const vItem = (x) => ({ videoId: x.videoId ?? null, playlistId: x.playlistId ?? null, title: x.title ?? "", channel: x.channel ?? "", audioOnly: Boolean(x.audioOnly) });
-  function videoNextInfo() { return VH.i < VH.list.length - 1 ? VH.list[VH.i + 1] : VQ[0] ?? vOthers[0] ?? null; }
+  const vItem = (x) => ({ videoId: x.videoId ?? null, playlistId: x.playlistId ?? null, title: x.title ?? "", channel: x.channel ?? "", audioOnly: Boolean(x.audioOnly), ...(x.secs ? { secs: x.secs } : {}), ...(x.length ? { length: x.length } : {}) });
+  // The video queue itself lives on the server (lib/video/queue.mjs, the "videosearch" feature) so it survives a restart
+  // and the voice, the desk and this screen all see the same one. SQ mirrors it ("vqueue" events); without the feature
+  // the older queue in this browser (VQ) is used.
+  const vsOn = () => (window.dsFeatures?.on ? window.dsFeatures.on("videosearch") !== false : true);
+  let SQ = { items: [], index: -1, upcoming: [], repeat: "off", shuffle: false, total: 0 };
+  function sqApply(q) {
+    if (!q || !Array.isArray(q.items)) return;
+    SQ = q;
+    if (P.source === "youtube" && P.fromQueue) { P.repeat = { one: "track", all: "context" }[q.repeat] ?? "off"; P.shuffle = Boolean(q.shuffle); }
+    if (P.source) renderPlayer();
+  }
+  window.dsQueueState = () => SQ;
+  const fromServerQueue = () => vsOn() && (P.fromQueue || SQ.upcoming?.length > 0);
+  function videoNextInfo() { if (vsOn() && P.fromQueue) { const n = SQ.upcoming?.[0] ?? (SQ.repeat === "all" ? SQ.items?.[0] : null); if (n) return n; } return VH.i < VH.list.length - 1 ? VH.list[VH.i + 1] : VQ[0] ?? vOthers[0] ?? null; }
   function videoHistoryPush(cmd) {
     const it = vItem(cmd);
     if (VH.list[VH.i]?.videoId === it.videoId && VH.list[VH.i]?.playlistId === it.playlistId) return;
@@ -1906,8 +1925,25 @@
     playMedia({ action: "play", provider: "youtube", ...it, audioOnly: P.source === "youtube" ? !P.video : it.audioOnly }, { fromHistory: true });
     return true;
   }
-  function queueVideo(x, { next = false } = {}) { const it = vItem(x); if (!it.videoId && !it.playlistId) return false; if (next) VQ.unshift(it); else VQ.push(it); saveVideos(true); renderPlayer(); return true; }
-  function playNextVideo() {
+  function queueVideo(x, { next = false } = {}) {
+    const it = vItem(x); if (!it.videoId && !it.playlistId) return false;
+    if (vsOn()) { post("/video/queue", { action: "add", item: it, next }).catch((e) => toast("Queue", e.message, "", "bell")); return true; }
+    if (next) VQ.unshift(it); else VQ.push(it); saveVideos(true); renderPlayer(); return true;
+  }
+  // the next one: the server's queue decides when this video came from it (repeat and shuffle live there too)
+  function playNextVideo({ auto = false } = {}) {
+    if (fromServerQueue() || (auto && vsOn() && P.fromQueue)) {
+      post("/video/queue", { action: auto ? "ended" : "skip" }).then((r) => {
+        const res = r?.result ?? {};
+        if (res.again && yt) { try { yt.seekTo(0, true); yt.playVideo(); } catch { /* gone */ } return; }
+        if (res.error) { push("sys", res.error); if (auto) stopMedia(false); return; }        // (the study rule, say: nothing else plays either)
+        if (res.ended) { if (!localNextVideo() && auto) stopMedia(false); }
+      }).catch(() => { if (!localNextVideo() && auto) stopMedia(false); });
+      return true;
+    }
+    return localNextVideo();
+  }
+  function localNextVideo() {
     if (VH.i < VH.list.length - 1) return playHistory(VH.i + 1);
     const q = VQ.shift() ?? vOthers.shift();
     saveVideos(true);
@@ -1927,9 +1963,19 @@
     current: () => (P.source === "youtube" ? vItem({ ...VH.list[VH.i], title: P.title || VH.list[VH.i]?.title, videoId: P.videoId ?? VH.list[VH.i]?.videoId }) : null),
   };
   // keep window.dsVideos.queue as the list getter; queueing is .add
-  window.dsVideos.queue = () => VQ.map((x, i) => ({ ...x, i }));
+  window.dsVideos.queue = () => (vsOn() ? (SQ.upcoming ?? []).map((x, i) => ({ ...x, i })) : VQ.map((x, i) => ({ ...x, i })));
   window.dsVideos.add = queueVideo;
+  // with the server's queue: the Library's list edits it there (positions after the one playing)
+  const upN = (i) => (SQ.index ?? -1) + 2 + Number(i);
+  window.dsVideos.remove = (i) => { if (vsOn()) { post("/video/queue", { action: "remove", n: upN(i) }).catch(() => {}); return; } VQ.splice(i, 1); saveVideos(true); renderPlayer(); };
+  window.dsVideos.move = (from, to) => { if (vsOn()) { post("/video/queue", { action: "move", n: upN(from), to: upN(Math.max(0, to)) }).catch(() => {}); return; } const [x] = VQ.splice(from, 1); if (x) VQ.splice(Math.max(0, Math.min(VQ.length, to)), 0, x); saveVideos(true); };
+  window.dsVideos.clear = () => { if (vsOn()) { post("/video/queue", { action: "clear" }).catch(() => {}); return; } VQ.length = 0; saveVideos(true); renderPlayer(); };
+  window.dsVideos.play = (x, { audioOnly = false } = {}) => { if (vsOn() && !audioOnly) { post("/video/queue", { action: "playNow", item: vItem(x) }).catch((e) => push("sys", e.message)); return; } playMedia({ action: "play", provider: "youtube", ...vItem(x), audioOnly }); };
 
+  // captions stay on for the next video once he turns them on (and in the language he chose)
+  const capPref = () => { try { return JSON.parse(localStorage.getItem("ds-captions") ?? "{}") ?? {}; } catch { return {}; } };
+  const setCapPref = (x) => { try { localStorage.setItem("ds-captions", JSON.stringify({ ...capPref(), ...x })); } catch { /* storage off */ } };
+  if (vsOn()) setTimeout(() => json("/video/queue").then((r) => sqApply(r.queue)).catch(() => {}), 400);
   // ---- YouTube on the Dayspring screen --------------------------------------------------------------------------------
   let yt = null, ytReady = false, nowPlaying = null, pendingPlay = null, lastRecorded = null;
   window.onYouTubeIframeAPIReady = () => { ytReady = true; if (pendingPlay) { const p = pendingPlay; pendingPlay = null; playMedia(p); } };
@@ -1951,13 +1997,15 @@
     if (Array.isArray(cmd.others)) vOthers = cmd.others.map(vItem).filter((x) => x.videoId || x.playlistId);
     else if (!fromHistory) vOthers = [];
     const box = $("#media");
-    box.hidden = false; box.className = "media " + (cmd.audioOnly ? "audio" : "video");
+    box.hidden = false; box.className = "media " + (cmd.audioOnly ? "audio" : "video") + (P.mini && !cmd.audioOnly ? " minip" : "");
     $("#np2").textContent = cmd.title ? `♪ ${cmd.title}` : "";
     Object.assign(P, { source: "youtube", title: cmd.title ?? "", artist: cmd.channel || "YouTube", art: cmd.videoId ? `https://i.ytimg.com/vi/${cmd.videoId}/mqdefault.jpg` : "", playing: false, pos: 0, dur: 0, at: Date.now(),
-      shuffle: Boolean(cmd.shuffle), repeat: "off", rate: 1, rates: [1], video: !cmd.audioOnly, playlist: Boolean(cmd.playlistId), videoId: cmd.videoId ?? null });
+      shuffle: Boolean(cmd.shuffle), repeat: "off", rate: 1, rates: [1], video: !cmd.audioOnly, playlist: Boolean(cmd.playlistId), videoId: cmd.videoId ?? null, fromQueue: Boolean(cmd.fromQueue), quality: "", captions: false, mini: Boolean(P.mini && !cmd.audioOnly) });
+    if (cmd.queue) sqApply({ ...SQ, repeat: cmd.queue.repeat, shuffle: cmd.queue.shuffle });
+    if (P.fromQueue) { P.repeat = { one: "track", all: "context" }[SQ.repeat] ?? "off"; P.shuffle = Boolean(SQ.shuffle); }
     renderPlayer(); showCtl(); mediaFollowNote();
     const start = cmd.videoId && VPOS[cmd.videoId] > 15 && fromHistory ? Math.floor(VPOS[cmd.videoId]) : 0;   // going back: pick up where they left off
-    const vars = { autoplay: 1, controls: 0, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, disablekb: 1, fs: 0, ...(start ? { start } : {}) };
+    const vars = { autoplay: 1, controls: 0, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, disablekb: 1, fs: 0, ...(start ? { start } : {}), ...(capPref().on ? { cc_load_policy: 1, cc_lang_pref: capPref().lang || "en" } : {}) };
     if (cmd.playlistId) Object.assign(vars, { listType: "playlist", list: cmd.playlistId });
     if (yt) { try { yt.destroy(); } catch { /* gone */ } yt = null; }
     if (!$("#yt")) $("#media").insertAdjacentHTML("afterbegin", '<div id="yt"></div>');
@@ -1968,6 +2016,7 @@
           if (cmd.shuffle && cmd.playlistId) e.target.setShuffle(true);
           e.target.setVolume(ducked ? Math.min(12, ytFull()) : ytFull()); e.target.playVideo();
           P.rates = e.target.getAvailablePlaybackRates?.() ?? [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+          if (capPref().on) { P.captions = true; try { e.target.loadModule?.("captions"); if (capPref().lang) e.target.setOption?.("captions", "track", { languageCode: capPref().lang }); } catch { /* no captions */ } }
           ytTick(true);
         },
         onPlaybackRateChange: () => ytTick(true),
@@ -1978,7 +2027,8 @@
           }
           if (e.data === YT.PlayerState.ENDED && !P.playlist) {
             if (P.videoId) delete VPOS[P.videoId];
-            if (P.repeat !== "off") { e.target.seekTo(0, true); e.target.playVideo(); }
+            if (P.fromQueue && vsOn()) playNextVideo({ auto: true });           // the queue decides: next, repeat one or all, or the end
+            else if (P.repeat !== "off") { e.target.seekTo(0, true); e.target.playVideo(); }
             else if (VQ.length || VH.i < VH.list.length - 1) playNextVideo();       // the up-next queue carries on
             else stopMedia(false);
           }
@@ -2095,7 +2145,7 @@
         else if (spot) await sp.nextTrack(); else await winCtl("next");
         break;
       case "previous":
-        if (yt1) { if (P.playlist) { if (posNow() > 5) yt.seekTo(0, true); else yt.previousVideo(); } else if (VH.i > 0) playHistory(VH.i - 1); else { yt.seekTo(0, true); return "That's the first video. Starting it over."; } }
+        if (yt1) { if (P.playlist) { if (posNow() > 5) yt.seekTo(0, true); else yt.previousVideo(); } else if (vsOn() && P.fromQueue && SQ.index > 0 && posNow() <= 5) post("/video/queue", { action: "previous" }).catch(() => {}); else if (vsOn() && P.fromQueue && posNow() > 5) yt.seekTo(0, true); else if (VH.i > 0) playHistory(VH.i - 1); else { yt.seekTo(0, true); return "That's the first video. Starting it over."; } }
         else if (spot) { if (posNow() > 5) await sp.seek(0); else await sp.previousTrack(); }
         else await winCtl("previous");
         break;
@@ -2117,7 +2167,8 @@
       }
       case "shuffle": {
         const want = v === undefined || v === null ? !P.shuffle : Boolean(v);
-        if (yt1) { if (!P.playlist) return "Shuffle works on playlists."; yt.setShuffle(want); }
+        if (yt1 && !P.playlist && vsOn() && P.fromQueue) { if ((SQ.total ?? 0) < 2) return "There's only one video in the queue."; await post("/video/queue", { action: "shuffle", value: want }); }
+        else if (yt1) { if (!P.playlist) return "Shuffle works on playlists and the queue."; yt.setShuffle(want); }
         else if (spot) await post("/player/spotify/api", { action: "shuffle", value: want });
         else return "I can't shuffle that one. Connect Spotify in Settings for full control.";
         P.shuffle = want; break;
@@ -2125,7 +2176,8 @@
       case "repeat": {
         const order = ["off", "context", "track"];
         const mode = order.includes(v) ? v : v === true ? "context" : v === false ? "off" : order[(order.indexOf(P.repeat) + 1) % 3];
-        if (yt1) { if (P.playlist) yt.setLoop(mode !== "off"); }            // a single video repeats by starting over at the end
+        if (yt1 && !P.playlist && vsOn() && P.fromQueue) await post("/video/queue", { action: "repeat", mode: { track: "one", context: "all", off: "off" }[mode] });   // the queue repeats (one, or all of it)
+        else if (yt1) { if (P.playlist) yt.setLoop(mode !== "off"); }            // a single video repeats by starting over at the end
         else if (spot) await post("/player/spotify/api", { action: "repeat", value: mode });
         else return "I can't set repeat on that one.";
         P.repeat = mode; break;
@@ -2147,8 +2199,56 @@
       case "full": {
         if (!yt1) return "";
         const box = $("#media"), on = v === undefined || v === null ? !box.classList.contains("full") : Boolean(v);
-        if (on) { P.video = true; box.classList.add("video"); box.classList.remove("audio"); }
+        if (on) { P.video = true; box.classList.add("video"); box.classList.remove("audio", "minip"); P.mini = false; }
         box.classList.toggle("full", on); break;
+      }
+      // the queue's repeat and shuffle changed on the server
+      case "queueMode": if (v) { if (src === "youtube" && P.fromQueue) { P.repeat = { one: "track", all: "context" }[v.repeat] ?? "off"; P.shuffle = Boolean(v.shuffle); } } break;
+      case "seekPct": {
+        if (!P.dur) return "I can't tell how long this one is yet.";
+        return ctl("seek", P.dur * Math.max(0, Math.min(100, Number(v) || 0)) / 100);
+      }
+      case "captions": case "captionLang": {
+        if (src !== "youtube") return spot || win ? "Spotify doesn't have captions." : "";
+        if (!yt1) return "";
+        const off = a === "captions" && (v === false || (v === undefined && P.captions));
+        try {
+          if (off) { yt.unloadModule?.("captions"); P.captions = false; setCapPref({ on: false }); break; }
+          yt.loadModule?.("captions");
+          if (a === "captionLang") {
+            const list = yt.getOption?.("captions", "tracklist") ?? [];
+            const t = list.find((x) => String(x.languageCode ?? "").toLowerCase().startsWith(String(v).toLowerCase()));
+            if (list.length && !t) { P.captions = true; renderPlayer(); return `This video doesn't have captions in that language${list.length ? `. It has ${list.map((x) => x.displayName ?? x.languageName ?? x.languageCode).slice(0, 4).join(", ")}` : ""}.`; }
+            yt.setOption?.("captions", "track", { languageCode: t?.languageCode ?? v });
+            setCapPref({ on: true, lang: t?.languageCode ?? v });
+          } else { const lang = capPref().lang; if (lang) yt.setOption?.("captions", "track", { languageCode: lang }); setCapPref({ on: true }); }
+          P.captions = true;
+        } catch { return "This video doesn't have captions."; }
+        break;
+      }
+      case "quality": {
+        if (src !== "youtube") return spot || win ? "Spotify picks its own quality." : "";
+        if (!yt1) return "";
+        const Q = { "2160p": "hd2160", "1440p": "hd1440", "1080p": "hd1080", "720p": "hd720", "480p": "large", "360p": "medium", "240p": "small", "144p": "tiny" };
+        const levels = (yt.getAvailableQualityLevels?.() ?? []).filter((x) => x !== "auto");
+        let want = v === "auto" ? "default" : v === "highest" ? levels[0] ?? "highres" : v === "lowest" ? levels[levels.length - 1] ?? "tiny" : Q[v] ?? "default";
+        if (levels.length && want !== "default" && !levels.includes(want)) {
+          const order = ["highres", "hd2160", "hd1440", "hd1080", "hd720", "large", "medium", "small", "tiny"];
+          const best = levels.find((x) => order.indexOf(x) >= order.indexOf(want)) ?? levels[0];
+          const name = Object.entries(Q).find(([, q]) => q === best)?.[0] ?? best;
+          yt.setPlaybackQuality?.(best); P.quality = best; renderPlayer();
+          return `This video doesn't come in ${v}. Playing it at ${name}.`;
+        }
+        yt.setPlaybackQuality?.(want); P.quality = want === "default" ? "" : want;
+        break;
+      }
+      case "minimize": {
+        if (!yt1 && !(src === "file" && P.video)) return src === "youtube" ? "" : "There's no video to minimize.";
+        const box = $("#media"), on = v === undefined || v === null ? !box.classList.contains("minip") : Boolean(v);
+        if (on) { P.video = true; box.classList.add("video"); box.classList.remove("audio", "full"); }
+        box.classList.toggle("minip", on); P.mini = on;
+        if (yt1 && !ducked) try { yt.setVolume(ytFull()); } catch { /* gone */ }
+        break;
       }
       case "popout": {
         if (!yt1 && !(src === "youtube" && P.videoId)) return "Only YouTube videos pop out into your browser.";
@@ -2189,6 +2289,7 @@
     e.stopPropagation();
     const a = b.dataset.p;
     if (a === "library") { window.dsLibrary?.open(b.closest("#media") || P.source === "youtube" ? "videos" : "music"); return; }
+    if (a === "queue") { if (vsOn() && window.dsVQueue) window.dsVQueue.toggle(); else window.dsLibrary?.open("queue"); return; }
     const act = a === "previous" && P.source === "youtube" && !P.playlist ? "previous" : a;
     ctl(act).then((msg) => { if (msg) toast("Player", msg, "", "bell"); });
     showCtl();
@@ -2202,16 +2303,19 @@
   }
   for (const id of ["#npVol", "#vVol"]) { const r = $(id); r.addEventListener("input", () => { r.style.setProperty("--pct", r.value + "%"); setMusicVolume(Number(r.value)); showCtl(); }); }
   $("#vRate").addEventListener("change", (e) => { ctl("speed", Number(e.target.value)); showCtl(); });
+  $("#vQual")?.addEventListener("change", (e) => { ctl("quality", e.target.value).then((msg) => { if (msg) toast("Player", msg, "", "bell"); }); showCtl(); });
   $("#vClose").addEventListener("click", (e) => { e.stopPropagation(); ctl("stop"); });
   $("#vLayer").addEventListener("click", () => { clearTimeout(clickT); clickT = setTimeout(() => ctl("toggle"), 230); showCtl(); });
   $("#vLayer").addEventListener("dblclick", () => { clearTimeout(clickT); ctl("full"); });
   $("#media").addEventListener("pointermove", showCtl);
   $("#media").addEventListener("pointerdown", showCtl);
-  // keys while a video is showing: Space/K play-pause, ←/→ 5 s, ↑/↓ volume, < > speed, F full screen, M mute, N/P next/previous, Esc close
+  // keys while a video is showing: Space/K play-pause, ←/→ 5 s, J/L 10 s, ↑/↓ volume, < > speed, 0–9 jump to 0–90%, Home the
+  // beginning, C captions, F full screen, I minimise, M mute, N/P next/previous, Q the queue, R repeat, S shuffle, Esc close
   document.addEventListener("keydown", (e) => {
     const box = $("#media");
-    if (box.hidden || P.source !== "youtube" || !P.video) return;
-    if (!$("#calwrap").hidden || !$("#pagewrap").hidden || detailOpen() || window.dsLibrary?.isOpen?.()) return;
+    if (box.hidden || !(P.source === "youtube" || (P.source === "file" && P.video)) || !P.video) return;
+    if (!$("#calwrap").hidden || !$("#pagewrap").hidden || detailOpen() || window.dsLibrary?.isOpen?.() || window.dsVideoPanels?.isOpen?.()) return;
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
     if (/INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName ?? "") && e.key !== "Escape") return;
     const k = e.key; let done = true;
     if (k === " " || k === "k" || k === "K") ctl("toggle");
@@ -2225,6 +2329,15 @@
     else if (k === "m" || k === "M") ctl("mute");
     else if (k === "N") ctl("next");
     else if (k === "P") ctl("previous");
+    else if (k === "j" || k === "J") ctl("seekBy", -10);
+    else if (k === "l" || k === "L") ctl("seekBy", 10);
+    else if (k === "Home") ctl("restart");
+    else if (/^[0-9]$/.test(k)) ctl("seekPct", Number(k) * 10);
+    else if (k === "c" || k === "C") ctl("captions").then((msg) => { if (msg) toast("Player", msg, "", "bell"); });
+    else if (k === "i" || k === "I") ctl("minimize");
+    else if (k === "q" || k === "Q") { if (vsOn() && window.dsVQueue) window.dsVQueue.toggle(); else window.dsLibrary?.open("queue"); }
+    else if (k === "r" || k === "R") ctl("repeat").then((msg) => { if (msg) toast("Player", msg, "", "bell"); });
+    else if (k === "s" || k === "S") ctl("shuffle").then((msg) => { if (msg) toast("Player", msg, "", "bell"); });
     else if (k === "Escape") { if (!escFor(e, box)) return; if (box.classList.contains("full")) ctl("full", false); else ctl("stop"); }
     else done = false;
     if (done) { e.preventDefault(); e.stopImmediatePropagation(); showCtl(); }
@@ -2344,6 +2457,25 @@
       if (/^(turn (it|this|that|the music|the song|the video|the volume) up( a (little|bit))?|turn up (the )?(music|volume|song|video)|louder|volume up|a (little|bit) louder|crank it( up)?)$/.test(t)) return run("volumeBy", /little|bit/.test(t) ? 8 : 15, "");
       if (/^(turn (it|this|that|the music|the song|the video|the volume) down( a (little|bit))?|turn down (the )?(music|volume|song|video)|quieter|softer|volume down|a (little|bit) quieter|too loud)$/.test(t)) return run("volumeBy", /little|bit/.test(t) ? -8 : -15, "");
     }
+    // how long is left, the middle, captions, quality, minimise (and fast forward / rewind with no amount)
+    if (/^how (much|long) (time )?(is |has it got )?(left|remaining|to go)( (in|on) (this|the) (video|song|one|movie|episode))?$|^how long is (this|the|it)( video| song| one)?( left)?$|^when (does|will) (this|it|the video|the song) (end|finish|be over)$|^time (left|remaining)$/.test(t)) {
+      const dur = P.dur || 0, left = Math.max(0, dur - posNow());
+      return r(dur ? `About ${spokenLen(left)} left, of ${spokenLen(dur)}.${P.playing ? "" : " It's paused."}` : "I can't tell how long this one is.", true);
+    }
+    if (/^(go|jump|skip|take me|seek) to (the )?(middle|halfway( point)?|half ?way)( of (it|the video|the song))?$|^(go|jump) halfway( through)?$/.test(t)) return run("seekPct", 50, "Halfway through.");
+    if (/^(fast forward|skip ahead|skip forward|jump ahead|go forward)( a (bit|little))?$/.test(t)) return run("seekBy", /bit|little/.test(t) ? 15 : 30, "");
+    if (/^(rewind|rewind (it|a bit|a little)|go back a (bit|little)|back up a (bit|little)|skip back|jump back)$/.test(t)) return run("seekBy", -10, "");
+    const CAPW = "(captions?|subtitles?|closed captions?|cc|subs)";
+    const LANG = { english: "en", spanish: "es", french: "fr", german: "de", portuguese: "pt", italian: "it", russian: "ru", japanese: "ja", korean: "ko", chinese: "zh", arabic: "ar", hindi: "hi", dutch: "nl", greek: "el", hebrew: "he", polish: "pl", turkish: "tr", vietnamese: "vi", swedish: "sv", ukrainian: "uk" };
+    if (new RegExp(`\\b${CAPW}\\b`).test(t) && (m = new RegExp(`\\b(${Object.keys(LANG).join("|")})\\b`).exec(t)) && !/\b(off|hide|disable|no)\b/.test(t)) return run("captionLang", LANG[m[1]], `Captions in ${m[1][0].toUpperCase() + m[1].slice(1)}.`);
+    if (new RegExp(`^(turn |switch |put )?(on )?(the )?${CAPW} on$|^(turn|switch|put) on (the )?${CAPW}$|^(show|enable|start)( me)? (the )?${CAPW}$|^${CAPW}$`).test(t)) return run("captions", true, "Captions on.");
+    if (new RegExp(`^(turn |switch )?(the )?${CAPW} off$|^(turn|switch) off (the )?${CAPW}$|^(hide|disable|stop|remove)( the)? ${CAPW}$|^no (more )?${CAPW}$`).test(t)) return run("captions", false, "Captions off.");
+    if (isVid && /\bquality\b|\b(\d{3,4} ?p|4k|hd)$/.test(t) && /^(set |change |switch |put |make |play |watch |go to |turn )?(it |the video |the quality |this )?(to |in |at |on )?(the )?(\w+ ){0,3}(quality|\d{3,4} ?p|4k|hd|full hd)( quality)?$/.test(t)) {
+      const q = /\b(highest|best|max|maximum|top)\b/.test(t) ? "highest" : /\b(lowest|worst|min|minimum|data saver)\b/.test(t) ? "lowest" : /\bauto/.test(t) ? "auto" : /\b4k\b|2160/.test(t) ? "2160p" : (m = /\b(144|240|360|480|720|1080|1440) ?p?\b/.exec(t)) ? m[1] + "p" : /full hd/.test(t) ? "1080p" : /\bhd\b/.test(t) ? "720p" : null;
+      if (q) return run("quality", q, q === "auto" ? "Quality on automatic." : `Asking for ${q === "highest" ? "the highest" : q === "lowest" ? "the lowest" : q} quality.`);
+    }
+    if ((isVid || (P.source === "file" && P.video)) && /^(minimi[sz]e|shrink|tuck away|mini player|picture in picture)( (the |this )?(video|player|it))?( to the corner)?$|^(put|move) (the )?(video|player|it) (in|to) the corner$/.test(t)) return run("minimize", true, "");
+    if ((isVid || (P.source === "file" && P.video)) && /^(restore|bring back|expand|unminimi[sz]e)( the)? (video|player)( back)?$|^(bring|put) (the )?(video|player|it) back$|^make the video big( again)?$/.test(t)) return run("minimize", false, "");
     if (/^(shuffle( on| it)?|turn on shuffle|shuffle (this|the playlist)|put it on shuffle)$/.test(t)) return run("shuffle", true, "Shuffle on.");
     if (/^(shuffle off|turn off shuffle|stop shuffling|no shuffle)$/.test(t)) return run("shuffle", false, "Shuffle off.");
     if (/^(repeat (this|this song|it|the song|this one|this video)|loop (this|it|the song|the video|this video))$/.test(t)) return run("repeat", "track", "Repeating this one.");
@@ -2975,6 +3107,7 @@
       } catch { /* bad event */ }
     });
     es.addEventListener("nowplaying", (e) => showNowPlaying(JSON.parse(e.data)));
+    es.addEventListener("vqueue", (e) => { try { sqApply(JSON.parse(e.data).queue); } catch { /* bad event */ } });
     es.addEventListener("player", (e) => {
       const c = JSON.parse(e.data);
       if (c.only) { if (c.only === P.source) { if (c.only === "spotify") sp?.pause().catch(() => {}); clearPlayer(); } return; }

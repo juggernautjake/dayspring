@@ -94,6 +94,8 @@ import * as floorRoutes from "./lib/floor-routes.mjs";
 import * as devRoutes from "./lib/dev/routes.mjs";   // the developer preview: 404 unless this is the developer's own computer (lib/dev)   // the conversation floor: the owner's requests before anything planned (lib/floor.mjs)
 import * as floor from "./lib/floor.mjs";
 import * as vision from "./lib/vision/index.mjs";
+import * as videoRoutes from "./lib/video/routes.mjs";   // finding videos, creators' channels, his YouTube playlists, the video queue (lib/video)
+import * as video from "./lib/video/index.mjs";
 import * as medialibRoutes from "./lib/medialib/routes.mjs";   // the owner's own music and videos, and Google Drive streaming (lib/medialib)
 import * as peopleComms from "./lib/people/comms.mjs";
 import * as mailRoutes from "./lib/mail/routes.mjs";   // email: every mailbox, the Mail window, the editor, Settings → Email (lib/mail)
@@ -112,7 +114,7 @@ addHello("micOwner", () => lantern.micOwner());
 addHello("listenState", () => settings.get().listenState ?? "active");
 addHello("notices", () => firstrun.notices());
 // The Settings/setup wizard, updates and the in-app guide each answer their own /api routes.
-const ROUTES = [featureRoutes, setupRoutes, updateRoutes, helpRoutes, discordRoutes, callRoutes, callsRoutes, meetRoutes, studyRoutes, playerRoutes, ambientRoutes, windowRoutes, documentRoutes, connectorRoutes, fsRoutes, toolingRoutes, welcomeRoutes, discoverRoutes, calendarRoutes, lanternRoutes, aboutRoutes, intentRoutes, personaRoutes, xpRoutes, imageRoutes, activityRoutes, moneyRoutes, visionRoutes, socialRoutes, floorRoutes, devRoutes, medialibRoutes, gifRoutes, mailRoutes, cameraRoutes, remoteRoutes, smarthomeRoutes, printerRoutes];
+const ROUTES = [featureRoutes, setupRoutes, updateRoutes, helpRoutes, discordRoutes, callRoutes, callsRoutes, meetRoutes, studyRoutes, playerRoutes, ambientRoutes, windowRoutes, documentRoutes, connectorRoutes, fsRoutes, toolingRoutes, welcomeRoutes, discoverRoutes, calendarRoutes, lanternRoutes, aboutRoutes, intentRoutes, personaRoutes, xpRoutes, imageRoutes, activityRoutes, moneyRoutes, visionRoutes, socialRoutes, floorRoutes, devRoutes, videoRoutes, medialibRoutes, gifRoutes, mailRoutes, cameraRoutes, remoteRoutes, smarthomeRoutes, printerRoutes];
 imageRoutes.setDeps({ openUrl: async (u) => (await import("./lib/browsers.mjs")).openUrl(u, owner.displayBrowser()) });
 gifRoutes.setDeps({ openUrl: async (u) => (await import("./lib/browsers.mjs")).openUrl(u, owner.displayBrowser()) });
 // 🎧 Tune in: what it hears addressed to Dayspring goes through the same assistant
@@ -710,6 +712,9 @@ async function api(req, res, url) {
     const key = surface === "tv" ? "tv" : "desk";
     transcripts.log({ role: "user", text: message.trim(), surface: key });
     // "tune in" / "tune out" / "answer into the call": handled right away, no AI needed
+    // while a video is showing, "full screen" and "exit full screen" are the video's (lib/video/controls.mjs)
+    { const vw = video.pictureWord(message.trim()) ? await video.command(message.trim(), { surface: key }).catch(() => null) : null;
+      if (vw) { floor.owner("message", key); floor.replied(key, vw); transcripts.log({ role: "dayspring", text: vw.reply, surface: key }); return send(res, 200, { reply: vw.reply, changes: [], usage: null, intent: "video" }); } }
     // "minimize", "hide yourself", "show yourself", "close the screen": the display window, right away
     const wc = await windowRoutes.command(message.trim()).catch(() => null);
     if (wc) { transcripts.log({ role: "dayspring", text: wc, surface: key }); return send(res, 200, { reply: wc, changes: [], usage: null }); }
@@ -723,6 +728,16 @@ async function api(req, res, url) {
     if (uc) { transcripts.log({ role: "dayspring", text: uc, surface: key }); return send(res, 200, { reply: uc, changes: [], usage: null }); }
     const tc = await callRoutes.command(message.trim()).catch(() => null);
     if (tc) { transcripts.log({ role: "dayspring", text: tc, surface: key }); return send(res, 200, { reply: tc, changes: [], usage: null }); }
+    // videos, before the Bible, music, pictures and GIFs: "find bible reading in psalms on youtube", "play a video by
+    // mike winger", "pull up videos about biking", "queue 3 videos about dovetails", "play my Worship playlist", "show the
+    // queue", "number 3", "not that", and playback controls for whatever is playing ("skip ahead 2 minutes", "captions
+    // on", "1.5x", "how long is left"). His request comes first (lib/floor.mjs), as with everything he says.
+    { const vc = await video.command(message.trim(), { surface: key }).catch((e) => { console.log(`video: ${e.message}`); return null; });
+      if (vc) {
+        floor.owner("message", key); floor.replied(key, vc);
+        transcripts.log({ role: "dayspring", text: vc.reply, surface: key });
+        return send(res, 200, { reply: vc.reply, changes: vc.played ? ["media"] : [], usage: null, intent: vc.intent ?? "video", ...(vc.listen ? { listen: true } : {}) });
+      } }
     // cameras: "show me the front camera", "any activity on the trail cam?", "play last night's deer clip" (lib/cameras)
     const cc = await cameraRoutes.command(message.trim()).catch((e) => { console.log(`cameras: ${e.message}`); return null; });
     if (cc) { transcripts.log({ role: "dayspring", text: cc, surface: key }); return send(res, 200, { reply: cc, changes: [], usage: null, intent: "cameras" }); }

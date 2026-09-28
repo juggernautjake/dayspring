@@ -71,8 +71,10 @@ This runs the export and privacy scan again, then makes `dist-out\Dayspring.zip`
 **Two channels.** That is the **production** release (`--channel stable`, the default): stable and beta features, a normal release marked Latest. A **development** release has everything, including features still being built:
 
 ```
-node scripts/release.mjs --channel dev --tag v1.7.0-dev.1
+node scripts/release.mjs --channel dev --tag v1.8.0-dev.1
 ```
+
+The development tag is numbered **past** the current production version (with production at 1.7.0, the development builds are `v1.8.0-dev.1`, `v1.8.0-dev.2`, …). A `-dev` version sorts before the release of the same number, and the Development channel takes the newest of both, so `v1.7.0-dev.1` next to 1.7.0 would never be offered. The script refuses such a tag and suggests the right one.
 
 It makes `dist-out\Dayspring-dev.zip` from a separate export folder (`dayspring-app-dev`, never the public repo's, because its `package.json` carries the `-dev` version) and prints a `gh release create … --prerelease --latest=false` command. Production copies never see pre-releases; copies on the Development channel (Settings → Updates → Which versions) do. Both channels run the privacy scan and the same checks, and both write `build-info.json` (`{ channel, version, commit }`) into the zip: that is how an install knows which features it has ([feature status](features-status.md)).
 

@@ -139,6 +139,11 @@ setChannel("stable");
   rec("A7 release: production is the default, Dayspring.zip, v<package version>", s.channel === "stable" && s.zipName === "Dayspring.zip" && s.tag === "v1.6.1" && !s.errors.length);
   rec("A7 release: development is Dayspring-dev.zip with its -dev tag, in its own export folder", d.channel === "dev" && d.zipName === "Dayspring-dev.zip" && d.version === "1.7.0-dev.1" && d.target.endsWith("dayspring-app-dev") && !d.errors.length);
   rec("A7 release: development needs a -dev tag", bad.errors.length === 1 && /v1\.7\.0-dev\.1/.test(bad.errors[0]) && bad2.errors.length === 1 && bad3.errors.length === 1);
+  { // (a -dev build of the production version itself sorts before it: Development installs would be offered production)
+    const same = rc.options(["--channel", "dev", "--tag", "v1.7.0-dev.1"], { pkgVersion: "1.7.0", defaultTarget: join(TMP, "dayspring-app") });
+    const next = rc.options(["--channel", "dev", "--tag", "v1.8.0-dev.1"], { pkgVersion: "1.7.0", defaultTarget: join(TMP, "dayspring-app") });
+    rec("A7 release: a development tag must be past the production version (1.7.0 → v1.8.0-dev.1, not v1.7.0-dev.1)", same.errors.length === 1 && /v1\.8\.0-dev\.1/.test(same.errors[0]) && !next.errors.length && rc.suggestDevTag("1.7.0") === "v1.8.0-dev.1", JSON.stringify(same.errors));
+  }
   rec("A7 release: development is a pre-release, never Latest", /--prerelease/.test(rc.ghCommand(d, "x.zip")) && /--latest=false/.test(rc.ghCommand(d, "x.zip")) && !/--prerelease/.test(rc.ghCommand(s, "x.zip")));
   rec("A7 release: build-info.json says the channel", rc.buildInfo({ channel: "dev", version: "1.7.0-dev.1", commit: "abc" }).channel === "dev");
   const release = readFileSync(join(DESK, "scripts", "release.mjs"), "utf8");

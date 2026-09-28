@@ -2812,6 +2812,108 @@
         "the developer setup"
       ],
       "safety": ""
+    },
+    {
+      "id": "videosearch-01",
+      "feature": "videosearch",
+      "title": "Find a video on YouTube (not the Bible reader)",
+      "steps": [
+        "Say \"find bible reading in psalms on YouTube\".",
+        "Then say \"read Psalm 23\"."
+      ],
+      "expected": "The first plays a Bible-reading video on the screen. The second reads Psalm 23 aloud from the Bible, as before.",
+      "needs": [
+        "the internet"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "videosearch-02",
+      "feature": "videosearch",
+      "title": "Play a video by a creator",
+      "steps": [
+        "Say \"play a video by Mike Winger\".",
+        "Say \"play a video by John MacArthur\".",
+        "Say \"play a video by oney plays\"."
+      ],
+      "expected": "Each plays a recent or popular video from the person's own channel (Mike Winger; Grace to You for John MacArthur; OneyPlays), never a video that only mentions them.",
+      "needs": [
+        "the internet"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "videosearch-03",
+      "feature": "videosearch",
+      "title": "Pick from a list of videos",
+      "steps": [
+        "Say \"pull up videos about biking\".",
+        "Say \"more\", then \"newest first\".",
+        "Say \"queue number 2 and 4\", then \"number 3\"."
+      ],
+      "expected": "A grid of 12 numbered videos appears (24 after \"more\"), re-sorted by date; 2 and 4 go into the queue and number 3 plays.",
+      "needs": [
+        "the internet"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "videosearch-04",
+      "feature": "videosearch",
+      "title": "Not that one",
+      "steps": [
+        "Say \"play the video amazing grace\".",
+        "If it asks which one, say \"number 2\"; otherwise say \"not that\"."
+      ],
+      "expected": "It plays your choice (or the next best one), and remembers it: asking the same way again plays that one.",
+      "needs": [
+        "the internet"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "videosearch-05",
+      "feature": "videosearch",
+      "title": "Your YouTube playlists",
+      "steps": [
+        "Sign in to YouTube once if you haven't (\"sign in to YouTube\").",
+        "Say \"list my YouTube playlists\".",
+        "Say \"play my <one of them> playlist\", then \"shuffle my liked videos\"."
+      ],
+      "expected": "It names your playlists plus Liked videos and Watch later, plays the one you named (even said loosely), and shuffles Liked videos.",
+      "needs": [
+        "a YouTube account signed in on the media browser, or a Google account connected with YouTube access"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "videosearch-06",
+      "feature": "videosearch",
+      "title": "The video queue",
+      "steps": [
+        "Say \"queue 3 videos about dovetails\" and \"play <a title> next\".",
+        "Say \"show the queue\", then \"play number 3\", \"move number 4 up\", \"remove number 2\".",
+        "Close Dayspring and open it again, then say \"show the queue\"."
+      ],
+      "expected": "The queue panel shows every video with its picture, title, channel and length and marks the one playing; each change happens; the queue is still there after the restart; the next video starts by itself when one ends.",
+      "needs": [
+        "the internet"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "videosearch-07",
+      "feature": "videosearch",
+      "title": "Playback control by voice, keys and buttons",
+      "steps": [
+        "While a video plays, say \"skip ahead 2 minutes\", \"go to the middle\", \"1.5x\", \"captions on\", \"captions in Spanish\", \"720p\", \"minimize the player\", \"bring the video back\", \"how long is left\".",
+        "Try the keys J, L, C, I, Q, 0–9 and the CC, quality, repeat and ☰ buttons."
+      ],
+      "expected": "Each does what it says (YouTube may keep its own choice of quality); the volume changes are the video's own, not the computer's.",
+      "needs": [
+        "a YouTube video playing on the screen"
+      ],
+      "safety": ""
     }
   ]
 }

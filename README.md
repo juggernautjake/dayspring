@@ -90,7 +90,7 @@ Everything is explained step by step. The same guide is built into Dayspring: cl
 [AI providers](docs/ai-providers.md) · [Voices](docs/voices.md) · [Speakers and microphones](docs/audio-devices.md) · [Display setup and the living sky](docs/display-setup.md) · [Compact mode, quiet mode and notifications](docs/quiet-and-notifications.md) · **[Every setting explained](docs/settings-reference.md)**
 
 **Connect**
-[Connecting apps](docs/connections.md) · [Permissions](docs/permissions.md) · [Files, programs and the browser](docs/files-and-browser.md) · [Documents](docs/documents.md) · [Music and videos](docs/music.md) · [Discover](docs/discover.md) · [Your phone](docs/phone.md) · [Tune in to calls](docs/discord-calls.md) · [Meetings (Google Meet)](docs/meeting-demo.md) · [The Discord bot](docs/discord-bot.md) · [Photos](docs/photos.md) · [Claude Code](docs/claude-code.md)
+[Connecting apps](docs/connections.md) · [Permissions](docs/permissions.md) · [Files, programs and the browser](docs/files-and-browser.md) · [Documents](docs/documents.md) · [Music and videos](docs/music.md) · [Videos, playlists and the queue](docs/videos.md) · [Discover](docs/discover.md) · [Your phone](docs/phone.md) · [Tune in to calls](docs/discord-calls.md) · [Meetings (Google Meet)](docs/meeting-demo.md) · [The Discord bot](docs/discord-bot.md) · [Photos](docs/photos.md) · [Claude Code](docs/claude-code.md)
 
 **More**
 [Faith features](docs/faith-features.md) · [Privacy](docs/privacy.md) · [Updating](docs/updating.md) · **[Troubleshooting](docs/troubleshooting.md)** · **[FAQ](docs/faq.md)**

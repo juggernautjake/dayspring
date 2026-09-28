@@ -595,6 +595,16 @@
   .vrate option{background:#141633}
   .media.audio .vctl{padding:1.2em .5em .35em;font-size:.82em}
   .media.audio .vtitle,.media.audio .vrate,.media.audio .pvol{display:none}
+  .vqual select{font:inherit;font-size:.78em;color:#fff;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:.6em;padding:.25em .35em;cursor:pointer}
+  .vqual select:focus-visible{outline:2px solid var(--violet)}
+  .vqual option{background:#141633}
+  .media .vctl .pb.cc{font-size:.72em;font-weight:700;letter-spacing:.03em;width:2.6em;border-radius:.6em}
+  .media .vctl .pb.vqbtn{width:auto;min-width:2.1em;padding:0 .55em;border-radius:1em;font-size:.9em}
+  .media.audio .vqual,.media.audio #vCC,.media.audio #vMin{display:none}
+  /* minimised: a small picture in the corner (safe-area.css keeps it inside the screen margins) */
+  .media.minip{inset:auto;right:calc(1.2em + var(--sx));bottom:calc(1.2em + var(--sy));width:26em;height:14.6em;border-radius:.9em}
+  .media.minip .vtitle,.media.minip .vrate,.media.minip .vqual,.media.minip .pvol,.media.minip .vlib,.media.minip #vPop{display:none}
+  .media.minip .vctl{padding:1em .4em .3em;font-size:.8em}
   .media.audio .vclose{width:2em;height:2em;font-size:.85em;top:.4em;right:.4em}
   .media .np2{position:absolute;left:0;right:0;bottom:0;padding:.6em 1em;background:linear-gradient(transparent,rgba(0,0,0,.85));font-size:.85em;color:#ddd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
 
@@ -805,6 +815,12 @@
       <span class="vtitle" id="vTitle"></span>
       <span class="pvol"><i class="vi" data-p="mute" title="Mute"></i><input type="range" id="vVol" min="0" max="100" step="1" aria-label="Volume"></span>
       <label class="vrate" title="Speed (&lt; and &gt;)"><select id="vRate" aria-label="Playback speed"></select></label>
+      <label class="vqual" title="Quality (YouTube has the last word)"><select id="vQual" aria-label="Video quality"><option value="auto">Auto</option><option value="highest">Best</option><option value="1080p">1080p</option><option value="720p">720p</option><option value="480p">480p</option><option value="360p">360p</option></select></label>
+      <button class="pb cc" data-p="captions" id="vCC" title="Captions (C)" aria-label="Captions" aria-pressed="false">CC</button>
+      <button class="pb" data-p="repeat" id="vRep" title="Repeat (R)" aria-label="Repeat" hidden></button>
+      <button class="pb" data-p="shuffle" id="vShuf" title="Shuffle (S)" aria-label="Shuffle" hidden></button>
+      <button class="pb vqbtn" data-p="queue" id="vQueueBtn" title="The queue (Q)" aria-label="The queue" hidden>☰</button>
+      <button class="pb" data-p="minimize" id="vMin" title="Minimize to the corner (I)" aria-label="Minimize the video"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="12" y="12" width="7" height="5" rx="1"/></svg></button>
       <button class="pb" data-p="audio" id="vAudio" title="Music only: hide the picture" aria-label="Music only"></button>
       <button class="pb" data-p="full" id="vFull" title="Full screen (F)" aria-label="Full screen"></button>
       <button class="pb popout" data-p="popout" id="vPop" title="Pop out into your browser" aria-label="Pop out into your browser">↗</button>
@@ -831,6 +847,7 @@
 <script src="/reader.js"></script>
 <script src="/results.js"></script>
 <script src="/medialib.js"></script>
+<script src="/videos.js"></script>
 <script src="/images.js"></script>
 <script src="/gifs.js"></script>
 <script src="/cameras-tv.js"></script>

@@ -28,7 +28,16 @@ export function options(argv, { pkgVersion, defaultTarget }) {
   if (channel === "dev") {
     if (!tag) errors.push(`A development release needs its tag, for example: --tag ${suggestDevTag(pkgVersion)}`);
     else if (!DEV_TAG.test(tag)) errors.push(`"${tag}" isn't a development tag. Use the form v1.7.0-dev.1.`);
-    else { tag = tag.startsWith("v") ? tag : "v" + tag; version = tag.slice(1); }
+    else {
+      tag = tag.startsWith("v") ? tag : "v" + tag; version = tag.slice(1);
+      // a -dev version sorts BEFORE the release of the same number (1.7.0-dev.1 < 1.7.0), and the Development channel
+      // takes the newest of both: so a development build must be numbered past the production version, or Development
+      // installs would be offered production instead (and a -dev install would "update" to it, losing its features)
+      const core = (v) => String(v).replace(/^v/, "").split("-")[0].split(".").map((x) => Number.parseInt(x, 10) || 0);
+      const [a, b] = [core(version), core(pkgVersion)];
+      const past = a[0] !== b[0] ? a[0] > b[0] : a[1] !== b[1] ? a[1] > b[1] : a[2] > b[2];
+      if (!past) errors.push(`${tag} would sort before the production version ${pkgVersion}, so Development installs would never be offered it. Use ${suggestDevTag(pkgVersion)}.`);
+    }
   } else {
     if (tag && tag.replace(/^v/, "") !== pkgVersion) errors.push(`A production release uses the version in package.json (${pkgVersion}); leave --tag out or use v${pkgVersion}.`);
     tag = `v${pkgVersion}`;

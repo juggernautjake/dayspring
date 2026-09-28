@@ -55,6 +55,7 @@ Which of Dayspring's features are finished, new, or still being built, and which
 | Pop-ups fit the screen margins | `popfit` | Screen | Beta (New) | 1.6.1 | 5 |  |
 | Your requests come first (the floor) | `floor` | Talking to Dayspring | Beta (New) | 1.6.0 | 5 |  |
 | Spotify plays what you asked for | `spotifyresolver` | Music and media | Beta (New) | 1.6.0 | 4 |  |
+| Finding videos, YouTube playlists and the video queue | `videosearch` | Music and media | Beta (New) | 1.7.1 | 7 |  |
 | Developer preview | `devpreview` | This app | Beta (New) | 1.6.0 | 4 |  |
 | Email | `email` | Apps and connections | In progress (dev) | 1.7.0 | 23 |  |
 | GIFs | `gifs` | Music and media | In progress (dev) | 1.7.0 | 12 |  |
@@ -78,6 +79,7 @@ Which of Dayspring's features are finished, new, or still being built, and which
 - **Pop-ups fit the screen margins** (`popfit`, since 1.6.1): Every notice, card, menu and dialog stays inside the margins set in Settings → Screen. Hidden when off: a stylesheet.
 - **Your requests come first (the floor)** (`floor`, since 1.6.0): While you talk, what Dayspring planned to say waits, then comes out one at a time; "what were you going to say?". Hidden when off: 1 screen element.
 - **Spotify plays what you asked for** (`spotifyresolver`, since 1.6.0): The best Spotify match for what was asked (checked, typos fixed), not just the first search result. Hidden when off: checks `features.on()` in its own code.
+- **Finding videos, YouTube playlists and the video queue** (`videosearch`, since 1.7.1): "Play a video by…" (the creator's own channel), "find … on YouTube", a grid of videos to pick from, your YouTube playlists (Liked, Watch later), and a video queue that's kept. Hidden when off: routes `/api/video`; 4 AI tool patterns; intents `video.`; 4 screen elements.
 - **Developer preview** (`devpreview`, since 1.6.0): On the developer's own computer only (signed, computer-bound token): every badge's art and every character. Hidden when off: routes `/api/dev`.
 
 ## In progress (dev) features

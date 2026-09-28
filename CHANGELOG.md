@@ -2,6 +2,32 @@
 
 All notable changes to Dayspring. Versions follow [semantic versioning](https://semver.org).
 
+## 1.7.1 (2026-09-28)
+
+### In this version
+
+**Ask for videos the way you'd ask a friend.** Dayspring finds them on YouTube, picks the best match and plays it on the Dayspring screen. It works without an AI brain and without a YouTube key. See [Videos](docs/videos.md).
+- "Find bible reading in Psalms on YouTube", "play the video Amazing Grace", "show me a video of a cat playing piano", "play a video about surfing under 10 minutes", "play more like this", "play the next episode".
+- Saying **YouTube** or **video** makes it a video request. "Find bible reading in Psalms on YouTube" plays a video, while "read Psalm 23" still reads the Bible to you. Music and pictures keep their own words too.
+- When a few videos fit equally well, you see the top 3 and say "number 2". Say "not that" and it plays the next best. Both are remembered for next time.
+- YouTube Shorts are left out unless you ask for one.
+
+**Videos by the people you like.** "Play a video by Mike Winger", "play a video by oney plays", "play the latest video from John MacArthur". Dayspring finds the person's own channel and plays a recent, popular video from it, never a video that only mentions them. Names are matched the way they sound ("oney plays", "one-y plays", "John McArthur"). People best known from another channel are looked up there: John MacArthur on Grace to You, R.C. Sproul on Ligonier Ministries, and a few more. Add your own with "when I say Pastor Bob I mean First Baptist Church". If it picks the wrong channel, say "wrong channel" and it remembers.
+
+**Browse and choose.** "Pull up videos about biking" or "show me videos by Mike Winger" shows a grid of 12 numbered videos with their pictures, lengths and ages (24 or more with "more"). Say a number or click one, press ＋ Queue, or say "queue number 2 and 4". Filter with "newest first", "most viewed", "longer than 20 minutes" or "no Shorts".
+
+**Your YouTube playlists.** "List my YouTube playlists", "play my Worship playlist", "shuffle my workout playlist", "play my liked videos", "play my watch later", "what's in my Sunday Sermons playlist?". The name can be said loosely. Dayspring reads them where you're signed in to YouTube in Dayspring, or through your Google account if one is connected with YouTube access.
+
+**A video queue that's kept.** "Queue how to cut dovetails", "play this next", "queue 3 videos about dovetails", "queue my Worship playlist after this". "Show the queue" (or ☰ on the video, or Q) shows every video with its picture, title, channel and length, and marks the one playing. Click one or say "play number 5" to jump; move, remove, clear, shuffle or repeat it. The next video starts by itself, and the queue is still there after a restart.
+
+**More control over what's playing, by voice, keys and buttons.** "Go back to the beginning", "rewind 30 seconds", "skip ahead 2 minutes", "jump to 5:30", "go to the middle", "1.5x", "slow down", "captions on", "captions in Spanish", "720p", "minimize the player", "how long is left". The video has new buttons for captions (CC), quality, repeat, shuffle, the queue and minimise, and new keys: J and L (10 seconds), 0–9 (jump to 0–90%), Home, C, I, Q, R and S. These work for YouTube videos, your own music and videos, and Spotify where they make sense. Volume commands change the video's or the music's own volume, not the computer's.
+
+**Marked New:** finding videos, YouTube playlists and the video queue. You can switch it off in Settings → Features. The playback controls are not marked New; they are always on.
+
+### In the development version only
+
+The same as 1.7.0: email, GIFs, smart devices, 3D printers, cameras and more than one computer are in the Development version (Dayspring-dev.zip) and not yet in Production.
+
 ## 1.7.0 (2026-09-28)
 
 ### In this version

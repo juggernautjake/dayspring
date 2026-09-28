@@ -132,7 +132,21 @@
       case "shuffle": { shuffleOn = v === undefined || v === null ? !shuffleOn : Boolean(v); const at = order[pos]; mkOrder(at); P.shuffle = shuffleOn; break; }
       case "repeat": { const m = ["off", "all", "one"]; repeat = v === "context" || v === true ? "all" : v === "track" ? "one" : v === false || v === "off" ? "off" : m[(m.indexOf(repeat) + 1) % 3]; P.repeat = repeat === "all" ? "context" : repeat === "one" ? "track" : "off"; break; }
       case "speed": case "speedBy": el.playbackRate = a === "speed" ? Math.max(0.5, Math.min(2, Number(v) || 1)) : Math.max(0.5, Math.min(2, el.playbackRate + 0.25 * Math.sign(Number(v) || 1))); P.rate = el.playbackRate; break;
-      case "full": case "video": { const box = $("#media"); if (it.kind !== "video" || !box) return it.kind === "video" ? "" : "There's no video with this one."; const on = v === undefined || v === null ? !box.classList.contains("full") : Boolean(v); box.classList.toggle("full", on); break; }
+      case "full": case "video": { const box = $("#media"); if (it.kind !== "video" || !box) return it.kind === "video" ? "" : "There's no video with this one."; const on = v === undefined || v === null ? !box.classList.contains("full") : Boolean(v); box.classList.toggle("full", on); if (on) { box.classList.remove("minip"); P.mini = false; } break; }
+      case "minimize": { const box = $("#media"); if (it.kind !== "video" || !box) return "There's no video to minimize."; const on = v === undefined || v === null ? !box.classList.contains("minip") : Boolean(v); box.classList.toggle("minip", on); if (on) box.classList.remove("full"); else box.classList.add("full"); P.mini = on; break; }
+      case "seekPct": { if (!P.dur) return "I can't tell how long this one is yet."; return ctl("seek", P.dur * Math.max(0, Math.min(100, Number(v) || 0)) / 100); }
+      // captions: a subtitle track the file carries (or a .vtt next to it, which the stream route offers)
+      case "captions": case "captionLang": {
+        const tracks = [...(el.textTracks ?? [])].filter((t) => t.kind === "subtitles" || t.kind === "captions");
+        if (!tracks.length) return it.kind === "video" ? "This video has no captions." : "Songs don't have captions.";
+        const want = a === "captionLang" ? tracks.find((t) => String(t.language).toLowerCase().startsWith(String(v).toLowerCase())) : tracks[0];
+        if (a === "captionLang" && !want) return "This video has no captions in that language.";
+        const off = a === "captions" && (v === false || (v === undefined && tracks.some((t) => t.mode === "showing")));
+        tracks.forEach((t) => { t.mode = !off && t === want ? "showing" : "hidden"; });
+        P.captions = !off; break;
+      }
+      case "quality": return "Your own files play at their own quality.";
+      case "queueMode": return "";
       case "popout": return "Only YouTube videos pop out into your browser.";
       case "stop": stop(true); return "";
       default: return "";

@@ -54,6 +54,7 @@ The same list is on the **Testing** page (Settings → This app → Testing, in 
 | Cameras | In progress (dev) | 15 |
 | Multi-device remote control | In progress (dev) | 11 |
 | Sharing with friends | In progress (dev) | 3 |
+| Finding videos, YouTube playlists and the video queue | Beta (New) | 7 |
 
 ## Schedule and calendar (Stable)
 
@@ -2283,5 +2284,89 @@ The same list is on the **Testing** page (Settings → This app → Testing, in 
 1. As the developer, start Dayspring with DAYSPRING_SOCIAL=1 and the mock server.
 
 **Expected:** The social routes answer; no key is made until asked.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+
+## Finding videos, YouTube playlists and the video queue (Beta (New))
+
+### videosearch-01: Find a video on YouTube (not the Bible reader)
+
+*You need: the internet*
+
+1. Say "find bible reading in psalms on YouTube".
+2. Then say "read Psalm 23".
+
+**Expected:** The first plays a Bible-reading video on the screen. The second reads Psalm 23 aloud from the Bible, as before.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### videosearch-02: Play a video by a creator
+
+*You need: the internet*
+
+1. Say "play a video by Mike Winger".
+2. Say "play a video by John MacArthur".
+3. Say "play a video by oney plays".
+
+**Expected:** Each plays a recent or popular video from the person's own channel (Mike Winger; Grace to You for John MacArthur; OneyPlays), never a video that only mentions them.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### videosearch-03: Pick from a list of videos
+
+*You need: the internet*
+
+1. Say "pull up videos about biking".
+2. Say "more", then "newest first".
+3. Say "queue number 2 and 4", then "number 3".
+
+**Expected:** A grid of 12 numbered videos appears (24 after "more"), re-sorted by date; 2 and 4 go into the queue and number 3 plays.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### videosearch-04: Not that one
+
+*You need: the internet*
+
+1. Say "play the video amazing grace".
+2. If it asks which one, say "number 2"; otherwise say "not that".
+
+**Expected:** It plays your choice (or the next best one), and remembers it: asking the same way again plays that one.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### videosearch-05: Your YouTube playlists
+
+*You need: a YouTube account signed in on the media browser, or a Google account connected with YouTube access*
+
+1. Sign in to YouTube once if you haven't ("sign in to YouTube").
+2. Say "list my YouTube playlists".
+3. Say "play my <one of them> playlist", then "shuffle my liked videos".
+
+**Expected:** It names your playlists plus Liked videos and Watch later, plays the one you named (even said loosely), and shuffles Liked videos.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### videosearch-06: The video queue
+
+*You need: the internet*
+
+1. Say "queue 3 videos about dovetails" and "play <a title> next".
+2. Say "show the queue", then "play number 3", "move number 4 up", "remove number 2".
+3. Close Dayspring and open it again, then say "show the queue".
+
+**Expected:** The queue panel shows every video with its picture, title, channel and length and marks the one playing; each change happens; the queue is still there after the restart; the next video starts by itself when one ends.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### videosearch-07: Playback control by voice, keys and buttons
+
+*You need: a YouTube video playing on the screen*
+
+1. While a video plays, say "skip ahead 2 minutes", "go to the middle", "1.5x", "captions on", "captions in Spanish", "720p", "minimize the player", "bring the video back", "how long is left".
+2. Try the keys J, L, C, I, Q, 0–9 and the CC, quality, repeat and ☰ buttons.
+
+**Expected:** Each does what it says (YouTube may keep its own choice of quality); the volume changes are the video's own, not the computer's.
 
 - [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____

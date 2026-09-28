@@ -7,6 +7,8 @@ Dayspring plays music and videos right on its screen, with full controls: play a
 
 Commands marked ⚡ work even without an AI brain.
 
+**New:** finding videos by title, topic or creator ("play a video by Mike Winger"), a grid of videos to pick from, your YouTube playlists (Liked videos and Watch later too), the video queue, and more playback controls (captions, quality, minimise). See [Videos: finding them, your playlists and the queue](videos.md).
+
 ## Turn it on
 
 Open Settings → **Features & apps** and turn on **Music**.
@@ -141,7 +143,7 @@ The free allowance is about 100 searches a day. When it runs out, Dayspring goes
 
 ## Video playlists
 
-Dayspring keeps its own named video playlists, like "Worship" or "Morning hymns", on this computer. They show in the Library and work by voice. They're separate from your YouTube account's playlists: Dayspring can play those ("play my YouTube playlists" needs an AI brain), but saving into your YouTube account isn't reliable, so Dayspring's playlists live in Dayspring.
+Dayspring keeps its own named video playlists, like "Worship" or "Morning hymns", on this computer. They show in the Library and work by voice. They're separate from your YouTube account's playlists: Dayspring can list and play those too ("list my YouTube playlists", "play my Worship playlist"; see [Your YouTube playlists](videos.md#your-youtube-playlists)), but saving into your YouTube account isn't reliable, so Dayspring's playlists live in Dayspring.
 
 ## Party / Jam: listening together
 
