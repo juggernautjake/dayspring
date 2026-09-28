@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GIFs · Dayspring</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='20' r='9' fill='%237c8cff'/%3E%3Crect x='2' y='20' width='28' height='10' fill='%23070913'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/fonts/fonts.css">
+<link rel="stylesheet" href="/gifs.css">
+<style>
+  html,body{margin:0;height:100%;background:#070913;color:#f4f5ff;font:15px/1.4 system-ui,"Segoe UI",sans-serif}
+  .closed{display:grid;place-items:center;height:100%;text-align:center}
+  .closed button{font:inherit;background:#7c8cff;color:#0b0f22;border:0;border-radius:10px;padding:10px 18px;font-weight:600;cursor:pointer}
+</style>
+</head>
+<body>
+<!-- The GIF picker on its own page (/gifs): search, trending, categories, favourites and recents, in any browser tab. -->
+<div class="closed" id="closed" hidden><div><p>The GIF picker is closed.</p><button type="button" id="reopen">Open GIFs</button></div></div>
+<script src="/gifs.js"></script>
+<script>
+  (function () {
+    var q = new URLSearchParams(location.search);
+    var closed = document.getElementById("closed");
+    function show() { closed.hidden = true; window.dsGifPicker.open({ query: q.get("q") || "", tab: q.get("tab") || undefined }); }
+    document.getElementById("reopen").onclick = show;
+    setInterval(function () { closed.hidden = window.dsGifPicker.isOpen(); }, 500);
+    show();
+  })();
+</script>
+</body>
+</html>

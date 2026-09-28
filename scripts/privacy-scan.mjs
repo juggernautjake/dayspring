@@ -29,6 +29,9 @@ const peopleFound = [];
 // the developer's dev token and private key (lib/dev, scripts/dev): they live in %LOCALAPPDATA%, never in an export
 const DEV_SECRETS = /^dev-(token|key)(\.|$)/i;
 const devFound = [];
+// email (lib/mail): the mailbox file (encrypted app passwords, signatures), the people he's emailed, any mail cache
+const MAIL_DATA = /^(mail|mail-contacts|microsoft|google)\.json$|^mail-cache$/i;
+const mailFound = [];
 const TEXT = new Set([".js", ".mjs", ".cjs", ".json", ".md", ".html", ".css", ".txt", ".cmd", ".bat", ".ps1", ".example", ".yml", ".yaml", ".gitignore", ""]);
 
 const KEYS = [
@@ -121,6 +124,7 @@ function* walk(dir) {
     if (e.isDirectory() && (FINANCE_DIRS.test(e.name) || (e.name === "finance" && /[\\/]data$/i.test(dir)))) { financeFound.push(join(dir, e.name)); continue; }
     if (SKIP_DIRS.has(e.name) || e.isSymbolicLink()) continue;   // junctions/symlinks (e.g. a linked node_modules) aren't ours
     if (DEV_SECRETS.test(e.name)) { devFound.push(join(dir, e.name)); continue; }
+    if (MAIL_DATA.test(e.name) && (e.name.toLowerCase() === "mail-cache" || /[\\/]connectors$/i.test(dir))) { mailFound.push(join(dir, e.name)); continue; }
     if (PEOPLE_DATA.test(e.name) && !(e.name === "people" && !/[\\/]data$/i.test(dir))) { peopleFound.push(join(dir, e.name)); continue; }
     if (e.isDirectory()) yield* walk(join(dir, e.name));
     else if (e.isFile()) yield join(dir, e.name);
@@ -147,6 +151,7 @@ export function scan(target, { dataDir } = {}) {
   }
   for (const d of peopleFound.splice(0)) hits.push({ level: "fail", file: relative(target, d), line: 0, what: "Face data, saved messages or face models", text: "people data must never be exported" });
   for (const d of devFound.splice(0)) hits.push({ level: "fail", file: relative(target, d), line: 0, what: "Developer token or key", text: "the dev token and key never leave the developer's computer" });
+  for (const d of mailFound.splice(0)) hits.push({ level: "fail", file: relative(target, d), line: 0, what: "Email accounts, sign-ins, contacts or mail cache", text: "mail credentials and caches must never be exported" });
   for (const d of financeFound.splice(0)) hits.push({ level: "fail", file: relative(target, d), line: 0, what: "Money review data or browser profile", text: "financial data must never be exported" });
   return hits;
 }

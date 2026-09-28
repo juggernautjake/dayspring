@@ -49,7 +49,7 @@ export function makeData(today) {
   bank.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 
   const venmo = []; venmo.tag = "v";
-  for (const dt of monthly(today, 2, 4)) add(venmo, dt, "You paid Alex Kim", -600, { note: "Rent share" });
+  for (const dt of monthly(today, 2, 4)) add(venmo, dt, "You paid Alex Moreau", -600, { note: "Rent share" });
   for (let d = 5; d <= 120; d += 19) add(venmo, back(today, d), "You paid Josh Rivera", -(12 + Math.round(r() * 30)), { note: "Pizza night" });
   for (let d = 11; d <= 120; d += 30) add(venmo, back(today, d), "Sam Lee paid you", 40, { note: "Concert tickets" });
   for (let d = 15; d <= 120; d += 45) add(venmo, back(today, d), "Standard transfer to bank", -100);

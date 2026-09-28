@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Smart devices · Dayspring</title>
+<link rel="icon" href="/favicon.ico">
+<link rel="stylesheet" href="/fonts/fonts.css">
+<link rel="stylesheet" href="/safe-area.css">
+<style>
+  :root{--bg:#070916;--panel:rgba(22,26,56,.78);--edge:rgba(160,170,255,.14);--edge2:rgba(170,180,255,.28);--ink:#eef0ff;--muted:#a4abcc;--indigo:#7c8cff;--violet:#a78bfa;--gold:#ffd27a;--mint:#7ee3b0;--rose:#ff8fa3;color-scheme:dark}
+  *{box-sizing:border-box}[hidden]{display:none!important}
+  html,body{height:100%;margin:0}
+  body{background:radial-gradient(1100px 650px at 15% -10%,rgba(124,140,255,.2),transparent 60%),var(--bg);color:var(--ink);font-family:Outfit,"Segoe UI",system-ui,sans-serif;
+    font-size:clamp(14px,min(1.15vw,2.4vh),19px);line-height:1.4;display:flex;flex-direction:column;overflow:hidden}
+  button,select,input{font:inherit;color:inherit}
+  :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .btn{background:rgba(255,255,255,.06);border:1px solid var(--edge2);border-radius:.7em;padding:.3em .8em;cursor:pointer;white-space:nowrap}
+  .btn:hover{background:rgba(124,140,255,.28)} .btn.main{background:var(--indigo);border-color:var(--indigo);color:#0b0f22;font-weight:600} .btn.danger{border-color:rgba(255,143,163,.55);color:var(--rose)}
+  .top{display:flex;align-items:center;gap:.6em;padding:.5em .9em;border-bottom:1px solid var(--edge);flex:0 0 auto;flex-wrap:wrap}
+  .top h1{margin:0;font-weight:500;font-size:1.25em;white-space:nowrap}
+  .sp{flex:1}
+  .say{display:flex;gap:.4em;flex:1 1 18em;max-width:36em}
+  .say input{flex:1;min-width:0;background:rgba(255,255,255,.06);border:1px solid var(--edge2);border-radius:.7em;padding:.3em .7em}
+  main{flex:1 1 auto;min-height:0;overflow:auto;padding:.8em .9em 1.4em}
+  .msg{min-height:1.3em;color:var(--gold);margin:.1em 0 .5em}
+  h2{font-weight:500;font-size:1.05em;margin:1em 0 .45em;color:var(--muted);text-transform:capitalize}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,13em),1fr));gap:.6em}
+  .tile{background:var(--panel);border:1px solid var(--edge);border-radius:.9em;padding:.6em .7em;display:flex;flex-direction:column;gap:.35em;min-width:0}
+  .tile.on{border-color:rgba(126,227,176,.55);box-shadow:0 0 0 1px rgba(126,227,176,.2) inset}
+  .tile .hd{display:flex;align-items:center;gap:.45em}
+  .tile .ic{font-size:1.5em;line-height:1}
+  .tile .nm{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+  .tile .st{font-size:.85em;color:var(--muted)}
+  .tile .st.on{color:var(--mint)} .tile .st.bad{color:var(--rose)}
+  .badges{display:flex;gap:.25em;flex-wrap:wrap}
+  .badge{font-size:.72em;border-radius:.6em;padding:0 .45em;background:rgba(124,140,255,.2)}
+  .badge.heat{background:rgba(255,160,90,.28)} .badge.motion{background:rgba(143,216,255,.25)} .badge.security{background:rgba(255,143,163,.28)} .badge.crit{background:rgba(255,210,122,.25)}
+  .sw{position:relative;width:3.1em;height:1.7em;border-radius:1em;border:1px solid var(--edge2);background:rgba(255,255,255,.08);cursor:pointer;flex:0 0 auto;padding:0}
+  .sw::after{content:"";position:absolute;top:.17em;left:.2em;width:1.25em;height:1.25em;border-radius:50%;background:#c9cdea;transition:left .15s}
+  .sw[aria-checked=true]{background:rgba(126,227,176,.55)} .sw[aria-checked=true]::after{left:1.62em;background:#fff}
+  .ctl{display:flex;gap:.4em;align-items:center;flex-wrap:wrap;font-size:.9em}
+  .ctl input[type=range]{flex:1;min-width:6em}
+  .ctl select{background:rgba(255,255,255,.06);border:1px solid var(--edge2);border-radius:.5em;padding:.1em .3em;max-width:100%}
+  .strip{background:var(--panel);border:1px solid var(--edge);border-radius:.9em;padding:.6em .7em;margin-bottom:.6em}
+  .outlets{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,8.5em),1fr));gap:.4em;margin-top:.4em}
+  .outlet{border:1px solid var(--edge2);border-radius:.6em;padding:.35em .5em;background:rgba(255,255,255,.04);text-align:left;cursor:pointer;min-width:0}
+  .outlet.on{background:rgba(126,227,176,.22);border-color:rgba(126,227,176,.55)}
+  .outlet b{display:block;font-size:.8em;color:var(--muted);font-weight:500} .outlet span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .outlet:disabled{cursor:default;opacity:.6}
+  .row{display:flex;gap:.5em;flex-wrap:wrap;align-items:center}
+  .list{display:grid;gap:.35em}
+  .item{display:flex;gap:.5em;align-items:center;background:rgba(255,255,255,.04);border:1px solid var(--edge);border-radius:.6em;padding:.35em .6em}
+  .item .grow{flex:1;min-width:0}
+  .empty{color:var(--muted);padding:1em 0}
+  /* the question before something risky: inside the safe area, never bigger than it */
+  .dlg{position:fixed;z-index:50;background:rgba(3,5,14,.7)}
+  .dlg .box{background:#12163a;border:1px solid var(--edge2);border-radius:1em;padding:1em 1.1em;width:min(34em,100%)}
+  .dlg .box p{margin:.2em 0 .8em}
+  .dlg .box .row{justify-content:flex-end;position:sticky;bottom:0;background:#12163a;padding-top:.4em}
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>🏠 Smart devices</h1>
+  <form class="say" id="say" autocomplete="off"><input id="sayIn" placeholder="Say it: “turn off fan 2”, “movie mode”, “office off at 10 pm”" aria-label="Tell Dayspring what to switch"><button class="btn" type="submit">Go</button></form>
+  <span class="sp"></span>
+  <button class="btn" id="refresh" type="button" title="Refresh">⟳</button>
+  <button class="btn" id="settings" type="button">⚙ Set up</button>
+  <button class="btn" id="close" type="button" title="Close (Esc)" hidden>✕</button>
+</div>
+<main>
+  <div class="msg" id="msg" role="status" aria-live="polite"></div>
+  <div id="rooms"></div>
+  <section id="scenesBox" hidden><h2>Scenes</h2><div class="row" id="scenes"></div></section>
+  <section id="stripsBox" hidden><h2>Power strips</h2><div id="strips"></div></section>
+  <section id="schedBox" hidden><h2>Schedules</h2><div class="list" id="scheds"></div></section>
+</main>
+<div class="dlg safe-cover" id="dlg" hidden role="dialog" aria-modal="true" aria-labelledby="dlgText"><div class="box"><p id="dlgText"></p><div class="row"><button class="btn" id="dlgNo" type="button">Cancel</button><button class="btn main" id="dlgYes" type="button">Yes, do it</button></div></div></div>
+<script src="/smarthome.js"></script>
+</body>
+</html>

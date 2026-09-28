@@ -1,0 +1,352 @@
+{
+  "category": "email",
+  "label": "Email providers",
+  "description": "Mailboxes Dayspring can read, organise and (with your yes) send from: Gmail and Outlook through their own sign-in, and most other providers through IMAP and SMTP with an app password. Passwords are stored encrypted with Windows, and nothing is ever sent without the owner's yes.",
+  "entries": [
+    {
+      "id": "gmail",
+      "brand": "Google",
+      "model": "Gmail",
+      "category": "email",
+      "connection": "cloud",
+      "offline": false,
+      "status": "tested-sim",
+      "capabilities": [
+        "read",
+        "search",
+        "drafts",
+        "send",
+        "organize",
+        "labels",
+        "attachments"
+      ],
+      "notes": "Best through Google sign-in: Dayspring uses the Gmail API with the Google account connection, asking for reading first and for sending or organising only when you turn those on. IMAP with a Google app password (two-step verification on) also works. The email test script runs every step against a stand-in Gmail server. Passes Dayspring's simulator tests (September 2026): Gmail, against stand-ins (mocks). Not yet tried on a real one.",
+      "howToSetUp": [
+        "In Dayspring, open Settings → Email and choose Add Gmail (sign in with Google).",
+        "Sign in to your Google account and allow reading mail.",
+        "If you want Dayspring to send or tidy up email, turn on \"Let Dayspring send email from this account\" or \"organize this mailbox\"; Google asks you once.",
+        "Alternatively: make an app password in your Google Account (Security → 2-Step Verification → App passwords) and add Gmail as an IMAP account with it."
+      ],
+      "links": [
+        "https://support.google.com/mail/",
+        "https://support.google.com/accounts/answer/185833"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "email"
+      ]
+    },
+    {
+      "id": "outlook",
+      "brand": "Microsoft",
+      "model": "Outlook.com / Hotmail / Live",
+      "category": "email",
+      "connection": "cloud",
+      "offline": false,
+      "status": "tested-sim",
+      "capabilities": [
+        "read",
+        "search",
+        "drafts",
+        "send",
+        "organize",
+        "folders",
+        "attachments"
+      ],
+      "notes": "Through Microsoft sign-in and Microsoft Graph: reading, drafts, marking and moving, and sending only after you turn it on. Microsoft now prefers this over passwords for Outlook.com. The email test script runs it against a stand-in Microsoft Graph. Passes Dayspring's simulator tests (September 2026): Outlook, against stand-ins (mocks). Not yet tried on a real one.",
+      "howToSetUp": [
+        "In Dayspring, open Settings → Email and choose Add Outlook (sign in with Microsoft).",
+        "Sign in with your Outlook.com or Hotmail account, for example name@example.com, and allow access.",
+        "Turn on \"Let Dayspring send email from this account\" if you want it to send."
+      ],
+      "links": [
+        "https://support.microsoft.com/outlook"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "email"
+      ]
+    },
+    {
+      "id": "microsoft-365",
+      "brand": "Microsoft",
+      "model": "Microsoft 365 work or school mailbox",
+      "category": "email",
+      "connection": "cloud",
+      "offline": false,
+      "status": "expected",
+      "capabilities": [
+        "read",
+        "search",
+        "drafts",
+        "send",
+        "organize",
+        "folders",
+        "attachments"
+      ],
+      "notes": "Uses the same Microsoft sign-in and Graph connection as Outlook.com. Many organisations only let approved apps in, so your IT admin may need to allow Dayspring (admin consent) before you can sign in.",
+      "howToSetUp": [
+        "In Dayspring, open Settings → Email and choose Add Outlook (sign in with Microsoft).",
+        "Sign in with your work or school account.",
+        "If Microsoft says an admin must approve the app, ask your IT admin to allow it."
+      ],
+      "links": [
+        "https://learn.microsoft.com/microsoft-365/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "email"
+      ]
+    },
+    {
+      "id": "yahoo-mail",
+      "brand": "Yahoo",
+      "model": "Yahoo Mail",
+      "category": "email",
+      "connection": "cloud",
+      "offline": false,
+      "status": "expected",
+      "capabilities": [
+        "read",
+        "search",
+        "drafts",
+        "send",
+        "organize",
+        "folders",
+        "attachments"
+      ],
+      "notes": "IMAP (imap.mail.yahoo.com, port 993) and SMTP (smtp.mail.yahoo.com, port 465). Yahoo needs an app password; your normal password won't work. Dayspring fills in the servers when you type a Yahoo address.",
+      "howToSetUp": [
+        "Open login.yahoo.com → Account info → Account security → Generate app password.",
+        "Name it Dayspring, press Generate, and copy the 16 letters.",
+        "In Dayspring, open Settings → Email, choose Add another account, type your Yahoo address, and paste the app password.",
+        "Press Test connection."
+      ],
+      "links": [
+        "https://login.yahoo.com/account/security",
+        "https://help.yahoo.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "email"
+      ]
+    },
+    {
+      "id": "icloud-mail",
+      "brand": "Apple",
+      "model": "iCloud Mail",
+      "category": "email",
+      "connection": "cloud",
+      "offline": false,
+      "status": "expected",
+      "capabilities": [
+        "read",
+        "search",
+        "drafts",
+        "send",
+        "organize",
+        "folders",
+        "attachments"
+      ],
+      "notes": "IMAP (imap.mail.me.com, port 993) and SMTP (smtp.mail.me.com, port 587). Apple needs two-factor authentication on and an app-specific password.",
+      "howToSetUp": [
+        "Make sure two-factor authentication is on for your Apple Account.",
+        "Open account.apple.com → Sign-In and Security → App-Specific Passwords → Generate, name it Dayspring, and copy it.",
+        "In Dayspring, open Settings → Email, choose Add another account, type your iCloud address, and paste the password.",
+        "Press Test connection."
+      ],
+      "links": [
+        "https://account.apple.com/",
+        "https://support.apple.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "email"
+      ]
+    },
+    {
+      "id": "aol-mail",
+      "brand": "AOL",
+      "model": "AOL Mail",
+      "category": "email",
+      "connection": "cloud",
+      "offline": false,
+      "status": "expected",
+      "capabilities": [
+        "read",
+        "search",
+        "drafts",
+        "send",
+        "organize",
+        "folders",
+        "attachments"
+      ],
+      "notes": "IMAP (imap.aol.com, port 993) and SMTP (smtp.aol.com, port 465) with an app password.",
+      "howToSetUp": [
+        "Open login.aol.com → Account info → Account security → Generate app password, name it Dayspring, and copy it.",
+        "In Dayspring, open Settings → Email, choose Add another account, type your AOL address, and paste the app password.",
+        "Press Test connection."
+      ],
+      "links": [
+        "https://login.aol.com/account/security",
+        "https://help.aol.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "email"
+      ]
+    },
+    {
+      "id": "zoho-mail",
+      "brand": "Zoho",
+      "model": "Zoho Mail",
+      "category": "email",
+      "connection": "cloud",
+      "offline": false,
+      "status": "expected",
+      "capabilities": [
+        "read",
+        "search",
+        "drafts",
+        "send",
+        "organize",
+        "folders",
+        "attachments"
+      ],
+      "notes": "IMAP (imap.zoho.com) and SMTP (smtp.zoho.com). IMAP access must be turned on in Zoho first, and with two-factor on you need an app-specific password. Accounts in other regions use that region's servers (for example imap.zoho.eu or imap.zoho.in); type them in by hand if yours is one of those.",
+      "howToSetUp": [
+        "In Zoho Mail, open Settings → Mail Accounts → IMAP Access and turn it on.",
+        "Open accounts.zoho.com → Security → App Passwords → Generate New Password, and copy it.",
+        "In Dayspring, open Settings → Email, choose Add another account, type your Zoho address, and paste the password.",
+        "If your account is in Europe, India or another region, change the servers to that region's (for example imap.zoho.eu and smtp.zoho.eu).",
+        "Press Test connection."
+      ],
+      "links": [
+        "https://www.zoho.com/mail/help/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "email"
+      ]
+    },
+    {
+      "id": "gmx",
+      "brand": "GMX",
+      "model": "GMX Mail",
+      "category": "email",
+      "connection": "cloud",
+      "offline": false,
+      "status": "expected",
+      "capabilities": [
+        "read",
+        "search",
+        "drafts",
+        "send",
+        "organize",
+        "folders",
+        "attachments"
+      ],
+      "notes": "IMAP (imap.gmx.com, port 993) and SMTP (mail.gmx.com, port 587). Access for other apps must be allowed in GMX webmail first. Your GMX password works, or an app password if two-factor is on.",
+      "howToSetUp": [
+        "In GMX webmail, open Settings → POP3 & IMAP and allow access.",
+        "In Dayspring, open Settings → Email, choose Add another account, type your GMX address and password.",
+        "Press Test connection."
+      ],
+      "links": [
+        "https://www.gmx.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "email"
+      ]
+    },
+    {
+      "id": "fastmail",
+      "brand": "Fastmail",
+      "model": "Fastmail",
+      "category": "email",
+      "connection": "cloud",
+      "offline": false,
+      "status": "expected",
+      "capabilities": [
+        "read",
+        "search",
+        "drafts",
+        "send",
+        "organize",
+        "folders",
+        "attachments"
+      ],
+      "notes": "IMAP (imap.fastmail.com, port 993) and SMTP (smtp.fastmail.com, port 465) with an app password that has IMAP and SMTP access.",
+      "howToSetUp": [
+        "In Fastmail, open Settings → Privacy & Security → Manage app passwords → New app password, with IMAP and SMTP access.",
+        "In Dayspring, open Settings → Email, choose Add another account, type your Fastmail address, and paste the app password.",
+        "Press Test connection."
+      ],
+      "links": [
+        "https://www.fastmail.help/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "email"
+      ]
+    },
+    {
+      "id": "proton-mail",
+      "brand": "Proton",
+      "model": "Proton Mail",
+      "category": "email",
+      "connection": "cloud",
+      "offline": false,
+      "status": "untested",
+      "capabilities": [
+        "read",
+        "search",
+        "send"
+      ],
+      "notes": "Proton Mail is end-to-end encrypted and has no ordinary IMAP server. Other apps can only reach it through Proton Mail Bridge, a program that runs on this computer and is available on paid Proton plans. Bridge gives local IMAP and SMTP addresses and its own password, which Dayspring should be able to use like any IMAP account; this hasn't been tried.",
+      "howToSetUp": [
+        "On a paid Proton plan, install Proton Mail Bridge on this computer and sign in.",
+        "Copy the IMAP and SMTP settings and the password Bridge shows for your address.",
+        "In Dayspring, open Settings → Email, choose Another provider (IMAP + SMTP), and type Bridge's servers, ports and password.",
+        "Keep Bridge running whenever Dayspring should see your mail."
+      ],
+      "links": [
+        "https://proton.me/mail/bridge"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "email"
+      ]
+    },
+    {
+      "id": "generic-imap",
+      "brand": "Any",
+      "model": "Any provider with IMAP and SMTP",
+      "category": "email",
+      "connection": "cloud",
+      "offline": false,
+      "status": "tested-sim",
+      "capabilities": [
+        "read",
+        "search",
+        "drafts",
+        "send",
+        "organize",
+        "folders",
+        "attachments"
+      ],
+      "notes": "Most email providers offer IMAP for reading and SMTP for sending. The email test script checks reading, drafts, replies, attachments, the send guard and more against a stand-in IMAP and SMTP server. Many providers need an app password when two-step sign-in is on. Passes Dayspring's simulator tests (September 2026): IMAP and SMTP, against stand-ins (mocks). Not yet tried on a real one.",
+      "howToSetUp": [
+        "Find your provider's IMAP and SMTP servers on its help pages (search for \"<provider> IMAP settings\").",
+        "In Dayspring, open Settings → Email, choose Another provider (IMAP + SMTP), and type your address (for example name@example.com), the servers and the password.",
+        "Press Test connection."
+      ],
+      "links": [],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "email"
+      ]
+    }
+  ]
+}

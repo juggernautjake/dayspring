@@ -50,4 +50,8 @@ node scripts/dev/make-dev-token.mjs --new-key    # a new key: every older token 
 
 Restart Dayspring after the first run. Only the computer that holds the private key can sign tokens.
 
+## Trying an in-progress feature on a production build
+
+The token is also the one way to switch on a feature that is still being built (stage "dev"; the guide's Feature status page lists them) on a production build: with it, Settings → **Features** shows a switch for each in-progress feature, one at a time (saved in `data/feature-switches.json` as `devOn`). Without the token those switches aren't offered, and editing `data/feature-switches.json` or `data/feature-stages.json` by hand can't turn one on. On the development version every feature is already on.
+
 The export and the privacy scan refuse any `dev-token` or `dev-key` file and anything that looks like a private key. `scripts/qa/dev-preview.mjs` tests all of this: tokens (valid, forged, copied, missing, revoked), that nothing shows or leaks without a token, that previewing changes nothing, the 10-minute try, unlock-all and reset, and the screens in a headless browser.

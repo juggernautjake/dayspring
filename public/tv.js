@@ -12,7 +12,7 @@
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   // Esc closes only what's on top. Every open overlay is found here and the top one (highest layer, then the one
   // added last) is marked on the key event (e.dsTop); each overlay's own Esc handler only acts when it's the one.
-  const ESC_ROOTS = ".wconfirm, .fitcal, #dsUpdate, .stpop, .tunepop, .morebox, #soundPanel, .fyl, #lib, .rpanel, #reader, #detail, #media.video, #calwrap, #pagewrap, #dsImages";
+  const ESC_ROOTS = ".wconfirm, .fitcal, #dsUpdate, .stpop, .tunepop, .morebox, #soundPanel, .fyl, #lib, .rpanel, #reader, #detail, #media.video, #calwrap, #pagewrap, #dsImages, #dsGifs";
   const shown = (el) => el.isConnected && !el.hidden && !el.closest("[hidden]") && getComputedStyle(el).display !== "none" && getComputedStyle(el).visibility !== "hidden";
   const layerOf = (el) => { for (let x = el; x && x !== document.body; x = x.parentElement) { const z = parseInt(getComputedStyle(x).zIndex, 10); if (!Number.isNaN(z)) return z; } return 0; };
   window.dsTopOverlay = () => {
@@ -2406,7 +2406,7 @@
       for (const p of parts) { all.set(p, o); o += p.length; }
       const ratio = rate / 16000, len = Math.floor(n / ratio), pcm = new Int16Array(len);
       for (let i = 0; i < len; i++) { const v = all[Math.floor(i * ratio)]; pcm[i] = Math.max(-32768, Math.min(32767, Math.round(v * 32767))); }
-      const purpose = mode === "command" || utter ? "request" : "wake";
+      const purpose = mode === "command" || utter || window.dsDictation?.active ? "request" : "wake";   // (dictating into an email: every word)
       try {
         const r = await fetch(`/api/stt?purpose=${purpose}`, { method: "POST", headers: { "content-type": "application/octet-stream" }, body: pcm.buffer });
         if (r.status === 503) { const j = await r.json().catch(() => ({})); sttNeedsInstall(j); this.abort(); return; }
@@ -2547,6 +2547,7 @@
       handleFinal(text);
     }
     interim = interim.trim();
+    if (interim && window.dsDictation?.active && mode !== "command" && !utter && !wakeRe.test(interim)) window.dsDictation.interim?.(interim);   // dictation (mail-compose.js)
     if (interim && wakeRe.test(interim) && mode === "idle") { duck(true); wake(); }
     if (interim && (mode === "command" || utter || wakeRe.test(interim))) {
       window.dsFloor?.owner("voice");        // he's talking to Dayspring: a planned line just starting is called back (floor.js)
@@ -2575,6 +2576,12 @@
     clearInterim();
     if (!text) return;
     if (isOwnEcho(text) && !wakeRe.test(text)) { dlog("ignored-echo", { words: text.split(/\s+/).length }); return; }
+    // dictating into an email (mail-compose.js): what he says goes into the email, except "Dayspring, …" (a request),
+    // and "Dayspring, stop dictating"; the words aren't logged
+    if (window.dsDictation?.active && !alarmOn && mode !== "command" && !utter) {
+      const dw = wakeRe.exec(text), rest = dw ? String(dw[1] || "").trim() : text;
+      if (!dw || /^(?:(?:ok(?:ay)? )?(?:stop|end|finish|done)(?: dictating| dictation)?|that'?s all)\W*$/i.test(rest)) { if (window.dsDictation.take(dw ? "stop dictating" : text)) { dlog("dictated", { words: text.split(/\s+/).length }); return; } }
+    }
     const m = wakeRe.exec(text);
     if (m || mode === "command" || utter) window.dsFloor?.owner("voice");
     // privacy: speech that isn't for Dayspring (room conversation) is logged only as a word count, never the words;

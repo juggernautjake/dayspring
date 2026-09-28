@@ -1,0 +1,84 @@
+/* The GIF picker (public/gifs.js). A window inside the screen's safe area (safe-area.css sets --safe-*; pages without it
+   use the whole window). Docked, it fills the safe area with a small gap; dragged or resized, it floats and gifs.js keeps
+   it inside. Everything is text-sized in em so it scales with the Dayspring screen's font size. */
+#dsGifs{--g-bg:rgba(10,13,28,.97);--g-ink:#f4f5ff;--g-mute:rgba(236,238,255,.72);--g-edge:rgba(124,140,255,.42);--g-acc:#7c8cff;--g-acc-ink:#0b0f22;--g-tile:rgba(255,255,255,.05);--g-gap:10px;
+  position:fixed;z-index:70;display:flex;flex-direction:column;background:var(--g-bg);color:var(--g-ink);border:1px solid var(--g-edge);border-radius:18px;
+  font:15px/1.35 system-ui,"Segoe UI",sans-serif;box-shadow:0 30px 90px rgba(0,0,0,.6);overflow:hidden;min-width:260px;min-height:240px;
+  top:calc(var(--safe-top, 0px) + var(--safe-gap, 10px));bottom:calc(var(--safe-bottom, 0px) + var(--safe-gap, 10px));
+  left:max(calc(var(--safe-left, 0px) + var(--safe-gap, 10px)), calc(50vw - 560px));right:max(calc(var(--safe-right, 0px) + var(--safe-gap, 10px)), calc(50vw - 560px))}
+#dsGifs.float{right:auto;bottom:auto}
+html.mini #dsGifs:not(.float){inset:0;border-radius:0}
+#dsGifs[hidden],#dsGifsPill[hidden]{display:none}
+#dsGifs *{box-sizing:border-box}
+#dsGifs button,#dsGifs select,#dsGifs input{font:inherit;color:inherit}
+#dsGifs .g-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:9px;padding:5px 10px;font-size:14px;cursor:pointer;white-space:nowrap}
+#dsGifs .g-btn:hover,#dsGifs .g-btn:focus-visible{background:rgba(124,140,255,.32);outline:none}
+#dsGifs .g-btn.main{background:var(--g-acc);border-color:var(--g-acc);color:var(--g-acc-ink);font-weight:600}
+#dsGifs .g-btn[aria-pressed="true"]{background:rgba(124,140,255,.45);border-color:var(--g-acc)}
+#dsGifs :focus-visible{outline:2px solid #b9c3ff;outline-offset:2px}
+/* the title bar: drag to move */
+#dsGifs .g-bar{display:flex;align-items:center;gap:8px;padding:8px 10px 6px 14px;cursor:move;user-select:none;flex-wrap:wrap;touch-action:none}
+#dsGifs .g-title{font-weight:650;font-size:17px;white-space:nowrap}
+#dsGifs .g-tabs{display:flex;gap:4px;flex-wrap:wrap;cursor:default}
+#dsGifs .g-tab{background:transparent;border:1px solid transparent;border-radius:999px;padding:4px 11px;font-size:14px;cursor:pointer;color:var(--g-mute)}
+#dsGifs .g-tab[aria-selected="true"]{background:rgba(124,140,255,.28);border-color:var(--g-edge);color:var(--g-ink)}
+#dsGifs .g-tab:hover{color:var(--g-ink)}
+#dsGifs .g-sp{flex:1}
+#dsGifs .g-win{display:flex;gap:4px;cursor:default}
+#dsGifs .g-win button{width:32px;height:30px;padding:0;display:grid;place-items:center}
+/* search and filters */
+#dsGifs .g-search{display:flex;gap:8px;padding:2px 14px 6px}
+#dsGifs .g-search input{flex:1;min-width:0;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.22);border-radius:10px;padding:7px 11px;font-size:16px}
+#dsGifs .g-filters{display:flex;gap:6px 10px;align-items:center;flex-wrap:wrap;padding:0 14px 6px;font-size:13px}
+#dsGifs .g-prov{display:flex;gap:4px;flex-wrap:wrap}
+#dsGifs .g-prov button{padding:3px 9px;font-size:13px}
+#dsGifs .g-filters label{display:flex;gap:5px;align-items:center;color:var(--g-mute)}
+#dsGifs .g-filters select{background:#1a1f3c;border:1px solid rgba(255,255,255,.22);border-radius:8px;padding:3px 6px;font-size:13px}
+#dsGifs .g-status{display:flex;gap:5px;flex-wrap:wrap}
+#dsGifs .g-chipbad{font-size:12px;padding:2px 8px;border-radius:999px;background:rgba(255,160,80,.16);border:1px solid rgba(255,170,90,.45);color:#ffd9b5}
+#dsGifs .g-chips{display:flex;gap:6px;overflow-x:auto;padding:0 14px 8px;scrollbar-width:thin;flex:0 0 auto}
+#dsGifs .g-chip{flex:0 0 auto;padding:3px 11px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);font-size:13px;cursor:pointer}
+#dsGifs .g-chip:hover,#dsGifs .g-chip:focus-visible{background:rgba(124,140,255,.3)}
+/* the grid: columns filled shortest-first (masonry), tiles sized by the GIF's shape */
+#dsGifs .g-body{flex:1;min-height:0;overflow:auto;padding:0 14px 10px;position:relative;overscroll-behavior:contain}
+#dsGifs .g-grid{display:flex;gap:var(--g-gap);align-items:flex-start}
+#dsGifs .g-col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:var(--g-gap)}
+#dsGifs .g-tile{position:relative;display:block;width:100%;padding:0;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:var(--g-tile);overflow:hidden;cursor:pointer;text-align:left}
+#dsGifs .g-tile:hover,#dsGifs .g-tile:focus-visible{border-color:var(--g-acc);outline:none;box-shadow:0 0 0 2px rgba(124,140,255,.55)}
+#dsGifs .g-media{position:relative;width:100%;background:linear-gradient(110deg,#1a2040 30%,#252c55 50%,#1a2040 70%);background-size:220% 100%;animation:dsgShimmer 1.3s linear infinite}
+#dsGifs .g-tile.loaded .g-media{animation:none;background:#111632}
+#dsGifs .g-media img,#dsGifs .g-media video,#dsGifs .g-media canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+#dsGifs .g-media canvas{display:none}
+#dsGifs .g-tile.still .g-media canvas{display:block}
+#dsGifs .g-tile.still .g-media img,#dsGifs .g-tile.still .g-media video{visibility:hidden}
+#dsGifs .g-num{position:absolute;top:5px;left:5px;min-width:24px;height:24px;padding:0 6px;border-radius:12px;background:var(--g-acc);color:var(--g-acc-ink);font-weight:750;font-size:13px;display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+#dsGifs .g-num:empty{display:none}
+#dsGifs .g-src{position:absolute;right:5px;bottom:5px;font-size:10.5px;font-weight:650;letter-spacing:.02em;padding:1px 6px;border-radius:6px;background:rgba(0,0,0,.62);color:#fff}
+#dsGifs .g-fav{position:absolute;top:5px;right:6px;font-size:14px;text-shadow:0 1px 3px #000}
+#dsGifs .g-tile .g-cap{display:none}
+#dsGifs .g-empty{opacity:.8;margin:22px 4px;text-align:center}
+#dsGifs .g-sentinel{height:1px}
+#dsGifs .g-more{display:flex;justify-content:center;padding:8px 0 2px}
+/* the big preview */
+#dsGifs .g-detail{position:absolute;inset:0;background:var(--g-bg);display:grid;grid-template-rows:minmax(0,1fr) auto;gap:10px;padding:10px 14px 12px;z-index:2}
+#dsGifs .g-detail[hidden]{display:none}
+#dsGifs .g-frame{min-height:0;display:grid;place-items:center;background:#070914;border-radius:14px;overflow:hidden;position:relative}
+#dsGifs .g-frame img,#dsGifs .g-frame video{max-width:100%;max-height:100%;object-fit:contain;display:block}
+#dsGifs .g-info{display:flex;flex-direction:column;gap:6px}
+#dsGifs .g-info .g-dt{font-size:18px;font-weight:620;overflow-wrap:anywhere}
+#dsGifs .g-meta{display:flex;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--g-mute);align-items:center}
+#dsGifs .g-acts{display:flex;gap:6px;flex-wrap:wrap}
+#dsGifs .g-body-wrap{flex:1;min-height:0;position:relative;display:flex;flex-direction:column}
+/* the footer: attribution, counts, messages */
+#dsGifs .g-foot{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:6px 14px 9px;font-size:12.5px;color:var(--g-mute);border-top:1px solid rgba(255,255,255,.08)}
+#dsGifs .g-attr{display:flex;gap:10px;flex-wrap:wrap}
+#dsGifs .g-attr b{color:var(--g-ink);font-weight:650}
+#dsGifs .g-msg{margin-left:auto;color:var(--g-ink)}
+#dsGifs .g-resize{position:absolute;right:0;bottom:0;width:18px;height:18px;cursor:nwse-resize;background:linear-gradient(135deg,transparent 50%,rgba(255,255,255,.35) 50%,rgba(255,255,255,.35) 60%,transparent 60%,transparent 70%,rgba(255,255,255,.35) 70%,rgba(255,255,255,.35) 80%,transparent 80%);touch-action:none;z-index:3}
+#dsGifs .g-link{color:#a9b6ff;text-decoration:underline}
+/* minimised */
+#dsGifsPill{position:fixed;z-index:70;left:calc(var(--safe-left, 0px) + var(--safe-gap, 10px) + 4px);bottom:calc(var(--safe-bottom, 0px) + var(--safe-gap, 10px) + 4px);
+  background:#7c8cff;color:#0b0f22;border:0;border-radius:999px;padding:8px 15px;font:600 15px system-ui,"Segoe UI",sans-serif;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+@keyframes dsgShimmer{from{background-position:120% 0}to{background-position:-120% 0}}
+@media (prefers-reduced-motion: reduce){#dsGifs .g-media{animation:none}}
+@media (max-width:560px){#dsGifs .g-filters label span{display:none}#dsGifs .g-title{display:none}}

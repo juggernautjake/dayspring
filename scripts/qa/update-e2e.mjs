@@ -43,17 +43,33 @@ function zip(dir, out) {
   return out;
 }
 const A = makeVersion("A", "1.0.1");
-const B = makeVersion("B", "1.0.2", (d) => writeFileSync(join(d, "NEW-MARKER.txt"), "1.0.2"));
+const buildInfo = (channel, version) => (d) => writeFileSync(join(d, "build-info.json"), JSON.stringify({ channel, version, commit: "test" }));
+const B = makeVersion("B", "1.0.2", (d) => { writeFileSync(join(d, "NEW-MARKER.txt"), "1.0.2"); buildInfo("stable", "1.0.2")(d); });
 const BAD = makeVersion("bad", "1.0.3", (d) => writeFileSync(join(d, "server.mjs"), 'throw new Error("this version is broken on purpose");\n'));
-const ZIPS = { B: zip(B, join(BASE, "B.zip")), bad: zip(BAD, join(BASE, "bad.zip")), A: zip(A, join(BASE, "A.zip")) };
+// the release channels: a development pre-release (Dayspring-dev.zip, v1.1.0-dev.2) and a later production release
+const D = makeVersion("D", "1.1.0-dev.2", (d) => { writeFileSync(join(d, "DEV-MARKER.txt"), "1.1.0-dev.2"); buildInfo("dev", "1.1.0-dev.2")(d); });
+const S = makeVersion("S", "1.1.0", buildInfo("stable", "1.1.0"));
+const ZIPS = { B: zip(B, join(BASE, "B.zip")), bad: zip(BAD, join(BASE, "bad.zip")), A: zip(A, join(BASE, "A.zip")), D: zip(D, join(BASE, "D.zip")), S: zip(S, join(BASE, "S.zip")) };
 // with --old from a release at or after 1.0.2: a newer test release for its own updater to install
 if (OLD) ZIPS.C = zip(makeVersion("C", "9.9.0"), join(BASE, "C.zip"));
 
 // ---- a fake GitHub -----------------------------------------------------------------------------------------------------
 let latest = "B", failDownload = false;
-const VERS = { A: "1.0.1", B: "1.0.2", bad: "1.0.3", C: "9.9.0" };
+const VERS = { A: "1.0.1", B: "1.0.2", bad: "1.0.3", C: "9.9.0", D: "1.1.0-dev.2", S: "1.1.0" };
+// the release list (what the Development channel reads): the production "latest", pre-releases, and noise it must skip
+// (a draft, a -beta pre-release, an older -dev). prereleases: which dev builds are published right now.
+let prereleases = ["D"];
+const relJson = (k, port, { pre = false, draft = false, tag = null } = {}) => ({ tag_name: tag ?? "v" + VERS[k], name: `Dayspring ${VERS[k]}`, body: `## What's new\n- Test release ${VERS[k]}`, html_url: "https://example.invalid/r", published_at: new Date().toISOString(), prerelease: pre, draft,
+  assets: [{ name: pre ? "Dayspring-dev.zip" : "Dayspring.zip", size: statSync(ZIPS[k]).size, browser_download_url: `http://127.0.0.1:${port}/dl/${k}.zip` }, ...(pre ? [{ name: "Dayspring.zip", size: 1, browser_download_url: `http://127.0.0.1:${port}/dl/wrong.zip` }] : [])] });
+const requests = [];
 const gh = createServer((req, res) => {
   const port = gh.address().port;
+  requests.push(req.url);
+  if (/^\/repos\/test\/dayspring\/releases(\?|$)/.test(req.url)) {
+    res.writeHead(200, { "content-type": "application/json" });
+    const list = [relJson(latest, port), ...prereleases.map((k) => relJson(k, port, { pre: true })), relJson("D", port, { pre: true, draft: true, tag: "v9.9.1-dev.1" }), relJson("A", port, { pre: true, tag: "v9.0.0-beta.1" }), relJson("A", port, { pre: true, tag: "v1.0.9-dev.1" })];
+    return res.end(JSON.stringify(list));
+  }
   if (req.url.startsWith("/repos/test/dayspring/releases/latest")) {
     const size = statSync(ZIPS[latest]).size;
     res.writeHead(200, { "content-type": "application/json" });
@@ -160,6 +176,51 @@ try {
     await sleep(1500);
     { let h = null; for (let i = 0; i < 10; i++) { h = hist(dir).at(-1); if (h?.ok === true) break; await sleep(1000); } check("idle: history ok", h?.ok === true && h?.how === "idle", JSON.stringify(h ?? {}).slice(0, 200)); }
     check("idle: data kept", dataKept(dir));
+    await stop(dir, port); }
+
+  // 7. release channels: production never sees a pre-release; development takes the newest of -dev and production
+  const bi = (dir) => { try { return JSON.parse(readFileSync(join(dir, "build-info.json"), "utf8")).channel; } catch { return null; } };
+  if (want("channel-stable")) { latest = "B"; prereleases = ["D"]; const port = portN++; const dir = install(A, "ch-stable");
+    const r = await runIn(dir, `import * as u from "./lib/updater.mjs"; const i = await u.check(); console.log(JSON.stringify({ ch: u.channel(), latest: i.latest, zip: i.zip, pre: i.prerelease }));`, envFor(port));
+    const o = (() => { try { return JSON.parse(r.stdout.trim().split(/\r?\n/).pop()); } catch { return {}; } })();
+    check("production channel: offered the production release, not the pre-release", o.ch === "stable" && o.latest === "1.0.2" && /\/dl\/B\.zip$/.test(o.zip ?? "") && o.pre === false, r.stdout.trim().slice(-200) + r.stderr.trim().slice(0, 200));
+    check("production channel: never asked for the release list", !requests.some((u) => /releases\?/.test(u))); }
+
+  if (want("channel-dev")) { latest = "B"; prereleases = ["D"]; const port = portN++; const dir = install(A, "ch-dev");
+    const set = await runIn(dir, `import * as u from "./lib/updater.mjs"; u.setChannel("dev"); const i = await u.check(); console.log(JSON.stringify({ ch: u.channel(), latest: i.latest, zip: i.zip, pre: i.prerelease, available: i.available }));`, envFor(port));
+    const o = (() => { try { return JSON.parse(set.stdout.trim().split(/\r?\n/).pop()); } catch { return {}; } })();
+    check("development channel: offered the newest -dev pre-release (skipping drafts, betas, older -dev)", o.ch === "dev" && o.latest === "1.1.0-dev.2" && o.pre === true && o.available === true, set.stdout.trim().slice(-200) + set.stderr.trim().slice(0, 200));
+    check("development channel: its asset is Dayspring-dev.zip", /\/dl\/D\.zip$/.test(o.zip ?? ""));
+    const r = await runIn(dir, `import * as u from "./lib/updater.mjs"; const x = await u.install({ how: "now" }); console.log(JSON.stringify(x));`, envFor(port));
+    check("development channel: installs the development build", ver(dir) === "1.1.0-dev.2" && existsSync(join(dir, "DEV-MARKER.txt")) && bi(dir) === "dev", r.stderr.trim().slice(0, 200));
+    check("development channel: data and .env kept, backups made", dataKept(dir) && listBackups(dir).some((d) => d.startsWith("data-1.0.1")) && listBackups(dir).some((d) => d.startsWith("code-1.0.1")));
+    const l = await launch(dir, ["--restart", "--verify"], envFor(port));
+    check("development channel: the development build starts", await up(port), l.stdout?.trim().slice(-200));
+    await sleep(1500);
+    const f = await (await fetch(`http://127.0.0.1:${port}/api/features`)).json().catch(() => ({}));
+    check("development channel: the installed build runs as development (every feature on)", f.channel === "dev" && (f.features ?? []).every((x) => x.on), `${f.channel}`);
+    check("development channel: history ok", hist(dir).at(-1)?.ok === true && hist(dir).at(-1)?.to === "1.1.0-dev.2");
+    // a production release newer than the dev build: development takes it
+    latest = "S";
+    const n = await runIn(dir, `import * as u from "./lib/updater.mjs"; const i = await u.check(); console.log(JSON.stringify({ latest: i.latest, pre: i.prerelease }));`, envFor(port));
+    check("development channel: a newer production release wins over the older -dev", /"latest":"1\.1\.0","pre":false/.test(n.stdout), n.stdout.trim().slice(-120));
+    latest = "B";
+    // development → production: offered the newest production version even though it's older, backed up first
+    const sw = await fetch(`http://127.0.0.1:${port}/api/update/channel`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ channel: "stable" }) }).then((x) => x.json()).catch((e) => ({ error: e.message }));
+    check("dev → production: switching offers the newest production version", sw.channel === "stable" && sw.offer?.version === "1.0.2" && sw.offer?.downgrade === true && sw.status?.channel === "stable", JSON.stringify(sw).slice(0, 200));
+    const nothing = ver(dir) === "1.1.0-dev.2";
+    check("dev → production: nothing is installed until the owner says yes", nothing);
+    await stop(dir, port);
+    const t = await runIn(dir, `import * as u from "./lib/updater.mjs"; const x = await u.toStable(); console.log(JSON.stringify(x));`, envFor(port));
+    check("dev → production: goes back to 1.0.2", ver(dir) === "1.0.2" && existsSync(join(dir, "NEW-MARKER.txt")) && !existsSync(join(dir, "DEV-MARKER.txt")) && bi(dir) === "stable", (t.stdout + t.stderr).trim().slice(-200));
+    check("dev → production: data and .env kept, with a backup of both first", dataKept(dir) && listBackups(dir).some((d) => d.startsWith("data-1.1.0-dev.2")) && listBackups(dir).some((d) => d.startsWith("code-1.1.0-dev.2")));
+    const l2 = await launch(dir, ["--restart", "--verify"], envFor(port));
+    check("dev → production: the production version starts and confirms", (await up(port)) && ver(dir) === "1.0.2", l2.stdout?.trim().slice(-160));
+    await sleep(1500);
+    const h = hist(dir).at(-1);
+    check("dev → production: history says it worked", h?.ok === true && h.to === "1.0.2" && h.how === "to-stable", JSON.stringify(h ?? {}).slice(0, 160));
+    const f2 = await (await fetch(`http://127.0.0.1:${port}/api/features`)).json().catch(() => ({}));
+    check("dev → production: runs as production (dev features off)", f2.channel === "stable" && f2.features?.find((x) => x.id === "gifs")?.on === false);
     await stop(dir, port); }
 
   // 6. an older release's own updater ("Update Dayspring.cmd") installing this version: it's offered whichever test

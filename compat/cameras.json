@@ -1,0 +1,872 @@
+{
+  "category": "cameras",
+  "label": "Cameras",
+  "description": "Cameras Dayspring can show and watch: USB webcams, security cameras on the home network (RTSP, ONVIF, snapshot addresses), GoPros, 3D printer cameras, cameras from Home Assistant, and trail cameras whose photos arrive by email or in a folder. Camera passwords are stored encrypted with Windows.",
+  "entries": [
+    {
+      "id": "usb-webcam",
+      "brand": "Any",
+      "model": "USB webcam (UVC), e.g. Logitech C920 / C922",
+      "category": "cameras",
+      "connection": "usb",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "snapshot",
+        "live-view",
+        "motion",
+        "recording"
+      ],
+      "notes": "Any standard USB webcam that Windows shows as a camera works through ffmpeg (DirectShow), which comes with Dayspring. Pictures never leave the computer unless AI analysis is turned on for that camera. Only one app can use a webcam at a time, so a video call may take it over. Passes Dayspring's simulator tests (September 2026): The capture settings Dayspring gives ffmpeg (DirectShow). Not yet tried on a real one.",
+      "howToSetUp": [
+        "Plug the webcam into this computer.",
+        "In Dayspring, open Settings → Cameras, choose Add camera → USB webcam, and press Discover.",
+        "Pick the webcam from the list, give it a name and a room, and press Test."
+      ],
+      "links": [
+        "https://support.logi.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras"
+      ]
+    },
+    {
+      "id": "logitech-brio",
+      "brand": "Logitech",
+      "model": "Brio / Brio 4K",
+      "category": "cameras",
+      "connection": "usb",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "snapshot",
+        "live-view",
+        "motion",
+        "recording"
+      ],
+      "notes": "A standard USB video camera, so it works like any webcam. Windows Hello's infrared camera on the Brio shows up as a separate device; pick the normal colour camera.",
+      "howToSetUp": [
+        "Plug the Brio into a USB port (USB 3 for the best picture).",
+        "In Dayspring, open Settings → Cameras, choose USB webcam, press Discover, and pick the Brio (not the IR camera).",
+        "Press Test to see a picture."
+      ],
+      "links": [
+        "https://support.logi.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras"
+      ]
+    },
+    {
+      "id": "reolink-rtsp",
+      "brand": "Reolink",
+      "model": "Wired and Wi-Fi cameras and NVRs (RTSP / ONVIF)",
+      "category": "cameras",
+      "connection": "lan",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "snapshot",
+        "live-view",
+        "motion",
+        "recording",
+        "onvif"
+      ],
+      "notes": "Reolink's plug-in cameras (RLC, E1, Duo, doorbells) and NVRs give an RTSP stream and a snapshot address on the home network. RTSP and ONVIF are off by default on newer firmware. Newer 4K models use the H.265 stream address. Everything stays on the home network. Passes Dayspring's simulator tests (September 2026): Reolink's snapshot address. Not yet tried on a real one.",
+      "howToSetUp": [
+        "In the Reolink app, open the camera → Settings → Network → Advanced → Server Settings and turn on RTSP (and ONVIF).",
+        "Note the camera's IP address, user name and password.",
+        "In Dayspring, open Settings → Cameras, choose Add camera → Reolink, and type the address, user name and password.",
+        "For a camera on an NVR, set Channel to the camera's number on the NVR.",
+        "Press Test to see a picture."
+      ],
+      "links": [
+        "https://support.reolink.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras"
+      ]
+    },
+    {
+      "id": "reolink-argus-battery",
+      "brand": "Reolink",
+      "model": "Argus and other battery cameras",
+      "category": "cameras",
+      "connection": "lan",
+      "offline": true,
+      "status": "not-supported",
+      "reason": "Reolink's battery cameras sleep between events and have no RTSP stream of their own, so Dayspring can't reach them directly.",
+      "capabilities": [],
+      "notes": "When a battery camera is paired with a Reolink Home Hub or a Reolink NVR, the hub gives each camera an RTSP channel, and Dayspring can use that like any Reolink camera. Live view on battery cameras also drains the battery faster.",
+      "howToSetUp": [
+        "Pair the battery camera with a Reolink Home Hub (or a Reolink NVR that supports it).",
+        "Turn on RTSP on the hub in the Reolink app (Settings → Network → Advanced → Server Settings).",
+        "In Dayspring, open Settings → Cameras, choose Reolink, type the hub's address, and set Channel to the camera's number on the hub."
+      ],
+      "links": [
+        "https://support.reolink.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras"
+      ]
+    },
+    {
+      "id": "amcrest-ip",
+      "brand": "Amcrest",
+      "model": "IP cameras and NVRs",
+      "category": "cameras",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "snapshot",
+        "live-view",
+        "motion",
+        "recording",
+        "sd-card-recordings",
+        "onvif"
+      ],
+      "notes": "Amcrest is built on Dahua: RTSP stream, a snapshot address with digest sign-in, and recordings on the camera's SD card that Dayspring can list and play.",
+      "howToSetUp": [
+        "Note the camera's IP address and its admin user name and password (from the Amcrest app or web page).",
+        "In Dayspring, open Settings → Cameras, choose Add camera → Amcrest, and type them in.",
+        "Press Test to see a picture."
+      ],
+      "links": [
+        "https://support.amcrest.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras"
+      ]
+    },
+    {
+      "id": "dahua-lorex",
+      "brand": "Dahua / Lorex",
+      "model": "IP cameras and NVRs",
+      "category": "cameras",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "snapshot",
+        "live-view",
+        "motion",
+        "recording",
+        "sd-card-recordings",
+        "onvif"
+      ],
+      "notes": "Dahua cameras and the many NVRs built on Dahua (including many Lorex recorders) use the same RTSP and snapshot addresses, and their recordings can be listed and played. Some newer Lorex systems use a different platform; if the Dahua preset doesn't work, try ONVIF.",
+      "howToSetUp": [
+        "Note the camera or NVR's IP address, user name and password.",
+        "In Dayspring, open Settings → Cameras, choose Add camera → Dahua (and Lorex), and type them in.",
+        "On an NVR, set Channel to the camera's number (1 for a single camera).",
+        "Press Test to see a picture."
+      ],
+      "links": [
+        "https://www.dahuasecurity.com/",
+        "https://help.lorex.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras"
+      ]
+    },
+    {
+      "id": "hikvision-ip",
+      "brand": "Hikvision / Annke",
+      "model": "IP cameras and NVRs",
+      "category": "cameras",
+      "connection": "lan",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "snapshot",
+        "live-view",
+        "motion",
+        "recording",
+        "sd-card-recordings",
+        "onvif"
+      ],
+      "notes": "RTSP stream and an ISAPI snapshot with digest sign-in; recordings on the camera or NVR can be searched and played. ONVIF may need turning on first. Passes Dayspring's simulator tests (September 2026): Moving a Hikvision camera to a preset. Not yet tried on a real one.",
+      "howToSetUp": [
+        "On the camera's web page, open Configuration → Network → Advanced Settings → Integration Protocol and turn on ONVIF (make an ONVIF user there).",
+        "In Dayspring, open Settings → Cameras, choose Add camera → Hikvision, and type the address, user name and password.",
+        "Press Test to see a picture."
+      ],
+      "links": [
+        "https://www.hikvision.com/en/support/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras"
+      ]
+    },
+    {
+      "id": "tapo-c-series",
+      "brand": "TP-Link Tapo",
+      "model": "C200 / C210 / C310 and other C-series",
+      "category": "cameras",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "snapshot",
+        "live-view",
+        "motion",
+        "recording",
+        "onvif"
+      ],
+      "notes": "Tapo C-series cameras give an RTSP stream (and ONVIF on port 2020) once a camera account is made in the Tapo app. That account is separate from your TP-Link sign-in. Tapo battery cameras don't offer RTSP.",
+      "howToSetUp": [
+        "In the Tapo app, open the camera → Settings → Advanced Settings → Camera Account and make a user name and password.",
+        "Note the camera's IP address (in the app under Device Info).",
+        "In Dayspring, open Settings → Cameras, choose Add camera → TP-Link Tapo, and type the address and the camera account.",
+        "Press Test to see a picture."
+      ],
+      "links": [
+        "https://www.tapo.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras"
+      ]
+    },
+    {
+      "id": "wyze-cam-v3",
+      "brand": "Wyze",
+      "model": "Wyze Cam v3",
+      "category": "cameras",
+      "connection": "lan",
+      "offline": false,
+      "status": "expected",
+      "capabilities": [
+        "snapshot",
+        "live-view",
+        "motion"
+      ],
+      "notes": "Wyze stopped offering its RTSP firmware, so the dependable way is docker-wyze-bridge: a free program that runs in Docker, signs in to your Wyze account, and re-shares every camera over RTSP on the home network. It needs the internet to sign in, and Wyze app changes have broken it before. Older units still on Wyze's RTSP firmware can use the Wyze (RTSP firmware) choice instead.",
+      "howToSetUp": [
+        "Install Docker Desktop and run docker-wyze-bridge, following its guide, with your Wyze account and API key.",
+        "Open the bridge's web page (port 5000) and note the camera's name there (lower case with dashes).",
+        "In Dayspring, open Settings → Cameras, choose Wyze via docker-wyze-bridge, type the bridge computer's address and the camera name.",
+        "Press Test to see a picture."
+      ],
+      "links": [
+        "https://github.com/mrlt8/docker-wyze-bridge",
+        "https://support.wyze.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras"
+      ]
+    },
+    {
+      "id": "wyze-cam-v4",
+      "brand": "Wyze",
+      "model": "Wyze Cam v4",
+      "category": "cameras",
+      "connection": "lan",
+      "offline": false,
+      "status": "untested",
+      "capabilities": [
+        "snapshot",
+        "live-view"
+      ],
+      "notes": "The v4 has no RTSP firmware and no local stream of its own. The only way in is docker-wyze-bridge, and support for the v4 depends on the bridge's version; it hasn't been tried with Dayspring.",
+      "howToSetUp": [
+        "Run a recent docker-wyze-bridge and check its web page (port 5000) shows the v4's picture.",
+        "If it does, add it in Settings → Cameras as Wyze via docker-wyze-bridge with the camera name from the bridge."
+      ],
+      "links": [
+        "https://github.com/mrlt8/docker-wyze-bridge",
+        "https://support.wyze.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras"
+      ]
+    },
+    {
+      "id": "eufy-rtsp",
+      "brand": "Eufy",
+      "model": "Indoor Cam, some wired cameras, HomeBase 3 cameras",
+      "category": "cameras",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "snapshot",
+        "live-view",
+        "motion"
+      ],
+      "notes": "Only some Eufy models offer RTSP: the Indoor Cam, some floodlight and wired cameras, and cameras on a HomeBase 3 with NAS (RTSP) turned on. Battery cameras sleep between events and often can't be watched live. The Eufy app shows the exact address.",
+      "howToSetUp": [
+        "In the Eufy app, open the camera's Storage settings and turn on NAS (RTSP); set a user name and password.",
+        "Copy the RTSP address the app shows.",
+        "In Dayspring, open Settings → Cameras, choose Eufy (or Other RTSP address) and paste the address.",
+        "Press Test to see a picture."
+      ],
+      "links": [
+        "https://support.eufy.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras"
+      ]
+    },
+    {
+      "id": "unifi-protect",
+      "brand": "Ubiquiti",
+      "model": "UniFi Protect cameras",
+      "category": "cameras",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "snapshot",
+        "live-view",
+        "motion",
+        "recording"
+      ],
+      "notes": "UniFi Protect can share each camera as an RTSP (RTSPS) stream on the home network. Dayspring uses that address; the recordings stay in Protect.",
+      "howToSetUp": [
+        "In UniFi Protect, open the camera → Settings → Advanced and turn on an RTSP stream (High, Medium or Low).",
+        "Copy the rtsps:// address it shows.",
+        "In Dayspring, open Settings → Cameras, choose Other (RTSP address), and paste it.",
+        "Press Test to see a picture."
+      ],
+      "links": [
+        "https://help.ui.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras"
+      ]
+    },
+    {
+      "id": "onvif-generic",
+      "brand": "Any",
+      "model": "Any ONVIF camera",
+      "category": "cameras",
+      "connection": "lan",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "snapshot",
+        "live-view",
+        "motion",
+        "recording",
+        "discover"
+      ],
+      "notes": "Most IP cameras speak ONVIF. Dayspring can find them on the home network when you press Discover, then asks the camera for its own stream and snapshot addresses. Cameras with ONVIF Profile G can also list their SD card recordings. Passes Dayspring's simulator tests (September 2026): ONVIF discovery, profiles, the snapshot address and Profile G recordings. Not yet tried on a real one.",
+      "howToSetUp": [
+        "Make sure ONVIF is turned on in the camera's app or web page, with a user name and password.",
+        "In Dayspring, open Settings → Cameras, choose Any ONVIF camera, and press Discover (or type its address).",
+        "Type the user name and password and press Test."
+      ],
+      "links": [
+        "https://www.onvif.org/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras"
+      ]
+    },
+    {
+      "id": "generic-rtsp",
+      "brand": "Any",
+      "model": "Any camera with an RTSP address",
+      "category": "cameras",
+      "connection": "lan",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "snapshot",
+        "live-view",
+        "motion",
+        "recording"
+      ],
+      "notes": "Any rtsp:// or rtsps:// address from a camera's manual or app works. If the address includes a password, Dayspring takes it out and stores it encrypted. Passes Dayspring's simulator tests (September 2026): The RTSP reader. Not yet tried on a real one.",
+      "howToSetUp": [
+        "Find the camera's RTSP address in its manual or app.",
+        "In Dayspring, open Settings → Cameras, choose Other (RTSP address), and paste it.",
+        "Press Test to see a picture."
+      ],
+      "links": [],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras"
+      ]
+    },
+    {
+      "id": "generic-http-camera",
+      "brand": "Any",
+      "model": "Snapshot or MJPEG address",
+      "category": "cameras",
+      "connection": "lan",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "snapshot",
+        "live-view",
+        "motion"
+      ],
+      "notes": "Cameras (and apps like OctoPrint or ESP32 camera boards) that offer a picture address (…/snapshot.jpg) or an MJPEG stream (…/video.mjpg). Basic and digest sign-in are supported. Passes Dayspring's simulator tests (September 2026): Snapshot and MJPEG addresses, including cameras that need Digest login. Not yet tried on a real one.",
+      "howToSetUp": [
+        "Find the camera's snapshot or MJPEG address.",
+        "In Dayspring, open Settings → Cameras, choose Other (snapshot or MJPEG address), and paste it with the user name and password if it needs them.",
+        "Press Test to see a picture."
+      ],
+      "links": [],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras"
+      ]
+    },
+    {
+      "id": "home-assistant-camera",
+      "brand": "Home Assistant",
+      "model": "Any camera in Home Assistant",
+      "category": "cameras",
+      "connection": "lan",
+      "offline": false,
+      "status": "tested-sim",
+      "capabilities": [
+        "snapshot",
+        "live-view",
+        "motion"
+      ],
+      "notes": "Any camera Home Assistant already shows can be added through the Home Assistant connection: still pictures and a live MJPEG view come through Home Assistant's camera proxy. This is also the way for cloud cameras (Nest, Ring, Blink, Arlo) that have a Home Assistant integration. Whether it works offline depends on the camera's own integration. Passes Dayspring's simulator tests (September 2026): Cameras through Home Assistant. Not yet tried on a real one.",
+      "howToSetUp": [
+        "Connect Dayspring to Home Assistant first (Settings → Apps → Home Assistant).",
+        "In Dayspring, open Settings → Cameras, choose Home Assistant camera, and press Discover.",
+        "Pick the camera from the list and press Test."
+      ],
+      "links": [
+        "https://www.home-assistant.io/integrations/camera/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras"
+      ]
+    },
+    {
+      "id": "ring-camera",
+      "brand": "Ring",
+      "model": "Ring doorbells and cameras",
+      "category": "cameras",
+      "connection": "cloud",
+      "offline": false,
+      "status": "not-supported",
+      "reason": "Ring cameras only stream through Ring's cloud and app; they offer no RTSP, ONVIF or other local stream Dayspring can open.",
+      "capabilities": [],
+      "notes": "Home Assistant's Ring integration can show Ring snapshots and events; through it, Dayspring can show them too.",
+      "howToSetUp": [
+        "Add the Ring integration in Home Assistant.",
+        "In Dayspring, open Settings → Cameras, choose Home Assistant camera, and pick the Ring camera."
+      ],
+      "links": [
+        "https://ring.com/support",
+        "https://www.home-assistant.io/integrations/ring/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras"
+      ]
+    },
+    {
+      "id": "google-nest-cam",
+      "brand": "Google",
+      "model": "Nest Cam and Nest Doorbell",
+      "category": "cameras",
+      "connection": "cloud",
+      "offline": false,
+      "status": "not-supported",
+      "reason": "Nest cameras stream only through Google's cloud (the Google Home app and Google's Device Access API); there's no local stream Dayspring can open.",
+      "capabilities": [],
+      "notes": "Home Assistant's Google Nest integration (which uses Google's Device Access, with a one-time fee from Google) can show Nest cameras; through it, Dayspring can show them too.",
+      "howToSetUp": [
+        "Set up the Google Nest integration in Home Assistant.",
+        "In Dayspring, open Settings → Cameras, choose Home Assistant camera, and pick the Nest camera."
+      ],
+      "links": [
+        "https://support.google.com/googlenest",
+        "https://www.home-assistant.io/integrations/nest/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras"
+      ]
+    },
+    {
+      "id": "blink-camera",
+      "brand": "Blink",
+      "model": "Blink cameras",
+      "category": "cameras",
+      "connection": "cloud",
+      "offline": false,
+      "status": "not-supported",
+      "reason": "Blink cameras are battery cameras that only work through Blink's cloud and app; there's no local stream.",
+      "capabilities": [],
+      "notes": "Home Assistant's Blink integration can fetch Blink snapshots; through it, Dayspring can show them.",
+      "howToSetUp": [
+        "Add the Blink integration in Home Assistant.",
+        "In Dayspring, open Settings → Cameras, choose Home Assistant camera, and pick the Blink camera."
+      ],
+      "links": [
+        "https://support.blinkforhome.com/",
+        "https://www.home-assistant.io/integrations/blink/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras"
+      ]
+    },
+    {
+      "id": "arlo-camera",
+      "brand": "Arlo",
+      "model": "Arlo cameras",
+      "category": "cameras",
+      "connection": "cloud",
+      "offline": false,
+      "status": "not-supported",
+      "reason": "Arlo cameras stream through Arlo's cloud and app; there's no official local RTSP or ONVIF stream.",
+      "capabilities": [],
+      "notes": "If a Home Assistant integration for Arlo is working in your setup, Dayspring can show those cameras through Home Assistant.",
+      "howToSetUp": [
+        "If you use Home Assistant with an Arlo integration, add the camera in Dayspring under Settings → Cameras → Home Assistant camera.",
+        "Otherwise keep using the Arlo app for these cameras."
+      ],
+      "links": [
+        "https://www.arlo.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras"
+      ]
+    },
+    {
+      "id": "gopro-hero-9-13",
+      "brand": "GoPro",
+      "model": "HERO9 to HERO13",
+      "category": "cameras",
+      "connection": "lan",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "snapshot",
+        "live-view",
+        "take-photo",
+        "device-recordings"
+      ],
+      "notes": "Uses Open GoPro, GoPro's own API. Over USB the GoPro appears as a network adapter and Dayspring turns on wired control; over Wi-Fi this computer joins the GoPro's own Wi-Fi. Dayspring can show the live preview, take a real photo, and list and play what's on the SD card. A GoPro can also work as a plain USB webcam (GoPro Webcam app, or HERO12 and newer directly). Passes Dayspring's simulator tests (September 2026): Open GoPro over USB. Not yet tried on a real one.",
+      "howToSetUp": [
+        "Easiest: plug the GoPro into this computer with its USB-C cable and turn it on.",
+        "Or turn on the GoPro's Wi-Fi from the Quik app or the camera's Connections menu, and join it from this computer.",
+        "In Dayspring, open Settings → Cameras, choose GoPro, pick USB or Wi-Fi, and choose Preview or Photo mode.",
+        "Press Test to see a picture."
+      ],
+      "links": [
+        "https://gopro.github.io/OpenGoPro/",
+        "https://gopro.com/help"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras"
+      ]
+    },
+    {
+      "id": "gopro-hero-8-older",
+      "brand": "GoPro",
+      "model": "HERO8 and older",
+      "category": "cameras",
+      "connection": "usb",
+      "offline": true,
+      "status": "not-supported",
+      "reason": "Open GoPro, the API Dayspring uses to control GoPros, starts with the HERO9; older models don't have it.",
+      "capabilities": [],
+      "notes": "A HERO8 can still work as a webcam with GoPro's Webcam desktop app, which makes it a normal USB webcam. For older models, copying the SD card into a folder camera brings the photos in.",
+      "howToSetUp": [
+        "HERO8: install the GoPro Webcam app, plug the camera in, then add it in Settings → Cameras as a USB webcam.",
+        "Older models: copy the photos from the SD card into a folder and add a folder camera in Settings → Cameras."
+      ],
+      "links": [
+        "https://gopro.com/help"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras"
+      ]
+    },
+    {
+      "id": "octoprint-webcam",
+      "brand": "OctoPrint",
+      "model": "OctoPrint webcam (MJPEG)",
+      "category": "cameras",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "snapshot",
+        "live-view",
+        "motion"
+      ],
+      "notes": "The camera on an OctoPrint (or Klipper with crowsnest) Raspberry Pi shares a snapshot address and an MJPEG stream. When the printer is added in Settings → Printers, its camera comes along by itself; it can also be added on its own.",
+      "howToSetUp": [
+        "Add the printer in Settings → Printers; its camera shows up in Cameras automatically.",
+        "Or add it alone: Settings → Cameras → Other (snapshot or MJPEG address), with the Pi's address and /webcam/?action=snapshot or /webcam/?action=stream."
+      ],
+      "links": [
+        "https://docs.octoprint.org/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras",
+        "printers"
+      ]
+    },
+    {
+      "id": "bambu-printer-camera",
+      "brand": "Bambu Lab",
+      "model": "Built-in printer camera",
+      "category": "cameras",
+      "connection": "lan",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "snapshot",
+        "live-view",
+        "motion",
+        "bed-check",
+        "failure-detection"
+      ],
+      "notes": "A Bambu printer's own camera, added automatically with the printer in LAN mode: an RTSPS stream on the X1, P2S and H2 series, and JPEG pictures on port 6000 on the P1 and A1 series. It's used for the bed-clear check before a print and to spot failures like spaghetti. The H2D and H2S need LAN Only Liveview on. Passes Dayspring's simulator tests (September 2026): The printer camera through the Bambu simulator (P1S and X1C). Not yet tried on a real one.",
+      "howToSetUp": [
+        "Add the printer in Settings → Printers (LAN Only Mode and Developer Mode on).",
+        "The camera then appears in Cameras by itself."
+      ],
+      "links": [
+        "https://wiki.bambulab.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras",
+        "printers"
+      ]
+    },
+    {
+      "id": "spypoint",
+      "brand": "Spypoint",
+      "model": "Cellular trail cameras",
+      "category": "cameras",
+      "connection": "email",
+      "offline": false,
+      "status": "tested-sim",
+      "capabilities": [
+        "photos",
+        "events"
+      ],
+      "notes": "Live view isn't possible with any cellular trail camera. Spypoint has no public API. The Spypoint app can forward photos to an email address on some plans; Dayspring's email camera reads those emails and takes the photos in as events. Photos saved from the app into a synced folder also work. Passes Dayspring's simulator tests (September 2026): Photos from the camera's emails (Spypoint-style). Not yet tried on a real one.",
+      "howToSetUp": [
+        "In the Spypoint app, open the camera's settings and turn on photo forwarding or email notifications to your email address (it depends on your plan).",
+        "Make sure that mailbox is connected in Settings → Email.",
+        "In Dayspring, open Settings → Cameras, choose Trail camera → Spypoint → By email.",
+        "Or save photos to a synced folder and choose By folder instead."
+      ],
+      "links": [
+        "https://www.spypoint.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras",
+        "email"
+      ]
+    },
+    {
+      "id": "tactacam-reveal",
+      "brand": "Tactacam",
+      "model": "Reveal cellular trail cameras",
+      "category": "cameras",
+      "connection": "email",
+      "offline": false,
+      "status": "untested",
+      "capabilities": [
+        "photos",
+        "events"
+      ],
+      "notes": "Live view isn't possible. Reveal can email notifications with a link to the photo on some plans, and Dayspring fetches the photo from the link. There's also an unofficial Home Assistant integration; with it, add the camera as a Home Assistant camera.",
+      "howToSetUp": [
+        "In the Reveal app, turn on email notifications for new photos.",
+        "Make sure that mailbox is connected in Settings → Email.",
+        "In Dayspring, open Settings → Cameras, choose Trail camera → Tactacam Reveal → By email."
+      ],
+      "links": [
+        "https://www.tactacam.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras",
+        "email"
+      ]
+    },
+    {
+      "id": "moultrie-mobile",
+      "brand": "Moultrie",
+      "model": "Moultrie Mobile cellular cameras",
+      "category": "cameras",
+      "connection": "email",
+      "offline": false,
+      "status": "untested",
+      "capabilities": [
+        "photos",
+        "events"
+      ],
+      "notes": "Live view isn't possible. Moultrie Mobile can send email notifications for new photos; the photos arrive as links, which Dayspring fetches.",
+      "howToSetUp": [
+        "In the Moultrie Mobile app, open Account → Notifications and turn on email for new photos.",
+        "Make sure that mailbox is connected in Settings → Email.",
+        "In Dayspring, open Settings → Cameras, choose Trail camera → Moultrie Mobile → By email."
+      ],
+      "links": [
+        "https://www.moultriemobile.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras",
+        "email"
+      ]
+    },
+    {
+      "id": "bushnell-cellucore",
+      "brand": "Bushnell",
+      "model": "CelluCORE / Impulse",
+      "category": "cameras",
+      "connection": "email",
+      "offline": false,
+      "status": "untested",
+      "capabilities": [
+        "photos",
+        "events"
+      ],
+      "notes": "Live view isn't possible. Bushnell's app can deliver new photos to your email, which Dayspring's email camera reads.",
+      "howToSetUp": [
+        "In the Bushnell app, turn on sending new photos to your email address.",
+        "Make sure that mailbox is connected in Settings → Email.",
+        "In Dayspring, open Settings → Cameras, choose Trail camera → Bushnell → By email."
+      ],
+      "links": [
+        "https://www.bushnell.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras",
+        "email"
+      ]
+    },
+    {
+      "id": "browning-trail-camera",
+      "brand": "Browning",
+      "model": "Defender / Covert cellular cameras",
+      "category": "cameras",
+      "connection": "email",
+      "offline": false,
+      "status": "untested",
+      "capabilities": [
+        "photos",
+        "events"
+      ],
+      "notes": "Live view isn't possible. The Browning / Covert app can email photos from some cameras; otherwise save the photos to a folder Dayspring watches.",
+      "howToSetUp": [
+        "In the Browning or Covert app, turn on emailing photos if your camera offers it.",
+        "Make sure that mailbox is connected in Settings → Email.",
+        "In Dayspring, open Settings → Cameras, choose Trail camera → Browning → By email (or By folder)."
+      ],
+      "links": [
+        "https://browningtrailcameras.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras",
+        "email"
+      ]
+    },
+    {
+      "id": "stealth-cam",
+      "brand": "Stealth Cam",
+      "model": "Command Pro cellular cameras",
+      "category": "cameras",
+      "connection": "folder",
+      "offline": false,
+      "status": "untested",
+      "capabilities": [
+        "photos",
+        "events"
+      ],
+      "notes": "Live view isn't possible. Save photos from the Command Pro app to a synced folder (OneDrive or Google Drive) that Dayspring watches; each new photo becomes an event.",
+      "howToSetUp": [
+        "In the Command Pro app, save new photos to your phone, and let OneDrive or Google Drive back them up to a folder this computer syncs.",
+        "In Dayspring, open Settings → Cameras, choose Trail camera → Stealth Cam → By folder, and pick that folder."
+      ],
+      "links": [
+        "https://www.stealthcam.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras"
+      ]
+    },
+    {
+      "id": "other-cellular-trail-camera",
+      "brand": "Any",
+      "model": "Other cellular trail camera",
+      "category": "cameras",
+      "connection": "email",
+      "offline": false,
+      "status": "tested-sim",
+      "capabilities": [
+        "photos",
+        "events"
+      ],
+      "notes": "Live view isn't possible. If the camera or its app can email photos, an email camera with the sender set picks them up; if its app can save photos, a folder camera does. Passes Dayspring's simulator tests (September 2026): Photos from the camera's emails (Spypoint-style). Not yet tried on a real one.",
+      "howToSetUp": [
+        "Turn on emailing photos in the camera's app, if it has it, and connect that mailbox in Settings → Email.",
+        "In Dayspring, open Settings → Cameras, choose Trail camera → Other, and pick By email (type the sender's address) or By folder."
+      ],
+      "links": [],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras"
+      ]
+    },
+    {
+      "id": "sd-card-trail-camera",
+      "brand": "Any",
+      "model": "Any trail camera (SD card)",
+      "category": "cameras",
+      "connection": "folder",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "photos",
+        "videos",
+        "events"
+      ],
+      "notes": "Works with any trail camera, cellular or not: put the SD card's DCIM folder (or a folder you copy the photos into) in a folder camera, and each new photo becomes an event that can be checked for deer, people and vehicles. No internet needed unless AI analysis is on. Passes Dayspring's simulator tests (September 2026): New pictures in a folder. Not yet tried on a real one.",
+      "howToSetUp": [
+        "Put the camera's SD card in this computer (or copy its photos into a folder).",
+        "In Dayspring, open Settings → Cameras, choose Trail camera → Any trail camera (SD card), and pick the DCIM folder or your photo folder.",
+        "New photos show up as events on the Cameras page."
+      ],
+      "links": [],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "cameras"
+      ]
+    }
+  ]
+}

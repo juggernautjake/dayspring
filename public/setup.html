@@ -9,6 +9,8 @@
 <link rel="stylesheet" href="/personality.css">
 <link rel="stylesheet" href="/calls.css">
 <link rel="stylesheet" href="/file-access.css">
+<link rel="stylesheet" href="/features-ui.css">
+<script src="/api/features/gate.js"></script>
 <style>
   :root{
     --bg:#070916; --panel:rgba(22,26,56,.72); --panel2:rgba(34,40,80,.6); --edge:rgba(160,170,255,.14); --edge2:rgba(170,180,255,.28);
@@ -44,6 +46,8 @@
   nav button:hover{background:rgba(255,255,255,.05);color:var(--ink)}
   nav button.on{background:linear-gradient(135deg,rgba(124,140,255,.35),rgba(167,139,250,.3));color:#fff}
   nav .ic{width:1.4em;text-align:center}
+  nav .navgrp{font-size:.72em;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);opacity:.75;padding:1em .9em .3em}
+  nav .navgrp:first-child{padding-top:.2em}
   body.wizard nav{display:none}
   main{flex:1 1 auto;min-width:0;overflow-y:auto;padding:1.4em 1.6em 2em;scroll-behavior:smooth}
   .card{max-width:54em;margin:0 auto;animation:in .35s var(--ease) both}
@@ -208,6 +212,7 @@
     .wrap{flex-direction:column}
     nav{flex:0 0 auto;border-right:0;border-bottom:1px solid var(--edge);display:flex;overflow-x:auto;overflow-y:hidden;padding:.4em;gap:.2em}
     nav button{width:auto;white-space:nowrap;padding:.4em .7em}
+    nav .navgrp{display:none}
     main{padding:1em 1em 1.5em}
     h1{font-size:1.45em}
     .top{padding:.5em .8em;gap:.5em}
@@ -248,7 +253,17 @@
   <script src="/personality.js"></script>
   <script src="/calls.js"></script>
   <script src="/photos-people.js"></script>
+  <script src="/gif-settings.js"></script>
+  <script src="/camera-settings.js"></script>
+  <script src="/devices-settings.js"></script>
+  <script src="/printers-settings.js"></script>
+  <script src="/devices-panel.js"></script>
+  <link rel="stylesheet" href="/vendor/quill/quill.snow.css">
+  <script src="/vendor/quill/quill.js"></script>
+  <script src="/mail-core.js"></script>
+  <script src="/email-settings.js"></script>
   <script src="/file-access.js"></script>
+  <script src="/features-ui.js"></script>
   <script src="/setup.js"></script>
 </body>
 </html>

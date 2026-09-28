@@ -2,6 +2,43 @@
 
 All notable changes to Dayspring. Versions follow [semantic versioning](https://semver.org).
 
+## 1.7.0 (2026-09-28)
+
+### In this version
+
+**Settings is easier to find your way around.** The sections are in a sensible order and grouped under headings:
+- **You & your day:** You, Where you are, Your week.
+- **Dayspring:** Your assistant, Personality, AI brain, Voice.
+- **Sound & screen:** Speakers & mic, Screen, Sky & scenery, Notifications.
+- **Apps & connections:** Features & apps, Apps & connections, Calls, Photos & people, Lantern.
+- **Privacy & safety:** Permissions, Activity log.
+- **This app:** Updates, About.
+
+The guided setup follows the same order. Calls has its own 📞 icon, so it no longer shares the headset icon with Speakers & mic. The Settings reference in the guide is in the same order.
+
+**Move Dayspring to another screen while it's open.** In Settings → Screen, click the picture of a screen (or choose Main screen / Second screen) and the open Dayspring screen moves there straight away. You no longer have to wait until it next opens. You can also say "move Dayspring to the other screen", "…to screen 2", "…to the TV" or "…to my main screen". An app window or Dayspring mini moves in place; full screen reopens full screen on the new screen. The choice is kept for next time too.
+
+**Two kinds of Dayspring: Production and Development.** The normal download (this one) is **Production**: finished features, plus newer ones marked **New**. There's now also a **Development** version with features that are still being built; it may have bugs and is meant for testing. Settings → Updates → **Which versions** chooses which one your updates come from. Production is the default and recommended, and nothing changes unless you switch.
+
+**See what's finished, what's new, and what works with what.**
+- **Settings → Features** lists every feature and how far along it is. Newer features are marked **New** and each has an off switch.
+- **Settings → Compatibility** lists the devices, services, browsers and systems Dayspring works with, and how well we know each one: confirmed by the owner, passes our simulator tests, expected to work, untested, or not supported (with the reason). The same list is in the guide.
+- **Settings → Testing** (Development version only) is a step-by-step checklist for trying each feature, with Pass, Fail, Skip or Blocked. When every test for a feature passes, it can be marked finished.
+
+**Marked New (you can switch each one off in Settings → Features):** Money review (read-only), pictures from the web, picture descriptions, faces and people, your own music and videos, Google Drive, meeting notes, Google Meet invitations, moving the screen, pop-ups that fit your screen margins, your requests coming first, and Spotify playing what you asked for. They all work as before; the mark only means the owner hasn't signed them off as finished yet.
+
+**Fixes.** "Is the TV on?" and "show me the printer camera" are understood correctly in the Development version, and "what's on right now?" always answers from your schedule first.
+
+### In the development version only
+
+These are in the Development version (Dayspring-dev.zip), **not in this Production release yet**. They come to Production once they've been tested on real devices.
+- **Email:** read, search and write email from Gmail, Outlook, Yahoo, iCloud and any IMAP mailbox, with a full editor; nothing is sent without your OK. See [Email](docs/email.md).
+- **GIFs:** search GIPHY, KLIPY, Imgur and the web at once, with a GIF picker (also in the email editor), copy, save and favourites. See [GIFs](docs/gifs.md).
+- **Smart devices:** switch power strips, plugs, lights and computers by voice on your own network (Kasa, Tapo, Shelly, Meross, WLED, Hue, Home Assistant, Wake-on-LAN), with safety rules and a Devices permission that starts off. See [Smart devices](docs/smart-devices.md).
+- **3D printers:** Bambu Lab in LAN mode, an Ender 5 Plus over USB, OctoPrint and Klipper: status, camera, pause, and starting a print only after a bed-clear check and your yes. See [3D printers](docs/bambu-printers.md).
+- **Cameras:** webcams, IP and ONVIF cameras, GoPro, Home Assistant and trail cameras, with snapshots, motion alerts and recordings, private by design. See [Cameras](docs/cameras.md).
+- **More than one computer:** link your Dayspring computers securely and control one from another ("turn on my computer at home"), with every command signed and encrypted. See [Dayspring on more than one computer](docs/multiple-devices.md).
+
 ## 1.6.1 (2026-09-27)
 
 **Pop-ups always fit inside your screen margins.** On a TV, notices, question cards, update prompts, menus and panels could run off the edge, sometimes far enough to hide their buttons or their ✕. Now every pop-up stays inside the margins you set in Settings → Screen (or with 📐 Fit to screen), and moves straight away when you change them, even while you drag the green lines, or when the window changes size.

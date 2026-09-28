@@ -1,0 +1,166 @@
+/* Email on the Dayspring screen (public/mail.js): the Mail window (folders | list | reader), the email editor windows
+   (several at once, minimised to tabs along the bottom), the invitation editor, and their small dialogs. Everything stays
+   inside the screen's margins (the --safe-* variables from safe-area.css; the editor windows are also clamped by
+   window.dsKeepInSafe from layout.js). */
+.mailbtnwrap{position:relative;display:inline-flex}
+.mailbadge{position:absolute;top:-.45em;right:-.45em;min-width:1.35em;height:1.35em;padding:0 .3em;box-sizing:border-box;border-radius:.7em;background:#ea4335;color:#fff;font-size:.62em;font-weight:600;line-height:1.35em;text-align:center;pointer-events:none}
+.mailbadge[hidden]{display:none}
+
+/* ---------- the Mail window ---------- */
+.mailwin{position:fixed;z-index:42;display:flex;flex-direction:column;background:rgba(16,20,46,.985);border:1px solid var(--edge2,#3a4170);border-radius:1em;box-shadow:0 20px 70px rgba(0,0,0,.7);color:var(--ink,#eef0ff);font-size:.9em;overflow:hidden;
+  inset:calc(var(--safe-top,0px) + var(--safe-gap,10px)) calc(var(--safe-right,0px) + var(--safe-gap,10px)) calc(var(--safe-bottom,0px) + var(--safe-gap,10px)) calc(var(--safe-left,0px) + var(--safe-gap,10px))}
+html.mini .mailwin{inset:0;border-radius:0}
+.mailwin button,.mailcomp button,.mailpick button,.mailconfirm button,.mailtoast button,.mailtabs button{font:inherit;color:inherit;background:rgba(124,140,255,.2);border:1px solid var(--edge2,#3a4170);border-radius:.6em;padding:.3em .65em;cursor:pointer;white-space:nowrap}
+.mailwin button:hover,.mailcomp button:hover,.mailpick button:hover{background:rgba(124,140,255,.38)}
+.mailwin button:focus-visible,.mailcomp button:focus-visible,.mailcomp input:focus-visible,.mailwin input:focus-visible{outline:2px solid #9aa6ff;outline-offset:1px}
+.mailwin button.plain,.mailcomp button.plain{background:transparent}
+.mailwin button.warn,.mailcomp button.warn,.mailconfirm button.warn{background:rgba(234,67,53,.3)}
+.mailwin button.primary,.mailcomp button.primary,.mailconfirm button.primary{background:#5b6cff;border-color:#8a96ff;font-weight:600}
+.mailwin button[disabled],.mailcomp button[disabled]{opacity:.45;cursor:default}
+.mailwin input,.mailwin select,.mailcomp input,.mailcomp select,.mailpick input{font:inherit;color:var(--ink,#eef0ff);background:rgba(255,255,255,.07);border:1px solid var(--edge2,#3a4170);border-radius:.5em;padding:.3em .5em;min-width:0}
+.mailwin select option,.mailcomp select option{color:#111;background:#fff}
+.mw-bar{display:flex;align-items:center;gap:.45em;padding:.55em .7em;border-bottom:1px solid var(--edge2,#3a4170);flex-wrap:wrap}
+.mw-bar h3{margin:0 .3em 0 .1em;font-weight:500;font-size:1.05em;white-space:nowrap}
+.mw-bar .mw-search{flex:1 1 12em;min-width:8em}
+.mw-bar .grow{flex:1}
+.mw-body{flex:1;display:grid;grid-template-columns:minmax(9em,12em) minmax(16em,26em) 1fr;min-height:0}
+.mw-folders{border-right:1px solid var(--edge2,#3a4170);overflow:auto;padding:.4em;display:flex;flex-direction:column;gap:.2em}
+.mw-folders button{text-align:left;background:transparent;border-color:transparent;display:flex;justify-content:space-between;gap:.4em}
+.mw-folders button[aria-current=true]{background:rgba(124,140,255,.3);border-color:var(--edge2,#3a4170)}
+.mw-folders .cnt{color:var(--muted,#a4abcc);font-size:.85em}
+.mw-folders h5{margin:.7em .4em .2em;font-weight:500;color:var(--muted,#a4abcc);font-size:.8em;text-transform:uppercase;letter-spacing:.04em}
+.mw-foldersel{display:none}
+.mw-list{border-right:1px solid var(--edge2,#3a4170);display:flex;flex-direction:column;min-height:0}
+.mw-bulk{display:flex;gap:.3em;flex-wrap:wrap;align-items:center;padding:.4em .5em;border-bottom:1px solid var(--edge2,#3a4170);background:rgba(124,140,255,.12)}
+.mw-bulk[hidden]{display:none}
+.mw-rows{flex:1;overflow:auto}
+.mw-row{display:grid;grid-template-columns:auto .6em 1fr auto;gap:.2em .45em;align-items:start;padding:.5em .6em;border-bottom:1px solid rgba(170,180,255,.12);cursor:pointer;position:relative}
+.mw-row:hover{background:rgba(255,255,255,.04)}
+.mw-row[aria-selected=true]{background:rgba(124,140,255,.22)}
+.mw-row.cursor{box-shadow:inset 3px 0 0 #9aa6ff}
+.mw-row .dot{width:.55em;height:.55em;border-radius:50%;margin-top:.45em;background:transparent}
+.mw-row.unread .dot{background:#6f86ff;box-shadow:0 0 6px #6f86ff}
+.mw-row .who{font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mw-row.unread .who,.mw-row.unread .subj{font-weight:600}
+.mw-row .when{color:var(--muted,#a4abcc);font-size:.8em;white-space:nowrap;text-align:right}
+.mw-row .subj{grid-column:3/5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mw-row .snip{grid-column:3/5;color:var(--muted,#a4abcc);font-size:.85em;font-weight:300;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:var(--preview-lines,1)}
+.mw-row .snip:empty{display:none}
+.mw-row .tags{display:flex;gap:.25em;justify-content:flex-end;font-size:.85em}
+.mw-row .acct{position:absolute;left:0;top:.4em;bottom:.4em;width:3px;border-radius:2px}
+.mw-row input[type=checkbox]{margin:.3em 0 0}
+.mw-empty{padding:1.2em;color:var(--muted,#a4abcc);font-weight:300;line-height:1.5}
+.mw-read{display:flex;flex-direction:column;min-height:0;min-width:0}
+.mw-rhead{padding:.7em .9em .4em;border-bottom:1px solid var(--edge2,#3a4170)}
+.mw-rhead h2{margin:0 0 .35em;font-weight:500;font-size:1.2em;line-height:1.3;overflow-wrap:anywhere}
+.mw-rhead .meta{color:var(--muted,#a4abcc);font-size:.88em;line-height:1.5;overflow-wrap:anywhere}
+.mw-racts{display:flex;gap:.3em;flex-wrap:wrap;padding:.45em .9em;border-bottom:1px solid var(--edge2,#3a4170)}
+.mw-note{margin:.4em .9em 0;padding:.45em .7em;border-radius:.6em;background:rgba(251,188,4,.14);border:1px solid rgba(251,188,4,.35);font-size:.88em;display:flex;gap:.5em;align-items:center;flex-wrap:wrap}
+.mw-frame{flex:1;min-height:8em;margin:.5em .9em;border:0;border-radius:.6em;background:#fff;width:calc(100% - 1.8em)}
+.mw-text{flex:1;overflow:auto;margin:.5em .9em;padding:.8em;border-radius:.6em;background:rgba(255,255,255,.05);white-space:pre-wrap;line-height:1.5;font-weight:300}
+.mw-atts{display:flex;flex-wrap:wrap;gap:.4em;padding:.2em .9em .7em}
+.mw-att{display:flex;gap:.35em;align-items:center;padding:.3em .5em;border-radius:.6em;background:rgba(255,255,255,.06);border:1px solid var(--edge2,#3a4170);font-size:.88em;max-width:100%}
+.mw-att .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:16em}
+.mw-thread{padding:.3em .9em;display:grid;gap:.25em;max-height:9em;overflow:auto;border-bottom:1px solid var(--edge2,#3a4170)}
+.mw-thread button{text-align:left;background:rgba(255,255,255,.04);display:grid;grid-template-columns:auto 1fr auto;gap:.5em;font-size:.85em}
+.mw-thread button[aria-current=true]{background:rgba(124,140,255,.28)}
+.mw-thread .s{color:var(--muted,#a4abcc);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.mw-back{display:none}
+.mw-status{padding:.35em .8em;border-top:1px solid var(--edge2,#3a4170);color:var(--muted,#a4abcc);font-size:.82em;min-height:1.2em}
+/* narrower: the folders become a menu; the list and the reader take turns */
+.mailwin.narrow .mw-body{grid-template-columns:minmax(0,1fr)}
+.mailwin.narrow .mw-folders{display:none}
+.mailwin.narrow .mw-foldersel{display:block}
+.mailwin.narrow .mw-list{border-right:0}
+.mailwin.narrow.reading .mw-list{display:none}
+.mailwin.narrow:not(.reading) .mw-read{display:none}
+.mailwin.narrow .mw-back{display:inline-block}
+.mailwin.medium .mw-body{grid-template-columns:minmax(8em,10em) minmax(14em,20em) 1fr}
+
+/* ---------- the email editor and the invitation editor ---------- */
+.mailcomp{position:fixed;z-index:44;display:flex;flex-direction:column;background:rgba(18,22,50,.99);border:1px solid #6d78c8;border-radius:.9em;box-shadow:0 24px 80px rgba(0,0,0,.75);color:var(--ink,#eef0ff);font-size:.9em;
+  resize:both;overflow:hidden;min-width:min(22em,calc(var(--safe-w,100vw) - 2 * var(--safe-gap,10px)));min-height:min(18em,calc(var(--safe-h,100vh) - 2 * var(--safe-gap,10px)));
+  max-width:calc(var(--safe-w,100vw) - 2 * var(--safe-gap,10px));max-height:calc(var(--safe-h,100vh) - 2 * var(--safe-gap,10px) - var(--mail-tabs-h,0px))}
+.mailcomp[hidden]{display:none}
+.mailcomp.max{width:calc(var(--safe-w,100vw) - 2 * var(--safe-gap,10px)) !important;height:calc(var(--safe-h,100vh) - 2 * var(--safe-gap,10px) - var(--mail-tabs-h,0px)) !important;resize:none}
+html.mini .mailcomp{min-width:0;min-height:0}
+.mc-bar{display:flex;align-items:center;gap:.4em;padding:.45em .6em;background:rgba(124,140,255,.16);cursor:move;user-select:none;touch-action:none}
+.mc-bar .t{flex:1;font-weight:500;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.mc-bar button{padding:.15em .55em}
+.mc-fields{display:grid;grid-template-columns:auto 1fr;gap:.3em .5em;align-items:center;padding:.5em .7em .3em}
+.mc-fields label{color:var(--muted,#a4abcc);font-size:.88em;text-align:right}
+.mc-fields .row{display:flex;gap:.35em;align-items:center;min-width:0}
+.mc-fields .row > input,.mc-fields .row > select{flex:1}
+.mc-fields [hidden]{display:none !important}
+.chips{display:flex;flex-wrap:wrap;gap:.25em;align-items:center;flex:1;min-width:0;padding:.15em .3em;border:1px solid var(--edge2,#3a4170);border-radius:.5em;background:rgba(255,255,255,.07);position:relative}
+.chips input{border:0 !important;background:transparent !important;flex:1;min-width:6em;padding:.2em .2em !important}
+.chip{display:inline-flex;align-items:center;gap:.25em;padding:.05em .2em .05em .5em;border-radius:1em;background:rgba(124,140,255,.3);font-size:.88em;max-width:100%}
+.chip.bad{background:rgba(234,67,53,.45)}
+.chip .x{background:transparent;border:0;padding:0 .3em;cursor:pointer}
+.chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.suggest{position:absolute;left:0;right:0;top:100%;z-index:3;margin-top:2px;background:#1b2150;border:1px solid var(--edge2,#3a4170);border-radius:.5em;max-height:12em;overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.suggest button{display:block;width:100%;text-align:left;border:0;border-radius:0;background:transparent}
+.suggest button[aria-selected=true],.suggest button:hover{background:rgba(124,140,255,.35)}
+.suggest small{color:var(--muted,#a4abcc)}
+.mc-tb{padding:.1em .4em;border-top:1px solid var(--edge2,#3a4170);border-bottom:1px solid var(--edge2,#3a4170);background:#f4f5fb;color:#222;max-height:7.5em;overflow:auto}
+.mc-tb.ql-toolbar.ql-snow{border:0;padding:.25em .3em}
+.mc-tb .ql-formats{margin-right:.5em !important}
+.mc-tb button.mc-x{width:auto;min-width:28px;height:24px;padding:0 .35em;font-size:14px;line-height:22px;background:transparent;border:0;color:#333;border-radius:3px;vertical-align:middle;cursor:pointer}
+.mc-tb button.mc-x:hover,.mc-tb button.mc-x[aria-pressed=true]{background:#dde2ff;color:#1c2a9c}
+.mc-tb .ql-picker.ql-font{width:9em}.mc-tb .ql-picker.ql-size{width:5em}
+.mc-editor{flex:1;min-height:6em;overflow:auto;background:#fff;color:#1c1e21}
+.mc-editor .ql-editor{min-height:100%;font-size:14px;line-height:1.5}
+.mc-editor .ql-container.ql-snow{border:0;font-size:14px}
+.mc-editor hr{border:0;border-top:1px solid #bbb;margin:.8em 0}
+.mc-editor table{border-collapse:collapse}.mc-editor td{border:1px solid #bbb;padding:3px 6px;min-width:3em}
+.mc-atts{display:flex;flex-wrap:wrap;gap:.3em;padding:.35em .7em;border-top:1px solid var(--edge2,#3a4170);max-height:6em;overflow:auto}
+.mc-atts:empty{display:none}
+.mc-att{display:inline-flex;gap:.35em;align-items:center;padding:.15em .25em .15em .55em;border-radius:.6em;background:rgba(255,255,255,.08);border:1px solid var(--edge2,#3a4170);font-size:.85em;max-width:100%}
+.mc-att .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:14em}
+.mc-att .x{padding:0 .35em;background:transparent;border:0}
+.mc-att.missing{border-color:#ea4335}
+.mc-warn{padding:.3em .7em;font-size:.85em;color:#ffd27a}
+.mc-warn:empty{display:none}
+.mc-warn.bad{color:#ff8a80}
+.mc-ai{display:flex;gap:.4em;align-items:center;flex-wrap:wrap;padding:.35em .7em;background:rgba(124,140,255,.18);border-top:1px solid var(--edge2,#3a4170);font-size:.88em}
+.mc-ai[hidden]{display:none}
+.mc-dict{display:flex;gap:.4em;align-items:center;padding:.35em .7em;background:rgba(52,168,83,.2);border-top:1px solid rgba(52,168,83,.5);font-size:.88em}
+.mc-dict[hidden]{display:none}
+.mc-dict .rec{width:.65em;height:.65em;border-radius:50%;background:#ea4335;box-shadow:0 0 6px #ea4335;animation:mcpulse 1.2s infinite}
+.mc-dict .heard{flex:1;color:var(--muted,#a4abcc);font-style:italic;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+@keyframes mcpulse{50%{opacity:.35}}
+.mc-foot{display:flex;gap:.35em;align-items:center;flex-wrap:wrap;padding:.45em .7em;border-top:1px solid var(--edge2,#3a4170)}
+.mc-foot .st{flex:1;min-width:6em;color:var(--muted,#a4abcc);font-size:.82em;text-align:right}
+.mc-drop{position:absolute;inset:0;z-index:5;display:grid;place-items:center;background:rgba(40,60,160,.55);border:3px dashed #9aa6ff;border-radius:.9em;font-size:1.3em;pointer-events:none}
+.mc-drop[hidden]{display:none}
+.mc-menu{position:absolute;z-index:6;background:#1b2150;border:1px solid var(--edge2,#3a4170);border-radius:.6em;padding:.3em;display:grid;gap:.2em;box-shadow:0 10px 30px rgba(0,0,0,.5);max-height:60%;overflow:auto}
+.mc-menu button{text-align:left;background:transparent;border-color:transparent}
+.mc-emoji{position:absolute;z-index:6;display:grid;grid-template-columns:repeat(8,2em);gap:.1em;padding:.4em;background:#fff;border:1px solid #bbb;border-radius:.5em;box-shadow:0 10px 30px rgba(0,0,0,.4);max-height:14em;overflow:auto}
+.mc-emoji button{background:transparent !important;border:0 !important;font-size:1.25em;padding:.1em !important;color:#000 !important}
+.mc-emoji button:hover{background:#e8ebff !important}
+.mc-inv{display:grid;grid-template-columns:auto 1fr;gap:.35em .5em;align-items:center;padding:.5em .7em .3em}
+.mc-inv label{color:var(--muted,#a4abcc);font-size:.88em;text-align:right}
+.mc-inv .row{display:flex;gap:.4em;flex-wrap:wrap;align-items:center}
+.mc-inv .row input[type=date],.mc-inv .row input[type=time]{flex:0 1 auto}
+
+/* minimised editors: tabs along the bottom of the safe area */
+/* (bottom left, above the editors: open editors start at the bottom right, and leave room for the tabs) */
+.mailtabs{position:fixed;z-index:45;left:calc(var(--safe-left,0px) + var(--safe-gap,10px));bottom:calc(var(--safe-bottom,0px) + var(--safe-gap,10px));display:flex;gap:.35em;flex-wrap:wrap-reverse;justify-content:flex-start;max-width:calc(var(--safe-w,100vw) - 2 * var(--safe-gap,10px));font-size:.85em}
+.mailtabs:empty{display:none}
+.mailtabs button{background:rgba(30,36,80,.97);border-color:#6d78c8;max-width:16em;overflow:hidden;text-overflow:ellipsis;box-shadow:0 6px 20px rgba(0,0,0,.5)}
+
+/* sending (with Undo), confirmations, pickers, shortcuts */
+.mailtoast{position:fixed;z-index:46;left:var(--safe-cx,50vw);transform:translateX(-50%);bottom:calc(var(--safe-bottom,0px) + 3.2em);display:flex;gap:.6em;align-items:center;padding:.55em .8em;border-radius:.8em;background:rgba(24,28,62,.98);border:1px solid #6d78c8;box-shadow:0 14px 40px rgba(0,0,0,.6);font-size:.92em;max-width:calc(var(--safe-w,100vw) - 2em)}
+.mailtoast span{overflow:hidden;text-overflow:ellipsis}
+.mailconfirm,.mailpick,.mailhelp{position:fixed;inset:0;z-index:48;display:grid;place-items:center;background:rgba(5,8,20,.5);
+  padding:calc(var(--safe-top,0px) + var(--safe-gap,10px)) calc(var(--safe-right,0px) + var(--safe-gap,10px)) calc(var(--safe-bottom,0px) + var(--safe-gap,10px)) calc(var(--safe-left,0px) + var(--safe-gap,10px))}
+.mailconfirm .box,.mailpick .box,.mailhelp .box{max-width:min(34em,100%);max-height:100%;overflow:auto;box-sizing:border-box;background:rgba(20,24,54,.99);border:1px solid var(--edge2,#3a4170);border-radius:1em;padding:1em 1.1em;color:var(--ink,#eef0ff);box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.mailconfirm .row,.mailpick .row{display:flex;gap:.5em;justify-content:flex-end;flex-wrap:wrap;margin-top:.8em;position:sticky;bottom:0}
+.mailpick .box{width:min(34em,100%)}
+.mailpick ul{list-style:none;margin:.5em 0;padding:0;display:grid;gap:.25em;max-height:50vh;overflow:auto}
+.mailpick li label,.mailpick li button{display:flex;gap:.5em;align-items:center;width:100%;text-align:left;padding:.35em .5em;border-radius:.5em;background:rgba(255,255,255,.05);border:1px solid transparent;box-sizing:border-box}
+.mailpick li small{color:var(--muted,#a4abcc)}
+.mailpick input[type=search],.mailpick input[type=text]{width:100%;box-sizing:border-box}
+.mailhelp table{border-collapse:collapse;font-size:.9em}.mailhelp td{padding:.2em .6em;border-bottom:1px solid rgba(170,180,255,.12)}.mailhelp kbd{background:rgba(255,255,255,.12);border-radius:.3em;padding:0 .35em;font-family:inherit}
+.mailhelp h4{margin:.6em 0 .3em;font-weight:500}
+.mailhelp .x{float:right}

@@ -223,47 +223,13 @@
         S.owner = r.owner;
       } },
 
-    // ------------------------------------------------------------------------------------------------ assistant
-    { id: "assistant", icon: "✨", title: "Your assistant",
-      render: () => { const o = S.owner; const humor = ["none", "light, friendly teasing", "dry and witty", "goofy and playful"]; const custom = o.humor && !humor.includes(o.humor); return `
-        <h1>Name your assistant</h1>
-        <p class="lead">Keep "Dayspring" or give it any name you like. Say its name to wake it up, like "Hey Dayspring, what's next?"</p>
-        <div class="row">${field("aname", "Assistant's name", text("aname", o.assistantName || "Dayspring", "Dayspring"))}${field("wake", "Wake words", text("wake", (o.wakeWords ?? []).join(", "), "dayspring"), "What you say to get its attention. Separate them with commas. \"Hey …\" works automatically.")}</div>
-        <div class="field"><span class="lbl" id="hu-l">Sense of humor</span>${chipGroup("humor", [["none", "Just the facts"], ["light, friendly teasing", "Light and friendly"], ["dry and witty", "Dry and witty"], ["goofy and playful", "Goofy and playful"], ["custom", "Something else…"]], [custom ? "custom" : o.humor || "light, friendly teasing"], false).replace('class="chips"', 'class="chips" role="group" aria-labelledby="hu-l"')}</div>
-        <div id="humorCustomWrap" ${custom ? "" : "hidden"}>${field("humorCustom", "Describe it", text("humorCustom", custom ? o.humor : "", "like a cheerful coach"))}</div>
-        <div class="msg" id="m"></div>`; },
-      mount: () => { $("[data-chips=humor]").addEventListener("change", () => { $("#humorCustomWrap").hidden = chipsOf("humor")[0] !== "custom"; }); },
-      save: async () => {
-        const h = chipsOf("humor")[0];
-        const r = await post("/setup/owner", { assistantName: val("aname") || "Dayspring", wakeWords: val("wake") || (val("aname") || "Dayspring").toLowerCase(), humor: h === "custom" ? val("humorCustom") || "light, friendly teasing" : h });
-        S.owner = r.owner; $("#brandName").textContent = S.owner.assistantName || "Dayspring";
-      } },
-
-    // ------------------------------------------------------------------------------------------------ personality (public/personality.js)
-    // Characters, saved personalities, sliders and a custom persona. Everything saves as you go, so no Save button.
-    { id: "personality", icon: "🎭", title: "Personality", settingsOnly: true,
-      render: () => window.DayspringPersonality ? window.DayspringPersonality.html() : `<h1>Personality</h1><p class="lead">This page didn't load. Reload to try again.</p>`,
-      mount: () => window.DayspringPersonality?.mount($("#card"), { toast }) },
-
-    // ------------------------------------------------------------------------------------------------ calls (public/calls.js)
-    // Dayspring in Discord, Zoom, Google Meet and Teams: each app's microphone and speaker, speed, the Discord chat companion.
-    { id: "calls", icon: "🎧", title: "Calls", settingsOnly: true,
-      render: () => window.DayspringCalls ? window.DayspringCalls.html() : `<h1>Calls</h1><p class="lead">This page didn't load. Reload to try again.</p>`,
-      mount: () => window.DayspringCalls?.mount($("#card"), { toast }) },
-
-    // ------------------------------------------------------------------------------------------------ photos & people (public/photos-people.js)
-    // Faces in the owner's own photos (off by default, local only), "Who's in this picture?", describing pictures, saved texts and calls.
-    { id: "photos", icon: "🖼️", title: "Photos & people", settingsOnly: true,
-      render: () => window.DayspringPhotosPeople ? window.DayspringPhotosPeople.html() : `<h1>Photos &amp; people</h1><p class="lead">This page didn't load. Reload to try again.</p>`,
-      mount: () => window.DayspringPhotosPeople?.mount($("#card"), { toast, onLeave }) },
-
     // ------------------------------------------------------------------------------------------------ location
     { id: "location", icon: "📍", title: "Where you are",
       render: () => { const l = S.owner.location ?? {}; return `
         <h1>Where are you?</h1>
         <p class="lead">This is used for your weather and to get times right. Just your city is enough.</p>
         <div class="field"><label for="city">Your city or town</label>
-          <div class="row" style="gap:.5em;align-items:center"><input type="search" id="city" placeholder="Austin, Texas" value="" style="flex:1 1 14em" autocomplete="off"><button class="btn" type="button" id="find">Search</button></div></div>
+          <div class="row" style="gap:.5em;align-items:center"><input type="search" id="city" placeholder="Springfield, Illinois" value="" style="flex:1 1 14em" autocomplete="off"><button class="btn" type="button" id="find">Search</button></div></div>
         <div class="results" id="results" role="listbox" aria-label="Places"></div>
         <div class="note" id="picked" ${l.place ? "" : "hidden"}>📍 <b id="pickedPlace">${esc(l.place)}</b> <span class="hint" id="pickedTz">${esc(l.timezone ?? "")}</span></div>
         ${field("tz", "Time zone", text("tz", l.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone, "America/Chicago"), "Filled in for you when you pick a place.")}
@@ -288,6 +254,107 @@
         const r = await post("/setup/owner", { location: { ...p, timezone: val("tz") || p.timezone } });
         S.owner = r.owner;
       } },
+
+    // ------------------------------------------------------------------------------------------------ your week
+    { id: "week", icon: "🗓️", title: "Your week",
+      render: () => { const f = S.schedule.fixed ?? { categories: ["work"], titleWords: [] }; return `
+        <h1>Your usual week</h1>
+        <p class="lead">Answer a few questions and Dayspring will sketch your regular week. You can add anything that repeats, like work, classes, practice or worship. Everything can be changed later in the Schedule.</p>
+        <div class="row">
+          ${field("wakeT", "Usually up at", text("wakeT", "07:00", "", "time"))}
+          ${field("bedT", "Usually in bed by", text("bedT", "22:30", "", "time"))}
+        </div>
+        <div class="field"><span class="lbl">Work or school days</span>${daysPicker("work", ["mon", "tue", "wed", "thu", "fri"])}</div>
+        <div class="row">
+          ${field("workTitle", "Called", text("workTitle", "Work", "Work"))}
+          ${field("workStart", "From", text("workStart", "09:00", "", "time"))}
+          ${field("workEnd", "Until", text("workEnd", "17:00", "", "time"))}
+        </div>
+        ${toggle("meals", "Add meal times", "Breakfast, lunch and dinner, so it plans around them.", !(S.schedule.routines ?? []).length || (S.schedule.routines ?? []).some((r) => r.category === "meal"))}
+        <h2>Other things that repeat</h2>
+        <div class="list" id="commits"></div>
+        <button type="button" class="btn small" id="addCommit">+ Add something that repeats</button>
+        <div class="row" style="gap:.6em;align-items:center;margin-top:1em">
+          <button type="button" class="btn primary" id="build">Build my week</button>
+          <label class="hint" style="display:flex;gap:.4em;align-items:center"><input type="checkbox" id="replace" ${S.schedule.routines.length ? "checked" : ""}> Replace the routines I have now</label>
+        </div>
+        <div class="msg" id="m" aria-live="polite"></div>
+        <h2>Your routines <span class="hint" id="rcount"></span></h2>
+        <div class="list" id="routines"></div>
+        <details style="margin-top:1em"><summary class="lbl" style="cursor:pointer">Things Dayspring should never move</summary>
+          <p class="hint">When plans shift, Dayspring rearranges flexible things around these.</p>
+          <div class="field"><span class="lbl">Whole categories</span>${chipGroup("fixedCats", Object.entries(CATS), f.categories ?? [])}</div>
+          ${field("fixedWords", "Or anything with these words in the title", text("fixedWords", (f.titleWords ?? []).join(", "), "class, practice, pickup"))}
+        </details>`; },
+      mount: (sec) => {
+        const commitRow = (c = {}) => {
+          const el = document.createElement("div"); el.className = "item";
+          el.innerHTML = `<input type="text" class="ct" placeholder="Soccer practice" value="${esc(c.title ?? "")}" aria-label="What" style="flex:1 1 10em">
+            ${daysPicker("c", c.days ?? ["sat"])}
+            <input type="time" class="cs" value="${c.start ?? "18:00"}" aria-label="Starts" style="flex:0 0 8.6em"><input type="time" class="ce" value="${c.end ?? "19:00"}" aria-label="Ends" style="flex:0 0 8.6em">
+            <select class="cc" aria-label="Kind" style="flex:0 0 9em">${Object.entries(CATS).map(([k, l]) => `<option value="${k}" ${k === (c.category ?? "flex") ? "selected" : ""}>${l}</option>`).join("")}</select>
+            <button type="button" class="btn small ghost danger" aria-label="Remove">✕</button>`;
+          $(".danger", el).onclick = () => el.remove();
+          $("#commits").append(el);
+        };
+        $("#addCommit").onclick = () => { commitRow(); $("#commits .item:last-child .ct").focus(); };
+        const drawRoutines = () => {
+          const rs = S.schedule.routines.slice().sort((a, b) => a.start.localeCompare(b.start));
+          $("#rcount").textContent = rs.length ? `(${rs.length})` : "";
+          $("#routines").innerHTML = rs.length ? rs.map((r) => `
+            <div class="item routine" data-id="${r.id}" style="${r.active ? "" : "opacity:.55"}">
+              <span class="dot" style="background:var(--${r.category})"></span>
+              <input type="text" class="rt" value="${esc(r.title)}" aria-label="Title">
+              <span class="times" style="display:flex;gap:.3em;align-items:center"><input type="time" class="rs" value="${r.start}" aria-label="Starts" style="width:8.6em"><span class="hint">–</span><input type="time" class="re" value="${r.end}" aria-label="Ends" style="width:8.6em"></span>
+              ${daysPicker("r", r.days)}
+              <span style="display:flex;gap:.3em">${sw("ra-" + r.id, r.active).replace('role="switch"', `role="switch" aria-label="On"`)}<button type="button" class="btn small ghost danger" aria-label="Delete ${esc(r.title)}">✕</button></span>
+            </div>`).join("") : `<div class="hint">No routines yet. Build your week above, or add them later in the Schedule.</div>`;
+          $$("#routines .item").forEach((row) => {
+            const id = row.dataset.id;
+            const upd = async (patch) => { try { S.schedule = await post("/setup/schedule", { action: "update", id, patch }); toast("Saved"); } catch (e) { msg($("#m"), e.message, "bad"); drawRoutines(); } };
+            $(".rt", row).onchange = (e) => upd({ title: e.target.value });
+            $(".rs", row).onchange = (e) => upd({ start: e.target.value });
+            $(".re", row).onchange = (e) => upd({ end: e.target.value });
+            $("[data-days]", row).addEventListener("change", (e) => { const ds = daysOf(e.currentTarget); if (ds.length) upd({ days: ds }); });
+            $(".sw", row).addEventListener("change", (e) => { row.style.opacity = isOn(e.target.id) ? "" : ".55"; upd({ active: isOn(e.target.id) }); });
+            $(".danger", row).onclick = async () => { S.schedule = await post("/setup/schedule", { action: "remove", id }); drawRoutines(); toast("Removed"); };
+          });
+        };
+        drawRoutines();
+        $("#build").onclick = async () => {
+          const commitments = $$("#commits .item").map((el) => ({ title: $(".ct", el).value.trim(), days: daysOf($("[data-days]", el)), start: $(".cs", el).value, end: $(".ce", el).value, category: $(".cc", el).value })).filter((c) => c.title);
+          try {
+            S.schedule = await post("/setup/schedule", { action: "template", replace: $("#replace").checked, template: { wake: val("wakeT"), bed: val("bedT"), workDays: daysOf($("[data-days=work]")), workStart: val("workStart"), workEnd: val("workEnd"), workTitle: val("workTitle"), meals: isOn("meals"), commitments } });
+            drawRoutines(); $("#replace").checked = true; sec.built = true;
+            msg($("#m"), `✓ Your week is sketched out: ${S.schedule.routines.length} routines. Adjust them below.`, "ok");
+          } catch (e) { msg($("#m"), e.message, "bad"); }
+        };
+      },
+      save: async () => {
+        S.schedule = await post("/setup/schedule", { fixed: { categories: chipsOf("fixedCats"), titleWords: val("fixedWords") } });
+      } },
+
+    // ------------------------------------------------------------------------------------------------ assistant
+    { id: "assistant", icon: "✨", title: "Your assistant",
+      render: () => { const o = S.owner; const humor = ["none", "light, friendly teasing", "dry and witty", "goofy and playful"]; const custom = o.humor && !humor.includes(o.humor); return `
+        <h1>Name your assistant</h1>
+        <p class="lead">Keep "Dayspring" or give it any name you like. Say its name to wake it up, like "Hey Dayspring, what's next?"</p>
+        <div class="row">${field("aname", "Assistant's name", text("aname", o.assistantName || "Dayspring", "Dayspring"))}${field("wake", "Wake words", text("wake", (o.wakeWords ?? []).join(", "), "dayspring"), "What you say to get its attention. Separate them with commas. \"Hey …\" works automatically.")}</div>
+        <div class="field"><span class="lbl" id="hu-l">Sense of humor</span>${chipGroup("humor", [["none", "Just the facts"], ["light, friendly teasing", "Light and friendly"], ["dry and witty", "Dry and witty"], ["goofy and playful", "Goofy and playful"], ["custom", "Something else…"]], [custom ? "custom" : o.humor || "light, friendly teasing"], false).replace('class="chips"', 'class="chips" role="group" aria-labelledby="hu-l"')}</div>
+        <div id="humorCustomWrap" ${custom ? "" : "hidden"}>${field("humorCustom", "Describe it", text("humorCustom", custom ? o.humor : "", "like a cheerful coach"))}</div>
+        <div class="msg" id="m"></div>`; },
+      mount: () => { $("[data-chips=humor]").addEventListener("change", () => { $("#humorCustomWrap").hidden = chipsOf("humor")[0] !== "custom"; }); },
+      save: async () => {
+        const h = chipsOf("humor")[0];
+        const r = await post("/setup/owner", { assistantName: val("aname") || "Dayspring", wakeWords: val("wake") || (val("aname") || "Dayspring").toLowerCase(), humor: h === "custom" ? val("humorCustom") || "light, friendly teasing" : h });
+        S.owner = r.owner; $("#brandName").textContent = S.owner.assistantName || "Dayspring";
+      } },
+
+    // ------------------------------------------------------------------------------------------------ personality (public/personality.js)
+    // Characters, saved personalities, sliders and a custom persona. Everything saves as you go, so no Save button.
+    { id: "personality", icon: "🎭", title: "Personality", settingsOnly: true,
+      render: () => window.DayspringPersonality ? window.DayspringPersonality.html() : `<h1>Personality</h1><p class="lead">This page didn't load. Reload to try again.</p>`,
+      mount: () => window.DayspringPersonality?.mount($("#card"), { toast }) },
 
     // ------------------------------------------------------------------------------------------------ AI
     { id: "ai", icon: "🧠", title: "AI brain",
@@ -469,83 +536,159 @@
         draw(false);
       } },
 
-    // ------------------------------------------------------------------------------------------------ your week
-    { id: "week", icon: "🗓️", title: "Your week",
-      render: () => { const f = S.schedule.fixed ?? { categories: ["work"], titleWords: [] }; return `
-        <h1>Your usual week</h1>
-        <p class="lead">Answer a few questions and Dayspring will sketch your regular week. You can add anything that repeats, like work, classes, practice or worship. Everything can be changed later in the Schedule.</p>
-        <div class="row">
-          ${field("wakeT", "Usually up at", text("wakeT", "07:00", "", "time"))}
-          ${field("bedT", "Usually in bed by", text("bedT", "22:30", "", "time"))}
-        </div>
-        <div class="field"><span class="lbl">Work or school days</span>${daysPicker("work", ["mon", "tue", "wed", "thu", "fri"])}</div>
-        <div class="row">
-          ${field("workTitle", "Called", text("workTitle", "Work", "Work"))}
-          ${field("workStart", "From", text("workStart", "09:00", "", "time"))}
-          ${field("workEnd", "Until", text("workEnd", "17:00", "", "time"))}
-        </div>
-        ${toggle("meals", "Add meal times", "Breakfast, lunch and dinner, so it plans around them.", !(S.schedule.routines ?? []).length || (S.schedule.routines ?? []).some((r) => r.category === "meal"))}
-        <h2>Other things that repeat</h2>
-        <div class="list" id="commits"></div>
-        <button type="button" class="btn small" id="addCommit">+ Add something that repeats</button>
-        <div class="row" style="gap:.6em;align-items:center;margin-top:1em">
-          <button type="button" class="btn primary" id="build">Build my week</button>
-          <label class="hint" style="display:flex;gap:.4em;align-items:center"><input type="checkbox" id="replace" ${S.schedule.routines.length ? "checked" : ""}> Replace the routines I have now</label>
-        </div>
-        <div class="msg" id="m" aria-live="polite"></div>
-        <h2>Your routines <span class="hint" id="rcount"></span></h2>
-        <div class="list" id="routines"></div>
-        <details style="margin-top:1em"><summary class="lbl" style="cursor:pointer">Things Dayspring should never move</summary>
-          <p class="hint">When plans shift, Dayspring rearranges flexible things around these.</p>
-          <div class="field"><span class="lbl">Whole categories</span>${chipGroup("fixedCats", Object.entries(CATS), f.categories ?? [])}</div>
-          ${field("fixedWords", "Or anything with these words in the title", text("fixedWords", (f.titleWords ?? []).join(", "), "class, practice, pickup"))}
-        </details>`; },
-      mount: (sec) => {
-        const commitRow = (c = {}) => {
-          const el = document.createElement("div"); el.className = "item";
-          el.innerHTML = `<input type="text" class="ct" placeholder="Soccer practice" value="${esc(c.title ?? "")}" aria-label="What" style="flex:1 1 10em">
-            ${daysPicker("c", c.days ?? ["sat"])}
-            <input type="time" class="cs" value="${c.start ?? "18:00"}" aria-label="Starts" style="flex:0 0 8.6em"><input type="time" class="ce" value="${c.end ?? "19:00"}" aria-label="Ends" style="flex:0 0 8.6em">
-            <select class="cc" aria-label="Kind" style="flex:0 0 9em">${Object.entries(CATS).map(([k, l]) => `<option value="${k}" ${k === (c.category ?? "flex") ? "selected" : ""}>${l}</option>`).join("")}</select>
-            <button type="button" class="btn small ghost danger" aria-label="Remove">✕</button>`;
-          $(".danger", el).onclick = () => el.remove();
-          $("#commits").append(el);
-        };
-        $("#addCommit").onclick = () => { commitRow(); $("#commits .item:last-child .ct").focus(); };
-        const drawRoutines = () => {
-          const rs = S.schedule.routines.slice().sort((a, b) => a.start.localeCompare(b.start));
-          $("#rcount").textContent = rs.length ? `(${rs.length})` : "";
-          $("#routines").innerHTML = rs.length ? rs.map((r) => `
-            <div class="item routine" data-id="${r.id}" style="${r.active ? "" : "opacity:.55"}">
-              <span class="dot" style="background:var(--${r.category})"></span>
-              <input type="text" class="rt" value="${esc(r.title)}" aria-label="Title">
-              <span class="times" style="display:flex;gap:.3em;align-items:center"><input type="time" class="rs" value="${r.start}" aria-label="Starts" style="width:8.6em"><span class="hint">–</span><input type="time" class="re" value="${r.end}" aria-label="Ends" style="width:8.6em"></span>
-              ${daysPicker("r", r.days)}
-              <span style="display:flex;gap:.3em">${sw("ra-" + r.id, r.active).replace('role="switch"', `role="switch" aria-label="On"`)}<button type="button" class="btn small ghost danger" aria-label="Delete ${esc(r.title)}">✕</button></span>
-            </div>`).join("") : `<div class="hint">No routines yet. Build your week above, or add them later in the Schedule.</div>`;
-          $$("#routines .item").forEach((row) => {
-            const id = row.dataset.id;
-            const upd = async (patch) => { try { S.schedule = await post("/setup/schedule", { action: "update", id, patch }); toast("Saved"); } catch (e) { msg($("#m"), e.message, "bad"); drawRoutines(); } };
-            $(".rt", row).onchange = (e) => upd({ title: e.target.value });
-            $(".rs", row).onchange = (e) => upd({ start: e.target.value });
-            $(".re", row).onchange = (e) => upd({ end: e.target.value });
-            $("[data-days]", row).addEventListener("change", (e) => { const ds = daysOf(e.currentTarget); if (ds.length) upd({ days: ds }); });
-            $(".sw", row).addEventListener("change", (e) => { row.style.opacity = isOn(e.target.id) ? "" : ".55"; upd({ active: isOn(e.target.id) }); });
-            $(".danger", row).onclick = async () => { S.schedule = await post("/setup/schedule", { action: "remove", id }); drawRoutines(); toast("Removed"); };
-          });
-        };
-        drawRoutines();
-        $("#build").onclick = async () => {
-          const commitments = $$("#commits .item").map((el) => ({ title: $(".ct", el).value.trim(), days: daysOf($("[data-days]", el)), start: $(".cs", el).value, end: $(".ce", el).value, category: $(".cc", el).value })).filter((c) => c.title);
+    // ------------------------------------------------------------------------------------------------ screen
+    { id: "screen", icon: "🖥️", title: "Screen",
+      render: () => `
+        <h1>Which screen?</h1>
+        <p class="lead">Dayspring can fill a screen with your day: a second monitor, a TV, a tablet or just this laptop. Choose which screen it uses. If Dayspring is open, it moves there straight away. You can also say “move Dayspring to the other screen” or “move Dayspring to screen 2”.</p>
+        <div class="screens" id="screens"><div class="hint">Looking at your screens…</div></div>
+        ${choiceGroup("display", [
+          { value: "auto", title: "Automatic", desc: "The second screen if there is one, otherwise this one." },
+          { value: "primary", title: "Main screen", desc: "Always on the main screen." },
+          { value: "secondary", title: "Second screen", desc: "Always on the other screen." },
+        ], ["auto", "primary", "secondary"].includes(S.owner.display) ? S.owner.display : "")}
+        <h2>How Dayspring opens</h2>
+        ${choiceGroup("openAs", [
+          { value: "auto", title: "Automatic", desc: "Its own window on this screen, full screen on a TV or second screen." },
+          { value: "window", title: "App window", desc: "A clean window of its own with no browser bars. It remembers the microphone and your sign-ins." },
+          { value: "compact", title: "Compact (Dayspring mini)", desc: "A small window you can put anywhere: the time, what's on now and next, the weather, and a chat box." },
+          { value: "fullscreen", title: "Full screen", desc: "Fills the screen, like the TV view. Move the mouse to the top for minimize, exit and sound." },
+          { value: "tab", title: "Browser tab", desc: "A normal tab in your browser. The browser may ask to use the microphone, and sound may need one click to start." },
+        ], ["auto", "window", "compact", "fullscreen", "tab"].includes(S.owner.openAs) ? S.owner.openAs : "auto")}
+        <p class="hint">The Start menu also has "Dayspring (full screen)", "Dayspring mini" and "Dayspring in browser" to open it a different way just once. You can also say "open Dayspring in my browser", "make Dayspring small", "open in its own window" or "go full screen".</p>
+        <h2>Which browser shows Dayspring?</h2>
+        <div class="field"><select id="dbrowser" aria-label="Browser for the Dayspring screen"><option value="default">Your default browser</option></select>
+          <div class="hint" id="dbNote">Any browser on this computer works. Microsoft Edge has the most natural-sounding free voices.</div>
+          <p class="hint" id="dbUsing"></p>
+          <p><button type="button" class="btn small" id="dbReopen" hidden>Reopen now</button></p>
+          <p class="hint">It's used for every way Dayspring opens (mini, app window, full screen, browser tab) and for "Pop out". Each browser keeps its own Dayspring sign-ins, so after switching, allow the microphone once and sign in to your apps again in the new browser.</p></div>
+        <h2>Speech recognition</h2>
+        ${choiceGroup("speechEngine", [
+          { value: "auto", title: "Automatic", desc: "The browser's own when it has one that works (Chrome, Edge), otherwise the private one on this computer (Brave, Firefox)." },
+          { value: "browser", title: "The browser", desc: "Fast, and needs the internet. Chrome and Edge only." },
+          { value: "local", title: "On this computer (private)", desc: "Nothing you say leaves the PC. Works in every browser. A one-time download of about 200 MB." },
+        ], ["auto", "browser", "local"].includes(S.voice?.speechEngine) ? S.voice.speechEngine : "auto")}
+        <h2>Opening and closing</h2>
+        ${toggle("keepScreenOpen", "Keep the Dayspring screen open", "For a TV or an always-on display: if the screen closes or the TV is unplugged, it opens again by itself. Off: when you close Dayspring, it stays closed (alarms and notifications still work).", S.owner.keepScreenOpen === true)}
+        ${toggle("openOnStartup", "Open the screen when Windows starts", "Only if Dayspring starts with Windows. Off: it starts hidden and shows notifications and alarms, and you open the screen when you want it.", S.owner.openOnStartup === true)}
+        <h2>Stay awake</h2>
+        ${toggle("keepAwake", "Keep this computer awake while Dayspring is running", "Only while it's plugged in: no sleep and no idle lock screen, so Dayspring can wake you, remind you and hear you. On battery it sleeps as usual. Nothing in your power settings changes.", S.keepAwake !== false)}
+        <h2>Fit Dayspring to your screen</h2>
+        <p class="hint">Everything here changes the Dayspring screen right away, so you can watch it while you adjust. Each group has its own Reset.</p>
+        <p><button type="button" class="btn" id="fitNow">📐 Fit to screen…</button> <span class="hint">Shows bright lines at the edges to line up with your TV.</span></p>
+        <div id="scbox">${SC_GROUPS.map((g) => `<fieldset class="scg" data-g="${g.id}"><legend>${g.title}</legend>${g.html}<button type="button" class="btn small ghost screset" data-g="${g.id}">Reset ${g.title.toLowerCase()}</button></fieldset>`).join("")}</div>
+        <p><button type="button" class="btn small ghost" id="scResetAll">Reset the whole screen layout</button></p>
+        <div class="msg" id="m"></div>`,
+      mount: async (sec) => {
+        await screenMount();
+        api("/keepawake").then((k) => { S.keepAwake = k.on; $("#keepAwake")?.setAttribute("aria-checked", String(k.on)); }).catch(() => {});
+        api("/settings").then((r) => { const v = r.settings?.speechEngine ?? "auto"; $$("[data-group=speechEngine] .choice").forEach((c) => { const on = c.dataset.value === v; c.classList.toggle("on", on); c.setAttribute("aria-checked", String(on)); }); }).catch(() => {});
+        api("/setup/browsers").then((b) => {
+          const sel = $("#dbrowser"); if (!sel) return;
+          const def = (b.browsers ?? []).find((x) => x.isDefault);
+          sel.innerHTML = `<option value="default">Your default browser${def ? " (" + esc(def.name) + ")" : ""}</option>` + (b.browsers ?? []).map((x) => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("");
+          sel.value = [...sel.options].some((o) => o.value === b.chosen) ? b.chosen : "default";
+          const using = (b.browsers ?? []).find((y) => y.id === b.using);
+          if ($("#dbUsing")) $("#dbUsing").textContent = using ? `In use now: ${using.name}.` : "";
+          const note = () => {
+            const id = sel.value === "default" ? def?.id : sel.value; const x = (b.browsers ?? []).find((y) => y.id === id);
+            $("#dbNote").textContent = (x?.note ? x.note + " " : "") + (id === "brave" ? "In Brave, Dayspring listens with the private speech recognition on this computer, and Brave has Windows' basic voices only (for a warmer voice use ElevenLabs, or Edge's free Natural voices). If a video won't play, turn Brave Shields down for localhost." : "Microsoft Edge has the most natural-sounding free voices.");
+            const r = $("#dbReopen"); if (r) { r.hidden = !x || id === b.using; r.textContent = x ? `Reopen now in ${x.name}` : "Reopen now"; }
+          };
+          sel.onchange = note; note();
+          $("#dbReopen").onclick = async () => {
+            try { await post("/setup/display", { displayBrowser: sel.value }); const r = await post("/app/reopen", {}); msg($("#m"), r.noScreen ? r.message : "Reopening Dayspring in the new browser…", r.ok === false ? "bad" : "ok"); b.using = sel.value === "default" ? def?.id : sel.value; note(); if ($("#dbUsing") && x0()) $("#dbUsing").textContent = `In use now: ${x0().name}.`; }
+            catch (e) { msg($("#m"), e.message, "bad"); }
+          };
+          const x0 = () => (b.browsers ?? []).find((y) => y.id === b.using);
+        }).catch(() => {});
+        const moveNow = async (want) => {
+          if (wizard) return;
+          msg($("#m"), "Moving Dayspring…");
           try {
-            S.schedule = await post("/setup/schedule", { action: "template", replace: $("#replace").checked, template: { wake: val("wakeT"), bed: val("bedT"), workDays: daysOf($("[data-days=work]")), workStart: val("workStart"), workEnd: val("workEnd"), workTitle: val("workTitle"), meals: isOn("meals"), commitments } });
-            drawRoutines(); $("#replace").checked = true; sec.built = true;
-            msg($("#m"), `✓ Your week is sketched out: ${S.schedule.routines.length} routines. Adjust them below.`, "ok");
+            const r = await post("/setup/display", { display: want });
+            S.owner.display = r.display;
+            const mv = r.moved;
+            msg($("#m"), !mv ? "Saved." : mv.ok === false ? (mv.message || "Couldn't move it.") : mv.note || (mv.moved ? `Moved to screen ${mv.screen}.` : "Saved."), mv && mv.ok === false ? "bad" : "ok");
           } catch (e) { msg($("#m"), e.message, "bad"); }
         };
+        $("[data-group=display]").addEventListener("change", () => { sec.display = chosen("display"); $$(".scr").forEach((x) => x.classList.remove("on")); moveNow(sec.display); });
+        try {
+          const r = await api("/setup/screens");
+          if (!$("#screens")) return;   // they moved on to another section while the screens were being read
+          if (!r.screens.length) { $("#screens").innerHTML = `<div class="hint">Couldn't read the screen layout. The choices below still work.</div>`; return; }
+          const maxW = Math.max(...r.screens.map((s) => s.width));
+          $("#screens").innerHTML = r.screens.map((s) => `<button type="button" class="scr${String(s.number) === String(S.owner.display) ? " on" : ""}" data-n="${s.number}" style="width:${Math.max(6, 11 * s.width / maxW)}em;aspect-ratio:${s.width}/${s.height}" aria-label="Screen ${s.number}, ${s.width} by ${s.height}${s.primary ? ", main" : ""}"><b>${s.number}</b>${s.width}×${s.height}${s.primary ? "<br>main" : ""}</button>`).join("");
+          $$(".scr").forEach((b) => b.onclick = () => { $$(".scr").forEach((x) => x.classList.toggle("on", x === b)); $$("[data-group=display] .choice").forEach((x) => { x.classList.remove("on"); x.setAttribute("aria-checked", "false"); }); sec.display = b.dataset.n; moveNow(sec.display); });
+        } catch { if ($("#screens")) $("#screens").innerHTML = ""; }
+      },
+      save: async (sec) => {
+        const r = await post("/setup/display", { display: sec.display ?? chosen("display") ?? S.owner.display ?? "auto", displayBrowser: $("#dbrowser")?.value || S.owner.displayBrowser || "default", openAs: chosen("openAs") ?? S.owner.openAs ?? "auto", keepScreenOpen: isOn("keepScreenOpen"), openOnStartup: isOn("openOnStartup") });
+        S.owner.keepScreenOpen = r.keepScreenOpen; S.owner.openOnStartup = r.openOnStartup;
+        if (chosen("speechEngine")) { const st = await post("/settings", { speechEngine: chosen("speechEngine") }).catch(() => null); if (st?.settings && S.voice) S.voice.speechEngine = st.settings.speechEngine; }
+        S.owner.display = r.display; S.owner.displayBrowser = r.displayBrowser; S.owner.openAs = r.openAs; S.voice.overscan = r.overscan;
+        if ($("#keepAwake")) { const k = await post("/keepawake", { on: isOn("keepAwake") }).catch(() => null); if (k) S.keepAwake = k.on; }
+      } },
+
+    // ------------------------------------------------------------------------------------------------ sky & scenery
+    { id: "sky", icon: "🎨", title: "Sky & scenery",
+      render: () => `
+        <h1>Sky &amp; scenery</h1>
+        <p class="lead">The background of the Dayspring screen follows the real sky outside: the time of day, the weather and the season. Or choose your own look. Every change shows on the screen right away.</p>
+        <div id="skyBox"><div class="hint">Loading…</div></div>
+        <div class="msg" id="m"></div>`,
+      mount: () => skyPanel() },
+
+    // ------------------------------------------------------------------------------------------------ notifications
+    { id: "notifications", icon: "🔔", title: "Notifications", settingsOnly: true,
+      render: () => `
+        <h1>Notifications and quiet</h1>
+        <p class="lead">Turn Dayspring's listening off with one click, choose how each kind of notification reaches you, and show notifications in front of every window.</p>
+        <h2>Dayspring is</h2>
+        ${choiceGroup("listenState", [
+          { value: "active", title: "Active", desc: "Listens for “Dayspring” and speaks." },
+          { value: "quiet", title: "Quiet", desc: "Still hears “Dayspring”, but says nothing: answers and notifications show on screen. Alarms still ring." },
+          { value: "off", title: "Off", desc: "Not listening at all (the microphone is released) and says nothing. The schedule and alarms keep going." },
+        ], ["active", "quiet", "off"].includes(S.voice?.listenState) ? S.voice.listenState : "active")}
+        ${toggle("alarmsWhenOff", "Alarms still ring when Off", "Your wake-up alarm and alarm reminders ring even when Dayspring is off.", S.voice?.alarmsWhenOff !== false)}
+        ${toggle("timersWhenQuiet", "Timers still ring when Dayspring is quiet or off", "A timer you set rings like an alarm (with its name) even when Dayspring is Quiet or Off. Turn this off and a finished timer only shows a card.", S.voice?.timersWhenQuiet !== false)}
+        ${toggle("jokeOffersOn", "Offer a joke now and then", "Only with a playful personality (Humour 60 or more in Settings → Personality), when someone's around, never during calls, alarms, timers, cooking or focus time.", S.voice?.jokeOffersOn !== false, `<div class="row" style="gap:.5em;align-items:center;margin-top:.3em"><label for="jokeOffers">At most</label><select id="jokeOffers">${[0, 1, 2, 3, 4, 5].map((n) => `<option value="${n}"${(S.voice?.jokeOffers ?? 3) === n ? " selected" : ""}>${n}</option>`).join("")}</select><span>a day</span></div>`)}
+        <p class="hint">Shortcuts: the coloured badge on the Dayspring screen, <b>Ctrl+Alt+Shift+D</b> anywhere in Windows (off / back on), or say “Dayspring, go quiet”.</p>
+        <h2>How each kind arrives</h2>
+        <div class="field" id="nkinds"></div>
+        <div class="field"><label for="nAll"><b>Quick switch for everything</b></label> <select id="nAll"><option value="">Use the settings above</option><option value="voice">Speak everything</option><option value="chime">Chime only for everything</option><option value="silent">Everything silent (on screen only)</option></select></div>
+        <h2>Desktop notifications</h2>
+        ${toggle("ovOn", "Show notifications in front of every window", "Small cards at the top-right of the screen, even over full-screen apps. They never take the focus, and they go away by themselves. Skipped while the Dayspring window itself is in front.", S.voice?.overlay?.on !== false)}
+        ${toggle("overlayWhenOff", "Show them when Dayspring is off", "Off stops listening and talking; the cards can still show.", S.voice?.overlayWhenOff !== false)}
+        <p class="hint">With the Dayspring screen closed, alarms still ring from these cards (Snooze 9 min, Dismiss, Open Dayspring), and notifications set to Chime still chime.</p>
+        ${toggle("speakWhenClosed", "Speak announcements even when the screen is closed", "Uses Windows' own voice when no Dayspring screen is open. Off: a chime instead.", S.voice?.speakWhenClosed === true)}
+        <div class="field"><label for="ovSecs"><b>Stay on screen for</b> <span id="ovSecsV"></span></label><input type="range" id="ovSecs" min="3" max="30" step="1" value="${Number(S.voice?.overlay?.seconds) || 8}"></div>
+        <div class="field"><label for="ovScreen"><b>Show them on</b></label> <select id="ovScreen"><option value="primary">The main screen</option><option value="1">Screen 1</option><option value="2">Screen 2</option><option value="3">Screen 3</option></select></div>
+        <p><button type="button" class="btn small" id="ovTest">Show a test notification</button> <span class="hint" id="ovState"></span></p>
+        <div class="msg" id="m"></div>`,
+      mount: async () => {
+        let s = {}; try { s = (await api("/settings")).settings ?? {}; } catch { /* defaults */ }
+        const pick = (g, v) => $$(`[data-group=${g}] .choice`).forEach((b) => { const on = b.dataset.value === v; b.classList.toggle("on", on); b.setAttribute("aria-checked", String(on)); });
+        if (!$("#nkinds")) return;          // left this section while loading
+        pick("listenState", s.listenState ?? "active");
+        const setT = (id, on) => $("#" + id)?.setAttribute("aria-checked", String(Boolean(on)));
+        setT("alarmsWhenOff", s.alarmsWhenOff !== false); setT("timersWhenQuiet", s.timersWhenQuiet !== false); setT("jokeOffersOn", s.jokeOffersOn !== false); if ($("#jokeOffers")) $("#jokeOffers").value = String(s.jokeOffers ?? 3); setT("overlayWhenOff", s.overlayWhenOff !== false); setT("speakWhenClosed", s.speakWhenClosed === true); setT("ovOn", s.overlay?.on !== false);
+        $("#ovSecs").value = Number(s.overlay?.seconds) || 8;
+        const KINDS = [["reminders", "Reminders"], ["schedule", "Schedule: start times, changes and check-ins"], ["texts", "Texts and phone"], ["lantern", "Lantern"], ["discover", "Discover"], ["system", "Updates, alerts and system"], ["discoveries", "Secret characters found"]];
+        const OPTS = [["auto", "Usual (" + ({ voice: "spoken", chime: "chime", silent: "silent" }[s.mode] ?? "spoken") + ")"], ["voice", "Speak"], ["chime", "Chime only"], ["silent", "Silent"]];
+        $("#nkinds").innerHTML = KINDS.map(([k, t]) => `<div class="row" style="display:flex;gap:.6em;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:.25em 0"><label for="nk-${k}">${t}</label><select id="nk-${k}" data-kind="${k}">${OPTS.map(([v, l]) => `<option value="${v}"${(s.notify?.[k] ?? "auto") === v ? " selected" : ""}>${l}</option>`).join("")}</select></div>`).join("");
+        $("#nAll").value = s.notifyAll ?? "";
+        $("#ovScreen").value = String(s.overlay?.screen ?? "primary");
+        const secs = () => { $("#ovSecsV").textContent = `${$("#ovSecs").value} seconds`; }; $("#ovSecs").oninput = secs; secs();
+        api("/overlay").then((o) => { $("#ovState").textContent = o.running ? "On." : o.error ? o.error : "Starts with Dayspring's screen."; }).catch(() => {});
+        $("#ovTest").onclick = async () => { try { const r = await post("/overlay/test", {}); $("#ovState").textContent = r.sent ? "Sent: look at the top-right of the screen." : (r.error || r.skipped || "Couldn't show it here."); } catch (e) { $("#ovState").textContent = e.message; } };
+        $("[data-group=listenState]")?.addEventListener("change", async () => { try { await post("/listen", { state: chosen("listenState") ?? "active", from: "settings" }); } catch (e) { msg($("#m"), e.message, "bad"); } });
       },
       save: async () => {
-        S.schedule = await post("/setup/schedule", { fixed: { categories: chipsOf("fixedCats"), titleWords: val("fixedWords") } });
+        const notify = Object.fromEntries($$("#nkinds select").map((x) => [x.dataset.kind, x.value]));
+        const r = await post("/settings", { notify, notifyAll: $("#nAll").value || null, alarmsWhenOff: isOn("alarmsWhenOff"), timersWhenQuiet: isOn("timersWhenQuiet"), jokeOffersOn: isOn("jokeOffersOn"), jokeOffers: Number($("#jokeOffers")?.value ?? 3), overlayWhenOff: isOn("overlayWhenOff"), speakWhenClosed: isOn("speakWhenClosed"), overlay: { on: isOn("ovOn"), seconds: Number($("#ovSecs").value), screen: $("#ovScreen").value } });
+        if (S.voice) Object.assign(S.voice, r.settings ?? {});
+        const want = chosen("listenState"); if (want && want !== (r.settings?.listenState ?? "active")) await post("/listen", { state: want, from: "settings" });
       } },
 
     // ------------------------------------------------------------------------------------------------ features
@@ -643,6 +786,120 @@
     { id: "apps", icon: "🔌", title: "Apps & connections", settingsOnly: true,
       render: () => window.DayspringApps ? window.DayspringApps.html() : `<h1>Apps &amp; connections</h1><p class="lead">This page didn't load. Reload to try again.</p>`,
       mount: () => window.DayspringApps?.mount($("#card"), { toast, openLink, keys: S.keys, owner: S.owner }) },
+
+    // ------------------------------------------------------------------------------------------------ email (public/email-settings.js)
+    // Mailboxes (Gmail, Outlook, Yahoo, iCloud, any IMAP), signatures, composing, reading, privacy and voice (the "email" feature)
+    { id: "email", icon: "✉️", title: "Email", settingsOnly: true, enabled: () => window.DayspringEmail?.enabled !== false,
+      render: () => window.DayspringEmail ? window.DayspringEmail.html() : `<h1>Email</h1><p class="lead">This page didn't load. Reload to try again.</p>`,
+      mount: () => window.DayspringEmail?.mount($("#card"), { toast, openLink, onLeave }),
+      save: async () => { if (window.DayspringEmail) await window.DayspringEmail.save(); } },
+
+    // ------------------------------------------------------------------------------------------------ calls (public/calls.js)
+    // Dayspring in Discord, Zoom, Google Meet and Teams: each app's microphone and speaker, speed, the Discord chat companion.
+    { id: "calls", icon: "📞", title: "Calls", settingsOnly: true,
+      render: () => window.DayspringCalls ? window.DayspringCalls.html() : `<h1>Calls</h1><p class="lead">This page didn't load. Reload to try again.</p>`,
+      mount: () => window.DayspringCalls?.mount($("#card"), { toast }) },
+
+    // ------------------------------------------------------------------------------------------------ photos & people (public/photos-people.js)
+    // Faces in the owner's own photos (off by default, local only), "Who's in this picture?", describing pictures, saved texts and calls.
+    { id: "photos", icon: "🖼️", title: "Photos & people", settingsOnly: true,
+      render: () => window.DayspringPhotosPeople ? window.DayspringPhotosPeople.html() : `<h1>Photos &amp; people</h1><p class="lead">This page didn't load. Reload to try again.</p>`,
+      mount: () => window.DayspringPhotosPeople?.mount($("#card"), { toast, onLeave }) },
+
+    // ------------------------------------------------------------------------------------------------ cameras (public/camera-settings.js)
+    // Webcams, IP/security cameras, GoPro, Home Assistant and trail cameras: guided add, test, region, schedule, AI, alerts, storage.
+    { id: "cameras", icon: "📷", title: "Cameras", settingsOnly: true,   // (the "cameras" release feature hides it when off)
+      render: () => window.DayspringCameraSettings ? window.DayspringCameraSettings.html() : `<h1>Cameras</h1><p class="lead">This page didn't load. Reload to try again.</p>`,
+      mount: () => window.DayspringCameraSettings?.mount($("#card"), { toast, onLeave }),
+      save: async () => { if (window.DayspringCameraSettings) await window.DayspringCameraSettings.save(); } },
+
+    // ------------------------------------------------------------------------------------------------ smart devices (public/devices-settings.js)
+    // Power strips and plugs, Wake-on-LAN, Home Assistant/Matter, WLED/Hue lights: find, name outlets, words, critical, per device, Test.
+    { id: "devices", icon: "🏠", title: "Smart devices", settingsOnly: true,   // (the "devices" release feature hides it when off)
+      render: () => window.DayspringDeviceSettings ? window.DayspringDeviceSettings.html() : `<h1>Smart devices</h1><p class="lead">This page didn't load. Reload to try again.</p>`,
+      mount: () => window.DayspringDeviceSettings?.mount($("#card"), { toast, onLeave }),
+      save: async () => { if (window.DayspringDeviceSettings) await window.DayspringDeviceSettings.save(); } },
+
+    // ------------------------------------------------------------------------------------------------ 3D printers (public/printers-settings.js)
+    // Bambu Lab (LAN), Ender over USB, OctoPrint, Klipper: connect, test, the LAN/Developer mode guide, the empty bed, watching, auto-pause/start.
+    { id: "printers", icon: "🖨️", title: "3D printers", settingsOnly: true,   // (the "printers" release feature hides it when off)
+      render: () => window.DayspringPrinterSettings ? window.DayspringPrinterSettings.html() : `<h1>3D printers</h1><p class="lead">This page didn't load. Reload to try again.</p>`,
+      mount: () => window.DayspringPrinterSettings?.mount($("#card"), { toast, onLeave }),
+      save: async () => { if (window.DayspringPrinterSettings) await window.DayspringPrinterSettings.save(); } },
+
+    // ------------------------------------------------------------------------------------------------ GIFs (public/gif-settings.js)
+    // GIPHY, KLIPY, Imgur and the keyless web search: keys, order, rating, format, autoplay, saving, cache, favourites.
+    { id: "gifs", icon: "🎞️", title: "GIFs", settingsOnly: true, enabled: () => window.DayspringGifSettings?.enabled !== false,   // (the "gifs" release feature)
+      render: () => window.DayspringGifSettings ? window.DayspringGifSettings.html() : `<h1>GIFs</h1><p class="lead">This page didn't load. Reload to try again.</p>`,
+      mount: () => window.DayspringGifSettings?.mount($("#card"), { toast, onLeave }),
+      save: async () => { if (window.DayspringGifSettings) await window.DayspringGifSettings.save(); } },
+
+    // ------------------------------------------------------------------------------------------------ lantern
+    { id: "lantern", icon: "🏮", title: "Lantern", settingsOnly: true,
+      render: () => `
+        <h1>Lantern</h1>
+        <p class="lead">Lantern is a free learning app from the same family as Dayspring. When both are on this computer they work together: Dayspring shows your courses and next lesson, opens a lesson when you ask, reads out course invitations and friend requests, and the two never talk over each other. Nothing here is needed if you don't use Lantern.</p>
+        <div id="lnBox" aria-live="polite"><div class="hint">Looking…</div></div>
+        <h2>Connect to Lantern</h2>
+        <p class="hint">So Dayspring can tell you about course invitations and friend requests. If Lantern is on this computer, it keeps your account and Dayspring uses it. If not, sign in here with the email you were invited with; when Lantern is installed later, it takes over the sign-in, so you won't sign in twice.</p>
+        <div id="lnConnect"></div>
+        <details class="note"><summary>Your Lantern hub (from the person who invited you)</summary>
+          <p class="hint">The hub is where Lantern keeps accounts. Paste its address and its <b>public</b> key (never a secret key). Leave it alone if Dayspring already knows it.</p>
+          <div class="row">${field("lnHubUrl", "Hub address", text("lnHubUrl", "", "https://….supabase.co"))}</div>
+          <div class="row">${field("lnHubKey", "Public key", text("lnHubKey", "", "sb_publishable_… or eyJ…"))}</div>
+          <button class="btn" type="button" id="lnHubSave">Save the hub</button></details>
+        <h2>The AI key</h2>
+        <div id="lnKey"></div>
+        <h2>Listening</h2>
+        <p class="hint">Only one app listens for its name at a time. Dayspring does while it's running; you can hand the microphone to Lantern (say "Dayspring, let Lantern listen", and "take the mic back" to return it).</p>
+        <div class="row" style="gap:.5em"><button class="btn" type="button" id="lnMicL">Let Lantern listen</button><button class="btn" type="button" id="lnMicD">Dayspring listens</button></div>
+        <div class="msg" id="m"></div>`,
+      mount: async () => {
+        const m = $("#m");
+        const paint = async () => {
+          let s; try { s = await api("/lantern/status"); } catch (e) { return msg(m, e.message, "bad"); }
+          const st = s.status;
+          $("#lnBox").innerHTML = s.running
+            ? `<p>✓ <b>Lantern is running</b>${st?.version ? " (" + esc(st.version) + ")" : ""}${st?.name ? ", signed in as <b>" + esc(st.name) + "</b>" : ""}.</p>
+               ${(st?.courses ?? []).length ? "<ul>" + st.courses.map((c) => `<li><b>${esc(c.title)}</b>: ${esc(c.measure || (c.percent ?? 0) + "%")}${c.next ? " · next: " + esc(c.next.title) : ""}</li>`).join("") + "</ul>" : "<p class='hint'>No courses yet.</p>"}
+               <button class="btn" type="button" id="lnOpen">Open Lantern</button>`
+            : s.installed ? `<p>Lantern is installed but not running.</p><button class="btn" type="button" id="lnOpen">Open Lantern</button>`
+            : `<p>Lantern isn't on this computer.</p><p class="hint">Dayspring can install it for you in <b>${esc(s.installDir)}</b> (about a minute, and it asks before installing anything else).</p><button class="btn primary" type="button" id="lnInstall">Install Lantern</button>${s.install ? `<p class="msg">${esc(s.install.message ?? "")}</p>` : ""}`;
+          $("#lnOpen")?.addEventListener("click", async () => { try { await post("/lantern/open", {}); toast("Opening Lantern"); } catch (e) { msg(m, e.message, "bad"); } });
+          $("#lnInstall")?.addEventListener("click", async () => { msg(m, "Installing Lantern… you can follow it on the Dayspring screen."); try { await post("/lantern/install", {}); } catch (e) { msg(m, e.message, "bad"); } });
+          const c = s.connected;
+          const codeHub = Boolean(s.hub?.emailCode);
+          $("#lnConnect").innerHTML = s.running ? `<p class="hint">${st?.signedIn ? "✓ Lantern is running and signed in, so it keeps your account and Dayspring uses it." : "Lantern is running. Sign in there (Settings → Account &amp; hub) and Dayspring uses that account."}</p>`
+            : c ? `<p>Connected as <b>${esc(c.email)}</b>.</p><button class="btn" type="button" id="lnOut">Disconnect</button>`
+            : !s.hub ? `<p class="hint">First add the hub below (the person who invited you has it).</p>`
+            : `${s.installed ? `<p><button class="btn primary" type="button" id="lnUseL">I already have Lantern on this computer</button> <span class="hint">Dayspring uses Lantern's sign-in.</span></p>` : ""}
+               <div class="row">${field("lnEmail", "Your email", text("lnEmail", "", "you@example.com", "email"))}</div>
+               <div class="row">${field("lnPw", "Password (6 or more characters)", text("lnPw", "", "", "password"))}</div>
+               <div class="row" style="gap:.5em"><button class="btn primary" type="button" id="lnSignIn">Sign in</button><button class="btn" type="button" id="lnCreate">Create an account</button></div>
+               <p class="hint" style="margin-top:.8em">No password? <button class="btn small" type="button" id="lnSend">Email me a sign-in link</button> Open the email on this computer and press its link.</p>
+               ${codeHub ? `<div class="row" style="margin-top:.6em">${field("lnCode", "Or the 6-digit code from the email", text("lnCode", "", "123456", "text", 'inputmode="numeric" maxlength="8"'))}</div><button class="btn" type="button" id="lnVerify">Connect with the code</button>` : ""}`;
+          $("#lnOut")?.addEventListener("click", async () => { await post("/lantern/disconnect", {}); paint(); });
+          $("#lnUseL")?.addEventListener("click", async () => { msg(m, "Opening Lantern…"); try { const r = await post("/lantern/use-lantern", {}); msg(m, r.connected ? "✓ Dayspring uses Lantern's account." : (r.say || "Sign in in Lantern."), r.connected ? "ok" : ""); paint(); } catch (e) { msg(m, e.message, "bad"); } });
+          const pwGo = async (create) => { const pw = $("#lnPw"); try { const r = await post("/lantern/password", { email: $("#lnEmail").value, password: pw.value, create }); pw.value = ""; msg(m, r.connected ? "Connected." : (r.say || "Check your email."), r.connected ? "ok" : ""); paint(); } catch (e) { msg(m, e.message, "bad"); } };
+          $("#lnSignIn")?.addEventListener("click", () => pwGo(false));
+          $("#lnCreate")?.addEventListener("click", () => pwGo(true));
+          $("#lnSend")?.addEventListener("click", async () => { try { await post("/lantern/connect", { email: $("#lnEmail").value }); msg(m, codeHub ? "Sent. Press the link in the email on this computer, or type the code from it below." : "Sent. Open the email on this computer and press its sign-in link (check spam too). This page updates by itself.", "ok"); const was = Date.now(); const t = setInterval(async () => { const x = await api("/lantern/status").catch(() => null); if (x?.connected || Date.now() - was > 600000) { clearInterval(t); if (x?.connected) paint(); } }, 3000); } catch (e) { msg(m, e.message, "bad"); } });
+          $("#lnVerify")?.addEventListener("click", async () => { try { await post("/lantern/verify", { code: $("#lnCode").value }); msg(m, "Connected.", "ok"); paint(); } catch (e) { msg(m, e.message, "bad"); } });
+          const k = s.sharedKey ?? {};
+          $("#lnKey").innerHTML = k.exists && k.updatedBy === "lantern" && !k.allowed ? `<p>Lantern already has an AI set up (${esc(k.provider ?? "")}). Use it in Dayspring too? The key stays encrypted on this computer and is never sent between the apps.</p><button class="btn primary" type="button" id="lnUse">Use the AI key from Lantern</button>`
+            : k.exists && k.allowed && k.updatedBy !== "dayspring" ? `<p>✓ Dayspring uses the AI key from Lantern.</p><button class="btn" type="button" id="lnStop">Stop using it</button>`
+            : k.exists && k.updatedBy === "dayspring" ? `<p>✓ Dayspring's AI key is shared with this computer's Lantern (Lantern still asks you first). <button class="btn" type="button" id="lnShare">Share it again</button></p>`
+            : `<p class="hint">Share Dayspring's AI key with Lantern, so you only set it up once. It's stored encrypted for your Windows account only, and Lantern asks you before it uses it.</p><button class="btn" type="button" id="lnShare">Use Dayspring's AI key in Lantern</button>`;
+          $("#lnUse")?.addEventListener("click", async () => { try { await post("/lantern/key", { use: true }); msg(m, "Done. Dayspring uses Lantern's AI key (restart Dayspring if replies don't use it yet).", "ok"); paint(); } catch (e) { msg(m, e.message, "bad"); } });
+          $("#lnStop")?.addEventListener("click", async () => { try { await post("/lantern/key", { use: false }); paint(); } catch (e) { msg(m, e.message, "bad"); } });
+          $("#lnShare")?.addEventListener("click", async () => { try { await post("/lantern/key", { share: true }); msg(m, "Shared. Lantern will ask you before it uses it.", "ok"); paint(); } catch (e) { msg(m, e.message, "bad"); } });
+          $("#lnMicL").classList.toggle("primary", s.micOwner === "lantern"); $("#lnMicD").classList.toggle("primary", s.micOwner !== "lantern");
+        };
+        $("#lnMicL").onclick = async () => { await post("/lantern/mic", { app: "lantern" }).catch(() => {}); paint(); };
+        $("#lnMicD").onclick = async () => { await post("/lantern/mic", { app: "dayspring" }).catch(() => {}); paint(); };
+        $("#lnHubSave").onclick = async () => { try { await post("/lantern/hub", { url: $("#lnHubUrl").value, anonKey: $("#lnHubKey").value }); msg(m, "Hub saved.", "ok"); paint(); } catch (e) { msg(m, e.message, "bad"); } };
+        await paint();
+      } },
 
     // ------------------------------------------------------------------------------------------------ permissions
     // The file-access chooser is file-access.js (the same one the first-run setup uses); Save sends choice: true.
@@ -746,98 +1003,12 @@
         await load();
       } },
 
-    // ------------------------------------------------------------------------------------------------ screen
-    { id: "screen", icon: "🖥️", title: "Screen",
-      render: () => `
-        <h1>Which screen?</h1>
-        <p class="lead">Dayspring can fill a screen with your day: a second monitor, a TV, a tablet or just this laptop. Choose where it opens when you start it.</p>
-        <div class="screens" id="screens"><div class="hint">Looking at your screens…</div></div>
-        ${choiceGroup("display", [
-          { value: "auto", title: "Automatic", desc: "The second screen if there is one, otherwise this one." },
-          { value: "primary", title: "Main screen", desc: "Always on the main screen." },
-          { value: "secondary", title: "Second screen", desc: "Always on the other screen." },
-        ], ["auto", "primary", "secondary"].includes(S.owner.display) ? S.owner.display : "")}
-        <h2>How Dayspring opens</h2>
-        ${choiceGroup("openAs", [
-          { value: "auto", title: "Automatic", desc: "Its own window on this screen, full screen on a TV or second screen." },
-          { value: "window", title: "App window", desc: "A clean window of its own with no browser bars. It remembers the microphone and your sign-ins." },
-          { value: "compact", title: "Compact (Dayspring mini)", desc: "A small window you can put anywhere: the time, what's on now and next, the weather, and a chat box." },
-          { value: "fullscreen", title: "Full screen", desc: "Fills the screen, like the TV view. Move the mouse to the top for minimize, exit and sound." },
-          { value: "tab", title: "Browser tab", desc: "A normal tab in your browser. The browser may ask to use the microphone, and sound may need one click to start." },
-        ], ["auto", "window", "compact", "fullscreen", "tab"].includes(S.owner.openAs) ? S.owner.openAs : "auto")}
-        <p class="hint">The Start menu also has "Dayspring (full screen)", "Dayspring mini" and "Dayspring in browser" to open it a different way just once. You can also say "open Dayspring in my browser", "make Dayspring small", "open in its own window" or "go full screen".</p>
-        <h2>Which browser shows Dayspring?</h2>
-        <div class="field"><select id="dbrowser" aria-label="Browser for the Dayspring screen"><option value="default">Your default browser</option></select>
-          <div class="hint" id="dbNote">Any browser on this computer works. Microsoft Edge has the most natural-sounding free voices.</div>
-          <p class="hint" id="dbUsing"></p>
-          <p><button type="button" class="btn small" id="dbReopen" hidden>Reopen now</button></p>
-          <p class="hint">It's used for every way Dayspring opens (mini, app window, full screen, browser tab) and for "Pop out". Each browser keeps its own Dayspring sign-ins, so after switching, allow the microphone once and sign in to your apps again in the new browser.</p></div>
-        <h2>Speech recognition</h2>
-        ${choiceGroup("speechEngine", [
-          { value: "auto", title: "Automatic", desc: "The browser's own when it has one that works (Chrome, Edge), otherwise the private one on this computer (Brave, Firefox)." },
-          { value: "browser", title: "The browser", desc: "Fast, and needs the internet. Chrome and Edge only." },
-          { value: "local", title: "On this computer (private)", desc: "Nothing you say leaves the PC. Works in every browser. A one-time download of about 200 MB." },
-        ], ["auto", "browser", "local"].includes(S.voice?.speechEngine) ? S.voice.speechEngine : "auto")}
-        <h2>Opening and closing</h2>
-        ${toggle("keepScreenOpen", "Keep the Dayspring screen open", "For a TV or an always-on display: if the screen closes or the TV is unplugged, it opens again by itself. Off: when you close Dayspring, it stays closed (alarms and notifications still work).", S.owner.keepScreenOpen === true)}
-        ${toggle("openOnStartup", "Open the screen when Windows starts", "Only if Dayspring starts with Windows. Off: it starts hidden and shows notifications and alarms, and you open the screen when you want it.", S.owner.openOnStartup === true)}
-        <h2>Stay awake</h2>
-        ${toggle("keepAwake", "Keep this computer awake while Dayspring is running", "Only while it's plugged in: no sleep and no idle lock screen, so Dayspring can wake you, remind you and hear you. On battery it sleeps as usual. Nothing in your power settings changes.", S.keepAwake !== false)}
-        <h2>Fit Dayspring to your screen</h2>
-        <p class="hint">Everything here changes the Dayspring screen right away, so you can watch it while you adjust. Each group has its own Reset.</p>
-        <p><button type="button" class="btn" id="fitNow">📐 Fit to screen…</button> <span class="hint">Shows bright lines at the edges to line up with your TV.</span></p>
-        <div id="scbox">${SC_GROUPS.map((g) => `<fieldset class="scg" data-g="${g.id}"><legend>${g.title}</legend>${g.html}<button type="button" class="btn small ghost screset" data-g="${g.id}">Reset ${g.title.toLowerCase()}</button></fieldset>`).join("")}</div>
-        <p><button type="button" class="btn small ghost" id="scResetAll">Reset the whole screen layout</button></p>
-        <div class="msg" id="m"></div>`,
-      mount: async (sec) => {
-        await screenMount();
-        api("/keepawake").then((k) => { S.keepAwake = k.on; $("#keepAwake")?.setAttribute("aria-checked", String(k.on)); }).catch(() => {});
-        api("/settings").then((r) => { const v = r.settings?.speechEngine ?? "auto"; $$("[data-group=speechEngine] .choice").forEach((c) => { const on = c.dataset.value === v; c.classList.toggle("on", on); c.setAttribute("aria-checked", String(on)); }); }).catch(() => {});
-        api("/setup/browsers").then((b) => {
-          const sel = $("#dbrowser"); if (!sel) return;
-          const def = (b.browsers ?? []).find((x) => x.isDefault);
-          sel.innerHTML = `<option value="default">Your default browser${def ? " (" + esc(def.name) + ")" : ""}</option>` + (b.browsers ?? []).map((x) => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("");
-          sel.value = [...sel.options].some((o) => o.value === b.chosen) ? b.chosen : "default";
-          const using = (b.browsers ?? []).find((y) => y.id === b.using);
-          if ($("#dbUsing")) $("#dbUsing").textContent = using ? `In use now: ${using.name}.` : "";
-          const note = () => {
-            const id = sel.value === "default" ? def?.id : sel.value; const x = (b.browsers ?? []).find((y) => y.id === id);
-            $("#dbNote").textContent = (x?.note ? x.note + " " : "") + (id === "brave" ? "In Brave, Dayspring listens with the private speech recognition on this computer, and Brave has Windows' basic voices only (for a warmer voice use ElevenLabs, or Edge's free Natural voices). If a video won't play, turn Brave Shields down for localhost." : "Microsoft Edge has the most natural-sounding free voices.");
-            const r = $("#dbReopen"); if (r) { r.hidden = !x || id === b.using; r.textContent = x ? `Reopen now in ${x.name}` : "Reopen now"; }
-          };
-          sel.onchange = note; note();
-          $("#dbReopen").onclick = async () => {
-            try { await post("/setup/display", { displayBrowser: sel.value }); const r = await post("/app/reopen", {}); msg($("#m"), r.noScreen ? r.message : "Reopening Dayspring in the new browser…", r.ok === false ? "bad" : "ok"); b.using = sel.value === "default" ? def?.id : sel.value; note(); if ($("#dbUsing") && x0()) $("#dbUsing").textContent = `In use now: ${x0().name}.`; }
-            catch (e) { msg($("#m"), e.message, "bad"); }
-          };
-          const x0 = () => (b.browsers ?? []).find((y) => y.id === b.using);
-        }).catch(() => {});
-        $("[data-group=display]").addEventListener("change", () => { sec.display = chosen("display"); $$(".scr").forEach((x) => x.classList.remove("on")); });
-        try {
-          const r = await api("/setup/screens");
-          if (!$("#screens")) return;   // they moved on to another section while the screens were being read
-          if (!r.screens.length) { $("#screens").innerHTML = `<div class="hint">Couldn't read the screen layout. The choices below still work.</div>`; return; }
-          const maxW = Math.max(...r.screens.map((s) => s.width));
-          $("#screens").innerHTML = r.screens.map((s) => `<button type="button" class="scr${String(s.number) === String(S.owner.display) ? " on" : ""}" data-n="${s.number}" style="width:${Math.max(6, 11 * s.width / maxW)}em;aspect-ratio:${s.width}/${s.height}" aria-label="Screen ${s.number}, ${s.width} by ${s.height}${s.primary ? ", main" : ""}"><b>${s.number}</b>${s.width}×${s.height}${s.primary ? "<br>main" : ""}</button>`).join("");
-          $$(".scr").forEach((b) => b.onclick = () => { $$(".scr").forEach((x) => x.classList.toggle("on", x === b)); $$("[data-group=display] .choice").forEach((x) => { x.classList.remove("on"); x.setAttribute("aria-checked", "false"); }); sec.display = b.dataset.n; });
-        } catch { if ($("#screens")) $("#screens").innerHTML = ""; }
-      },
-      save: async (sec) => {
-        const r = await post("/setup/display", { display: sec.display ?? chosen("display") ?? S.owner.display ?? "auto", displayBrowser: $("#dbrowser")?.value || S.owner.displayBrowser || "default", openAs: chosen("openAs") ?? S.owner.openAs ?? "auto", keepScreenOpen: isOn("keepScreenOpen"), openOnStartup: isOn("openOnStartup") });
-        S.owner.keepScreenOpen = r.keepScreenOpen; S.owner.openOnStartup = r.openOnStartup;
-        if (chosen("speechEngine")) { const st = await post("/settings", { speechEngine: chosen("speechEngine") }).catch(() => null); if (st?.settings && S.voice) S.voice.speechEngine = st.settings.speechEngine; }
-        S.owner.display = r.display; S.owner.displayBrowser = r.displayBrowser; S.owner.openAs = r.openAs; S.voice.overscan = r.overscan;
-        if ($("#keepAwake")) { const k = await post("/keepawake", { on: isOn("keepAwake") }).catch(() => null); if (k) S.keepAwake = k.on; }
-      } },
-
-    // ------------------------------------------------------------------------------------------------ sky & scenery
-    { id: "sky", icon: "🎨", title: "Sky & scenery",
-      render: () => `
-        <h1>Sky &amp; scenery</h1>
-        <p class="lead">The background of the Dayspring screen follows the real sky outside: the time of day, the weather and the season. Or choose your own look. Every change shows on the screen right away.</p>
-        <div id="skyBox"><div class="hint">Loading…</div></div>
-        <div class="msg" id="m"></div>`,
-      mount: () => skyPanel() },
+    // ------------------------------------------------------------------------------------------------ devices & sign-in (public/devices-panel.js)
+    // His Dayspring computers on one account: sign in, approve a new one (the code on both screens), rename, what each may
+    // do, sign one out remotely. The "remote" release feature (off = no section, no routes).
+    { id: "remote", icon: "📡", title: "Devices & sign-in", settingsOnly: true, enabled: () => Boolean(window.DayspringRemote) && window.DayspringRemote.enabled !== false,
+      render: () => window.DayspringRemote ? window.DayspringRemote.html() : `<h1>Devices &amp; sign-in</h1><p class="lead">This page didn't load. Reload to try again.</p>`,
+      mount: () => window.DayspringRemote?.mount($("#card"), { toast, onLeave }) },
 
     // ------------------------------------------------------------------------------------------------ updates
     // New versions come from GitHub. The notice on the Dayspring screen offers the same three choices as "When a new
@@ -853,6 +1024,12 @@
           { value: "idle", title: "Install it when I'm not using Dayspring", desc: "After half an hour of quiet. Never during an alarm, a call or Tune in." },
           { value: "launch", title: "Install it the next time Dayspring starts", desc: "Downloaded now, installed just before Dayspring opens next time." },
         ], "ask")}
+        <h2>Which versions</h2>
+        ${choiceGroup("upChannel", [
+          { value: "stable", title: "Production (stable)", desc: "Finished features, plus new ones marked New. Recommended." },
+          { value: "dev", title: "Development (newest, may have bugs)", desc: "Everything, including features still being built. For testing." },
+        ], "stable")}
+        <div id="upChan" class="hint" aria-live="polite"></div>
         <h2>What changed</h2>
         <div id="upHist"><div class="hint">Looking…</div></div>
         <div class="msg" id="m"></div>`,
@@ -872,66 +1049,48 @@
           $("#upCheck").onclick = async () => { msg($("#m"), "Checking…"); try { const r = await api("/update/check"); paint(r.status, r); msg($("#m"), r.off ? "" : r.available ? "" : "You're up to date."); } catch (e) { msg($("#m"), e.message, "bad"); } };
           $("#upNow")?.addEventListener("click", async () => { if (!confirm("Install the update now? Dayspring restarts (about a minute). Your data is backed up first.")) return; msg($("#m"), "Installing… Dayspring will restart in a moment."); try { await post("/update/choose", { choice: "now" }); } catch (e) { msg($("#m"), e.message, "bad"); } });
           $$("[data-group=upWhen] .choice").forEach((b) => { const on = b.dataset.value === st.when; b.classList.toggle("on", on); b.setAttribute("aria-checked", String(on)); });
+          // the update channel (lib/updater.mjs): production or development; this copy's own build says which it is now
+          $$("[data-group=upChannel] .choice").forEach((b) => { const on = b.dataset.value === (st.channel ?? "stable"); b.classList.toggle("on", on); b.setAttribute("aria-checked", String(on)); });
+          if ($("#upChan")) $("#upChan").innerHTML = `This copy is the <b>${st.buildChannel === "dev" ? "development" : "production"}</b> version.${st.channel === "stable" && st.buildChannel === "dev" ? ` <button class="btn small" type="button" id="upToStable">Go back to the production version…</button>` : ""}`;
+          $("#upToStable")?.addEventListener("click", () => toStable());
           const h = st.history ?? [];
           $("#upHist").innerHTML = h.length ? h.map((x) => `<details class="note"${x === h[0] ? " open" : ""}><summary><b>${esc(x.to)}</b> · ${esc(when(x.at))} · ${x.ok === true ? "✓ installed" : x.ok === false ? "✗ didn't work, the previous version was kept" : "installing"}</summary>${x.error ? `<p class="msg bad">${esc(x.error)}</p>` : ""}${x.notes ? md(x.notes) : "<p class='hint'>No notes.</p>"}</details>`).join("") : `<p class="hint">No updates installed yet. When one is, its notes show here.</p>`;
         };
         try { paint(await api("/update/status")); } catch (e) { msg($("#m"), e.message, "bad"); }
         // the choice saves as soon as it's made
         $("[data-group=upWhen]")?.addEventListener("change", async () => { try { await post("/update/when", { when: chosen("upWhen") ?? "ask" }); toast("Saved"); } catch (e) { msg($("#m"), e.message, "bad"); } });
+        // development → production: offer to go back to the newest production version now (backed up first)
+        async function toStable() {
+          try {
+            const o = await api("/update/stable-offer");
+            if (!o.offer) { msg($("#m"), o.message || "There's no production version to go back to right now.", ""); return; }
+            if (!confirm(`Go back to Dayspring ${o.offer.version} (production)? Your data and keys are backed up first, and Dayspring restarts (about a minute). Features that are still being built disappear.`)) return;
+            msg($("#m"), `Installing Dayspring ${o.offer.version}… Dayspring will restart in a moment.`);
+            await post("/update/to-stable", {});
+          } catch (e) { msg($("#m"), e.message, "bad"); }
+        }
+        $("[data-group=upChannel]")?.addEventListener("change", async () => {
+          try {
+            const r = await post("/update/channel", { channel: chosen("upChannel") ?? "stable" });
+            paint(r.status ?? await api("/update/status")); toast("Saved");
+            if (r.channel === "stable" && r.offer) await toStable();
+          } catch (e) { msg($("#m"), e.message, "bad"); }
+        });
       },
       save: async () => { await post("/update/when", { when: chosen("upWhen") ?? "ask" }); } },
 
-    // ------------------------------------------------------------------------------------------------ notifications
-    { id: "notifications", icon: "🔔", title: "Notifications", settingsOnly: true,
-      render: () => `
-        <h1>Notifications and quiet</h1>
-        <p class="lead">Turn Dayspring's listening off with one click, choose how each kind of notification reaches you, and show notifications in front of every window.</p>
-        <h2>Dayspring is</h2>
-        ${choiceGroup("listenState", [
-          { value: "active", title: "Active", desc: "Listens for “Dayspring” and speaks." },
-          { value: "quiet", title: "Quiet", desc: "Still hears “Dayspring”, but says nothing: answers and notifications show on screen. Alarms still ring." },
-          { value: "off", title: "Off", desc: "Not listening at all (the microphone is released) and says nothing. The schedule and alarms keep going." },
-        ], ["active", "quiet", "off"].includes(S.voice?.listenState) ? S.voice.listenState : "active")}
-        ${toggle("alarmsWhenOff", "Alarms still ring when Off", "Your wake-up alarm and alarm reminders ring even when Dayspring is off.", S.voice?.alarmsWhenOff !== false)}
-        ${toggle("timersWhenQuiet", "Timers still ring when Dayspring is quiet or off", "A timer you set rings like an alarm (with its name) even when Dayspring is Quiet or Off. Turn this off and a finished timer only shows a card.", S.voice?.timersWhenQuiet !== false)}
-        ${toggle("jokeOffersOn", "Offer a joke now and then", "Only with a playful personality (Humour 60 or more in Settings → Personality), when someone's around, never during calls, alarms, timers, cooking or focus time.", S.voice?.jokeOffersOn !== false, `<div class="row" style="gap:.5em;align-items:center;margin-top:.3em"><label for="jokeOffers">At most</label><select id="jokeOffers">${[0, 1, 2, 3, 4, 5].map((n) => `<option value="${n}"${(S.voice?.jokeOffers ?? 3) === n ? " selected" : ""}>${n}</option>`).join("")}</select><span>a day</span></div>`)}
-        <p class="hint">Shortcuts: the coloured badge on the Dayspring screen, <b>Ctrl+Alt+Shift+D</b> anywhere in Windows (off / back on), or say “Dayspring, go quiet”.</p>
-        <h2>How each kind arrives</h2>
-        <div class="field" id="nkinds"></div>
-        <div class="field"><label for="nAll"><b>Quick switch for everything</b></label> <select id="nAll"><option value="">Use the settings above</option><option value="voice">Speak everything</option><option value="chime">Chime only for everything</option><option value="silent">Everything silent (on screen only)</option></select></div>
-        <h2>Desktop notifications</h2>
-        ${toggle("ovOn", "Show notifications in front of every window", "Small cards at the top-right of the screen, even over full-screen apps. They never take the focus, and they go away by themselves. Skipped while the Dayspring window itself is in front.", S.voice?.overlay?.on !== false)}
-        ${toggle("overlayWhenOff", "Show them when Dayspring is off", "Off stops listening and talking; the cards can still show.", S.voice?.overlayWhenOff !== false)}
-        <p class="hint">With the Dayspring screen closed, alarms still ring from these cards (Snooze 9 min, Dismiss, Open Dayspring), and notifications set to Chime still chime.</p>
-        ${toggle("speakWhenClosed", "Speak announcements even when the screen is closed", "Uses Windows' own voice when no Dayspring screen is open. Off: a chime instead.", S.voice?.speakWhenClosed === true)}
-        <div class="field"><label for="ovSecs"><b>Stay on screen for</b> <span id="ovSecsV"></span></label><input type="range" id="ovSecs" min="3" max="30" step="1" value="${Number(S.voice?.overlay?.seconds) || 8}"></div>
-        <div class="field"><label for="ovScreen"><b>Show them on</b></label> <select id="ovScreen"><option value="primary">The main screen</option><option value="1">Screen 1</option><option value="2">Screen 2</option><option value="3">Screen 3</option></select></div>
-        <p><button type="button" class="btn small" id="ovTest">Show a test notification</button> <span class="hint" id="ovState"></span></p>
-        <div class="msg" id="m"></div>`,
-      mount: async () => {
-        let s = {}; try { s = (await api("/settings")).settings ?? {}; } catch { /* defaults */ }
-        const pick = (g, v) => $$(`[data-group=${g}] .choice`).forEach((b) => { const on = b.dataset.value === v; b.classList.toggle("on", on); b.setAttribute("aria-checked", String(on)); });
-        if (!$("#nkinds")) return;          // left this section while loading
-        pick("listenState", s.listenState ?? "active");
-        const setT = (id, on) => $("#" + id)?.setAttribute("aria-checked", String(Boolean(on)));
-        setT("alarmsWhenOff", s.alarmsWhenOff !== false); setT("timersWhenQuiet", s.timersWhenQuiet !== false); setT("jokeOffersOn", s.jokeOffersOn !== false); if ($("#jokeOffers")) $("#jokeOffers").value = String(s.jokeOffers ?? 3); setT("overlayWhenOff", s.overlayWhenOff !== false); setT("speakWhenClosed", s.speakWhenClosed === true); setT("ovOn", s.overlay?.on !== false);
-        $("#ovSecs").value = Number(s.overlay?.seconds) || 8;
-        const KINDS = [["reminders", "Reminders"], ["schedule", "Schedule: start times, changes and check-ins"], ["texts", "Texts and phone"], ["lantern", "Lantern"], ["discover", "Discover"], ["system", "Updates, alerts and system"], ["discoveries", "Secret characters found"]];
-        const OPTS = [["auto", "Usual (" + ({ voice: "spoken", chime: "chime", silent: "silent" }[s.mode] ?? "spoken") + ")"], ["voice", "Speak"], ["chime", "Chime only"], ["silent", "Silent"]];
-        $("#nkinds").innerHTML = KINDS.map(([k, t]) => `<div class="row" style="display:flex;gap:.6em;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:.25em 0"><label for="nk-${k}">${t}</label><select id="nk-${k}" data-kind="${k}">${OPTS.map(([v, l]) => `<option value="${v}"${(s.notify?.[k] ?? "auto") === v ? " selected" : ""}>${l}</option>`).join("")}</select></div>`).join("");
-        $("#nAll").value = s.notifyAll ?? "";
-        $("#ovScreen").value = String(s.overlay?.screen ?? "primary");
-        const secs = () => { $("#ovSecsV").textContent = `${$("#ovSecs").value} seconds`; }; $("#ovSecs").oninput = secs; secs();
-        api("/overlay").then((o) => { $("#ovState").textContent = o.running ? "On." : o.error ? o.error : "Starts with Dayspring's screen."; }).catch(() => {});
-        $("#ovTest").onclick = async () => { try { const r = await post("/overlay/test", {}); $("#ovState").textContent = r.sent ? "Sent: look at the top-right of the screen." : (r.error || r.skipped || "Couldn't show it here."); } catch (e) { $("#ovState").textContent = e.message; } };
-        $("[data-group=listenState]")?.addEventListener("change", async () => { try { await post("/listen", { state: chosen("listenState") ?? "active", from: "settings" }); } catch (e) { msg($("#m"), e.message, "bad"); } });
-      },
-      save: async () => {
-        const notify = Object.fromEntries($$("#nkinds select").map((x) => [x.dataset.kind, x.value]));
-        const r = await post("/settings", { notify, notifyAll: $("#nAll").value || null, alarmsWhenOff: isOn("alarmsWhenOff"), timersWhenQuiet: isOn("timersWhenQuiet"), jokeOffersOn: isOn("jokeOffersOn"), jokeOffers: Number($("#jokeOffers")?.value ?? 3), overlayWhenOff: isOn("overlayWhenOff"), speakWhenClosed: isOn("speakWhenClosed"), overlay: { on: isOn("ovOn"), seconds: Number($("#ovSecs").value), screen: $("#ovScreen").value } });
-        if (S.voice) Object.assign(S.voice, r.settings ?? {});
-        const want = chosen("listenState"); if (want && want !== (r.settings?.listenState ?? "active")) await post("/listen", { state: want, from: "settings" });
-      } },
+    // ------------------------------------------------------------------------------------------------ features, compatibility, testing (public/features-ui.js)
+    // What's finished, new (with off switches) and in progress; the compatibility lists; the step-by-step test checklist
+    // (Testing: the development version, or the developer; lib/features.mjs hides it otherwise).
+    { id: "featurelist", icon: "🧪", title: "Features", settingsOnly: true,
+      render: () => window.DayspringFeatureUI ? window.DayspringFeatureUI.features.html() : `<h1>Features</h1><p class="lead">This page didn't load. Reload to try again.</p>`,
+      mount: () => window.DayspringFeatureUI?.features.mount($("#card"), { toast }) },
+    { id: "compat", icon: "📋", title: "Compatibility", settingsOnly: true,
+      render: () => window.DayspringFeatureUI ? window.DayspringFeatureUI.compat.html() : `<h1>Compatibility</h1><p class="lead">This page didn't load. Reload to try again.</p>`,
+      mount: () => window.DayspringFeatureUI?.compat.mount($("#card"), { toast }) },
+    { id: "testing", icon: "✅", title: "Testing", settingsOnly: true,
+      render: () => window.DayspringFeatureUI ? window.DayspringFeatureUI.testing.html() : `<h1>Testing</h1><p class="lead">This page didn't load. Reload to try again.</p>`,
+      mount: () => window.DayspringFeatureUI?.testing.mount($("#card"), { toast }) },
 
     // ------------------------------------------------------------------------------------------------ about
     { id: "about", icon: "ℹ️", title: "About", settingsOnly: true,
@@ -1007,73 +1166,6 @@
           catch (e) { msg($("#unMsg"), e.message, "bad"); $("#unGo").disabled = !matches(); }
         };
         if (params.get("uninstall") === "1") setTimeout(() => $("#unOpen").click(), 300);
-      } },
-
-    // ------------------------------------------------------------------------------------------------ lantern
-    { id: "lantern", icon: "🏮", title: "Lantern", settingsOnly: true,
-      render: () => `
-        <h1>Lantern</h1>
-        <p class="lead">Lantern is a free learning app from the same family as Dayspring. When both are on this computer they work together: Dayspring shows your courses and next lesson, opens a lesson when you ask, reads out course invitations and friend requests, and the two never talk over each other. Nothing here is needed if you don't use Lantern.</p>
-        <div id="lnBox" aria-live="polite"><div class="hint">Looking…</div></div>
-        <h2>Connect to Lantern</h2>
-        <p class="hint">So Dayspring can tell you about course invitations and friend requests. If Lantern is on this computer, it keeps your account and Dayspring uses it. If not, sign in here with the email you were invited with; when Lantern is installed later, it takes over the sign-in, so you won't sign in twice.</p>
-        <div id="lnConnect"></div>
-        <details class="note"><summary>Your Lantern hub (from the person who invited you)</summary>
-          <p class="hint">The hub is where Lantern keeps accounts. Paste its address and its <b>public</b> key (never a secret key). Leave it alone if Dayspring already knows it.</p>
-          <div class="row">${field("lnHubUrl", "Hub address", text("lnHubUrl", "", "https://….supabase.co"))}</div>
-          <div class="row">${field("lnHubKey", "Public key", text("lnHubKey", "", "sb_publishable_… or eyJ…"))}</div>
-          <button class="btn" type="button" id="lnHubSave">Save the hub</button></details>
-        <h2>The AI key</h2>
-        <div id="lnKey"></div>
-        <h2>Listening</h2>
-        <p class="hint">Only one app listens for its name at a time. Dayspring does while it's running; you can hand the microphone to Lantern (say "Dayspring, let Lantern listen", and "take the mic back" to return it).</p>
-        <div class="row" style="gap:.5em"><button class="btn" type="button" id="lnMicL">Let Lantern listen</button><button class="btn" type="button" id="lnMicD">Dayspring listens</button></div>
-        <div class="msg" id="m"></div>`,
-      mount: async () => {
-        const m = $("#m");
-        const paint = async () => {
-          let s; try { s = await api("/lantern/status"); } catch (e) { return msg(m, e.message, "bad"); }
-          const st = s.status;
-          $("#lnBox").innerHTML = s.running
-            ? `<p>✓ <b>Lantern is running</b>${st?.version ? " (" + esc(st.version) + ")" : ""}${st?.name ? ", signed in as <b>" + esc(st.name) + "</b>" : ""}.</p>
-               ${(st?.courses ?? []).length ? "<ul>" + st.courses.map((c) => `<li><b>${esc(c.title)}</b>: ${esc(c.measure || (c.percent ?? 0) + "%")}${c.next ? " · next: " + esc(c.next.title) : ""}</li>`).join("") + "</ul>" : "<p class='hint'>No courses yet.</p>"}
-               <button class="btn" type="button" id="lnOpen">Open Lantern</button>`
-            : s.installed ? `<p>Lantern is installed but not running.</p><button class="btn" type="button" id="lnOpen">Open Lantern</button>`
-            : `<p>Lantern isn't on this computer.</p><p class="hint">Dayspring can install it for you in <b>${esc(s.installDir)}</b> (about a minute, and it asks before installing anything else).</p><button class="btn primary" type="button" id="lnInstall">Install Lantern</button>${s.install ? `<p class="msg">${esc(s.install.message ?? "")}</p>` : ""}`;
-          $("#lnOpen")?.addEventListener("click", async () => { try { await post("/lantern/open", {}); toast("Opening Lantern"); } catch (e) { msg(m, e.message, "bad"); } });
-          $("#lnInstall")?.addEventListener("click", async () => { msg(m, "Installing Lantern… you can follow it on the Dayspring screen."); try { await post("/lantern/install", {}); } catch (e) { msg(m, e.message, "bad"); } });
-          const c = s.connected;
-          const codeHub = Boolean(s.hub?.emailCode);
-          $("#lnConnect").innerHTML = s.running ? `<p class="hint">${st?.signedIn ? "✓ Lantern is running and signed in, so it keeps your account and Dayspring uses it." : "Lantern is running. Sign in there (Settings → Account &amp; hub) and Dayspring uses that account."}</p>`
-            : c ? `<p>Connected as <b>${esc(c.email)}</b>.</p><button class="btn" type="button" id="lnOut">Disconnect</button>`
-            : !s.hub ? `<p class="hint">First add the hub below (the person who invited you has it).</p>`
-            : `${s.installed ? `<p><button class="btn primary" type="button" id="lnUseL">I already have Lantern on this computer</button> <span class="hint">Dayspring uses Lantern's sign-in.</span></p>` : ""}
-               <div class="row">${field("lnEmail", "Your email", text("lnEmail", "", "you@example.com", "email"))}</div>
-               <div class="row">${field("lnPw", "Password (6 or more characters)", text("lnPw", "", "", "password"))}</div>
-               <div class="row" style="gap:.5em"><button class="btn primary" type="button" id="lnSignIn">Sign in</button><button class="btn" type="button" id="lnCreate">Create an account</button></div>
-               <p class="hint" style="margin-top:.8em">No password? <button class="btn small" type="button" id="lnSend">Email me a sign-in link</button> Open the email on this computer and press its link.</p>
-               ${codeHub ? `<div class="row" style="margin-top:.6em">${field("lnCode", "Or the 6-digit code from the email", text("lnCode", "", "123456", "text", 'inputmode="numeric" maxlength="8"'))}</div><button class="btn" type="button" id="lnVerify">Connect with the code</button>` : ""}`;
-          $("#lnOut")?.addEventListener("click", async () => { await post("/lantern/disconnect", {}); paint(); });
-          $("#lnUseL")?.addEventListener("click", async () => { msg(m, "Opening Lantern…"); try { const r = await post("/lantern/use-lantern", {}); msg(m, r.connected ? "✓ Dayspring uses Lantern's account." : (r.say || "Sign in in Lantern."), r.connected ? "ok" : ""); paint(); } catch (e) { msg(m, e.message, "bad"); } });
-          const pwGo = async (create) => { const pw = $("#lnPw"); try { const r = await post("/lantern/password", { email: $("#lnEmail").value, password: pw.value, create }); pw.value = ""; msg(m, r.connected ? "Connected." : (r.say || "Check your email."), r.connected ? "ok" : ""); paint(); } catch (e) { msg(m, e.message, "bad"); } };
-          $("#lnSignIn")?.addEventListener("click", () => pwGo(false));
-          $("#lnCreate")?.addEventListener("click", () => pwGo(true));
-          $("#lnSend")?.addEventListener("click", async () => { try { await post("/lantern/connect", { email: $("#lnEmail").value }); msg(m, codeHub ? "Sent. Press the link in the email on this computer, or type the code from it below." : "Sent. Open the email on this computer and press its sign-in link (check spam too). This page updates by itself.", "ok"); const was = Date.now(); const t = setInterval(async () => { const x = await api("/lantern/status").catch(() => null); if (x?.connected || Date.now() - was > 600000) { clearInterval(t); if (x?.connected) paint(); } }, 3000); } catch (e) { msg(m, e.message, "bad"); } });
-          $("#lnVerify")?.addEventListener("click", async () => { try { await post("/lantern/verify", { code: $("#lnCode").value }); msg(m, "Connected.", "ok"); paint(); } catch (e) { msg(m, e.message, "bad"); } });
-          const k = s.sharedKey ?? {};
-          $("#lnKey").innerHTML = k.exists && k.updatedBy === "lantern" && !k.allowed ? `<p>Lantern already has an AI set up (${esc(k.provider ?? "")}). Use it in Dayspring too? The key stays encrypted on this computer and is never sent between the apps.</p><button class="btn primary" type="button" id="lnUse">Use the AI key from Lantern</button>`
-            : k.exists && k.allowed && k.updatedBy !== "dayspring" ? `<p>✓ Dayspring uses the AI key from Lantern.</p><button class="btn" type="button" id="lnStop">Stop using it</button>`
-            : k.exists && k.updatedBy === "dayspring" ? `<p>✓ Dayspring's AI key is shared with this computer's Lantern (Lantern still asks you first). <button class="btn" type="button" id="lnShare">Share it again</button></p>`
-            : `<p class="hint">Share Dayspring's AI key with Lantern, so you only set it up once. It's stored encrypted for your Windows account only, and Lantern asks you before it uses it.</p><button class="btn" type="button" id="lnShare">Use Dayspring's AI key in Lantern</button>`;
-          $("#lnUse")?.addEventListener("click", async () => { try { await post("/lantern/key", { use: true }); msg(m, "Done. Dayspring uses Lantern's AI key (restart Dayspring if replies don't use it yet).", "ok"); paint(); } catch (e) { msg(m, e.message, "bad"); } });
-          $("#lnStop")?.addEventListener("click", async () => { try { await post("/lantern/key", { use: false }); paint(); } catch (e) { msg(m, e.message, "bad"); } });
-          $("#lnShare")?.addEventListener("click", async () => { try { await post("/lantern/key", { share: true }); msg(m, "Shared. Lantern will ask you before it uses it.", "ok"); paint(); } catch (e) { msg(m, e.message, "bad"); } });
-          $("#lnMicL").classList.toggle("primary", s.micOwner === "lantern"); $("#lnMicD").classList.toggle("primary", s.micOwner !== "lantern");
-        };
-        $("#lnMicL").onclick = async () => { await post("/lantern/mic", { app: "lantern" }).catch(() => {}); paint(); };
-        $("#lnMicD").onclick = async () => { await post("/lantern/mic", { app: "dayspring" }).catch(() => {}); paint(); };
-        $("#lnHubSave").onclick = async () => { try { await post("/lantern/hub", { url: $("#lnHubUrl").value, anonKey: $("#lnHubKey").value }); msg(m, "Hub saved.", "ok"); paint(); } catch (e) { msg(m, e.message, "bad"); } };
-        await paint();
       } },
 
     // ------------------------------------------------------------------------------------------------ done
@@ -1258,16 +1350,19 @@
   }
 
   // ================================================================================================= wizard / settings
-  const visible = () => SECTIONS.filter((s) => (wizard ? !s.settingsOnly : !s.wizardOnly));
+  // (a feature that's off in this build also hides its sections: window.dsFeatures from /api/features/gate.js, lib/features.mjs)
+  const visible = () => SECTIONS.filter((s) => (wizard ? !s.settingsOnly : !s.wizardOnly) && s.enabled?.() !== false && !(window.dsFeatures?.hiddenSections ?? []).includes(s.id));
+  // Settings nav groups (the wizard shows no nav): a heading where a new group starts
+  const NAV_GROUP = { you: "You & your day", assistant: "Dayspring", sound: "Sound & screen", features: "Apps & connections", permissions: "Privacy & safety", updates: "This app" };
   function nav() {
-    $("#nav").innerHTML = visible().map((s, i) => `<button type="button" data-i="${i}" class="${i === cur ? "on" : ""}" ${i === cur ? 'aria-current="page"' : ""}><span class="ic" aria-hidden="true">${s.icon}</span>${esc(s.title)}</button>`).join("");
+    $("#nav").innerHTML = visible().map((s, i) => (!wizard && NAV_GROUP[s.id] ? `<div class="navgrp" role="presentation">${esc(NAV_GROUP[s.id])}</div>` : "") + `<button type="button" data-i="${i}" class="${i === cur ? "on" : ""}" ${i === cur ? 'aria-current="page"' : ""}><span class="ic" aria-hidden="true">${s.icon}</span>${esc(s.title)}</button>`).join("");
     $$("#nav button").forEach((b) => b.onclick = () => go(Number(b.dataset.i)));
   }
   // "Need help?" under every section: its walkthrough in the guide (in the same frame on the Dayspring screen)
   const GUIDE = { welcome: ["getting-started", "Getting started"], you: ["settings-reference/you", "About you"], assistant: ["settings-reference/your-assistant", "Your assistant"],
     location: ["settings-reference/where-you-are", "Where you are"], ai: ["ai-providers", "AI providers"], voice: ["voices", "Voices"], sound: ["audio-devices", "Speakers and microphones"],
-    week: ["schedule/routine-and-fixed-blocks", "Your usual week"], features: ["settings-reference/features--apps", "Features & apps"], apps: ["connections", "Connecting apps"],
-    permissions: ["permissions", "Permissions"], photos: ["photos-and-people", "Photos & people"], activity: ["permissions/the-activity-log", "The activity log"], screen: ["display-setup/fitting-dayspring-to-your-screen", "Fitting Dayspring to your screen"], sky: ["display-setup/the-living-sky", "The living sky"],
+    week: ["schedule/routine-and-fixed-blocks", "Your usual week"], features: ["settings-reference/features--apps", "Features & apps"], apps: ["connections", "Connecting apps"], email: ["email", "Email"],
+    permissions: ["permissions", "Permissions"], photos: ["photos-and-people", "Photos & people"], cameras: ["cameras", "Cameras"], devices: ["smart-devices", "Smart devices"], printers: ["bambu-printers", "3D printers"], gifs: ["gifs", "GIFs"], activity: ["permissions/the-activity-log", "The activity log"], remote: ["multiple-devices", "Dayspring on more than one computer"], screen: ["display-setup/fitting-dayspring-to-your-screen", "Fitting Dayspring to your screen"], sky: ["display-setup/the-living-sky", "The living sky"],
     done: ["tutorials", "Tutorials: how do I…?"] };
   const guideLink = (id) => { const g = GUIDE[id]; if (!g) return ""; const embed = params.get("embed");
     return `<p class="hint guide-link" style="margin-top:1.4em">❓ Need help? <a href="/help${embed ? "?embed=1" : ""}#${g[0]}"${embed ? "" : ' target="_blank" rel="noopener"'}>Open the guide for this step: ${esc(g[1])}</a> · <a href="/help${embed ? "?embed=1" : ""}#settings-reference"${embed ? "" : ' target="_blank" rel="noopener"'}>every setting explained</a></p>`; };

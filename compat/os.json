@@ -1,0 +1,134 @@
+{
+  "category": "os",
+  "label": "Operating systems",
+  "description": "Dayspring runs on Windows: its helpers (the window, the overlay, sounds, keep-awake, reading text on screen, encrypted passwords) use Windows' own parts. It needs Node.js 22.13 or newer, which comes with the installer.",
+  "entries": [
+    {
+      "id": "windows-11",
+      "brand": "Microsoft",
+      "model": "Windows 11 (23H2, 24H2, 25H2)",
+      "category": "os",
+      "connection": "local",
+      "offline": true,
+      "status": "verified",
+      "capabilities": ["full-app", "dpapi", "powershell-5-1", "whisper", "overlay", "keep-awake"],
+      "notes": "In the owner's daily use (September 2026): Windows 11 25H2 (build 26200). 23H2 and 24H2 use the same parts and should behave the same. Home and Pro both work.",
+      "howToSetUp": [
+        "Run the Dayspring installer and follow the setup wizard.",
+        "Keep Windows up to date as usual; Dayspring's settings are kept across updates."
+      ],
+      "links": ["https://support.microsoft.com/windows"],
+      "lastChecked": "2026-09-28",
+      "features": ["settings"]
+    },
+    {
+      "id": "windows-10",
+      "brand": "Microsoft",
+      "model": "Windows 10 (1809 and newer, best on 22H2)",
+      "category": "os",
+      "connection": "local",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": ["full-app", "dpapi", "powershell-5-1", "whisper", "overlay", "keep-awake"],
+      "notes": "Dayspring works on Windows 10. A test script checks that every PowerShell script runs in Windows PowerShell 5.1, every C# helper builds with the .NET Framework compiler that comes with Windows 10, no Windows 11-only features are used, and only Windows' own tar is used. Microsoft ended free support for Windows 10 on October 14, 2025, so it no longer gets security updates unless enrolled in Extended Security Updates; Dayspring still runs, but upgrading to Windows 11 is wise.",
+      "howToSetUp": [
+        "Update Windows 10 to version 22H2 (Settings → Update & Security → Windows Update).",
+        "Run the Dayspring installer and follow the setup wizard."
+      ],
+      "links": ["https://support.microsoft.com/windows"],
+      "lastChecked": "2026-09-28",
+      "features": ["settings"]
+    },
+    {
+      "id": "windows-10-before-1803",
+      "brand": "Microsoft",
+      "model": "Windows 10 versions before 1803",
+      "category": "os",
+      "connection": "local",
+      "offline": true,
+      "status": "not-supported",
+      "reason": "These early Windows 10 versions lack the built-in tar that Dayspring's installer and updates use, and are older than what Dayspring is checked against (1809 and newer). Windows 8.1, 7 and older can't run Node.js 22.13 at all.",
+      "capabilities": [],
+      "notes": "These versions haven't had security updates for years.",
+      "howToSetUp": [
+        "Update Windows 10 to version 22H2 through Windows Update, or move to Windows 11 if the computer supports it.",
+        "Then run the Dayspring installer."
+      ],
+      "links": ["https://support.microsoft.com/windows"],
+      "lastChecked": "2026-09-28",
+      "features": ["settings"]
+    },
+    {
+      "id": "windows-on-arm",
+      "brand": "Microsoft",
+      "model": "Windows 11 on Arm (Snapdragon PCs)",
+      "category": "os",
+      "connection": "local",
+      "offline": true,
+      "status": "untested",
+      "capabilities": [],
+      "notes": "Node.js has Arm builds for Windows, and Windows on Arm can also run x64 programs through emulation. Parts Dayspring ships as x64 programs (ffmpeg, the whisper speech recognition) would run emulated and may be slower. Not tried.",
+      "howToSetUp": [
+        "Run the Dayspring installer and follow the setup wizard.",
+        "If speech recognition is slow, use the browser's speech recognition in Chrome or Edge (Settings → Screen)."
+      ],
+      "links": ["https://support.microsoft.com/windows"],
+      "lastChecked": "2026-09-28",
+      "features": ["settings"]
+    },
+    {
+      "id": "windows-server",
+      "brand": "Microsoft",
+      "model": "Windows Server 2019 / 2022 / 2025",
+      "category": "os",
+      "connection": "local",
+      "offline": true,
+      "status": "untested",
+      "capabilities": [],
+      "notes": "Shares most parts with Windows 10 and 11, but servers often lack desktop audio, a microphone and some desktop features, and are locked down more. Not tried.",
+      "howToSetUp": [
+        "Install the Desktop Experience and turn on the Windows Audio service.",
+        "Run the Dayspring installer and follow the setup wizard."
+      ],
+      "links": ["https://learn.microsoft.com/windows-server/"],
+      "lastChecked": "2026-09-28",
+      "features": ["settings"]
+    },
+    {
+      "id": "macos",
+      "brand": "Apple",
+      "model": "macOS",
+      "category": "os",
+      "connection": "local",
+      "offline": true,
+      "status": "not-supported",
+      "reason": "Dayspring's helpers are Windows-only: PowerShell scripts, C# helpers for the window and overlay, Windows audio, Windows DPAPI for encrypted passwords, and Windows OCR.",
+      "capabilities": [],
+      "notes": "A Mac port would need its own versions of those helpers.",
+      "howToSetUp": [
+        "Run Dayspring on a Windows 10 or 11 computer instead."
+      ],
+      "links": [],
+      "lastChecked": "2026-09-28",
+      "features": ["settings"]
+    },
+    {
+      "id": "linux",
+      "brand": "Linux",
+      "model": "Linux distributions",
+      "category": "os",
+      "connection": "local",
+      "offline": true,
+      "status": "not-supported",
+      "reason": "Dayspring's helpers are Windows-only (PowerShell, C# helpers, Windows audio, DPAPI encryption, Windows OCR).",
+      "capabilities": [],
+      "notes": "Parts of the server may start on Linux for development, but passwords wouldn't be protected the Windows way and many features would be missing.",
+      "howToSetUp": [
+        "Run Dayspring on a Windows 10 or 11 computer instead."
+      ],
+      "links": [],
+      "lastChecked": "2026-09-28",
+      "features": ["settings"]
+    }
+  ]
+}

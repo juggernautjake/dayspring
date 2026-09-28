@@ -6,7 +6,8 @@ Ask Dayspring to find pictures of anything, and they show up on the Dayspring sc
 
 - "Show me pictures of golden retrievers"
 - "Image search for mid-century desk"
-- "Find a transparent PNG of a lantern" · "Find a GIF of a dancing cat" · "Find me wallpapers of mountains"
+- "Find a transparent PNG of a lantern" · "Find me wallpapers of mountains"
+- For GIFs ("show me a GIF of a dancing cat"), Dayspring opens the GIF picker instead. See [GIFs](gifs.md).
 - "What does a capybara look like?"
 
 About 12 pictures show at a time, each with a number, its title and the site it came from.

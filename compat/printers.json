@@ -1,0 +1,874 @@
+{
+  "category": "printers",
+  "label": "3D printers",
+  "description": "3D printers Dayspring can watch and control on the home network or over USB: status, camera, temperatures, pause, resume, cancel and starting a print. Starting a print always needs the owner's yes and a bed-clear check first, because a printer heats up and moves.",
+  "entries": [
+    {
+      "id": "bambu-x1c",
+      "brand": "Bambu Lab",
+      "model": "X1 Carbon",
+      "category": "printers",
+      "connection": "lan",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "status",
+        "camera",
+        "temperatures",
+        "pause",
+        "resume",
+        "cancel",
+        "start-print",
+        "upload",
+        "light",
+        "speed",
+        "ams"
+      ],
+      "notes": "Talks to the printer itself in LAN mode: status and commands over the printer's own MQTT (encrypted, port 8883, user bblp and the access code), files over FTPS (port 990), and the camera as an RTSPS stream (port 322). The Bambu account and cloud are never used. Since 2025, Bambu's firmware (X1 01.08.03 and newer) only accepts control commands from other software when LAN Only Mode AND Developer Mode are both on; without them, status still arrives but pause and start are ignored, and Dayspring says so. Safety: starting a print always needs the owner's yes and a bed-clear check with the camera (heat and motion). Passes Dayspring's simulator tests (September 2026): Status and the camera, and the clear message when Developer Mode is off and the printer refuses commands. Not yet tried on a real one.",
+      "howToSetUp": [
+        "On the printer's screen, open Settings → Network (the WLAN page) and turn on LAN Only Mode.",
+        "On the same page, turn on Developer Mode so Dayspring may send commands.",
+        "Write down the printer's IP address and the Access Code shown there, and the serial number (Settings → Device).",
+        "In Dayspring, open Settings → Printers, choose Bambu Lab, pick the model, and type the IP address, serial number and access code.",
+        "Clear the bed and take a picture of the empty bed when Dayspring asks, so it can check the bed before any print."
+      ],
+      "links": [
+        "https://wiki.bambulab.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "printers"
+      ]
+    },
+    {
+      "id": "bambu-x1",
+      "brand": "Bambu Lab",
+      "model": "X1",
+      "category": "printers",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "status",
+        "camera",
+        "temperatures",
+        "pause",
+        "resume",
+        "cancel",
+        "start-print",
+        "upload",
+        "light",
+        "speed",
+        "ams"
+      ],
+      "notes": "The original X1 works the same way as the X1 Carbon: MQTT on port 8883 with the access code, FTPS for files, and an RTSPS camera stream on port 322. Newer firmware needs LAN Only Mode and Developer Mode on for control from Dayspring. Safety: starting a print always needs the owner's yes and a bed-clear check (heat and motion).",
+      "howToSetUp": [
+        "On the printer's screen, turn on LAN Only Mode and Developer Mode (Settings → Network).",
+        "Note the IP address, the Access Code and the serial number.",
+        "In Dayspring, open Settings → Printers, choose Bambu Lab → X1, and type them in.",
+        "Take a picture of the empty bed when Dayspring asks."
+      ],
+      "links": [
+        "https://wiki.bambulab.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "printers"
+      ]
+    },
+    {
+      "id": "bambu-x1e",
+      "brand": "Bambu Lab",
+      "model": "X1E",
+      "category": "printers",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "status",
+        "camera",
+        "temperatures",
+        "chamber-temperature",
+        "pause",
+        "resume",
+        "cancel",
+        "start-print",
+        "upload",
+        "light",
+        "speed",
+        "ams"
+      ],
+      "notes": "Same local protocol as the X1 Carbon (MQTT 8883 with the access code, FTPS, RTSPS camera on port 322), plus the heated chamber. The X1E is often on business networks: LAN Only Mode and Developer Mode must be allowed on it for Dayspring to send commands. Safety: starting a print always needs the owner's yes and a bed-clear check (heat and motion).",
+      "howToSetUp": [
+        "On the printer's screen, turn on LAN Only Mode and Developer Mode (Settings → Network).",
+        "Note the IP address, the Access Code and the serial number.",
+        "In Dayspring, open Settings → Printers, choose Bambu Lab → X1E, and type them in.",
+        "Take a picture of the empty bed when Dayspring asks."
+      ],
+      "links": [
+        "https://wiki.bambulab.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "printers"
+      ]
+    },
+    {
+      "id": "bambu-p1s",
+      "brand": "Bambu Lab",
+      "model": "P1S",
+      "category": "printers",
+      "connection": "lan",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "status",
+        "camera",
+        "temperatures",
+        "pause",
+        "resume",
+        "cancel",
+        "start-print",
+        "upload",
+        "light",
+        "speed",
+        "ams"
+      ],
+      "notes": "Local MQTT (port 8883, user bblp, the access code) and FTPS for files. The P1S camera isn't an RTSP stream: it sends JPEG pictures over an encrypted connection on port 6000, about one a second, which Dayspring reads directly. P1 firmware 01.08.02 and newer needs LAN Only Mode and Developer Mode for control from Dayspring. Safety: starting a print always needs the owner's yes and a bed-clear check (heat and motion). Passes Dayspring's simulator tests (September 2026): The whole path: status, the camera, commands and starting a print (with the bed check and your yes). Not yet tried on a real one.",
+      "howToSetUp": [
+        "On the printer's screen, turn on LAN Only Mode and Developer Mode (Settings → Network).",
+        "Note the IP address, the Access Code and the serial number.",
+        "In Dayspring, open Settings → Printers, choose Bambu Lab → P1S, and type them in.",
+        "Take a picture of the empty bed when Dayspring asks."
+      ],
+      "links": [
+        "https://wiki.bambulab.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "printers"
+      ]
+    },
+    {
+      "id": "bambu-p1p",
+      "brand": "Bambu Lab",
+      "model": "P1P",
+      "category": "printers",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "status",
+        "camera",
+        "temperatures",
+        "pause",
+        "resume",
+        "cancel",
+        "start-print",
+        "upload",
+        "speed",
+        "ams"
+      ],
+      "notes": "Same as the P1S: MQTT on 8883 with the access code, FTPS for files, and JPEG camera pictures on port 6000. The P1P's camera is optional on some units and it has no enclosure. Newer firmware needs LAN Only Mode and Developer Mode for control. Safety: starting a print always needs the owner's yes and a bed-clear check (heat and motion).",
+      "howToSetUp": [
+        "On the printer's screen, turn on LAN Only Mode and Developer Mode (Settings → Network).",
+        "Note the IP address, the Access Code and the serial number.",
+        "In Dayspring, open Settings → Printers, choose Bambu Lab → P1P, and type them in.",
+        "Take a picture of the empty bed when Dayspring asks."
+      ],
+      "links": [
+        "https://wiki.bambulab.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "printers"
+      ]
+    },
+    {
+      "id": "bambu-p2s",
+      "brand": "Bambu Lab",
+      "model": "P2S",
+      "category": "printers",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "status",
+        "camera",
+        "temperatures",
+        "pause",
+        "resume",
+        "cancel",
+        "start-print",
+        "upload",
+        "light",
+        "speed",
+        "ams"
+      ],
+      "notes": "Uses the same local MQTT and FTPS as the other Bambu printers; its camera is an RTSPS stream on port 322 like the X1. LAN Only Mode and Developer Mode are needed for control. Safety: starting a print always needs the owner's yes and a bed-clear check (heat and motion).",
+      "howToSetUp": [
+        "On the printer's screen, turn on LAN Only Mode and Developer Mode (Settings → Network).",
+        "Note the IP address, the Access Code and the serial number.",
+        "In Dayspring, open Settings → Printers, choose Bambu Lab → P2S, and type them in.",
+        "Take a picture of the empty bed when Dayspring asks."
+      ],
+      "links": [
+        "https://wiki.bambulab.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "printers"
+      ]
+    },
+    {
+      "id": "bambu-a1",
+      "brand": "Bambu Lab",
+      "model": "A1",
+      "category": "printers",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "status",
+        "camera",
+        "temperatures",
+        "pause",
+        "resume",
+        "cancel",
+        "start-print",
+        "upload",
+        "speed",
+        "ams-lite"
+      ],
+      "notes": "Local MQTT (8883 with the access code), FTPS for files, and JPEG camera pictures on port 6000. A1 firmware 01.05 and newer needs LAN Only Mode and Developer Mode for control from Dayspring. The A1 is an open bed-slinger, so the bed-clear check matters even more. Safety: starting a print always needs the owner's yes and a bed-clear check (heat and motion).",
+      "howToSetUp": [
+        "On the printer's screen, turn on LAN Only Mode and Developer Mode (Settings → Network).",
+        "Note the IP address, the Access Code and the serial number.",
+        "In Dayspring, open Settings → Printers, choose Bambu Lab → A1, and type them in.",
+        "Take a picture of the empty bed when Dayspring asks."
+      ],
+      "links": [
+        "https://wiki.bambulab.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "printers"
+      ]
+    },
+    {
+      "id": "bambu-a1-mini",
+      "brand": "Bambu Lab",
+      "model": "A1 mini",
+      "category": "printers",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "status",
+        "camera",
+        "temperatures",
+        "pause",
+        "resume",
+        "cancel",
+        "start-print",
+        "upload",
+        "speed",
+        "ams-lite"
+      ],
+      "notes": "Same as the A1: MQTT on 8883 with the access code, FTPS for files, JPEG camera pictures on port 6000, and LAN Only Mode plus Developer Mode needed for control on newer firmware. Safety: starting a print always needs the owner's yes and a bed-clear check (heat and motion).",
+      "howToSetUp": [
+        "On the printer's screen, turn on LAN Only Mode and Developer Mode (Settings → Network).",
+        "Note the IP address, the Access Code and the serial number.",
+        "In Dayspring, open Settings → Printers, choose Bambu Lab → A1 mini, and type them in.",
+        "Take a picture of the empty bed when Dayspring asks."
+      ],
+      "links": [
+        "https://wiki.bambulab.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "printers"
+      ]
+    },
+    {
+      "id": "bambu-h2d",
+      "brand": "Bambu Lab",
+      "model": "H2D",
+      "category": "printers",
+      "connection": "lan",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "status",
+        "camera",
+        "temperatures",
+        "chamber-temperature",
+        "dual-nozzle",
+        "pause",
+        "resume",
+        "cancel",
+        "start-print",
+        "upload",
+        "light",
+        "speed",
+        "ams"
+      ],
+      "notes": "Local MQTT (8883 with the access code), FTPS for files, and an RTSPS camera stream on port 322. The H2D's camera also needs \"LAN Only Liveview\" turned on at the printer. It has two nozzles and a heated chamber; Dayspring refuses temperatures above the model's safe limits. LAN Only Mode and Developer Mode are needed for control. Safety: starting a print always needs the owner's yes and a bed-clear check (heat and motion). Passes Dayspring's simulator tests (September 2026): Reading its status and the print command it expects. Not yet tried on a real one.",
+      "howToSetUp": [
+        "On the printer's screen, turn on LAN Only Mode and Developer Mode (Settings → Network).",
+        "Also turn on LAN Only Liveview so the camera can be seen on the home network.",
+        "Note the IP address, the Access Code and the serial number.",
+        "In Dayspring, open Settings → Printers, choose Bambu Lab → H2D, and type them in.",
+        "Take a picture of the empty bed when Dayspring asks."
+      ],
+      "links": [
+        "https://wiki.bambulab.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "printers"
+      ]
+    },
+    {
+      "id": "bambu-h2s",
+      "brand": "Bambu Lab",
+      "model": "H2S",
+      "category": "printers",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "status",
+        "camera",
+        "temperatures",
+        "chamber-temperature",
+        "pause",
+        "resume",
+        "cancel",
+        "start-print",
+        "upload",
+        "light",
+        "speed",
+        "ams"
+      ],
+      "notes": "The single-nozzle sibling of the H2D: the same local MQTT, FTPS and RTSPS camera (with LAN Only Liveview on). LAN Only Mode and Developer Mode are needed for control. Safety: starting a print always needs the owner's yes and a bed-clear check (heat and motion).",
+      "howToSetUp": [
+        "On the printer's screen, turn on LAN Only Mode, Developer Mode and LAN Only Liveview.",
+        "Note the IP address, the Access Code and the serial number.",
+        "In Dayspring, open Settings → Printers, choose Bambu Lab → H2S, and type them in.",
+        "Take a picture of the empty bed when Dayspring asks."
+      ],
+      "links": [
+        "https://wiki.bambulab.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "printers"
+      ]
+    },
+    {
+      "id": "creality-ender-5-plus",
+      "brand": "Creality",
+      "model": "Ender 5 Plus (USB)",
+      "category": "printers",
+      "connection": "usb",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "status",
+        "temperatures",
+        "pause",
+        "resume",
+        "cancel",
+        "start-print",
+        "fans",
+        "speed",
+        "gcode"
+      ],
+      "notes": "Plugged straight into this computer with a USB cable: Dayspring speaks Marlin G-code over the serial port, line by line with checksums, and watches for thermal runaway and other printer errors. It works, but OctoPrint or Klipper on a Raspberry Pi is more reliable: here this computer feeds every line, so if Windows sleeps, restarts for an update, or the cable is bumped, the print stops. Dayspring keeps the computer awake while printing. There's no built-in camera; add a USB webcam in Settings → Cameras if you want one. Safety: starting a print always needs the owner's yes and a bed-clear check (heat and motion). Passes Dayspring's simulator tests (September 2026): Marlin over USB. Not yet tried on a real one.",
+      "howToSetUp": [
+        "Connect the printer to this computer with a USB cable and turn the printer on.",
+        "In Dayspring, open Settings → Printers, choose Marlin over USB, and pick Creality Ender 5 Plus.",
+        "Pick the printer's USB port (a COM number) and leave the speed at 115200.",
+        "Turn off Windows updates' automatic restarts during printing hours, and keep the cable where it won't be bumped."
+      ],
+      "links": [
+        "https://marlinfw.org/",
+        "https://www.creality.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "printers"
+      ]
+    },
+    {
+      "id": "creality-ender-5-plus-octoprint",
+      "brand": "Creality",
+      "model": "Ender 5 Plus (OctoPrint)",
+      "category": "printers",
+      "connection": "lan",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "status",
+        "camera",
+        "temperatures",
+        "pause",
+        "resume",
+        "cancel",
+        "start-print",
+        "upload",
+        "fans",
+        "speed",
+        "gcode"
+      ],
+      "notes": "The Ender 5 Plus plugged into a Raspberry Pi running OctoPrint. Dayspring uses OctoPrint's REST API with an API key: status every few seconds, pause, resume, cancel, temperatures, fan, upload-and-print, and the OctoPrint webcam as the printer's camera. The print keeps going even if this computer sleeps. Safety: starting a print always needs the owner's yes and a bed-clear check (heat and motion). Passes Dayspring's simulator tests (September 2026): OctoPrint's API. Not yet tried on a real one.",
+      "howToSetUp": [
+        "Set up OctoPrint on a Raspberry Pi (OctoPi) and connect the printer to the Pi with USB.",
+        "In OctoPrint, open Settings → Application Keys and make a key named Dayspring.",
+        "In Dayspring, open Settings → Printers, choose OctoPrint, and type the Pi's address and the key.",
+        "Take a picture of the empty bed when Dayspring asks."
+      ],
+      "links": [
+        "https://docs.octoprint.org/en/master/api/",
+        "https://octoprint.org/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "printers"
+      ]
+    },
+    {
+      "id": "creality-ender-5-plus-klipper",
+      "brand": "Creality",
+      "model": "Ender 5 Plus (Klipper + Moonraker)",
+      "category": "printers",
+      "connection": "lan",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "status",
+        "camera",
+        "temperatures",
+        "pause",
+        "resume",
+        "cancel",
+        "start-print",
+        "upload",
+        "fans",
+        "speed",
+        "gcode"
+      ],
+      "notes": "The Ender 5 Plus running Klipper firmware with Moonraker on a Raspberry Pi (usually with Mainsail or Fluidd). Dayspring uses Moonraker's API (an API key is optional): status, pause, resume, cancel, temperatures, fans, upload-and-print, and the webcam's snapshot. Flashing Klipper replaces the stock firmware; follow Klipper's guide for this printer. Safety: starting a print always needs the owner's yes and a bed-clear check (heat and motion). Passes Dayspring's simulator tests (September 2026): Moonraker's API (Klipper). Not yet tried on a real one.",
+      "howToSetUp": [
+        "Install Klipper, Moonraker and Mainsail (or Fluidd) on a Raspberry Pi, for example with the MainsailOS image.",
+        "Flash Klipper to the printer following Klipper's instructions for the Ender 5 Plus.",
+        "In Dayspring, open Settings → Printers, choose Klipper (Moonraker), and type the Pi's address.",
+        "If Moonraker is set to need a key, paste it too.",
+        "Take a picture of the empty bed when Dayspring asks."
+      ],
+      "links": [
+        "https://moonraker.readthedocs.io/",
+        "https://www.klipper3d.org/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "printers"
+      ]
+    },
+    {
+      "id": "creality-ender-3-usb",
+      "brand": "Creality",
+      "model": "Ender 3 / V2 / S1 (USB)",
+      "category": "printers",
+      "connection": "usb",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "status",
+        "temperatures",
+        "pause",
+        "resume",
+        "cancel",
+        "start-print",
+        "fans",
+        "speed",
+        "gcode"
+      ],
+      "notes": "Marlin printers over USB work the same way as the Ender 5 Plus: this computer sends the G-code line by line, so sleep, restarts or a bumped cable stop the print. OctoPrint or Klipper on a Pi is the more reliable way. Safety: starting a print always needs the owner's yes and a bed-clear check (heat and motion).",
+      "howToSetUp": [
+        "Connect the printer to this computer with a USB cable.",
+        "In Dayspring, open Settings → Printers, choose Marlin over USB, and pick Creality Ender 3.",
+        "Pick the printer's COM port."
+      ],
+      "links": [
+        "https://marlinfw.org/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "printers"
+      ]
+    },
+    {
+      "id": "prusa-mk4s",
+      "brand": "Prusa Research",
+      "model": "MK4S",
+      "category": "printers",
+      "connection": "lan",
+      "offline": true,
+      "status": "untested",
+      "capabilities": [
+        "status",
+        "temperatures",
+        "pause",
+        "resume",
+        "cancel"
+      ],
+      "notes": "The MK4S has PrusaLink built in (a local web API on the home network), but Dayspring doesn't have a PrusaLink connection yet. The way that should work today is OctoPrint on a Raspberry Pi connected to the printer's USB port, which Dayspring already supports; that way hasn't been tried with an MK4S. Safety: starting a print always needs the owner's yes and a bed-clear check (heat and motion).",
+      "howToSetUp": [
+        "Connect a Raspberry Pi running OctoPrint to the printer's USB port.",
+        "In OctoPrint, make an API key under Settings → Application Keys.",
+        "In Dayspring, open Settings → Printers, choose OctoPrint, and type the Pi's address and the key."
+      ],
+      "links": [
+        "https://help.prusa3d.com/",
+        "https://octoprint.org/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "printers"
+      ]
+    },
+    {
+      "id": "prusa-core-one",
+      "brand": "Prusa Research",
+      "model": "CORE One",
+      "category": "printers",
+      "connection": "lan",
+      "offline": true,
+      "status": "untested",
+      "capabilities": [
+        "status",
+        "temperatures",
+        "pause",
+        "resume",
+        "cancel"
+      ],
+      "notes": "Uses the same firmware family as the MK4S, with PrusaLink on the home network. Dayspring has no PrusaLink connection yet, so it hasn't been tried; OctoPrint over USB is the likely way for now. Safety: starting a print always needs the owner's yes and a bed-clear check (heat and motion).",
+      "howToSetUp": [
+        "Connect a Raspberry Pi running OctoPrint to the printer's USB port.",
+        "In Dayspring, open Settings → Printers, choose OctoPrint, and type the Pi's address and API key."
+      ],
+      "links": [
+        "https://help.prusa3d.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "printers"
+      ]
+    },
+    {
+      "id": "prusa-mini-plus",
+      "brand": "Prusa Research",
+      "model": "MINI+",
+      "category": "printers",
+      "connection": "lan",
+      "offline": true,
+      "status": "untested",
+      "capabilities": [
+        "status",
+        "temperatures",
+        "pause",
+        "resume",
+        "cancel"
+      ],
+      "notes": "The MINI+ has PrusaLink and Prusa Connect with its network board. Dayspring has no PrusaLink connection yet and it hasn't been tried. Safety: starting a print always needs the owner's yes and a bed-clear check (heat and motion).",
+      "howToSetUp": [
+        "Until PrusaLink is built in, use OctoPrint on a Raspberry Pi connected to the printer.",
+        "In Dayspring, open Settings → Printers, choose OctoPrint, and type the Pi's address and API key."
+      ],
+      "links": [
+        "https://help.prusa3d.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "printers"
+      ]
+    },
+    {
+      "id": "prusa-mk3s-plus",
+      "brand": "Prusa Research",
+      "model": "MK3S+ (OctoPrint)",
+      "category": "printers",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "status",
+        "camera",
+        "temperatures",
+        "pause",
+        "resume",
+        "cancel",
+        "start-print",
+        "upload",
+        "fans",
+        "gcode"
+      ],
+      "notes": "The MK3S+ is commonly run with OctoPrint on a Raspberry Pi (Prusa documents a Pi Zero on the board or a Pi over USB). Dayspring talks to OctoPrint's API, so it should work like any OctoPrint printer. Safety: starting a print always needs the owner's yes and a bed-clear check (heat and motion).",
+      "howToSetUp": [
+        "Set up OctoPrint on a Raspberry Pi connected to the printer.",
+        "In OctoPrint, make an API key under Settings → Application Keys.",
+        "In Dayspring, open Settings → Printers, choose OctoPrint, and type the Pi's address and the key.",
+        "Take a picture of the empty bed when Dayspring asks."
+      ],
+      "links": [
+        "https://help.prusa3d.com/",
+        "https://docs.octoprint.org/en/master/api/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "printers"
+      ]
+    },
+    {
+      "id": "octoprint-any-printer",
+      "brand": "OctoPrint",
+      "model": "Any printer run by OctoPrint",
+      "category": "printers",
+      "connection": "lan",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "status",
+        "camera",
+        "temperatures",
+        "pause",
+        "resume",
+        "cancel",
+        "start-print",
+        "upload",
+        "fans",
+        "speed",
+        "gcode"
+      ],
+      "notes": "Any printer that OctoPrint can drive works through OctoPrint's REST API with an API key, including the OctoPrint webcam as the printer's camera. Safety: starting a print always needs the owner's yes and a bed-clear check (heat and motion). Passes Dayspring's simulator tests (September 2026): OctoPrint's API. Not yet tried on a real one.",
+      "howToSetUp": [
+        "In OctoPrint, open Settings → Application Keys and make a key named Dayspring.",
+        "In Dayspring, open Settings → Printers, choose OctoPrint, and type OctoPrint's address and the key."
+      ],
+      "links": [
+        "https://docs.octoprint.org/en/master/api/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "printers"
+      ]
+    },
+    {
+      "id": "voron-klipper",
+      "brand": "Voron",
+      "model": "Voron (Klipper + Moonraker)",
+      "category": "printers",
+      "connection": "lan",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "status",
+        "camera",
+        "temperatures",
+        "pause",
+        "resume",
+        "cancel",
+        "start-print",
+        "upload",
+        "fans",
+        "speed",
+        "gcode"
+      ],
+      "notes": "Voron printers run Klipper with Moonraker (Mainsail or Fluidd), the same API Dayspring uses for any Klipper printer. Safety: starting a print always needs the owner's yes and a bed-clear check (heat and motion). Passes Dayspring's simulator tests (September 2026): Moonraker's API (Klipper). Not yet tried on a real one.",
+      "howToSetUp": [
+        "In Dayspring, open Settings → Printers, choose Klipper (Moonraker), and type the printer's address (the one you open Mainsail or Fluidd with).",
+        "If Moonraker needs an API key, paste it too.",
+        "Take a picture of the empty bed when Dayspring asks."
+      ],
+      "links": [
+        "https://docs.vorondesign.com/",
+        "https://moonraker.readthedocs.io/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "printers"
+      ]
+    },
+    {
+      "id": "elegoo-neptune-4-pro",
+      "brand": "Elegoo",
+      "model": "Neptune 4 Pro",
+      "category": "printers",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "status",
+        "camera",
+        "temperatures",
+        "pause",
+        "resume",
+        "cancel",
+        "start-print",
+        "upload",
+        "fans",
+        "speed",
+        "gcode"
+      ],
+      "notes": "The Neptune 4 series ships with Klipper and Moonraker (Elegoo's Fluidd page on the printer), so Dayspring's Klipper connection should work without changing firmware. Not tried with a real one yet. Safety: starting a print always needs the owner's yes and a bed-clear check (heat and motion).",
+      "howToSetUp": [
+        "Connect the printer to Wi-Fi or Ethernet from its screen and note its IP address.",
+        "In Dayspring, open Settings → Printers, choose Klipper (Moonraker), and type that address.",
+        "Take a picture of the empty bed when Dayspring asks."
+      ],
+      "links": [
+        "https://www.elegoo.com/",
+        "https://moonraker.readthedocs.io/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "printers"
+      ]
+    },
+    {
+      "id": "creality-k1-max",
+      "brand": "Creality",
+      "model": "K1 Max",
+      "category": "printers",
+      "connection": "lan",
+      "offline": true,
+      "status": "untested",
+      "capabilities": [
+        "status",
+        "camera",
+        "temperatures",
+        "pause",
+        "resume",
+        "cancel"
+      ],
+      "notes": "The K1 Max runs Creality OS, which is built on Klipper, but the stock firmware doesn't open Moonraker to other apps. After enabling root (Creality offers it in the printer's settings) and installing Moonraker with a community helper script, Dayspring's Klipper connection should be able to talk to it. Rooting is at the owner's own risk and hasn't been tried with Dayspring. Safety: starting a print always needs the owner's yes and a bed-clear check (heat and motion).",
+      "howToSetUp": [
+        "Only if you're comfortable with it: enable root on the printer and install Moonraker and Mainsail or Fluidd with a community helper script.",
+        "In Dayspring, open Settings → Printers, choose Klipper (Moonraker), and type the printer's address."
+      ],
+      "links": [
+        "https://www.creality.com/",
+        "https://moonraker.readthedocs.io/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "printers"
+      ]
+    },
+    {
+      "id": "creality-k2-plus",
+      "brand": "Creality",
+      "model": "K2 Plus",
+      "category": "printers",
+      "connection": "lan",
+      "offline": true,
+      "status": "untested",
+      "capabilities": [
+        "status",
+        "camera",
+        "temperatures"
+      ],
+      "notes": "The K2 Plus runs Creality OS (Klipper-based) and is mainly controlled with Creality Print and the Creality Cloud app. Whether Moonraker can be reached depends on firmware and rooting; it hasn't been tried with Dayspring. Safety: starting a print always needs the owner's yes and a bed-clear check (heat and motion).",
+      "howToSetUp": [
+        "If the printer exposes Moonraker (after rooting), open Settings → Printers in Dayspring, choose Klipper (Moonraker), and type its address.",
+        "Otherwise keep using Creality Print; Dayspring can still watch it with a separate camera in Settings → Cameras."
+      ],
+      "links": [
+        "https://www.creality.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "printers"
+      ]
+    },
+    {
+      "id": "creality-ender-3-v3-ke",
+      "brand": "Creality",
+      "model": "Ender 3 V3 KE",
+      "category": "printers",
+      "connection": "lan",
+      "offline": true,
+      "status": "untested",
+      "capabilities": [
+        "status",
+        "temperatures",
+        "pause",
+        "resume",
+        "cancel"
+      ],
+      "notes": "Runs Creality OS (Klipper-based) like the K1. Moonraker is reachable only after enabling root and installing it; not tried with Dayspring. Safety: starting a print always needs the owner's yes and a bed-clear check (heat and motion).",
+      "howToSetUp": [
+        "Only if you're comfortable with it: enable root on the printer and install Moonraker with a community helper script.",
+        "In Dayspring, open Settings → Printers, choose Klipper (Moonraker), and type the printer's address."
+      ],
+      "links": [
+        "https://www.creality.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "printers"
+      ]
+    },
+    {
+      "id": "anycubic-kobra-3",
+      "brand": "Anycubic",
+      "model": "Kobra 3",
+      "category": "printers",
+      "connection": "cloud",
+      "offline": false,
+      "status": "not-supported",
+      "reason": "Anycubic controls the Kobra 3 through its own app, cloud and slicer; there is no documented local API that Dayspring can use, and Dayspring has no Anycubic connection.",
+      "capabilities": [],
+      "notes": "Community firmware exists that adds Klipper-style access, but it is unofficial and replaces parts of the printer's software; Dayspring doesn't rely on it. Safety: starting a print always needs the owner's yes and a bed-clear check (heat and motion).",
+      "howToSetUp": [
+        "Keep printing with the Anycubic app or Anycubic Slicer.",
+        "To let Dayspring watch the print, point a USB webcam or IP camera at the printer and add it in Settings → Cameras."
+      ],
+      "links": [
+        "https://www.anycubic.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "printers"
+      ]
+    },
+    {
+      "id": "flashforge-adventurer-5m",
+      "brand": "Flashforge",
+      "model": "Adventurer 5M / 5M Pro",
+      "category": "printers",
+      "connection": "lan",
+      "offline": true,
+      "status": "untested",
+      "capabilities": [
+        "status",
+        "camera"
+      ],
+      "notes": "Flashforge's firmware has its own local network interface used by Flashforge's slicer, which Dayspring doesn't speak. Community Klipper mods add Moonraker, after which Dayspring's Klipper connection should work; not tried. Safety: starting a print always needs the owner's yes and a bed-clear check (heat and motion).",
+      "howToSetUp": [
+        "Keep using Orca-Flashforge or Flashforge's app for printing.",
+        "If you install a Klipper mod that adds Moonraker, add the printer in Settings → Printers as Klipper (Moonraker).",
+        "The printer's camera can also be added in Settings → Cameras if it has a stream address."
+      ],
+      "links": [
+        "https://www.flashforge.com/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "printers"
+      ]
+    }
+  ]
+}

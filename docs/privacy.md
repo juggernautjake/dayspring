@@ -26,6 +26,8 @@ These are **never** included when Dayspring is updated, exported or shared. Upda
 | Spotify / YouTube | What you play | Spotify / YouTube, under your own account |
 | Checking for updates | A request for the latest version number | GitHub |
 | A meeting's summary (with a cloud AI brain) | The words of that meeting's notes, to write the summary | That AI provider |
+| Email you connect | Your mailbox's sign-in or app password (encrypted on this computer), and the emails you read, write and send | Your email provider (Google, Microsoft, Yahoo, Apple…) |
+| You ask the AI about an email (with a cloud AI brain) | That email's text, only when your question needs it (Settings → Email → Privacy can limit it to who/what/when, or nothing) | That AI provider |
 
 Each AI and voice provider has its own privacy policy and data-use terms for API customers, including whether they keep or train on what you send. Check them if this matters to you. If you want nothing to leave your computer, use Ollama.
 

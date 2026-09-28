@@ -1,0 +1,69 @@
+{
+ "query": "dancing cat gif",
+ "results": [
+  {
+   "height": 360,
+   "width": 480,
+   "image": "https://media.giphy.fixture.test/media/gA2/giphy.gif",
+   "thumbnail": "https://tse.fixture.test/m/w0t.jpg",
+   "title": "Cat Dance Party - GIPHY",
+   "url": "https://giphy.com/gifs/gA2",
+   "source": "Bing"
+  },
+  {
+   "height": 360,
+   "width": 480,
+   "image": "https://web.fixture.test/m/w1.gif",
+   "thumbnail": "https://tse.fixture.test/m/w1t.jpg",
+   "title": "dancing cat animated gif",
+   "url": "https://blog.fixture.test/cats",
+   "source": "Bing"
+  },
+  {
+   "height": 300,
+   "width": 300,
+   "image": "https://web.fixture.test/m/w2.gif",
+   "thumbnail": "https://tse.fixture.test/m/w2t.jpg",
+   "title": "Cat dance loop.gif",
+   "url": "https://blog.fixture.test/loop",
+   "source": "Bing"
+  },
+  {
+   "height": 360,
+   "width": 480,
+   "image": "https://web.fixture.test/m/w3.jpg",
+   "thumbnail": "https://tse.fixture.test/m/w3t.jpg",
+   "title": "Photo of a cat (not a GIF)",
+   "url": "https://blog.fixture.test/photo",
+   "source": "Bing"
+  },
+  {
+   "height": 360,
+   "width": 480,
+   "image": "https://web.fixture.test/m/w4.gif",
+   "thumbnail": "https://tse.fixture.test/m/w4t.jpg",
+   "title": "Dancing kitty | Tumblr",
+   "url": "https://tumblr.fixture.test/post/4",
+   "source": "Bing"
+  },
+  {
+   "height": 360,
+   "width": 480,
+   "image": "https://web.fixture.test/m/w5.gif",
+   "thumbnail": "https://tse.fixture.test/m/w5t.jpg",
+   "title": "Party cat",
+   "url": "https://blog.fixture.test/party",
+   "source": "Bing"
+  },
+  {
+   "height": 225,
+   "width": 400,
+   "image": "https://web.fixture.test/m/w6.gif",
+   "thumbnail": "https://tse.fixture.test/m/w6t.jpg",
+   "title": "Cat jam",
+   "url": "https://blog.fixture.test/jam",
+   "source": "Bing"
+  }
+ ],
+ "next": "i.js?q=dancing+cat&s=100"
+}

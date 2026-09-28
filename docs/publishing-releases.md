@@ -68,6 +68,16 @@ node scripts/release.mjs
 
 This runs the export and privacy scan again, then makes `dist-out\Dayspring.zip` (inside your working copy's app folder) and checks that it contains the program and no personal files. It ends by printing the exact publish steps. It never uploads anything by itself. Write a few friendly lines about what's new to paste into the release.
 
+**Two channels.** That is the **production** release (`--channel stable`, the default): stable and beta features, a normal release marked Latest. A **development** release has everything, including features still being built:
+
+```
+node scripts/release.mjs --channel dev --tag v1.7.0-dev.1
+```
+
+It makes `dist-out\Dayspring-dev.zip` from a separate export folder (`dayspring-app-dev`, never the public repo's, because its `package.json` carries the `-dev` version) and prints a `gh release create … --prerelease --latest=false` command. Production copies never see pre-releases; copies on the Development channel (Settings → Updates → Which versions) do. Both channels run the privacy scan and the same checks, and both write `build-info.json` (`{ channel, version, commit }`) into the zip: that is how an install knows which features it has ([feature status](features-status.md)).
+
+**Promotions.** Before a production release, export the owner's results from the Testing page and run `node scripts/promote-features.mjs <results.md>`, then `node scripts/gen-feature-docs.mjs`. Every feature whose tests all passed becomes stable in `lib/features.mjs` ([testing checklist](testing-checklist.md)).
+
 ### 6. Publish
 
 With Git:

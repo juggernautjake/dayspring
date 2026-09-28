@@ -54,7 +54,7 @@ Step-by-step with pictures and fixes: **[Installing Dayspring](docs/install.md)*
 - **🎧 Tune in**: it listens to your headset during a call or game and answers when someone says its name. Speech-to-text runs on your own computer.
 - **A Discord bot** that joins your server's voice channel as its own member.
 - **Your phone**: texts and notifications announced through Microsoft Phone Link (iPhone and Android).
-- **Connected apps**: Google Calendar and Gmail, Outlook and Microsoft To Do, Notion, Todoist, news and RSS, Home Assistant (lights, thermostats), webhooks (IFTTT, Zapier), and severe weather alerts. It writes drafts but never sends email on its own.
+- **Connected apps**: Google Calendar and Gmail, Outlook and Microsoft To Do, Notion, Todoist, news and RSS, Home Assistant (lights, thermostats), webhooks (IFTTT, Zapier), and severe weather alerts. Email from Gmail, Outlook, Yahoo, iCloud or any other mailbox in its Mail window, sent only when you press Send or say yes.
 - **Documents read aloud, summarized and explained**: Word, PDF, PowerPoint, Excel, CSV and more. "Read me the lease", "summarize my resume".
 - **Your files, programs and a browser it can use for you**, each only if you switch it on, with a backup before any change and the Recycle Bin for deletes.
 

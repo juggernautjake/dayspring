@@ -1,0 +1,478 @@
+{
+  "category": "led-strips",
+  "label": "LED strips",
+  "description": "LED strips and their controllers: colour, brightness, effects and segments. WLED is the recommended choice and Dayspring talks to it directly; Bluetooth-only strips are coming through this PC's Bluetooth or ESPHome Bluetooth proxies.",
+  "entries": [
+    {
+      "id": "wled",
+      "brand": "WLED (open firmware)",
+      "model": "ESP32 / ESP8266 LED controllers running WLED",
+      "category": "led-strips",
+      "connection": "lan",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "effects",
+        "segments",
+        "music-sync",
+        "scenes"
+      ],
+      "notes": "Recommended. WLED is free firmware for small Wi-Fi LED controllers that drive addressable strips (WS2812B, SK6812 and similar). Dayspring talks to it directly on your network: no account, no cloud, over a hundred built-in effects, and presets you save in WLED. Passes Dayspring's simulator tests (September 2026): WLED's own local controls. Not yet tried on a real one.",
+      "howToSetUp": [
+        "Get a controller with WLED already installed (see the next entry) or install it on an ESP32 with the WLED web installer.",
+        "Connect it to your Wi-Fi (the WLED app or its WLED-AP setup network) and set the LED count and type in its settings.",
+        "Reserve its IP address in your router.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick WLED and enter the IP address (the WLED app lists it).",
+        "Name it (for example \"shelf lights\") and test \"shelf lights blue\"."
+      ],
+      "links": [
+        "https://kno.wled.ge",
+        "https://kno.wled.ge/interfaces/json-api/",
+        "https://www.home-assistant.io/integrations/wled/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "wled-prebuilt-controller",
+      "brand": "Various (QuinLED, Athom, Gledopto and others)",
+      "model": "Ready-made controllers sold with WLED installed",
+      "category": "led-strips",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "effects",
+        "segments",
+        "music-sync"
+      ],
+      "notes": "The easiest way to get a WLED strip: these boxes come with WLED already on them, often with a proper power input and fuse. Once on your Wi-Fi they work exactly like the WLED entry.",
+      "howToSetUp": [
+        "Connect the strip and power supply as the controller's instructions show (match the strip's voltage).",
+        "Join the controller to your Wi-Fi from its WLED-AP setup network or the WLED app.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick WLED and enter the IP address."
+      ],
+      "links": [
+        "https://kno.wled.ge"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "govee-lan-strip",
+      "brand": "Govee",
+      "model": "Govee Wi-Fi strips with LAN Control",
+      "category": "led-strips",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "color-temperature"
+      ],
+      "notes": "Some Govee Wi-Fi strips support Govee's local LAN API, but only the supported models, and only after you turn on LAN Control in the Govee app. Home Assistant's Govee lights local integration uses it. Govee's own effects and music modes aren't available over the local API.",
+      "howToSetUp": [
+        "Set up the strip in the Govee Home app.",
+        "Open the strip's settings in the Govee app and turn on LAN Control. If there's no such switch, your model doesn't support local control.",
+        "In Home Assistant, add the Govee lights local integration; it finds the strip.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the strip."
+      ],
+      "links": [
+        "https://www.govee.com",
+        "https://www.home-assistant.io/integrations/govee_light_local/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "govee-ble-strip",
+      "brand": "Govee",
+      "model": "Bluetooth-only Govee strips",
+      "category": "led-strips",
+      "connection": "ble",
+      "offline": true,
+      "status": "untested",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color"
+      ],
+      "notes": "Govee strips without Wi-Fi are controlled by the app over Bluetooth. Their commands have been worked out by the community but vary by model. Dayspring's Bluetooth strip support (through this PC's Bluetooth or ESPHome Bluetooth proxies) is still being built, and no Bluetooth-only Govee strip has been tried.",
+      "howToSetUp": [
+        "Keep the strip within Bluetooth range of this PC, or place an ESPHome Bluetooth proxy near it.",
+        "When Bluetooth strips arrive in Dayspring, open Settings → Devices, choose Add a device and pick Bluetooth LED strips; Dayspring will look for it.",
+        "Until then, if you want Dayspring control now, choose a WLED controller or a Govee strip with LAN Control."
+      ],
+      "links": [
+        "https://www.govee.com",
+        "https://esphome.github.io/bluetooth-proxies/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "magichome-wifi-strip",
+      "brand": "MagicHome / Zengge",
+      "model": "MagicHome Wi-Fi LED controllers",
+      "category": "led-strips",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "effects"
+      ],
+      "notes": "Cheap Wi-Fi controllers that use the Magic Home Pro app. They take local commands on TCP port 5577, which Home Assistant's Magic Home integration (flux_led) uses. Dayspring reaches them through Home Assistant for now.",
+      "howToSetUp": [
+        "Set up the controller in the Magic Home Pro app so it's on your Wi-Fi.",
+        "In Home Assistant, add the Magic Home integration; it finds the controller.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the strip."
+      ],
+      "links": [
+        "https://www.home-assistant.io/integrations/flux_led/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "triones-ble-strip",
+      "brand": "Triones / \"Happy Lighting\"",
+      "model": "Bluetooth LED controllers used with the Happy Lighting app",
+      "category": "led-strips",
+      "connection": "ble",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "effects"
+      ],
+      "notes": "A very common, simple Bluetooth protocol that is well documented by the community, and Home Assistant's LED BLE integration controls many of these controllers today. Dayspring's own Bluetooth support is planned. Not yet tried on real hardware; cheap controllers vary.",
+      "howToSetUp": [
+        "Close the Happy Lighting app on your phone (a Bluetooth strip usually accepts only one connection at a time).",
+        "Make sure Home Assistant has Bluetooth (the server's Bluetooth or an ESPHome Bluetooth proxy near the strip).",
+        "In Home Assistant, add the LED BLE integration when it offers the strip.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the strip."
+      ],
+      "links": [
+        "https://www.home-assistant.io/integrations/led_ble/",
+        "https://esphome.github.io/bluetooth-proxies/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "elk-bledom-strip",
+      "brand": "duoCo / ELK-BLEDOM",
+      "model": "ELK-BLEDOM Bluetooth LED controllers (duoCo Strip, Lotus Lantern apps)",
+      "category": "led-strips",
+      "connection": "ble",
+      "offline": true,
+      "status": "untested",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "effects"
+      ],
+      "notes": "Very cheap strips whose controller shows up in Bluetooth as ELK-BLEDOM. The protocol is known from community projects, but there's no official Home Assistant integration and it hasn't been tried with Dayspring.",
+      "howToSetUp": [
+        "Keep the strip within Bluetooth range of this PC or an ESPHome Bluetooth proxy, and close its phone app.",
+        "When Bluetooth strips arrive in Dayspring, open Settings → Devices, choose Add a device and pick Bluetooth LED strips.",
+        "Advanced users can try the community ELK-BLEDOM integration for Home Assistant in the meantime."
+      ],
+      "links": [
+        "https://github.com/dave-code-ruiz/elkbledom"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "hue-lightstrip",
+      "brand": "Philips Hue",
+      "model": "Hue Lightstrip Plus / Gradient Lightstrip",
+      "category": "led-strips",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "color-temperature",
+        "scenes"
+      ],
+      "notes": "Controlled through the Hue bridge like any Hue light. Gradient strips show several colours at once in the Hue app; Dayspring sets one colour for the whole strip.",
+      "howToSetUp": [
+        "Add the lightstrip to your Hue bridge in the Hue app.",
+        "In Dayspring, open Settings → Devices and add (or refresh) the Philips Hue bridge; the strip appears with your other Hue lights."
+      ],
+      "links": [
+        "https://www.philips-hue.com",
+        "https://developers.meethue.com"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "lifx-z",
+      "brand": "LIFX",
+      "model": "LIFX Z / Lightstrip",
+      "category": "led-strips",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "color-temperature",
+        "effects"
+      ],
+      "notes": "LIFX strips use the same local LAN protocol as LIFX bulbs, through Home Assistant's LIFX integration.",
+      "howToSetUp": [
+        "Set up the strip in the LIFX app.",
+        "In Home Assistant, add the LIFX integration.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the strip."
+      ],
+      "links": [
+        "https://www.lifx.com",
+        "https://www.home-assistant.io/integrations/lifx/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "nanoleaf-essentials-lightstrip",
+      "brand": "Nanoleaf",
+      "model": "Essentials Lightstrip (Thread / Matter)",
+      "category": "led-strips",
+      "connection": "matter-ha",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "color-temperature"
+      ],
+      "notes": "Uses Thread, so it needs a Thread border router (for example a Home Assistant Connect ZBT-1 or a compatible smart speaker). With Matter firmware it pairs to Home Assistant directly.",
+      "howToSetUp": [
+        "Make sure Home Assistant has Thread set up (see Smart-home hubs).",
+        "Update the strip's firmware in the Nanoleaf app so it supports Matter.",
+        "In the Home Assistant app, choose Add device → Matter and scan the strip's code.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Matter (through Home Assistant) and choose the strip."
+      ],
+      "links": [
+        "https://nanoleaf.me",
+        "https://www.home-assistant.io/integrations/matter/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "twinkly",
+      "brand": "Twinkly",
+      "model": "Twinkly strings and strips",
+      "category": "led-strips",
+      "connection": "lan",
+      "offline": true,
+      "status": "untested",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "effects"
+      ],
+      "notes": "Twinkly lights have a local API and a Home Assistant integration. It hasn't been tried with Dayspring, and Twinkly's mapped effects are only fully available in its own app.",
+      "howToSetUp": [
+        "Set up the lights in the Twinkly app on your Wi-Fi.",
+        "In Home Assistant, add the Twinkly integration with the lights' IP address.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the lights."
+      ],
+      "links": [
+        "https://twinkly.com",
+        "https://www.home-assistant.io/integrations/twinkly/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "tuya-led-strip",
+      "brand": "Tuya / Smart Life (many brands)",
+      "model": "Tuya-based Wi-Fi LED strips",
+      "category": "led-strips",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "effects"
+      ],
+      "notes": "Many store-brand Wi-Fi strips use Tuya and the Smart Life app. Local control needs the strip's local key, pulled once from Tuya's developer site, and a community local Tuya integration in Home Assistant. Dayspring's own local Tuya support is planned.",
+      "howToSetUp": [
+        "Set up the strip in the Smart Life app.",
+        "Get its device ID and local key with a tool such as TinyTuya's setup wizard (a technical helper can do this).",
+        "In Home Assistant, add the strip with a local Tuya integration (LocalTuya or Tuya Local).",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the strip."
+      ],
+      "links": [
+        "https://github.com/jasonacox/tinytuya",
+        "https://github.com/rospogrigio/localtuya"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "esphome-led-strip",
+      "brand": "ESPHome (open firmware)",
+      "model": "ESP32 / ESP8266 LED controller running ESPHome",
+      "category": "led-strips",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "effects"
+      ],
+      "notes": "ESPHome can drive most LED strips and shows up in Home Assistant automatically. For a controller that only does lights, WLED is simpler and Dayspring talks to it directly.",
+      "howToSetUp": [
+        "Install ESPHome on the controller with a light set up for your strip (Home Assistant's ESPHome add-on makes this easier).",
+        "In Home Assistant, add the ESPHome device when it's discovered.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the strip."
+      ],
+      "links": [
+        "https://esphome.io",
+        "https://www.home-assistant.io/integrations/esphome/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "shelly-rgbw-controller",
+      "brand": "Shelly",
+      "model": "Shelly RGBW2 / Plus RGBW PM",
+      "category": "led-strips",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "power-monitoring"
+      ],
+      "notes": "Wi-Fi controllers for ordinary (non-addressable) 12 V or 24 V RGB and RGBW strips, with Shelly's local API. Colour control goes through Home Assistant's Shelly integration.",
+      "howToSetUp": [
+        "Wire the strip and power supply to the controller as its manual shows, then join it to Wi-Fi with the Shelly app.",
+        "In Home Assistant, add the Shelly integration with its IP address.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the strip."
+      ],
+      "links": [
+        "https://www.shelly.com",
+        "https://www.home-assistant.io/integrations/shelly/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "zigbee-led-controller-ha",
+      "brand": "Any Zigbee brand",
+      "model": "Zigbee LED strip controllers (Gledopto and others) via Home Assistant",
+      "category": "led-strips",
+      "connection": "zigbee-ha",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "color-temperature"
+      ],
+      "notes": "Zigbee controllers for ordinary RGB, RGBW or white strips. They pair to a Zigbee coordinator in Home Assistant and work with no Wi-Fi or internet.",
+      "howToSetUp": [
+        "Set up a Zigbee coordinator in Home Assistant (see Smart-home hubs).",
+        "In Home Assistant, choose Add device and put the controller into pairing mode (see its manual).",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the strip."
+      ],
+      "links": [
+        "https://www.home-assistant.io/integrations/zha/",
+        "https://www.zigbee2mqtt.io"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "govee-cloud-strip",
+      "brand": "Govee",
+      "model": "Govee Wi-Fi strips without LAN Control",
+      "category": "led-strips",
+      "connection": "cloud",
+      "offline": false,
+      "status": "untested",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color"
+      ],
+      "notes": "Govee models that lack LAN Control can only be reached through Govee's cloud API, which needs the internet and a developer key and has request limits. Dayspring has no Govee cloud connection; community Home Assistant integrations exist but haven't been tried.",
+      "howToSetUp": [
+        "First check the Govee app for a LAN Control switch; if it's there, use the Govee LAN entry instead.",
+        "Otherwise, for offline control, consider a WLED controller for that strip.",
+        "Advanced users can request a Govee API key in the Govee app and try a community Govee cloud integration in Home Assistant, then add the strip in Settings → Devices."
+      ],
+      "links": [
+        "https://developer.govee.com"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    }
+  ]
+}

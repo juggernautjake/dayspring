@@ -22,6 +22,15 @@ Settings → **Updates** → **When a new version comes out**:
 - **Install it when I'm not using Dayspring**: no card; it updates itself during a quiet time.
 - **Install it the next time Dayspring starts**: no card; it updates the next time it starts.
 
+## Production or development
+
+Settings → **Updates** → **Which versions**:
+
+- **Production (stable)** (the default): finished features, plus new ones marked **New** that you can switch off in Settings → **Features**.
+- **Development (newest, may have bugs)**: also the features still being built. It takes whichever is newer, a development build or a production release.
+
+Switching from Development back to Production offers to go back to the newest production version straight away. Your data and keys are backed up first, the same as any update. The [feature status](features-status.md) page lists what's in each.
+
 ## Check for updates yourself
 
 A **⬆** in the window bar at the top of the Dayspring screen means a new version is ready: click it for **What's new** and **Update now**.

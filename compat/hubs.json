@@ -1,0 +1,482 @@
+{
+  "category": "hubs",
+  "label": "Smart-home hubs and bridges",
+  "description": "Hubs, bridges and radio sticks that connect many devices at once. Home Assistant is the recommended backbone: it runs Zigbee, Z-Wave, Thread/Matter and thousands of integrations on your own network, and Dayspring controls anything it runs.",
+  "entries": [
+    {
+      "id": "home-assistant",
+      "brand": "Home Assistant",
+      "model": "Home Assistant (OS, Green, Yellow or a mini PC)",
+      "category": "hubs",
+      "connection": "lan",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "color-temperature",
+        "effects",
+        "open-close",
+        "lock",
+        "temperature",
+        "sensor",
+        "scenes"
+      ],
+      "notes": "Recommended backbone. Dayspring connects to Home Assistant's REST and WebSocket APIs with a long-lived access token and can then control its lights, switches, covers, locks, thermostats, fans and media players. Everything stays on your network. The most important devices (strips, LED controllers, printers) also connect to Dayspring directly, so they keep working if Home Assistant is down. Passes Dayspring's simulator tests (September 2026): Home Assistant's API. Not yet tried on a real one.",
+      "howToSetUp": [
+        "Install Home Assistant on a small always-on computer (a Home Assistant Green is the easiest) and finish its setup.",
+        "In Home Assistant, open your profile (bottom left), go to the Security tab, and under Long-lived access tokens choose Create token; copy it.",
+        "In Dayspring, open Settings → Apps & connections, choose Home Assistant and enter its address (for example http://homeassistant.local:8123) and the token.",
+        "Then in Settings → Devices, choose Add a device, pick Home Assistant entity and choose what you want Dayspring to control."
+      ],
+      "links": [
+        "https://www.home-assistant.io",
+        "https://developers.home-assistant.io/docs/api/rest/",
+        "https://developers.home-assistant.io/docs/api/websocket/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "hubitat",
+      "brand": "Hubitat",
+      "model": "Hubitat Elevation hub (Maker API)",
+      "category": "hubs",
+      "connection": "lan",
+      "offline": true,
+      "status": "untested",
+      "capabilities": [
+        "on-off"
+      ],
+      "notes": "Hubitat runs locally and its Maker API app gives each device simple web addresses for on and off. Dayspring's custom web-request device can call those, so on/off should work; it hasn't been tried. For more than on and off, Hubitat can share devices with Home Assistant.",
+      "howToSetUp": [
+        "In Hubitat, add the built-in Maker API app, pick the devices to share and note the local URLs it shows.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Custom (HTTP or MQTT) and choose the Webhooks template.",
+        "Paste the device's local \"on\" URL and \"off\" URL from Maker API, then test it."
+      ],
+      "links": [
+        "https://hubitat.com"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "smartthings",
+      "brand": "Samsung",
+      "model": "SmartThings (hub or app)",
+      "category": "hubs",
+      "connection": "cloud",
+      "offline": false,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "sensor",
+        "lock"
+      ],
+      "notes": "SmartThings is reached through Samsung's cloud, so it needs the internet. Home Assistant's SmartThings integration brings its devices in, and Dayspring controls them from there. Over time, prefer moving important devices to a local connection.",
+      "howToSetUp": [
+        "In Home Assistant, add the SmartThings integration and sign in with your Samsung account.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the SmartThings devices."
+      ],
+      "links": [
+        "https://www.smartthings.com",
+        "https://www.home-assistant.io/integrations/smartthings/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "sonoff-zbdongle-e",
+      "brand": "SONOFF",
+      "model": "ZBDongle-E (Zigbee 3.0 USB Dongle Plus, EFR32)",
+      "category": "hubs",
+      "connection": "zigbee-ha",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "sensor"
+      ],
+      "notes": "A low-cost USB Zigbee coordinator for Home Assistant (ZHA or Zigbee2MQTT). Once it's set up, every Zigbee bulb, sensor and plug you pair shows up in Dayspring through Home Assistant.",
+      "howToSetUp": [
+        "Plug the dongle into the Home Assistant computer, ideally on a short USB extension cable away from USB 3 ports and Wi-Fi gear.",
+        "In Home Assistant, add the Zigbee Home Automation (ZHA) integration when it discovers the dongle (or install Zigbee2MQTT).",
+        "Pair your Zigbee devices in Home Assistant, then add them in Dayspring's Settings → Devices."
+      ],
+      "links": [
+        "https://sonoff.tech",
+        "https://www.home-assistant.io/integrations/zha/",
+        "https://www.zigbee2mqtt.io"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "sonoff-zbdongle-p",
+      "brand": "SONOFF",
+      "model": "ZBDongle-P (Zigbee 3.0 USB Dongle Plus, CC2652P)",
+      "category": "hubs",
+      "connection": "zigbee-ha",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "sensor"
+      ],
+      "notes": "The Texas Instruments–based version of SONOFF's Zigbee stick; well supported by both ZHA and Zigbee2MQTT.",
+      "howToSetUp": [
+        "Plug the dongle into the Home Assistant computer on a short USB extension cable.",
+        "In Home Assistant, add ZHA when it discovers the dongle (or install Zigbee2MQTT).",
+        "Pair your Zigbee devices in Home Assistant, then add them in Dayspring's Settings → Devices."
+      ],
+      "links": [
+        "https://sonoff.tech",
+        "https://www.home-assistant.io/integrations/zha/",
+        "https://www.zigbee2mqtt.io"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "ha-connect-zbt1",
+      "brand": "Home Assistant",
+      "model": "Home Assistant Connect ZBT-1 (Zigbee or Thread)",
+      "category": "hubs",
+      "connection": "zigbee-ha",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "sensor"
+      ],
+      "notes": "Home Assistant's own USB stick. It runs Zigbee, or Thread for Matter-over-Thread devices, and Home Assistant sets it up almost automatically. Using one stick for both at once is experimental; many homes use one stick per radio.",
+      "howToSetUp": [
+        "Plug it into the Home Assistant computer on a USB extension cable.",
+        "In Home Assistant, accept the discovered device and choose Zigbee or Thread.",
+        "Pair your devices in Home Assistant, then add them in Dayspring's Settings → Devices."
+      ],
+      "links": [
+        "https://www.home-assistant.io/connectzbt1/",
+        "https://www.home-assistant.io/integrations/homeassistant_sky_connect/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "zooz-zst39",
+      "brand": "Zooz",
+      "model": "ZST39 800 Series Z-Wave Long Range USB stick",
+      "category": "hubs",
+      "connection": "zwave-ha",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "sensor"
+      ],
+      "notes": "A Z-Wave coordinator for Home Assistant (Z-Wave JS). Z-Wave is common for locks, in-wall switches and sensors, and Long Range reaches detached garages and sheds.",
+      "howToSetUp": [
+        "Plug the stick into the Home Assistant computer on a USB extension cable.",
+        "In Home Assistant, add the Z-Wave integration when it discovers the stick (it installs Z-Wave JS for you).",
+        "Add your Z-Wave devices in Home Assistant (scan their QR codes for secure pairing), then add them in Dayspring's Settings → Devices."
+      ],
+      "links": [
+        "https://www.getzooz.com",
+        "https://www.home-assistant.io/integrations/zwave_js/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "matter-thread-ha",
+      "brand": "Matter / Thread",
+      "model": "Matter and Thread devices via Home Assistant",
+      "category": "hubs",
+      "connection": "matter-ha",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "color-temperature",
+        "open-close",
+        "lock",
+        "sensor"
+      ],
+      "notes": "Matter is the cross-brand standard; Thread is the low-power radio many Matter devices use. Home Assistant is a Matter controller (Wi-Fi and Thread) and can share devices already set up in Apple, Google or Amazon homes. Thread devices need a Thread border router (a ZBT-1 or a compatible speaker or hub). Passes Dayspring's simulator tests (September 2026): Matter devices through Home Assistant. Not yet tried on a real one.",
+      "howToSetUp": [
+        "In Home Assistant, add the Matter integration (and the Thread integration with a border router if your devices use Thread).",
+        "Pair a device from the Home Assistant phone app: Add device → Matter, then scan its code.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Matter (through Home Assistant) and choose the device."
+      ],
+      "links": [
+        "https://www.home-assistant.io/integrations/matter/",
+        "https://www.home-assistant.io/integrations/thread/",
+        "https://csa-iot.org/all-solutions/matter/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "bond-bridge",
+      "brand": "Bond",
+      "model": "Bond Bridge (ceiling fans, shades, fireplaces)",
+      "category": "hubs",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "open-close",
+        "ir-learn"
+      ],
+      "notes": "Learns the radio (RF) and infrared remotes of ceiling fans, shades and fireplaces and controls them from your network. It has a local API used by Home Assistant's Bond integration. Fireplaces are heat devices and shades are motion devices: Dayspring's safety rules apply.",
+      "howToSetUp": [
+        "Set up the bridge in the Bond app and teach it your fan's or shade's remote.",
+        "In Home Assistant, add the Bond integration (it asks for the bridge's local token, shown in the Bond app).",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the fan or shade."
+      ],
+      "links": [
+        "https://bondhome.io",
+        "https://www.home-assistant.io/integrations/bond/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "broadlink-rm4",
+      "brand": "Broadlink",
+      "model": "RM4 Mini / RM4 Pro (IR and RF blaster)",
+      "category": "hubs",
+      "connection": "ir",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "ir-learn",
+        "on-off"
+      ],
+      "notes": "Learns the buttons of infrared remotes (older TVs, fans, AC units, soundbars; the Pro also does some RF remotes) and sends them locally. Home Assistant's Broadlink integration learns and sends commands today; Dayspring's own infrared support is planned. IR is one-way, so Dayspring can't tell whether the device actually changed.",
+      "howToSetUp": [
+        "Set up the blaster on your Wi-Fi with the Broadlink app, and place it where it can see the devices.",
+        "In Home Assistant, add the Broadlink integration, then use its learn command to record each remote button you need.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the remote's buttons or scripts."
+      ],
+      "links": [
+        "https://www.ibroadlink.com",
+        "https://www.home-assistant.io/integrations/broadlink/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "ratgdo",
+      "brand": "ratgdo",
+      "model": "ratgdo garage door controller",
+      "category": "hubs",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "open-close",
+        "sensor",
+        "on-off"
+      ],
+      "notes": "Stage 3. A small board wired to your garage door opener that controls it locally and reports whether the door is open, with no cloud. It runs ESPHome (or MQTT firmware) and shows up in Home Assistant. A garage door is a motion device: Dayspring asks for confirmation, never includes it in \"turn everything on\", and can alert if it's left open.",
+      "howToSetUp": [
+        "Buy a ratgdo that matches your opener and install it following its instructions (a few low-voltage wires to the opener).",
+        "Join it to your Wi-Fi and choose the ESPHome firmware.",
+        "In Home Assistant, add the discovered ESPHome device.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the garage door; mark it as a motion device."
+      ],
+      "links": [
+        "https://paulwieland.github.io/ratgdo/",
+        "https://www.home-assistant.io/integrations/esphome/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "switchbot-hub-2",
+      "brand": "SwitchBot",
+      "model": "Hub 2",
+      "category": "hubs",
+      "connection": "cloud",
+      "offline": false,
+      "status": "expected",
+      "capabilities": [
+        "temperature",
+        "humidity",
+        "ir-learn",
+        "sensor"
+      ],
+      "notes": "Connects SwitchBot Bluetooth devices to SwitchBot's cloud, learns IR remotes and has its own temperature sensor. Its devices can be reached through SwitchBot's cloud API (needs the internet) or, better, directly over Bluetooth through Home Assistant's SwitchBot integration without the hub. Newer firmware can also share devices over Matter.",
+      "howToSetUp": [
+        "For offline control, skip the hub for Bluetooth devices: see the SwitchBot entries under Bluetooth devices.",
+        "For its IR remotes and sensor, add the SwitchBot Cloud integration in Home Assistant with the token from the SwitchBot app (Profile → Preferences → Developer Options).",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the devices."
+      ],
+      "links": [
+        "https://www.switch-bot.com",
+        "https://github.com/OpenWonderLabs/SwitchBotAPI",
+        "https://www.home-assistant.io/integrations/switchbot_cloud/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "zigbee2mqtt",
+      "brand": "Zigbee2MQTT",
+      "model": "Zigbee2MQTT with an MQTT broker",
+      "category": "hubs",
+      "connection": "zigbee-ha",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "sensor"
+      ],
+      "notes": "An alternative to ZHA that supports a very wide range of Zigbee devices. It publishes each device over MQTT, so Dayspring can switch plugs and relays with its Zigbee2MQTT template even without Home Assistant, or through Home Assistant for everything else. Passes Dayspring's simulator tests (September 2026): Zigbee2MQTT over MQTT. Not yet tried on a real one.",
+      "howToSetUp": [
+        "Install an MQTT broker (Mosquitto) and Zigbee2MQTT, for example as Home Assistant add-ons, with a Zigbee coordinator stick.",
+        "Pair your devices in the Zigbee2MQTT web page and give them friendly names.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Custom (HTTP or MQTT), choose the Zigbee2MQTT template and enter the broker address and device name; or add it as a Home Assistant entity."
+      ],
+      "links": [
+        "https://www.zigbee2mqtt.io",
+        "https://mosquitto.org"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "tuya-cloud",
+      "brand": "Tuya / Smart Life",
+      "model": "Tuya / Smart Life cloud (official Home Assistant integration)",
+      "category": "hubs",
+      "connection": "cloud",
+      "offline": false,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "sensor"
+      ],
+      "notes": "Home Assistant's official Tuya integration controls Smart Life devices through Tuya's cloud: easy to set up, but it needs the internet and stops when Tuya's servers are down. Prefer local Tuya control (see the Tuya plug, bulb and strip entries) for anything important.",
+      "howToSetUp": [
+        "In Home Assistant, add the Tuya integration and link it by scanning the QR code with the Smart Life app.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the devices.",
+        "Later, move important devices to local Tuya control so they work without the internet."
+      ],
+      "links": [
+        "https://www.home-assistant.io/integrations/tuya/",
+        "https://developer.tuya.com"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "apple-home",
+      "brand": "Apple",
+      "model": "Apple Home (HomeKit)",
+      "category": "hubs",
+      "connection": "cloud",
+      "offline": false,
+      "status": "not-supported",
+      "reason": "Apple Home has no API for Windows or other outside programs; only Apple devices can control it.",
+      "capabilities": [],
+      "notes": "Home Assistant can work alongside Apple Home in both directions.",
+      "howToSetUp": [
+        "Pair Matter devices to Home Assistant too (Matter allows more than one controller), or move HomeKit devices to Home Assistant's HomeKit Device integration.",
+        "Use Home Assistant's HomeKit Bridge to show Home Assistant devices in Apple Home if you still want Siri.",
+        "Add the devices in Dayspring's Settings → Devices as Home Assistant entities."
+      ],
+      "links": [
+        "https://www.home-assistant.io/integrations/homekit/",
+        "https://www.home-assistant.io/integrations/homekit_controller/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "google-home",
+      "brand": "Google",
+      "model": "Google Home / Nest hubs",
+      "category": "hubs",
+      "connection": "cloud",
+      "offline": false,
+      "status": "not-supported",
+      "reason": "Google Home has no local API that outside programs can use to control its devices.",
+      "capabilities": [],
+      "notes": "Matter devices set up in Google Home can also be shared with Home Assistant.",
+      "howToSetUp": [
+        "In the Google Home app, open a Matter device's settings and choose Linked Matter apps & services to share it with Home Assistant.",
+        "Add it in Dayspring's Settings → Devices as a Home Assistant entity."
+      ],
+      "links": [
+        "https://home.google.com",
+        "https://www.home-assistant.io/integrations/matter/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "amazon-alexa",
+      "brand": "Amazon",
+      "model": "Alexa / Echo hubs",
+      "category": "hubs",
+      "connection": "cloud",
+      "offline": false,
+      "status": "not-supported",
+      "reason": "Alexa offers no API for outside programs to control its devices; it's cloud-only and Alexa-controlled.",
+      "capabilities": [],
+      "notes": "Matter devices set up with Alexa can often be shared with Home Assistant too.",
+      "howToSetUp": [
+        "In the Alexa app, open a Matter device's settings and choose Other Assistants and Apps to get a pairing code, then add it in Home Assistant.",
+        "Add it in Dayspring's Settings → Devices as a Home Assistant entity."
+      ],
+      "links": [
+        "https://www.home-assistant.io/integrations/matter/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    }
+  ]
+}

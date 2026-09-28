@@ -1,0 +1,301 @@
+{
+ "data": [
+  {
+   "type": "gif",
+   "id": "gA1",
+   "url": "https://giphy.com/gifs/gA1",
+   "slug": "dancing-cat-gif-by-happy-pets-gA1",
+   "title": "Dancing Cat GIF by Happy Pets",
+   "rating": "g",
+   "is_sticker": 0,
+   "images": {
+    "original": {
+     "url": "https://media.fixture.test/m/gA1-orig.gif",
+     "width": "480",
+     "height": "360",
+     "size": "234567",
+     "mp4": "https://media.fixture.test/m/gA1.mp4",
+     "webp": "https://media.fixture.test/m/gA1.webp"
+    },
+    "fixed_width": {
+     "url": "https://media.fixture.test/m/gA1.gif",
+     "width": "200",
+     "height": "150",
+     "mp4": "https://media.fixture.test/m/gA1-200.mp4",
+     "webp": "https://media.fixture.test/m/gA1-200.webp"
+    },
+    "fixed_width_small": {
+     "url": "https://media.fixture.test/m/gA1-small.gif",
+     "width": "100",
+     "height": "75"
+    },
+    "fixed_width_still": {
+     "url": "https://media.fixture.test/m/gA1-still.gif",
+     "width": "200",
+     "height": "150"
+    }
+   }
+  },
+  {
+   "type": "gif",
+   "id": "gA2",
+   "url": "https://giphy.com/gifs/gA2",
+   "slug": "cat-dance-party-gA2",
+   "title": "Cat Dance Party",
+   "rating": "pg",
+   "is_sticker": 0,
+   "images": {
+    "original": {
+     "url": "https://media.fixture.test/m/gA2-orig.gif",
+     "width": "480",
+     "height": "360",
+     "size": "234567",
+     "mp4": "https://media.fixture.test/m/gA2.mp4",
+     "webp": "https://media.fixture.test/m/gA2.webp"
+    },
+    "fixed_width": {
+     "url": "https://media.fixture.test/m/gA2.gif",
+     "width": "200",
+     "height": "150",
+     "mp4": "https://media.fixture.test/m/gA2-200.mp4",
+     "webp": "https://media.fixture.test/m/gA2-200.webp"
+    },
+    "fixed_width_small": {
+     "url": "https://media.fixture.test/m/gA2-small.gif",
+     "width": "100",
+     "height": "75"
+    },
+    "fixed_width_still": {
+     "url": "https://media.fixture.test/m/gA2-still.gif",
+     "width": "200",
+     "height": "150"
+    }
+   }
+  },
+  {
+   "type": "gif",
+   "id": "gA3",
+   "url": "https://giphy.com/gifs/gA3",
+   "slug": "dance-moves-cat-gA3",
+   "title": "Dance Moves Cat",
+   "rating": "g",
+   "is_sticker": 0,
+   "images": {
+    "original": {
+     "url": "https://media.fixture.test/m/gA3-orig.gif",
+     "width": "480",
+     "height": "360",
+     "size": "234567",
+     "mp4": "https://media.fixture.test/m/gA3.mp4",
+     "webp": "https://media.fixture.test/m/gA3.webp"
+    },
+    "fixed_width": {
+     "url": "https://media.fixture.test/m/same.gif",
+     "width": "200",
+     "height": "150",
+     "mp4": "https://media.fixture.test/m/gA3-200.mp4",
+     "webp": "https://media.fixture.test/m/gA3-200.webp"
+    },
+    "fixed_width_small": {
+     "url": "https://media.fixture.test/m/gA3-small.gif",
+     "width": "100",
+     "height": "75"
+    },
+    "fixed_width_still": {
+     "url": "https://media.fixture.test/m/gA3-still.gif",
+     "width": "200",
+     "height": "150"
+    }
+   }
+  },
+  {
+   "type": "gif",
+   "id": "gA4",
+   "url": "https://giphy.com/gifs/gA4",
+   "slug": "-b-bold-b-lt-img-src-x-onerror-window-xss-gt-cat-gA4",
+   "title": "<b>Bold</b> &lt;img src=x onerror=window.__xss=1&gt; cat",
+   "rating": "g",
+   "is_sticker": 0,
+   "images": {
+    "original": {
+     "url": "https://media.fixture.test/m/gA4-orig.gif",
+     "width": "480",
+     "height": "360",
+     "size": "234567",
+     "mp4": "https://media.fixture.test/m/gA4.mp4",
+     "webp": "https://media.fixture.test/m/gA4.webp"
+    },
+    "fixed_width": {
+     "url": "https://media.fixture.test/m/gA4.gif",
+     "width": "200",
+     "height": "150",
+     "mp4": "https://media.fixture.test/m/gA4-200.mp4",
+     "webp": "https://media.fixture.test/m/gA4-200.webp"
+    },
+    "fixed_width_small": {
+     "url": "https://media.fixture.test/m/gA4-small.gif",
+     "width": "100",
+     "height": "75"
+    },
+    "fixed_width_still": {
+     "url": "https://media.fixture.test/m/gA4-still.gif",
+     "width": "200",
+     "height": "150"
+    }
+   }
+  },
+  {
+   "type": "gif",
+   "id": "gA5",
+   "url": "https://giphy.com/gifs/gA5",
+   "slug": "rude-cat-gA5",
+   "title": "Rude cat",
+   "rating": "r",
+   "is_sticker": 0,
+   "images": {
+    "original": {
+     "url": "https://media.fixture.test/m/gA5-orig.gif",
+     "width": "480",
+     "height": "360",
+     "size": "234567",
+     "mp4": "https://media.fixture.test/m/gA5.mp4",
+     "webp": "https://media.fixture.test/m/gA5.webp"
+    },
+    "fixed_width": {
+     "url": "https://media.fixture.test/m/gA5.gif",
+     "width": "200",
+     "height": "150",
+     "mp4": "https://media.fixture.test/m/gA5-200.mp4",
+     "webp": "https://media.fixture.test/m/gA5-200.webp"
+    },
+    "fixed_width_small": {
+     "url": "https://media.fixture.test/m/gA5-small.gif",
+     "width": "100",
+     "height": "75"
+    },
+    "fixed_width_still": {
+     "url": "https://media.fixture.test/m/gA5-still.gif",
+     "width": "200",
+     "height": "150"
+    }
+   }
+  },
+  {
+   "type": "gif",
+   "id": "gA6",
+   "url": "https://giphy.com/gifs/gA6",
+   "slug": "kitty-dancing-gA6",
+   "title": "Kitty dancing",
+   "rating": "pg-13",
+   "is_sticker": 0,
+   "images": {
+    "original": {
+     "url": "https://media.fixture.test/m/gA6-orig.gif",
+     "width": "360",
+     "height": "480",
+     "size": "234567",
+     "mp4": "https://media.fixture.test/m/gA6.mp4",
+     "webp": "https://media.fixture.test/m/gA6.webp"
+    },
+    "fixed_width": {
+     "url": "https://media.fixture.test/m/gA6.gif",
+     "width": "200",
+     "height": "267",
+     "mp4": "https://media.fixture.test/m/gA6-200.mp4",
+     "webp": "https://media.fixture.test/m/gA6-200.webp"
+    },
+    "fixed_width_small": {
+     "url": "https://media.fixture.test/m/gA6-small.gif",
+     "width": "100",
+     "height": "133"
+    },
+    "fixed_width_still": {
+     "url": "https://media.fixture.test/m/gA6-still.gif",
+     "width": "200",
+     "height": "267"
+    }
+   }
+  },
+  {
+   "type": "gif",
+   "id": "gA7",
+   "url": "https://giphy.com/gifs/gA7",
+   "slug": "cat-grooves-gA7",
+   "title": "Cat grooves",
+   "rating": "g",
+   "is_sticker": 0,
+   "images": {
+    "original": {
+     "url": "https://media.fixture.test/m/gA7-orig.gif",
+     "width": "480",
+     "height": "270",
+     "size": "234567",
+     "mp4": "https://media.fixture.test/m/gA7.mp4",
+     "webp": "https://media.fixture.test/m/gA7.webp"
+    },
+    "fixed_width": {
+     "url": "https://media.fixture.test/m/gA7.gif",
+     "width": "200",
+     "height": "113",
+     "mp4": "https://media.fixture.test/m/gA7-200.mp4",
+     "webp": "https://media.fixture.test/m/gA7-200.webp"
+    },
+    "fixed_width_small": {
+     "url": "https://media.fixture.test/m/gA7-small.gif",
+     "width": "100",
+     "height": "56"
+    },
+    "fixed_width_still": {
+     "url": "https://media.fixture.test/m/gA7-still.gif",
+     "width": "200",
+     "height": "113"
+    }
+   }
+  },
+  {
+   "type": "gif",
+   "id": "gA8",
+   "url": "https://giphy.com/gifs/gA8",
+   "slug": "funky-feline-gA8",
+   "title": "Funky feline",
+   "rating": "g",
+   "is_sticker": 0,
+   "images": {
+    "original": {
+     "url": "https://media.fixture.test/m/gA8-orig.gif",
+     "width": "480",
+     "height": "360",
+     "size": "234567",
+     "mp4": "https://media.fixture.test/m/gA8.mp4",
+     "webp": "https://media.fixture.test/m/gA8.webp"
+    },
+    "fixed_width": {
+     "url": "https://media.fixture.test/m/gA8.gif",
+     "width": "200",
+     "height": "150",
+     "mp4": "https://media.fixture.test/m/gA8-200.mp4",
+     "webp": "https://media.fixture.test/m/gA8-200.webp"
+    },
+    "fixed_width_small": {
+     "url": "https://media.fixture.test/m/gA8-small.gif",
+     "width": "100",
+     "height": "75"
+    },
+    "fixed_width_still": {
+     "url": "https://media.fixture.test/m/gA8-still.gif",
+     "width": "200",
+     "height": "150"
+    }
+   }
+  }
+ ],
+ "pagination": {
+  "total_count": 40,
+  "count": 8,
+  "offset": 0
+ },
+ "meta": {
+  "status": 200,
+  "msg": "OK"
+ }
+}

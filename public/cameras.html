@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cameras · Dayspring</title>
+<link rel="icon" href="/favicon.ico">
+<style>
+  :root{--bg:#070916;--panel:rgba(22,26,56,.78);--panel2:rgba(34,40,80,.6);--edge:rgba(160,170,255,.14);--edge2:rgba(170,180,255,.28);
+    --ink:#eef0ff;--muted:#a4abcc;--dim:#8d94b8;--violet:#a78bfa;--indigo:#7c8cff;--gold:#ffd27a;--mint:#7ee3b0;--rose:#ff8fa3;--rec:#ff4d64;color-scheme:dark}
+  *{box-sizing:border-box}[hidden]{display:none!important}
+  html,body{height:100%;margin:0}
+  body{background:radial-gradient(1100px 650px at 15% -10%,rgba(124,140,255,.2),transparent 60%),radial-gradient(900px 600px at 110% 110%,rgba(167,139,250,.18),transparent 60%),var(--bg);
+    color:var(--ink);font-family:Outfit,"Segoe UI",system-ui,sans-serif;font-size:clamp(14px,min(1.15vw,2.4vh),19px);line-height:1.4;display:flex;flex-direction:column;overflow:hidden}
+  button,select,input{font:inherit;color:inherit}
+  :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .top{display:flex;align-items:center;gap:.6em;padding:.5em .9em;border-bottom:1px solid var(--edge);flex:0 0 auto;flex-wrap:wrap}
+  .top h1{margin:0;font-weight:500;font-size:1.25em;white-space:nowrap}
+  .tabs{display:flex;gap:.3em}
+  .tabs button,.btn{background:rgba(255,255,255,.06);border:1px solid var(--edge2);border-radius:.7em;padding:.3em .8em;cursor:pointer;white-space:nowrap}
+  .tabs button[aria-selected=true]{background:linear-gradient(135deg,rgba(124,140,255,.45),rgba(167,139,250,.4))}
+  .btn:hover,.tabs button:hover{background:rgba(124,140,255,.28)}
+  .btn.danger{border-color:rgba(255,143,163,.5)}
+  .sp{flex:1}
+  .rec{color:var(--rec);font-weight:600;letter-spacing:.04em}
+  .rec::before{content:"●";margin-right:.25em;animation:blink 1.4s infinite}
+  @keyframes blink{50%{opacity:.25}}
+  main{flex:1 1 auto;min-height:0;overflow:auto;padding:.8em .9em 1.4em}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,19em),1fr));gap:.8em}
+  .cam{background:var(--panel);border:1px solid var(--edge);border-radius:.9em;overflow:hidden;cursor:pointer;display:flex;flex-direction:column}
+  .cam:hover{border-color:var(--edge2)}
+  .view{position:relative;aspect-ratio:16/9;background:#050714;display:grid;place-items:center;overflow:hidden}
+  .view img{width:100%;height:100%;object-fit:contain;display:block}
+  .view .badge{position:absolute;top:.4em;left:.5em;background:rgba(5,7,20,.7);border-radius:.5em;padding:.1em .5em;font-size:.8em}
+  .view .badge.r{left:auto;right:.5em}
+  .view .none{color:var(--dim);font-size:.9em;padding:1em;text-align:center}
+  .cam .meta{padding:.45em .7em;display:flex;gap:.5em;align-items:baseline}
+  .cam .meta b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cam .meta span{color:var(--dim);font-size:.82em;white-space:nowrap}
+  .filters{display:flex;gap:.5em;flex-wrap:wrap;margin-bottom:.7em;align-items:center}
+  .filters select,.filters input{background:rgba(255,255,255,.06);border:1px solid var(--edge2);border-radius:.6em;padding:.25em .5em}
+  .feed{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,15em),1fr));gap:.6em}
+  .ev{background:var(--panel);border:1px solid var(--edge);border-radius:.8em;overflow:hidden;cursor:pointer;text-align:left;padding:0;display:flex;flex-direction:column}
+  .ev img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#050714}
+  .ev .t{padding:.35em .6em .5em;font-size:.88em}
+  .ev .t b{display:block}
+  .chip{display:inline-block;background:rgba(124,140,255,.22);border-radius:.6em;padding:0 .45em;margin:.15em .2em 0 0;font-size:.8em}
+  .chip.deer,.chip.animal{background:rgba(224,195,160,.28)}.chip.person{background:rgba(255,143,163,.28)}.chip.vehicle{background:rgba(143,216,255,.25)}.chip.package{background:rgba(255,210,122,.28)}
+  .detail{display:grid;grid-template-columns:minmax(0,2fr) minmax(14em,1fr);gap:.9em}
+  @media (max-width:900px){.detail{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--edge);border-radius:.9em;padding:.7em .8em}
+  .panel h2{margin:.1em 0 .5em;font-size:1.05em;font-weight:500}
+  .list{display:grid;gap:.35em;max-height:50vh;overflow:auto}
+  .list button{text-align:left;background:rgba(255,255,255,.04);border:1px solid var(--edge);border-radius:.6em;padding:.35em .6em;cursor:pointer;display:flex;gap:.6em;align-items:center}
+  .list img{width:4.5em;height:2.6em;object-fit:cover;border-radius:.35em;flex:0 0 auto}
+  .timeline{position:relative;height:3.2em;background:rgba(255,255,255,.05);border:1px solid var(--edge);border-radius:.6em;margin:.5em 0 1.4em}
+  .timeline .seg{position:absolute;top:.4em;bottom:.4em;background:rgba(124,140,255,.45);border-radius:.3em;cursor:pointer}
+  .timeline .mk{position:absolute;top:0;bottom:0;width:.5em;margin-left:-.25em;border:0;padding:0;cursor:pointer;background:none}
+  .timeline .mk::after{content:"";position:absolute;left:50%;top:.3em;bottom:.3em;width:3px;margin-left:-1.5px;border-radius:2px;background:var(--gold)}
+  .timeline .mk.clip::after{background:var(--mint);width:5px;margin-left:-2.5px}
+  .timeline .mk.deer::after,.timeline .mk.animal::after{background:#e0c3a0}.timeline .mk.person::after{background:var(--rose)}
+  .timeline .hr{position:absolute;bottom:-1.3em;font-size:.72em;color:var(--dim);transform:translateX(-50%)}
+  .empty{color:var(--dim);padding:1.5em;text-align:center}
+  /* the viewer: centred in the safe area (safe-area.css), never bigger than it */
+  .viewer{position:fixed;inset:0;background:rgba(3,4,12,.82);display:grid;place-items:center;z-index:50;
+    padding:calc(var(--safe-top,0px) + var(--safe-gap,10px)) calc(var(--safe-right,0px) + var(--safe-gap,10px)) calc(var(--safe-bottom,0px) + var(--safe-gap,10px)) calc(var(--safe-left,0px) + var(--safe-gap,10px))}
+  .viewer .box{background:var(--panel);border:1px solid var(--edge2);border-radius:1em;padding:.7em;max-width:100%;max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:.5em;min-width:min(30em,100%)}
+  .viewer img,.viewer video{max-width:100%;max-height:calc(100vh - 12em);display:block;margin:0 auto;border-radius:.6em;background:#000}
+  .viewer .row{display:flex;gap:.5em;align-items:center;flex-wrap:wrap}
+  .msg{color:var(--muted);font-size:.9em;min-height:1.2em}
+</style>
+<link rel="stylesheet" href="/safe-area.css">
+</head>
+<body>
+<header class="top">
+  <h1>📷 Cameras</h1>
+  <div class="tabs" role="tablist">
+    <button role="tab" id="t-live" aria-selected="true" data-tab="live">Live</button>
+    <button role="tab" id="t-events" aria-selected="false" data-tab="events">Events</button>
+    <button role="tab" id="t-rec" aria-selected="false" data-tab="recordings">Recordings</button>
+  </div>
+  <span id="recNow" class="rec" hidden title="A camera is recording">REC</span>
+  <span class="sp"></span>
+  <a class="btn" id="setLink" href="/setup?s=cameras" title="Settings → Cameras">⚙ Settings</a>
+  <button class="btn" id="close" title="Close (Esc)" hidden>✕</button>
+</header>
+<main id="main" aria-live="polite"></main>
+<div class="viewer" id="viewer" hidden role="dialog" aria-modal="true" aria-label="Camera picture or clip"><div class="box" id="vbox"></div></div>
+<script src="/cameras.js"></script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+{
+  "category": "gifs",
+  "label": "GIF providers",
+  "description": "Where Dayspring's GIF picker finds GIFs and stickers. The web search works with no key at all; free keys from GIPHY or KLIPY add much bigger libraries. All sources are searched at once and mixed into one list.",
+  "entries": [
+    {
+      "id": "giphy",
+      "brand": "GIPHY",
+      "model": "GIPHY API",
+      "category": "gifs",
+      "connection": "cloud",
+      "offline": false,
+      "status": "tested-sim",
+      "capabilities": ["search", "trending", "categories", "stickers", "ratings"],
+      "notes": "The biggest GIF library. A free beta key allows about 100 searches an hour, which is plenty for one home. Results are shown with \"Powered by GIPHY\", as GIPHY asks. The GIF test script checks it against a stand-in GIPHY server.",
+      "howToSetUp": [
+        "Go to developers.giphy.com, sign in or make a free account, and click Create an App.",
+        "Choose API (not SDK), name it Dayspring, agree to the terms, and copy the API key.",
+        "In Dayspring, open Settings → GIFs, paste the key into the GIPHY card, and click Save key. It shows ✓ Works when the key is good."
+      ],
+      "links": ["https://developers.giphy.com/"],
+      "lastChecked": "2026-09-28",
+      "features": ["gifs"]
+    },
+    {
+      "id": "klipy",
+      "brand": "KLIPY",
+      "model": "KLIPY API",
+      "category": "gifs",
+      "connection": "cloud",
+      "offline": false,
+      "status": "tested-sim",
+      "capabilities": ["search", "trending", "categories", "stickers", "ratings"],
+      "notes": "A large free GIF, sticker and meme library, and the usual replacement for Tenor. Results are shown with \"Powered by KLIPY\". Dayspring never asks for ads. The GIF test script checks it against a stand-in KLIPY server.",
+      "howToSetUp": [
+        "Go to partner.klipy.com (KLIPY's Partner Panel) and make a free account.",
+        "Add an app named Dayspring and open its API keys.",
+        "Copy the key, paste it into the KLIPY card in Settings → GIFs, and click Save key."
+      ],
+      "links": ["https://klipy.com/developers", "https://partner.klipy.com/"],
+      "lastChecked": "2026-09-28",
+      "features": ["gifs"]
+    },
+    {
+      "id": "imgur",
+      "brand": "Imgur",
+      "model": "Imgur API",
+      "category": "gifs",
+      "connection": "cloud",
+      "offline": false,
+      "status": "tested-sim",
+      "capabilities": ["search", "trending"],
+      "notes": "Animated GIFs from Imgur's gallery, with a free Client ID. Imgur doesn't rate its content, so it's only used when the rating setting is PG-13 or R. No stickers. The GIF test script checks it against a stand-in Imgur server.",
+      "howToSetUp": [
+        "Sign in to Imgur and register an app at imgur.com/account/settings/apps (choose anonymous usage without a callback).",
+        "Copy the Client ID.",
+        "In Dayspring, open Settings → GIFs, paste it into the Imgur card, and click Save key."
+      ],
+      "links": ["https://apidocs.imgur.com/"],
+      "lastChecked": "2026-09-28",
+      "features": ["gifs"]
+    },
+    {
+      "id": "web-gif-search",
+      "brand": "Web",
+      "model": "Web image search (keyless)",
+      "category": "gifs",
+      "connection": "cloud",
+      "offline": false,
+      "status": "tested-sim",
+      "capabilities": ["search", "trending", "stickers", "safe-search"],
+      "notes": "Animated pictures from the web image search (DuckDuckGo, then Bing) with their animated-GIF filter. No account and no key, so GIFs always work, and it steps in when every other source is busy. The web isn't rated, so SafeSearch does the filtering. The GIF test script checks it with no keys at all against a stand-in search.",
+      "howToSetUp": [
+        "Nothing to set up: it's on from the start.",
+        "To turn it off or change its order, open Settings → GIFs."
+      ],
+      "links": [],
+      "lastChecked": "2026-09-28",
+      "features": ["gifs"]
+    },
+    {
+      "id": "tenor",
+      "brand": "Google",
+      "model": "Tenor API",
+      "category": "gifs",
+      "connection": "cloud",
+      "offline": false,
+      "status": "not-supported",
+      "reason": "Google shut down the Tenor API for good on June 30, 2026, and took no new keys from January 2026.",
+      "capabilities": [],
+      "notes": "Old Tenor keys no longer work anywhere. KLIPY is the usual replacement.",
+      "howToSetUp": [
+        "Use KLIPY or GIPHY instead: get a free key and paste it in Settings → GIFs.",
+        "Without any key, the web GIF search still works."
+      ],
+      "links": ["https://developers.google.com/tenor"],
+      "lastChecked": "2026-09-28",
+      "features": ["gifs"]
+    }
+  ]
+}

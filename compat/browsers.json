@@ -1,0 +1,136 @@
+{
+  "category": "browsers",
+  "label": "Browsers for the Dayspring screen",
+  "description": "The Dayspring screen is a web page shown by a browser on this computer, as its own app window, full screen, a small mini window, or a normal tab. Chrome and Edge hear you with their own speech recognition; other browsers use Dayspring's private recognition on this computer.",
+  "entries": [
+    {
+      "id": "chrome",
+      "brand": "Google",
+      "model": "Chrome",
+      "category": "browsers",
+      "connection": "local",
+      "offline": true,
+      "status": "verified",
+      "capabilities": ["app-window", "full-screen", "mini-window", "tab", "browser-speech-recognition", "local-speech-recognition", "autoplay"],
+      "notes": "In the owner's daily use (September 2026): his Dayspring screen runs in Chrome. Dayspring opens it with its own profile as an app window, full screen on a TV, or the mini window. Chrome's speech recognition needs the internet; the private recognition on this computer works without it. The screen itself is served from this computer, so it opens without internet.",
+      "howToSetUp": [
+        "Install Google Chrome if it isn't there.",
+        "In Dayspring, open Settings → Screen → Which browser shows Dayspring? and choose Google Chrome (or Your default browser if Chrome is the default).",
+        "Allow the microphone the first time Dayspring asks."
+      ],
+      "links": ["https://support.google.com/chrome/"],
+      "lastChecked": "2026-09-28",
+      "features": ["screen"]
+    },
+    {
+      "id": "edge",
+      "brand": "Microsoft",
+      "model": "Edge",
+      "category": "browsers",
+      "connection": "local",
+      "offline": true,
+      "status": "expected",
+      "capabilities": ["app-window", "full-screen", "mini-window", "tab", "browser-speech-recognition", "local-speech-recognition", "autoplay", "natural-voices"],
+      "notes": "Built on the same engine as Chrome, so app window, full screen and the mini window work the same way. Edge has the most natural-sounding free voices (the Online (Natural) ones, which need the internet) and its own speech recognition. Comes with Windows.",
+      "howToSetUp": [
+        "In Dayspring, open Settings → Screen → Which browser shows Dayspring? and choose Microsoft Edge.",
+        "Press Reopen now, and allow the microphone when asked."
+      ],
+      "links": ["https://support.microsoft.com/microsoft-edge"],
+      "lastChecked": "2026-09-28",
+      "features": ["screen"]
+    },
+    {
+      "id": "brave",
+      "brand": "Brave",
+      "model": "Brave",
+      "category": "browsers",
+      "connection": "local",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": ["app-window", "full-screen", "mini-window", "tab", "local-speech-recognition", "autoplay"],
+      "notes": "Chromium-based, so app window and full screen work. Brave has no working browser speech recognition, so Dayspring uses its private recognition on this computer (whisper) automatically, and speaks with the Windows voices unless a voice service is set up. The screen-modes test script checks how Brave is started and that the wake word and a request work with the local recognition (against a stand-in).",
+      "howToSetUp": [
+        "In Dayspring, open Settings → Screen → Which browser shows Dayspring? and choose Brave.",
+        "Under Speech recognition, leave it on Automatic; Dayspring downloads the private speech model once (about 200 MB).",
+        "Allow the microphone when asked."
+      ],
+      "links": ["https://brave.com/"],
+      "lastChecked": "2026-09-28",
+      "features": ["screen"]
+    },
+    {
+      "id": "firefox",
+      "brand": "Mozilla",
+      "model": "Firefox",
+      "category": "browsers",
+      "connection": "local",
+      "offline": true,
+      "status": "expected",
+      "capabilities": ["full-screen", "tab", "local-speech-recognition"],
+      "notes": "Firefox has no app-window mode, so Dayspring opens it as a tab or full screen (kiosk) with its own profile. It has no browser speech recognition, so Dayspring uses the private recognition on this computer. The test scripts check how Dayspring starts Firefox; its speech path is the same local one tested for Brave. Sound may need one click to start.",
+      "howToSetUp": [
+        "In Dayspring, open Settings → Screen → Which browser shows Dayspring? and choose Mozilla Firefox.",
+        "Choose Full screen or Browser tab under how Dayspring opens.",
+        "Leave Speech recognition on Automatic so it uses the private recognition, and allow the microphone when asked."
+      ],
+      "links": ["https://support.mozilla.org/"],
+      "lastChecked": "2026-09-28",
+      "features": ["screen"]
+    },
+    {
+      "id": "vivaldi",
+      "brand": "Vivaldi",
+      "model": "Vivaldi",
+      "category": "browsers",
+      "connection": "local",
+      "offline": true,
+      "status": "untested",
+      "capabilities": ["app-window", "full-screen", "tab", "local-speech-recognition"],
+      "notes": "Chromium-based, and Dayspring recognises it and starts it the same way as Chrome. Its speech recognition hasn't been tried; if it fails, Dayspring switches to the private recognition on this computer.",
+      "howToSetUp": [
+        "In Dayspring, open Settings → Screen → Which browser shows Dayspring? and choose Vivaldi.",
+        "If Dayspring doesn't hear you, set Speech recognition to On this computer (private)."
+      ],
+      "links": ["https://vivaldi.com/"],
+      "lastChecked": "2026-09-28",
+      "features": ["screen"]
+    },
+    {
+      "id": "opera",
+      "brand": "Opera",
+      "model": "Opera / Opera GX",
+      "category": "browsers",
+      "connection": "local",
+      "offline": true,
+      "status": "untested",
+      "capabilities": ["tab", "local-speech-recognition"],
+      "notes": "Dayspring recognises Opera and Opera GX but opens them as a normal window (no app window or kiosk flags). Browser speech recognition isn't dependable in Opera, so the private recognition on this computer is the safer choice. Not tried yet.",
+      "howToSetUp": [
+        "In Dayspring, open Settings → Screen → Which browser shows Dayspring? and choose Opera.",
+        "Set Speech recognition to On this computer (private)."
+      ],
+      "links": ["https://www.opera.com/"],
+      "lastChecked": "2026-09-28",
+      "features": ["screen"]
+    },
+    {
+      "id": "safari",
+      "brand": "Apple",
+      "model": "Safari",
+      "category": "browsers",
+      "connection": "local",
+      "offline": true,
+      "status": "not-supported",
+      "reason": "Safari isn't available on Windows, and Dayspring runs on Windows.",
+      "capabilities": [],
+      "notes": "Apple stopped making Safari for Windows long ago.",
+      "howToSetUp": [
+        "Use Chrome or Edge for the Dayspring screen instead (Settings → Screen)."
+      ],
+      "links": [],
+      "lastChecked": "2026-09-28",
+      "features": ["screen"]
+    }
+  ]
+}

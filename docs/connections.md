@@ -21,9 +21,10 @@ This page lists everything Dayspring can connect to, how to set each one up, and
 | **Weather** | Forecast on screen and in the rundown | Your town (Settings) | Free, no key |
 | **Voicemeeter** | Music on several speakers at once | Optional install | [Sound](audio-devices.md) |
 | **Notion** | Search, read, create pages, add notes | A Notion token | [Notion](#notion) |
-| **Google Calendar + Gmail** | Your calendar on the schedule, add events, read mail, write drafts; several Google accounts at once | Your own Google sign-in client (once) | [Google](#google-calendar--gmail) |
+| **Google Calendar + Gmail** | Your calendar on the schedule, add events, read and write mail (sending only with your OK); several Google accounts at once | Your own Google sign-in client (once) | [Google](#google-calendar--gmail) |
+| **Yahoo, iCloud, AOL and any other email** | Read, search and write email in the Mail window (sending only with your OK) | An app password | [Email](email.md) |
 | **Google Drive** | Search, read and play your Drive files; upload and organise with your yes | The same Google client, plus the Drive API | [Google Drive](google-drive.md) |
-| **Outlook + Microsoft To Do** | Your calendar on the schedule, add events, read mail, write drafts, To Do tasks | A small Microsoft app registration (once) | [Outlook](#outlook--microsoft-to-do) |
+| **Outlook + Microsoft To Do** | Your calendar on the schedule, add events, read and write mail (sending only with your OK), To Do tasks | A small Microsoft app registration (once) | [Outlook](#outlook--microsoft-to-do) |
 | **Calendar subscriptions** (iCloud, school, teams, holidays) | Any .ics / webcal calendar on the schedule, read-only | Paste the link | [Calendar subscriptions](#calendar-subscriptions-icloud-school-teams-holidays) |
 | **News and RSS feeds** | Headlines by topic, local news, any site's feed | Pick a topic or paste a feed | [News](#news-and-rss-feeds) |
 | **Home Assistant** (and the smart-home brands it connects) | Lights, plugs, thermostats, scenes, sensors, locks and garage doors (with a yes first) | Address + a long-lived token | [Home Assistant](#home-assistant-smart-home) |
@@ -55,7 +56,7 @@ Google asks every app to use its own sign-in "client", so you create one, free, 
 
 Your Google events then appear on Dayspring's schedule in their own colours, next to everything else, and Dayspring checks them for clashes (see [All your calendars in one place](schedule.md#all-your-calendars-in-one-place) and [Conflicts](schedule.md#conflicts)). Dayspring changes a Google event only when you say yes, for example to move it or decline an invitation. You can also put your Dayspring schedule on Google Calendar, which is off until you turn it on. Things you can say: "what's on my Google calendar tomorrow", "check my email", "read the email from Pat", "put the dentist on my Google calendar Friday at 3", "draft a reply saying I'll be there".
 
-**Email is never sent.** Dayspring can only save drafts in your Gmail **Drafts**; you send them yourself.
+**Email is sent only with your OK.** Gmail shows in Dayspring's Mail window (see [Email](email.md)). Dayspring sends only after you turn on **Let Dayspring send email from this mailbox** in Settings → Email (Google asks you once for the `gmail.send` permission), and then only when you press **Send** in the editor, or say yes after Dayspring reads back who it's to and the subject.
 
 **Several Google accounts.** Press **Add another Google account** to connect a work and a personal account at once. Each one has its own Calendar, Gmail and Drive switches and an optional nickname ("Work"), and one is the primary: Calendar and Gmail use it unless you name another ("check my work email"). Removing one leaves the others. Your first account became account 1 automatically, with the same access. The sign-ins are encrypted with your Windows account. Drive (search, read, play, and changes only with your yes) is on its own page: [Google Drive](google-drive.md).
 
@@ -68,7 +69,9 @@ Microsoft needs a small app registration, free, once (about 10 minutes):
 3. Redirect URI: platform **Public client/native (mobile & desktop)**, value `http://localhost:4747/oauth/microsoft` (use your Dayspring port if you changed it).
 4. **Register**, copy the **Application (client) ID** into **Settings → Apps → Outlook**, and press **Connect**. Sign in and accept. No client secret is needed.
 
-Your Outlook events then appear on the schedule next to everything else, and are checked for clashes (see [All your calendars in one place](schedule.md#all-your-calendars-in-one-place) and [Conflicts](schedule.md#conflicts)). To Do items with a due date show in the all-day row. Dayspring changes an Outlook event only when you say yes, and it can put your Dayspring schedule on Outlook (off until you turn it on). Things you can say: "what's on my Outlook calendar today", "check my Outlook email", "what's on my To Do list", "add call the bank to my To Do", "mark buy stamps done". Email is drafts only (saved in Outlook **Drafts**, never sent).
+Your Outlook events then appear on the schedule next to everything else, and are checked for clashes (see [All your calendars in one place](schedule.md#all-your-calendars-in-one-place) and [Conflicts](schedule.md#conflicts)). To Do items with a due date show in the all-day row. Dayspring changes an Outlook event only when you say yes, and it can put your Dayspring schedule on Outlook (off until you turn it on). Things you can say: "what's on my Outlook calendar today", "check my Outlook email", "what's on my To Do list", "add call the bank to my To Do", "mark buy stamps done". Outlook mail shows in Dayspring's Mail window; it's sent only after you turn on sending in Settings → Email (Microsoft asks once for `Mail.Send`), and then only when you press **Send** or say yes to the read-back. See [Email](email.md). The sign-in is encrypted with your Windows account.
+
+**Other email (Yahoo, iCloud, AOL and the rest).** These connect with an app password in **Settings → Email**; see [Email](email.md) for each provider.
 
 ### iCloud
 

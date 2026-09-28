@@ -17,6 +17,29 @@ Most settings can also be changed by voice, for example "make everything bigger"
 | **A little about you** | Work, family, what matters to you. It uses this when it plans and talks with you. It stays on your computer and goes to your AI only as part of a conversation. |
 | **Interests and hobbies** | Up to 40. They shape Discover ("For you"), the videos and the quotes on the screen. |
 
+## Where you are
+
+`?s=location`
+
+| Setting | What it does |
+|---|---|
+| **Your city or town** | Type it and press **Search**, then pick the right place. It's used for weather, weather alerts, sunrise and sunset (for the living sky) and local news. |
+| **Time zone** | Filled in when you pick a place. Change it only if it's wrong. |
+
+## Your week
+
+`?s=week` · Full walkthrough: [Your schedule](schedule.md#routine-and-fixed-blocks)
+
+| Setting | What it does |
+|---|---|
+| **Usually up at / in bed by** | Frames your day. The alarm rings at your first item. |
+| **Work or school days, Called, From, Until** | Your regular work or school block. |
+| **Add meal times** | Adds breakfast, lunch and dinner so it plans around them. |
+| **Other things that repeat** | Practice, classes, worship: pick the days, times and kind. |
+| **Build my week** | Turns the answers into routines. Tick **Replace the routines I have now** to start fresh. |
+| **Your routines** | Each routine's title, times, days, on/off switch and ✕ to delete. |
+| **Things Dayspring should never move** | Categories (such as Work) or title words (such as "class") that stay put when plans shift. |
+
 ## Your assistant
 
 `?s=assistant`
@@ -26,37 +49,6 @@ Most settings can also be changed by voice, for example "make everything bigger"
 | **Assistant's name** | Keep "Dayspring" or choose any name. |
 | **Wake words** | What you say to get its attention, separated by commas. "Hey …" works automatically. |
 | **Sense of humor** | Just the facts, Light and friendly, Dry and witty, Goofy and playful, or describe your own. |
-
-## Calls
-
-`?s=calls` · Full walkthrough: [Dayspring in calls](discord-calls.md) and [Discord bot](discord-bot.md)
-
-Everything here saves as you change it (in `data\calls.json`), so there's no Save button. At the top: whether Tune in is listening (and in which call app), whether answers go into the call, and whether the Discord bot is online.
-
-| Setting | What it does | Default |
-|---|---|---|
-| **Call apps** (Discord, Zoom, Google Meet, Teams, Any other app) | For each app, the exact **Microphone** and **Speaker** to pick on this computer, where that setting is in the app, and recommended extras. Dayspring never changes them. A table of all apps is underneath. | — |
-| **▶ Test** | Plays a test phrase into the call mixer and checks it arrived, that Voicemeeter is running, and that Dayspring can hear your speaker. | — |
-| **Speed** | How long the last 10 answers took, from the end of the question to the first sound. | — |
-| **Wait after someone stops talking** | How much quiet ends a question. Shorter answers sooner; too short cuts people off mid-pause. | 450 ms |
-| **While thinking** | Nothing, a soft blip, or a short "mm-hm" (Discord bot). | Nothing |
-| **Quick listening** | Uses the fast speech model's words when they're clear, instead of a second, slower pass. | On |
-| **Stop when someone talks over me** | Talking over Dayspring for about half a second stops it (Discord bot). **…with Tune in too** does the same for Tune in. | On · Off |
-| **When the Discord bot and Tune in are both in the call** | Who answers, so nobody hears two answers. | The bot |
-| **Direct messages from** | Who can DM the Discord bot: anyone, people in a server with the bot, only you, or nobody. | People in a server with the bot |
-| **Dayspring's channel ID** | A Discord channel where every message is for Dayspring. | — |
-| **Personality in Discord** | A different personality just for Discord, or the same as everywhere. | The same |
-| **Share my schedule with Discord** | Lets friends ask what you're up to today. Files, texts and the prayer list stay private either way. | Off |
-| **Copy invite link** | The link that adds the bot (with its slash commands) to a server you manage. | — |
-
-## Where you are
-
-`?s=location`
-
-| Setting | What it does |
-|---|---|
-| **Your city or town** | Type it and press **Search**, then pick the right place. It's used for weather, weather alerts, sunrise and sunset (for the living sky) and local news. |
-| **Time zone** | Filled in when you pick a place. Change it only if it's wrong. |
 
 ## AI brain
 
@@ -99,19 +91,64 @@ On the Dayspring screen, the **🔊 Sound** panel has separate sliders for the v
 
 Dayspring only changes its **own** sound. Your Windows default speaker and your other apps are never changed.
 
-## Your week
+## Screen
 
-`?s=week` · Full walkthrough: [Your schedule](schedule.md#routine-and-fixed-blocks)
+`?s=screen` · Full walkthrough: [Display setup](display-setup.md)
 
 | Setting | What it does |
 |---|---|
-| **Usually up at / in bed by** | Frames your day. The alarm rings at your first item. |
-| **Work or school days, Called, From, Until** | Your regular work or school block. |
-| **Add meal times** | Adds breakfast, lunch and dinner so it plans around them. |
-| **Other things that repeat** | Practice, classes, worship: pick the days, times and kind. |
-| **Build my week** | Turns the answers into routines. Tick **Replace the routines I have now** to start fresh. |
-| **Your routines** | Each routine's title, times, days, on/off switch and ✕ to delete. |
-| **Things Dayspring should never move** | Categories (such as Work) or title words (such as "class") that stay put when plans shift. |
+| **Which screen** | Click a screen, or choose Automatic (the second screen if there is one), Main screen or Second screen. |
+| **How Dayspring opens** | **Automatic** (an app window on this screen, full screen on a TV or second screen), **App window**, **Compact (Dayspring mini)**, **Full screen** or **Browser tab**. See [Opening Dayspring](display-setup.md#opening-dayspring-app-window-compact-full-screen-or-browser-tab). |
+| **Which browser shows Dayspring?** | Your default browser (the default), or any browser on the computer: Edge, Chrome, Brave, Firefox, Opera, Vivaldi… Used for every way Dayspring opens and for Pop out. **Reopen now in …** switches straight away. Edge has the best free voices. |
+| **Speech recognition** | **Automatic** (the browser's own in Chrome and Edge, otherwise the private one), **The browser** (fast, needs the internet), or **On this computer (private)** (works in every browser; a one-time download of about 200 MB). |
+| **Keep the Dayspring screen open** | Off unless you turn it on. On: if the screen closes or the TV is unplugged, it opens again by itself. Off: when you close it, it stays closed. |
+| **Open the screen when Windows starts** | Only if Dayspring starts with Windows. Off (the default): it starts hidden, with notifications and alarms working. |
+| **Keep this computer awake** | While plugged in: no sleep and no idle lock screen, so Dayspring can wake you and hear you. On battery it sleeps as usual. Your power settings are not changed. See [Keeping the screen awake](display-setup.md#keeping-the-screen-awake). |
+| **📐 Fit to screen…** | Bright lines at the edges to line up with your TV. See [Fitting Dayspring to your screen](display-setup.md#fitting-dayspring-to-your-screen). |
+
+**Size**: *Everything* (60–150%), *Text in the cards* (80–130%), *The clock* (60–160%).
+
+**Margins**: *All sides* and *Top / Bottom / Left / Right* (0–20%) for TVs that crop the edges.
+
+**Layout**: *Arrangement* (Automatic, Two columns, panel on the right or left, One column, Compact), *Dayspring panel width* (or automatic), *Spacing* (Comfortable or Compact), *Shape* (Fill the screen, or Keep proportions 16:9).
+
+**What to show**: the clock and date, Now and Next, the rotating panel, the exam countdown, the course rings, the transcript, and *Rows in the day list* (0 = as many as fit).
+
+**Motion**: *Seconds per slide* in the rotating panel (0 = it stays put) and *Calmer motion*.
+
+Each group has its own **Reset**, and **Reset the whole screen layout** puts everything back.
+
+## Sky & scenery
+
+`?s=sky` · Full walkthrough: [Display setup → The living sky](display-setup.md#the-living-sky)
+
+| Group | Settings |
+|---|---|
+| **Living sky** | On, or off for a plain dark background. |
+| **Vibe** | One tap sets everything: Real world, Calm, Cozy, Vivid, Minimal, Focus, Night owl. **Reset everything** goes back to Real world. |
+| **Weather** | *Follow the real weather*, or pick one (clear, partly cloudy, overcast, drizzle, rain, storm, snow, fog). Sliders for clouds, rain, drops on the glass, snow, fog, wind, sun rays; *Lightning in storms*. |
+| **Time of day** | *Follow the sun*, or pick a time (night to dusk); *Shift sunrise/sunset* by up to an hour. |
+| **Season** | *Follow the calendar*, or pick one; *Leaves, petals & seeds*. |
+| **Scenery** | A new one each day, rolling hills, crop fields, forest, river, or none; grass, water shimmer, night lights and fireflies, stars and moon. |
+| **Colors** | Brightness, color richness, warmth, *Darken behind the cards*, *Accent colors follow the sky*. |
+| **Motion** | Normal, Reduced (no particles), or Still; smoothness 15, 30 or 60 fps (lower is lighter on older computers). |
+| **Schedule-aware vibe** | Changes the vibe during kinds of blocks, for example Focus while studying. |
+| **Preview** | Shows a look for 20 seconds without saving it. |
+
+## Notifications
+
+`?s=notifications` · Settings only. Full walkthrough: [Compact mode, quiet mode and notifications](quiet-and-notifications.md)
+
+| Setting | What it does |
+|---|---|
+| **Dayspring is** | **Active** (listens and speaks), **Quiet** (hears its name, says nothing) or **Off** (not listening; the microphone is released). Also on the badge, with **Ctrl+Alt+Shift+D**, or by voice. |
+| **Alarms still ring when Off** | On by default. |
+| **How each kind arrives** | For Reminders, Schedule, Texts and phone, Lantern, Discover, and Updates, alerts and system: **Usual**, **Speak**, **Chime only** or **Silent**. |
+| **Quick switch for everything** | Overrides them all (speak, chime only, or silent) until you choose **Use the settings above**. |
+| **Show notifications in front of every window** | Small cards at the top-right, over any app, without taking the focus. Skipped while the Dayspring window is in front. |
+| **Show them when Dayspring is off** | On by default. |
+| **Speak announcements even when the screen is closed** | Off by default. With no Dayspring screen open, notifications set to Speak are read in Windows' own voice; off, they chime instead. Alarms always ring from the desktop card. |
+| **Stay on screen for** / **Show them on** | 3–30 seconds; the main screen or screen 1–3. **Show a test notification** tries it. |
 
 ## Features & apps
 
@@ -136,6 +173,95 @@ Dayspring only changes its **own** sound. Your Windows default speaker and your 
 `?s=apps` · Full walkthrough: [Connecting apps](connections.md)
 
 Every app Dayspring can connect to, each on its own card with its status, **Set up** / **Manage** (a step-by-step drawer with a button that opens the right website) and **Disconnect**: Google Calendar + Gmail, Outlook + Microsoft To Do, Notion, calendar subscriptions, news and RSS, Home Assistant, webhooks, Todoist, weather alerts, Spotify, YouTube, Phone Link and Discord. Each card saves itself, so there's no Save button. The same cards are on the **Apps** step of the guided setup (`http://localhost:4747/welcome?step=apps`).
+
+## Calls
+
+`?s=calls` · Full walkthrough: [Dayspring in calls](discord-calls.md) and [Discord bot](discord-bot.md)
+
+Everything here saves as you change it (in `data\calls.json`), so there's no Save button. At the top: whether Tune in is listening (and in which call app), whether answers go into the call, and whether the Discord bot is online.
+
+| Setting | What it does | Default |
+|---|---|---|
+| **Call apps** (Discord, Zoom, Google Meet, Teams, Any other app) | For each app, the exact **Microphone** and **Speaker** to pick on this computer, where that setting is in the app, and recommended extras. Dayspring never changes them. A table of all apps is underneath. | — |
+| **▶ Test** | Plays a test phrase into the call mixer and checks it arrived, that Voicemeeter is running, and that Dayspring can hear your speaker. | — |
+| **Speed** | How long the last 10 answers took, from the end of the question to the first sound. | — |
+| **Wait after someone stops talking** | How much quiet ends a question. Shorter answers sooner; too short cuts people off mid-pause. | 450 ms |
+| **While thinking** | Nothing, a soft blip, or a short "mm-hm" (Discord bot). | Nothing |
+| **Quick listening** | Uses the fast speech model's words when they're clear, instead of a second, slower pass. | On |
+| **Stop when someone talks over me** | Talking over Dayspring for about half a second stops it (Discord bot). **…with Tune in too** does the same for Tune in. | On · Off |
+| **When the Discord bot and Tune in are both in the call** | Who answers, so nobody hears two answers. | The bot |
+| **Direct messages from** | Who can DM the Discord bot: anyone, people in a server with the bot, only you, or nobody. | People in a server with the bot |
+| **Dayspring's channel ID** | A Discord channel where every message is for Dayspring. | — |
+| **Personality in Discord** | A different personality just for Discord, or the same as everywhere. | The same |
+| **Share my schedule with Discord** | Lets friends ask what you're up to today. Files, texts and the prayer list stay private either way. | Off |
+| **Copy invite link** | The link that adds the bot (with its slash commands) to a server you manage. | — |
+
+## Smart devices
+
+`?s=devices` · Shown in Settings only · Development version · Full walkthrough: [Smart devices](smart-devices.md)
+
+Everything saves as you change it. Kept in `data\devices-home.json`; passwords and keys sealed with Windows' protection.
+
+| Setting | What it does | Default |
+|---|---|---|
+| **May Dayspring switch your devices?** | Off, Ask me first (every switch waits for your yes), or On (everyday things just happen; risky ones still ask). | Off |
+| **Recommended power strips** | The strips that switch each outlet on its own and work on your own network, with links and notes. | — |
+| **Find devices on my network** | Looks for Kasa, Shelly, Tapo, Meross and WLED devices (only when you click), with **Add** for each. | — |
+| **Your strips and plugs** | Each strip: its kind, address, login, outlets, **Test**, and each outlet's device. Custom HTTP/MQTT devices start from a template. | — |
+| **Devices** | Name, kind, room, other words for it, the outlet it's on, Wake-on-LAN, a Home Assistant / Matter entity, WLED or Hue, Critical, This PC, auto-off, its 3D printer, and its own Control setting. | Like everything else |
+| **Scenes** | Several devices at once ("movie mode"). | — |
+| **Philips Hue** | Pair a bridge (press its button first). | — |
+| **Limits** | Seconds between switching the same thing, most switches per minute, how many things make a command ask first. | 3 s, 8, 4 |
+
+## 3D printers
+
+`?s=printers` · Shown in Settings only · Development version · Full walkthrough: [3D printers](bambu-printers.md)
+
+| Setting | What it does | Default |
+|---|---|---|
+| **Add a printer** | Bambu Lab (IP, serial, access code, model), Creality Ender / Marlin over USB (its port), OctoPrint (address, API key) or Klipper (address), and a camera for printers without one. **Test connection**. | — |
+| **The empty bed** | Take a picture of the empty bed (per plate), and drag a box around the bed. | — |
+| **Look every** | How often a picture is taken while printing. | 10 minutes |
+| **How sure before it warns you** | Warn early, Balanced, Only when quite sure. | Balanced |
+| **Ask the AI to look too** | Like "Describe pictures with AI", yes, or no (this computer only). | Like "Describe pictures" |
+| **Keep failed-print pictures** | Days. | 30 |
+| **Pause by itself when it looks like it's failing** | Off: it tells you and asks. It never stops a print by itself. | Off |
+| **Start queued prints by themselves when the bed is clear** | Off: "ask me first". On: a fresh clear-bed check is still required every time. | Off |
+| **Always keep a timelapse** | A good print's pictures become one video instead of being deleted. | Off |
+| **Ask me if it came out okay** | Before clearing the pictures. | Off |
+| **Also text me when a print fails** | Uses the phone number in Notifications. | Off |
+| **Queue folder** | Its .3mf / .gcode files are queued. | Empty |
+
+## GIFs
+
+`?s=gifs` · Shown in Settings only · Full walkthrough: [GIFs](gifs.md)
+
+Keys save as soon as you click **Save key**; everything else saves with **Save** (or when you move to another section). Kept in `data\gifs.json` (keys in `.env`).
+
+| Setting | What it does | Default |
+|---|---|---|
+| **Sources** (GIPHY, KLIPY, Imgur, Web) | One card each: an on/off switch, the key (never shown again once saved), **Test** (✓ Works, Key not accepted, Busy, Unavailable), **Get a free key** with the steps, and the credit shown with its GIFs. Drag the cards or use ▲ ▼ to set which goes first. The web search needs no key and steps in whenever nothing else can answer. | All on |
+| **Highest rating to show** | G, PG, PG-13 or R. Checked by the sources and again by Dayspring. | PG-13 |
+| **Show at first** | GIFs or stickers. | GIFs |
+| **Preferred format** | GIF, MP4 or WebP, for the big preview, saving and attaching. | GIF |
+| **Animate GIFs** | Always, only when pointed at, or never in the grid. | Always |
+| **Data saver** | Smaller previews in the grid. | Off |
+| **Save GIFs to** | A folder of your own. Empty: Pictures › Dayspring GIFs (when Permissions allow it, otherwise Dayspring's `data\gifs`). | Empty |
+| **Keep up to (MB)** | Space for GIFs kept for attaching and copying, and **Clear GIF cache**. | 200 MB |
+| **Favourites and recent GIFs** | How many you have, with **Clear favourites** and **Clear recent GIFs**. | — |
+| **Say the GIF's title when you pick one** | "Number 4: Dancing cat, from GIPHY", or just "Number 4". | On |
+
+## Lantern
+
+Shown in Settings only. Everything here is optional; see [Dayspring and Lantern](lantern.md).
+
+| Setting | What it does |
+| --- | --- |
+| **Status** | Whether Lantern is running, your courses and their progress, and **Open Lantern**. Without Lantern: **Install Lantern** (it asks before installing anything). |
+| **Connect to Lantern** | So Dayspring can tell you about course invitations and friend requests: **I already have Lantern** (uses Lantern's sign-in), your email and a password (**Sign in** / **Create an account**; the password is never saved), or **Email me a sign-in link** (open it on this computer). A 6-digit code only on hubs whose email includes one. The sign-in is kept in Dayspring's `data` folder, not `.env`, and handed to Lantern once when it's installed. |
+| **Your Lantern hub** | The hub's address and its **public** key, from the person who invited you. A secret key is refused. |
+| **The AI key** | **Use Dayspring's AI key in Lantern** or **Use the AI key from Lantern**: set up the AI once. Stored encrypted for your Windows account; never sent between the apps. |
+| **Listening** | **Let Lantern listen** or **Dayspring listens**: which app listens for its name. Dayspring does while it runs, unless you hand it over. |
 
 ## Permissions
 
@@ -166,74 +292,6 @@ Whatever these say, Windows, Program Files, boot files, the registry, other peop
 | **Restore this version** | Puts back a file as it was before that change (the current version is backed up first). |
 | **Days to keep the log and file backups** | At least 120, 180 to start with. |
 
-## Screen
-
-`?s=screen` · Full walkthrough: [Display setup](display-setup.md)
-
-| Setting | What it does |
-|---|---|
-| **Which screen** | Click a screen, or choose Automatic (the second screen if there is one), Main screen or Second screen. |
-| **How Dayspring opens** | **Automatic** (an app window on this screen, full screen on a TV or second screen), **App window**, **Compact (Dayspring mini)**, **Full screen** or **Browser tab**. See [Opening Dayspring](display-setup.md#opening-dayspring-app-window-compact-full-screen-or-browser-tab). |
-| **Which browser shows Dayspring?** | Your default browser (the default), or any browser on the computer: Edge, Chrome, Brave, Firefox, Opera, Vivaldi… Used for every way Dayspring opens and for Pop out. **Reopen now in …** switches straight away. Edge has the best free voices. |
-| **Speech recognition** | **Automatic** (the browser's own in Chrome and Edge, otherwise the private one), **The browser** (fast, needs the internet), or **On this computer (private)** (works in every browser; a one-time download of about 200 MB). |
-| **Keep the Dayspring screen open** | Off unless you turn it on. On: if the screen closes or the TV is unplugged, it opens again by itself. Off: when you close it, it stays closed. |
-| **Open the screen when Windows starts** | Only if Dayspring starts with Windows. Off (the default): it starts hidden, with notifications and alarms working. |
-| **Keep this computer awake** | While plugged in: no sleep and no idle lock screen, so Dayspring can wake you and hear you. On battery it sleeps as usual. Your power settings are not changed. See [Keeping the screen awake](display-setup.md#keeping-the-screen-awake). |
-| **📐 Fit to screen…** | Bright lines at the edges to line up with your TV. See [Fitting Dayspring to your screen](display-setup.md#fitting-dayspring-to-your-screen). |
-
-**Size**: *Everything* (60–150%), *Text in the cards* (80–130%), *The clock* (60–160%).
-
-**Margins**: *All sides* and *Top / Bottom / Left / Right* (0–20%) for TVs that crop the edges.
-
-**Layout**: *Arrangement* (Automatic, Two columns, panel on the right or left, One column, Compact), *Dayspring panel width* (or automatic), *Spacing* (Comfortable or Compact), *Shape* (Fill the screen, or Keep proportions 16:9).
-
-**What to show**: the clock and date, Now and Next, the rotating panel, the exam countdown, the course rings, the transcript, and *Rows in the day list* (0 = as many as fit).
-
-**Motion**: *Seconds per slide* in the rotating panel (0 = it stays put) and *Calmer motion*.
-
-Each group has its own **Reset**, and **Reset the whole screen layout** puts everything back.
-
-## Notifications
-
-`?s=notifications` · Settings only. Full walkthrough: [Compact mode, quiet mode and notifications](quiet-and-notifications.md)
-
-| Setting | What it does |
-|---|---|
-| **Dayspring is** | **Active** (listens and speaks), **Quiet** (hears its name, says nothing) or **Off** (not listening; the microphone is released). Also on the badge, with **Ctrl+Alt+Shift+D**, or by voice. |
-| **Alarms still ring when Off** | On by default. |
-| **How each kind arrives** | For Reminders, Schedule, Texts and phone, Lantern, Discover, and Updates, alerts and system: **Usual**, **Speak**, **Chime only** or **Silent**. |
-| **Quick switch for everything** | Overrides them all (speak, chime only, or silent) until you choose **Use the settings above**. |
-| **Show notifications in front of every window** | Small cards at the top-right, over any app, without taking the focus. Skipped while the Dayspring window is in front. |
-| **Show them when Dayspring is off** | On by default. |
-| **Speak announcements even when the screen is closed** | Off by default. With no Dayspring screen open, notifications set to Speak are read in Windows' own voice; off, they chime instead. Alarms always ring from the desktop card. |
-| **Stay on screen for** / **Show them on** | 3–30 seconds; the main screen or screen 1–3. **Show a test notification** tries it. |
-
-## About
-
-`?s=about` · Settings only.
-
-| Setting | What it does |
-|---|---|
-| **Running parts** | Every Dayspring process running now (as named in Task Manager), with **Stop all**. See [What's running](troubleshooting.md#whats-running). |
-| **Uninstall Dayspring…** | Removes Dayspring, keeping your data unless you choose otherwise; you confirm by typing your name. See [Uninstalling](install.md#uninstalling-dayspring). |
-
-## Sky & scenery
-
-`?s=sky` · Full walkthrough: [Display setup → The living sky](display-setup.md#the-living-sky)
-
-| Group | Settings |
-|---|---|
-| **Living sky** | On, or off for a plain dark background. |
-| **Vibe** | One tap sets everything: Real world, Calm, Cozy, Vivid, Minimal, Focus, Night owl. **Reset everything** goes back to Real world. |
-| **Weather** | *Follow the real weather*, or pick one (clear, partly cloudy, overcast, drizzle, rain, storm, snow, fog). Sliders for clouds, rain, drops on the glass, snow, fog, wind, sun rays; *Lightning in storms*. |
-| **Time of day** | *Follow the sun*, or pick a time (night to dusk); *Shift sunrise/sunset* by up to an hour. |
-| **Season** | *Follow the calendar*, or pick one; *Leaves, petals & seeds*. |
-| **Scenery** | A new one each day, rolling hills, crop fields, forest, river, or none; grass, water shimmer, night lights and fireflies, stars and moon. |
-| **Colors** | Brightness, color richness, warmth, *Darken behind the cards*, *Accent colors follow the sky*. |
-| **Motion** | Normal, Reduced (no particles), or Still; smoothness 15, 30 or 60 fps (lower is lighter on older computers). |
-| **Schedule-aware vibe** | Changes the vibe during kinds of blocks, for example Focus while studying. |
-| **Preview** | Shows a look for 20 seconds without saving it. |
-
 ## Updates
 
 | Setting | What it does |
@@ -245,17 +303,14 @@ Each group has its own **Reset**, and **Reset the whole screen layout** puts eve
 
 Backups of your data and of the previous version are in the `backups` folder. See [Updating](updating.md).
 
-## Lantern
+## About
 
-Shown in Settings only. Everything here is optional; see [Dayspring and Lantern](lantern.md).
+`?s=about` · Settings only.
 
 | Setting | What it does |
-| --- | --- |
-| **Status** | Whether Lantern is running, your courses and their progress, and **Open Lantern**. Without Lantern: **Install Lantern** (it asks before installing anything). |
-| **Connect to Lantern** | So Dayspring can tell you about course invitations and friend requests: **I already have Lantern** (uses Lantern's sign-in), your email and a password (**Sign in** / **Create an account**; the password is never saved), or **Email me a sign-in link** (open it on this computer). A 6-digit code only on hubs whose email includes one. The sign-in is kept in Dayspring's `data` folder, not `.env`, and handed to Lantern once when it's installed. |
-| **Your Lantern hub** | The hub's address and its **public** key, from the person who invited you. A secret key is refused. |
-| **The AI key** | **Use Dayspring's AI key in Lantern** or **Use the AI key from Lantern**: set up the AI once. Stored encrypted for your Windows account; never sent between the apps. |
-| **Listening** | **Let Lantern listen** or **Dayspring listens**: which app listens for its name. Dayspring does while it runs, unless you hand it over. |
+|---|---|
+| **Running parts** | Every Dayspring process running now (as named in Task Manager), with **Stop all**. See [What's running](troubleshooting.md#whats-running). |
+| **Uninstall Dayspring…** | Removes Dayspring, keeping your data unless you choose otherwise; you confirm by typing your name. See [Uninstalling](install.md#uninstalling-dayspring). |
 
 ## Keys in the .env file
 

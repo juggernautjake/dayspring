@@ -21,6 +21,7 @@
 
   const GROUPS = [
     { id: "calendars", title: "Calendars & tasks", apps: ["google", "microsoft", "ics", "todoist"] },
+    { id: "email", title: "Email", apps: ["mail"] },   // (only when the "email" feature is on: /api/connect lists it then)
     { id: "notes", title: "Notes & docs", apps: ["notion"] },
     { id: "media", title: "Music & video", apps: ["spotify", "youtube"] },
     { id: "talk", title: "Messages & calls", apps: ["phone", "discord", "tunein"] },
@@ -34,10 +35,11 @@
     notion: "Search and read your Notion pages; save notes to them.", homeassistant: "Lights, plugs and scenes by voice.",
     webhooks: "IFTTT, Zapier, Make or n8n: say a phrase, run an action.", feeds: "Headlines from topics and sites you choose.",
     weatheralerts: "Severe weather warnings for your town, announced right away.",
+    mail: "Yahoo, iCloud, AOL and any other email, with an app password. (Gmail and Outlook use their own sign-in.)",
   };
-  const MULTI = { ics: "calendars", feeds: "feeds", webhooks: "outgoing" };
+  const MULTI = { ics: "calendars", feeds: "feeds", webhooks: "outgoing", mail: "imap" };
   const OAUTH = ["google", "microsoft"];
-  const REQUIRED = { notion: ["token"], todoist: ["token"], homeassistant: ["url", "token"], google: ["clientId", "clientSecret"], microsoft: ["clientId"] };
+  const REQUIRED = { notion: ["token"], todoist: ["token"], homeassistant: ["url", "token"], google: ["clientId", "clientSecret"], microsoft: ["clientId"], mail: ["email", "password"] };
 
   // Spotify, YouTube, Phone Link, Discord, Tune in, Claude Code, Codex: { load() → status, pill(s), drawer parts, connect, disconnect }
   const CUSTOM = {
@@ -193,7 +195,7 @@
     </article>`;
   }
   function paint() {
-    root.innerHTML = GROUPS.map((g) => `<section class="app-group" aria-labelledby="ag-${g.id}"><h2 id="ag-${g.id}">${esc(g.title)}</h2>
+    root.innerHTML = GROUPS.filter((g) => g.apps.some((id) => apps[id])).map((g) => `<section class="app-group" aria-labelledby="ag-${g.id}"><h2 id="ag-${g.id}">${esc(g.title)}</h2>
       <div class="app-grid">${g.apps.map(card).join("")}</div>
       ${g.id === "calendars" ? `<div class="app-sync" id="calendarSync" data-hook="calendar-sync"><h3>🔄 Calendar sync</h3><p class="hint">Events from the calendars you connect show on Dayspring's calendar next to your own. Settings for how they're merged will appear here.</p></div>` : ""}
     </section>`).join("");
@@ -266,12 +268,14 @@
   function itemsHtml(id, s) {
     const key = MULTI[id]; if (!key) return "";
     const items = s[key] ?? [];
-    const label = { ics: "Your calendars", feeds: "Your feeds", webhooks: "Your actions" }[id];
-    const line = (x) => id === "webhooks" ? `<div class="t">${esc(x.name)}</div><div class="s">Say “${esc(x.phrase)}” · ${esc(x.host)}</div>` : `<div class="t">${esc(x.name)}</div><div class="s">${esc([x.topic, x.host].filter(Boolean).join(" · "))}</div>`;
+    const label = { ics: "Your calendars", feeds: "Your feeds", webhooks: "Your actions", mail: "Your mailboxes" }[id];
+    const line = (x) => id === "webhooks" ? `<div class="t">${esc(x.name)}</div><div class="s">Say “${esc(x.phrase)}” · ${esc(x.host)}</div>`
+      : id === "mail" ? `<div class="t">${esc(x.email)}</div><div class="s">${esc(x.provider)} · ${x.canSend ? "can send" : "sending off"} · <a href="/settings?s=email" data-email-settings>Settings → Email</a></div>`
+      : `<div class="t">${esc(x.name)}</div><div class="s">${esc([x.topic, x.host].filter(Boolean).join(" · "))}</div>`;
     const incoming = id === "webhooks" && s.incoming ? `<h3>Incoming link</h3><p class="hint">Other services can make Dayspring speak or set a reminder by sending to this link. It works on this computer only. Keep it private: anyone with it can make Dayspring talk.</p>
       <div class="secret-row"><code class="copyval masked" id="adIncoming" data-real="${esc(s.incoming)}">${esc(s.incoming.replace(/[^/]+$/, "••••••••"))}</code>
       <button type="button" class="btn small ghost" data-reveal="adIncoming" aria-pressed="false">Show</button><button type="button" class="btn small" data-copy="${esc(s.incoming)}" aria-label="Copy the incoming link">Copy</button></div>` : "";
-    return `<h3>${label}</h3>${items.length ? `<div class="list" role="list">${items.map((x) => `<div class="item" role="listitem"><div class="grow">${line(x)}</div><button type="button" class="btn small ghost danger" data-remove="${esc(x.id)}" aria-label="Remove ${esc(x.name)}">Remove</button></div>`).join("")}</div>` : `<p class="hint">None yet. Add one below.</p>`}${incoming}`;
+    return `<h3>${label}</h3>${items.length ? `<div class="list" role="list">${items.map((x) => `<div class="item" role="listitem"><div class="grow">${line(x)}</div><button type="button" class="btn small ghost danger" data-remove="${esc(x.id)}" aria-label="Remove ${esc(x.name ?? x.email)}">Remove</button></div>`).join("")}</div>` : `<p class="hint">None yet. Add one below.</p>`}${incoming}${id === "mail" ? `<p class="hint">Signatures, sending, reading and privacy are in <a href="/settings?s=email" data-email-settings>Settings → Email</a>.</p>` : ""}`;
   }
   function paintDrawer() {
     const id = openId, a = apps[id], d = $("#appsDrawer"); if (!id || !a) return;

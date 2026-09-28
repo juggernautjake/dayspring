@@ -120,3 +120,6 @@ html body .stpop{max-width:calc(var(--safe-w) - 2 * var(--safe-gap));max-height:
 html body .tunepop, html body .meetpop{z-index:41}
 /* their ✕ stays at the top while the rest scrolls */
 html body .tunepop .x, html body .meetpop .x{position:sticky;float:right;top:0;right:auto;margin:-.5em -.5em 0 .4em;z-index:2}
+/* a 3D printer that looks like it is failing: its picture card (public/home-tv.js), top right, never past a margin */
+html body .printpanel{right:calc(var(--safe-right) + var(--safe-gap));top:max(calc(var(--safe-top) + var(--safe-gap) + 2.4em), var(--pop-top, 0px));max-width:calc(var(--safe-w) - 2 * var(--safe-gap));max-height:calc(var(--safe-h) - 2 * var(--safe-gap) - 2.4em);overflow:auto}
+html.mini body .printpanel{left:calc(.5em + var(--safe-left));right:calc(.5em + var(--safe-right));width:auto;top:calc(.5em + var(--safe-top))}

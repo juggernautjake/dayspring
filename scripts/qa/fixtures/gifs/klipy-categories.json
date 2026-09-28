@@ -1,0 +1,22 @@
+{
+ "result": true,
+ "data": {
+  "categories": [
+   {
+    "category": "Love",
+    "query": "love",
+    "preview_url": "https://media.fixture.test/m/kc1.gif"
+   },
+   {
+    "category": "Animals",
+    "query": "animals",
+    "preview_url": "https://media.fixture.test/m/kc2.gif"
+   },
+   {
+    "category": "Birthday",
+    "query": "happy birthday",
+    "preview_url": "https://media.fixture.test/m/kc3.gif"
+   }
+  ]
+ }
+}

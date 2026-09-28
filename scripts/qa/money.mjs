@@ -193,7 +193,7 @@ await safe("report", async () => {
   report = r.report;
   const rec1 = (m) => report.recurring.find((x) => new RegExp(m, "i").test(x.merchant));
   const nf = rec1("netflix");
-  rec("recurring charges found (Netflix, Spotify, Hulu, gym, iCloud, Crunchyroll, rent share)", ["netflix", "spotify", "hulu", "planet fitness", "icloud", "crunchyroll", "alex kim"].every((m) => rec1(m)), report.recurring.map((x) => x.merchant).join(", "));
+  rec("recurring charges found (Netflix, Spotify, Hulu, gym, iCloud, Crunchyroll, rent share)", ["netflix", "spotify", "hulu", "planet fitness", "icloud", "crunchyroll", "alex moreau"].every((m) => rec1(m)), report.recurring.map((x) => x.merchant).join(", "));
   rec("monthly cadence, next expected date and yearly cost", nf?.every === "monthly" && /^\d{4}-\d{2}-\d{2}$/.test(nf.next) && nf.next > nf.last && Math.abs(nf.yearly - 17.99 * 12) < 2, JSON.stringify(nf));
   rec("the Netflix price increase is caught", report.priceIncreases.some((p) => /netflix/i.test(p.merchant) && p.from === 15.49 && p.to === 17.99), JSON.stringify(report.priceIncreases));
   rec("the duplicate iCloud charge is caught", report.duplicates.some((d) => /icloud/i.test(d.merchant) && d.amount === 2.99), JSON.stringify(report.duplicates));
@@ -201,7 +201,7 @@ await safe("report", async () => {
   rec("the overdraft fee is listed", report.fees.some((f) => /overdraft/i.test(f.description)) && report.feesTotal >= 35);
   const cancel = report.cancel.map((c) => c.merchant.toLowerCase()).join(" | ");
   rec("things to cancel: price went up, duplicate, overlapping streaming, with reasons and how", /netflix/.test(cancel) && /icloud/.test(cancel) && /hulu/.test(cancel) && report.cancel.every((c) => c.reasons.length && c.how.length > 20), cancel);
-  rec("rent, utilities and phone are never suggested for cancelling", !/rent|duke|at&t|alex kim/.test(cancel));
+  rec("rent, utilities and phone are never suggested for cancelling", !/rent|duke|at&t|alex moreau/.test(cancel));
   rec("totals by month and a net figure", report.months.length >= 3 && report.months.every((m) => Math.abs(m.in - m.out - m.net) < 0.01) && Math.abs(report.totals.in - report.totals.out - report.totals.net) < 0.01);
   rec("spending by category and top merchants", report.categories.some((c) => c.category === "Groceries") && report.merchants[0]?.total > 0);
   rec("the spoken summary is short", r.reply.length < 400 && /screen/.test(r.reply), r.reply);
@@ -344,7 +344,7 @@ await safe("logs", async () => {
   // the shared log's own hashes are left out (hex can look like anything)
   const shared = existsSync(join(APP, "data", "logs", "activity")) ? readdirSync(join(APP, "data", "logs", "activity")).flatMap((f) => readFileSync(join(APP, "data", "logs", "activity", f), "utf8").split("\n").filter(Boolean))
     .map((l) => { try { const { hash, prev, id, ...rest } = JSON.parse(l); return JSON.stringify(rest); } catch { return ""; } }).join("\n") : "";
-  const leak = /\$\s?\d|\d+\.\d{2}\b|netflix|kroger|josh|alex kim|4111222233334444|4000123456789010/i;
+  const leak = /\$\s?\d|\d+\.\d{2}\b|netflix|kroger|josh|alex moreau|4111222233334444|4000123456789010/i;
   rec("the money log and the shared activity log hold no amounts, merchants, names or numbers", !leak.test(mine) && !leak.test(shared) && /read \d+ transactions from venmo\.test/.test(mine), (mine.match(leak) ?? shared.match(leak) ?? [""])[0]);
   rec("money actions reach the shared activity log", /"money"/.test(shared) || !existsSync(join(APP, "lib", "activity.mjs")), shared ? "" : "no shared log in this copy");
 });

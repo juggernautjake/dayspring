@@ -1,0 +1,312 @@
+{
+  "category": "bluetooth",
+  "label": "Bluetooth devices",
+  "description": "Bluetooth LE gadgets: switches, plugs, sensors and trackers. Today they come in through Home Assistant (with the server's Bluetooth or ESPHome Bluetooth proxies); Dayspring's own Bluetooth control, through this PC or the proxies, is planned. Nothing here has been confirmed with Dayspring yet.",
+  "entries": [
+    {
+      "id": "esphome-bluetooth-proxy",
+      "brand": "ESPHome (open firmware)",
+      "model": "ESP32 Bluetooth proxy",
+      "category": "bluetooth",
+      "connection": "ble",
+      "offline": true,
+      "status": "expected",
+      "capabilities": ["sensor"],
+      "notes": "Recommended in the home-control plan. A cheap ESP32 board on your Wi-Fi (or wired network) that listens for and talks to Bluetooth devices nearby, extending Bluetooth range to every room. Home Assistant uses them automatically; Dayspring will use them for its own Bluetooth control too.",
+      "howToSetUp": [
+        "Buy an ESP32 board (a wired-network one is best), and plug it in with a USB cable to this PC.",
+        "Open the ESPHome Bluetooth proxy installer page in Chrome or Edge, choose your board and click Connect to install it.",
+        "Join it to your Wi-Fi when the installer asks, then place it in the room you want covered, powered by any USB charger.",
+        "In Home Assistant, accept the new ESPHome device it discovers; Bluetooth devices near it start appearing."
+      ],
+      "links": ["https://esphome.github.io/bluetooth-proxies/", "https://esphome.io", "https://www.home-assistant.io/integrations/bluetooth/"],
+      "lastChecked": "2026-09-28",
+      "features": ["devices"]
+    },
+    {
+      "id": "switchbot-bot",
+      "brand": "SwitchBot",
+      "model": "Bot (button pusher)",
+      "category": "bluetooth",
+      "connection": "ble",
+      "offline": true,
+      "status": "expected",
+      "capabilities": ["on-off", "battery"],
+      "notes": "A small arm that presses a physical button or rocker switch, handy for a coffee maker or an old appliance. Home Assistant's SwitchBot integration controls it directly over Bluetooth, no SwitchBot hub or cloud needed. Don't use it on anything that heats without Dayspring's heat-safety rules.",
+      "howToSetUp": [
+        "Set up the Bot in the SwitchBot app and stick it next to the button.",
+        "Make sure Home Assistant has Bluetooth near it (the server's Bluetooth or an ESPHome Bluetooth proxy).",
+        "In Home Assistant, add the SwitchBot Bluetooth integration when it offers the Bot.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the Bot."
+      ],
+      "links": ["https://www.switch-bot.com", "https://www.home-assistant.io/integrations/switchbot/"],
+      "lastChecked": "2026-09-28",
+      "features": ["devices"]
+    },
+    {
+      "id": "switchbot-plug-mini",
+      "brand": "SwitchBot",
+      "model": "Plug Mini",
+      "category": "bluetooth",
+      "connection": "ble",
+      "offline": true,
+      "status": "expected",
+      "capabilities": ["on-off", "power-monitoring"],
+      "notes": "A Wi-Fi and Bluetooth plug with power readings. Home Assistant's SwitchBot integration controls it locally over Bluetooth.",
+      "howToSetUp": [
+        "Set up the plug in the SwitchBot app.",
+        "Make sure Home Assistant has Bluetooth near it.",
+        "In Home Assistant, add the SwitchBot Bluetooth integration when it offers the plug.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the plug."
+      ],
+      "links": ["https://www.switch-bot.com", "https://www.home-assistant.io/integrations/switchbot/"],
+      "lastChecked": "2026-09-28",
+      "features": ["devices"]
+    },
+    {
+      "id": "switchbot-meter",
+      "brand": "SwitchBot",
+      "model": "Meter / Meter Plus / Outdoor Meter",
+      "category": "bluetooth",
+      "connection": "ble",
+      "offline": true,
+      "status": "expected",
+      "capabilities": ["sensor", "temperature", "humidity", "battery"],
+      "notes": "Temperature and humidity sensors that broadcast their readings over Bluetooth. Home Assistant reads them without pairing.",
+      "howToSetUp": [
+        "Put the sensor where you want readings, within reach of Home Assistant's Bluetooth or an ESPHome Bluetooth proxy.",
+        "In Home Assistant, add the SwitchBot Bluetooth integration when it offers the sensor.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the temperature and humidity readings."
+      ],
+      "links": ["https://www.switch-bot.com", "https://www.home-assistant.io/integrations/switchbot/"],
+      "lastChecked": "2026-09-28",
+      "features": ["devices"]
+    },
+    {
+      "id": "switchbot-curtain",
+      "brand": "SwitchBot",
+      "model": "Curtain / Blind Tilt",
+      "category": "bluetooth",
+      "connection": "ble",
+      "offline": true,
+      "status": "expected",
+      "capabilities": ["open-close", "battery"],
+      "notes": "Motors that open and close curtains or tilt blinds, controlled over Bluetooth through Home Assistant. These move, so Dayspring treats them with its motion safety rules.",
+      "howToSetUp": [
+        "Install and calibrate it with the SwitchBot app.",
+        "In Home Assistant, add the SwitchBot Bluetooth integration when it offers the device.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose it."
+      ],
+      "links": ["https://www.switch-bot.com", "https://www.home-assistant.io/integrations/switchbot/"],
+      "lastChecked": "2026-09-28",
+      "features": ["devices"]
+    },
+    {
+      "id": "govee-h5075",
+      "brand": "Govee",
+      "model": "H5075 thermometer-hygrometer (and similar Govee Bluetooth sensors)",
+      "category": "bluetooth",
+      "connection": "ble",
+      "offline": true,
+      "status": "expected",
+      "capabilities": ["sensor", "temperature", "humidity", "battery"],
+      "notes": "Broadcasts its readings in Bluetooth advertisements, so it can be read without pairing or the Govee app. Home Assistant's Govee Bluetooth integration picks them up.",
+      "howToSetUp": [
+        "Place the sensor within range of Home Assistant's Bluetooth or an ESPHome Bluetooth proxy.",
+        "In Home Assistant, add the Govee Bluetooth integration when it offers the sensor.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose its readings."
+      ],
+      "links": ["https://www.govee.com", "https://www.home-assistant.io/integrations/govee_ble/"],
+      "lastChecked": "2026-09-28",
+      "features": ["devices"]
+    },
+    {
+      "id": "xiaomi-lywsd03mmc",
+      "brand": "Xiaomi",
+      "model": "LYWSD03MMC thermometer (custom firmware / BTHome)",
+      "category": "bluetooth",
+      "connection": "ble",
+      "offline": true,
+      "status": "expected",
+      "capabilities": ["sensor", "temperature", "humidity", "battery"],
+      "notes": "A very cheap temperature and humidity sensor. With its original firmware the readings are encrypted and need a key from Xiaomi; with the free pvvx custom firmware (installed from a web page in a minute) it broadcasts open BTHome readings that Home Assistant picks up automatically.",
+      "howToSetUp": [
+        "Open the pvvx firmware flasher page in Chrome or Edge on a computer or phone with Bluetooth, connect to the sensor and install the custom firmware, choosing the BTHome format.",
+        "Place it within range of Home Assistant's Bluetooth or an ESPHome Bluetooth proxy.",
+        "In Home Assistant, add the BTHome integration when it offers the sensor.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose its readings."
+      ],
+      "links": ["https://github.com/pvvx/ATC_MiThermometer", "https://www.home-assistant.io/integrations/bthome/", "https://www.home-assistant.io/integrations/xiaomi_ble/"],
+      "lastChecked": "2026-09-28",
+      "features": ["devices"]
+    },
+    {
+      "id": "inkbird-ble-thermometer",
+      "brand": "Inkbird",
+      "model": "Inkbird Bluetooth thermometers and hygrometers",
+      "category": "bluetooth",
+      "connection": "ble",
+      "offline": true,
+      "status": "expected",
+      "capabilities": ["sensor", "temperature", "humidity", "battery"],
+      "notes": "Many Inkbird Bluetooth sensors (room, fridge and some cooking probes) are read by Home Assistant's Inkbird integration without the app.",
+      "howToSetUp": [
+        "Place the sensor within range of Home Assistant's Bluetooth or an ESPHome Bluetooth proxy.",
+        "In Home Assistant, add the Inkbird integration when it offers the sensor.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose its readings."
+      ],
+      "links": ["https://inkbird.com", "https://www.home-assistant.io/integrations/inkbird/"],
+      "lastChecked": "2026-09-28",
+      "features": ["devices"]
+    },
+    {
+      "id": "ruuvitag",
+      "brand": "Ruuvi",
+      "model": "RuuviTag environmental sensor",
+      "category": "bluetooth",
+      "connection": "ble",
+      "offline": true,
+      "status": "expected",
+      "capabilities": ["sensor", "temperature", "humidity", "battery"],
+      "notes": "A rugged sensor (temperature, humidity, air pressure, movement) with an open Bluetooth format, read by Home Assistant's RuuviTag integration. Good for a shop, garage or outdoors.",
+      "howToSetUp": [
+        "Place the tag within range of Home Assistant's Bluetooth or an ESPHome Bluetooth proxy.",
+        "In Home Assistant, add the RuuviTag integration when it offers the sensor.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose its readings."
+      ],
+      "links": ["https://ruuvi.com", "https://www.home-assistant.io/integrations/ruuvitag_ble/"],
+      "lastChecked": "2026-09-28",
+      "features": ["devices"]
+    },
+    {
+      "id": "yale-ble-lock",
+      "brand": "Yale / August",
+      "model": "Yale and August smart locks (local Bluetooth)",
+      "category": "bluetooth",
+      "connection": "ble",
+      "offline": true,
+      "status": "untested",
+      "capabilities": ["lock", "battery"],
+      "notes": "Home Assistant's Yale Access Bluetooth integration can lock and unlock many Yale and August locks locally, using an offline key obtained once. Locks are security devices: Dayspring requires an exact match and your confirmation, and never lets other people unlock them. Not yet tried with Dayspring.",
+      "howToSetUp": [
+        "Set up the lock in its own app first.",
+        "In Home Assistant, add the Yale Access Bluetooth integration and follow its steps to fetch the lock's offline key.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the lock; mark it as a security device."
+      ],
+      "links": ["https://www.home-assistant.io/integrations/yalexs_ble/"],
+      "lastChecked": "2026-09-28",
+      "features": ["devices"]
+    },
+    {
+      "id": "bluetooth-headphones",
+      "brand": "Any brand",
+      "model": "Bluetooth headphones, earbuds and speakers",
+      "category": "bluetooth",
+      "connection": "local",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [],
+      "notes": "These are audio devices, not smart-home devices. Pair them with Windows as usual; Dayspring then plays its voice and sounds through whichever Windows audio device you choose. Dayspring doesn't control the headphones themselves (noise cancelling, battery and so on).",
+      "howToSetUp": [
+        "Pair them in Windows: Settings → Bluetooth & devices → Add device.",
+        "In Dayspring's audio settings, choose them as the speaker or microphone if you want Dayspring to use them."
+      ],
+      "links": ["https://support.microsoft.com"],
+      "lastChecked": "2026-09-28",
+      "features": ["devices"]
+    },
+    {
+      "id": "ember-mug",
+      "brand": "Ember",
+      "model": "Ember Mug / Travel Mug",
+      "category": "bluetooth",
+      "connection": "ble",
+      "offline": true,
+      "status": "untested",
+      "capabilities": ["temperature", "battery"],
+      "notes": "The mug's Bluetooth commands are known from community projects, and there's a community Home Assistant integration, but it hasn't been tried with Dayspring. The mug usually connects to only one thing at a time, so its phone app may need to be closed.",
+      "howToSetUp": [
+        "Advanced users can install the community Ember Mug integration in Home Assistant and add the mug when it's near Home Assistant's Bluetooth or a proxy.",
+        "Then in Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the mug's temperature."
+      ],
+      "links": ["https://ember.com", "https://github.com/sopelj/hass-ember-mug"],
+      "lastChecked": "2026-09-28",
+      "features": ["devices"]
+    },
+    {
+      "id": "unknown-app-only-ble-gadget",
+      "brand": "Any brand",
+      "model": "An app-only Bluetooth gadget (\"Learn a device\")",
+      "category": "bluetooth",
+      "connection": "ble",
+      "offline": true,
+      "status": "untested",
+      "capabilities": ["on-off"],
+      "notes": "Planned for Stage 3. For a gadget that only works with its phone app and has no known protocol, the \"Learn a device\" wizard will capture what the app sends once (for example \"on\" and \"off\"), let you name each button, and replay it through this PC's Bluetooth or an ESPHome proxy. It won't work for gadgets that encrypt or change their commands each time.",
+      "howToSetUp": [
+        "Until the wizard is ready, put the gadget on a smart plug if on and off is all you need.",
+        "When it's ready, open Settings → Devices, choose Learn a device, and follow the steps: press each button in the phone app while Dayspring listens, then name the buttons."
+      ],
+      "links": ["https://esphome.github.io/bluetooth-proxies/"],
+      "lastChecked": "2026-09-28",
+      "features": ["devices"]
+    },
+    {
+      "id": "apple-airtag",
+      "brand": "Apple",
+      "model": "AirTag",
+      "category": "bluetooth",
+      "connection": "ble",
+      "offline": false,
+      "status": "not-supported",
+      "reason": "AirTags only work through Apple's Find My network. Their Bluetooth signal is deliberately private and rotating, and Apple offers no Windows or local API.",
+      "capabilities": ["presence"],
+      "notes": "For presence (\"is anyone home?\"), linking a phone or laptop to Dayspring works better.",
+      "howToSetUp": [
+        "Use Apple's Find My app to locate an AirTag.",
+        "For presence in Dayspring, link your phone or laptop instead, or use a Bluetooth sensor tag seen by Home Assistant."
+      ],
+      "links": ["https://www.apple.com/airtag/"],
+      "lastChecked": "2026-09-28",
+      "features": ["devices"]
+    },
+    {
+      "id": "tile-tracker",
+      "brand": "Tile",
+      "model": "Tile trackers",
+      "category": "bluetooth",
+      "connection": "ble",
+      "offline": false,
+      "status": "not-supported",
+      "reason": "Tile trackers are located through Tile's app and cloud, with no official local or public API.",
+      "capabilities": ["presence"],
+      "notes": "Use Tile's own app to find items.",
+      "howToSetUp": [
+        "Use the Tile app to find your items.",
+        "For presence in Dayspring, link your phone or laptop instead."
+      ],
+      "links": ["https://www.tile.com"],
+      "lastChecked": "2026-09-28",
+      "features": ["devices"]
+    },
+    {
+      "id": "eve-energy-bt",
+      "brand": "Eve",
+      "model": "Eve Energy (older Bluetooth / HomeKit-only version)",
+      "category": "bluetooth",
+      "connection": "ble",
+      "offline": true,
+      "status": "not-supported",
+      "reason": "The older Eve Energy speaks only HomeKit over Bluetooth, which needs an Apple home hub and has no Windows API.",
+      "capabilities": ["on-off", "power-monitoring"],
+      "notes": "The current Eve Energy uses Thread and Matter and works with Home Assistant.",
+      "howToSetUp": [
+        "Check whether Eve offers a Matter firmware update for your plug in the Eve app; if it does, update it and pair it to Home Assistant as a Matter device.",
+        "Otherwise, use the Thread/Matter version of Eve Energy, or a Kasa, Shelly or Tapo plug."
+      ],
+      "links": ["https://www.evehome.com", "https://www.home-assistant.io/integrations/matter/"],
+      "lastChecked": "2026-09-28",
+      "features": ["devices"]
+    }
+  ]
+}

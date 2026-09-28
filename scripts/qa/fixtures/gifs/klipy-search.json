@@ -1,0 +1,336 @@
+{
+ "result": true,
+ "data": {
+  "data": [
+   {
+    "id": 101,
+    "slug": "dancing-cat-by-happy-pets-k1",
+    "title": "Dancing Cat GIF by Happy Pets",
+    "type": "gif",
+    "tags": [
+     "cat",
+     "dance"
+    ],
+    "file": {
+     "hd": {
+      "gif": {
+       "url": "https://media.fixture.test/m/k1-hd.gif",
+       "width": 480,
+       "height": 360,
+       "size": 345678
+      },
+      "webp": {
+       "url": "https://media.fixture.test/m/k1-hd.webp",
+       "width": 480,
+       "height": 360,
+       "size": 123456
+      },
+      "mp4": {
+       "url": "https://media.fixture.test/m/k1-hd.mp4",
+       "width": 480,
+       "height": 360,
+       "size": 99999
+      }
+     },
+     "md": {
+      "gif": {
+       "url": "https://media.fixture.test/m/k1-md.gif",
+       "width": 320,
+       "height": 240,
+       "size": 150000
+      }
+     },
+     "sm": {
+      "gif": {
+       "url": "https://media.fixture.test/m/k1-sm.gif",
+       "width": 220,
+       "height": 165,
+       "size": 60000
+      }
+     },
+     "xs": {
+      "gif": {
+       "url": "https://media.fixture.test/m/k1-xs.gif",
+       "width": 90,
+       "height": 68,
+       "size": 9000
+      }
+     }
+    }
+   },
+   {
+    "id": 102,
+    "slug": "totally-different-k2",
+    "title": "Totally different",
+    "type": "gif",
+    "file": {
+     "hd": {
+      "gif": {
+       "url": "https://media.fixture.test/m/k2-hd.gif",
+       "width": 480,
+       "height": 360,
+       "size": 345678
+      },
+      "webp": {
+       "url": "https://media.fixture.test/m/k2-hd.webp",
+       "width": 480,
+       "height": 360,
+       "size": 123456
+      },
+      "mp4": {
+       "url": "https://media.fixture.test/m/k2-hd.mp4",
+       "width": 480,
+       "height": 360,
+       "size": 99999
+      }
+     },
+     "md": {
+      "gif": {
+       "url": "https://media.fixture.test/m/k2-md.gif",
+       "width": 320,
+       "height": 240,
+       "size": 150000
+      }
+     },
+     "sm": {
+      "gif": {
+       "url": "https://media.fixture.test/m/same-k2.gif",
+       "width": 220,
+       "height": 165,
+       "size": 60000
+      }
+     },
+     "xs": {
+      "gif": {
+       "url": "https://media.fixture.test/m/k2-xs.gif",
+       "width": 90,
+       "height": 68,
+       "size": 9000
+      }
+     }
+    }
+   },
+   {
+    "id": 103,
+    "slug": "broken-k3",
+    "title": "A broken one",
+    "type": "gif",
+    "file": {
+     "hd": {
+      "gif": {
+       "url": "https://media.fixture.test/m/broken3-hd.gif",
+       "width": 480,
+       "height": 360,
+       "size": 345678
+      },
+      "webp": {
+       "url": "https://media.fixture.test/m/broken3-hd.webp",
+       "width": 480,
+       "height": 360,
+       "size": 123456
+      },
+      "mp4": {
+       "url": "https://media.fixture.test/m/broken3-hd.mp4",
+       "width": 480,
+       "height": 360,
+       "size": 99999
+      }
+     },
+     "md": {
+      "gif": {
+       "url": "https://media.fixture.test/m/broken3-md.gif",
+       "width": 320,
+       "height": 240,
+       "size": 150000
+      }
+     },
+     "sm": {
+      "gif": {
+       "url": "https://media.fixture.test/m/broken.gif",
+       "width": 220,
+       "height": 165,
+       "size": 60000
+      }
+     },
+     "xs": {
+      "gif": {
+       "url": "https://media.fixture.test/m/broken3-xs.gif",
+       "width": 90,
+       "height": 68,
+       "size": 9000
+      }
+     }
+    }
+   },
+   {
+    "id": 0,
+    "type": "ad",
+    "width": 300,
+    "height": 250,
+    "content": "<div>an ad</div>"
+   },
+   {
+    "id": 104,
+    "slug": "cat-in-a-box-k4",
+    "title": "Cat in a box",
+    "type": "gif",
+    "tags": [
+     "cat"
+    ],
+    "file": {
+     "hd": {
+      "gif": {
+       "url": "https://media.fixture.test/m/k4-hd.gif",
+       "width": 400,
+       "height": 400,
+       "size": 345678
+      },
+      "webp": {
+       "url": "https://media.fixture.test/m/k4-hd.webp",
+       "width": 400,
+       "height": 400,
+       "size": 123456
+      },
+      "mp4": {
+       "url": "https://media.fixture.test/m/k4-hd.mp4",
+       "width": 400,
+       "height": 400,
+       "size": 99999
+      }
+     },
+     "md": {
+      "gif": {
+       "url": "https://media.fixture.test/m/k4-md.gif",
+       "width": 320,
+       "height": 320,
+       "size": 150000
+      }
+     },
+     "sm": {
+      "gif": {
+       "url": "https://media.fixture.test/m/k4-sm.gif",
+       "width": 220,
+       "height": 220,
+       "size": 60000
+      }
+     },
+     "xs": {
+      "gif": {
+       "url": "https://media.fixture.test/m/k4-xs.gif",
+       "width": 90,
+       "height": 90,
+       "size": 9000
+      }
+     }
+    }
+   },
+   {
+    "id": 105,
+    "slug": "dance-dance-k5",
+    "title": "Dance dance cat",
+    "type": "gif",
+    "file": {
+     "hd": {
+      "gif": {
+       "url": "https://media.fixture.test/m/k5-hd.gif",
+       "width": 480,
+       "height": 360,
+       "size": 345678
+      },
+      "webp": {
+       "url": "https://media.fixture.test/m/k5-hd.webp",
+       "width": 480,
+       "height": 360,
+       "size": 123456
+      },
+      "mp4": {
+       "url": "https://media.fixture.test/m/k5-hd.mp4",
+       "width": 480,
+       "height": 360,
+       "size": 99999
+      }
+     },
+     "md": {
+      "gif": {
+       "url": "https://media.fixture.test/m/k5-md.gif",
+       "width": 320,
+       "height": 240,
+       "size": 150000
+      }
+     },
+     "sm": {
+      "gif": {
+       "url": "https://media.fixture.test/m/k5-sm.gif",
+       "width": 220,
+       "height": 165,
+       "size": 60000
+      }
+     },
+     "xs": {
+      "gif": {
+       "url": "https://media.fixture.test/m/k5-xs.gif",
+       "width": 90,
+       "height": 68,
+       "size": 9000
+      }
+     }
+    }
+   },
+   {
+    "id": 106,
+    "slug": "happy-kitten-k6",
+    "title": "Happy kitten",
+    "type": "gif",
+    "file": {
+     "hd": {
+      "gif": {
+       "url": "https://media.fixture.test/m/k6-hd.gif",
+       "width": 300,
+       "height": 400,
+       "size": 345678
+      },
+      "webp": {
+       "url": "https://media.fixture.test/m/k6-hd.webp",
+       "width": 300,
+       "height": 400,
+       "size": 123456
+      },
+      "mp4": {
+       "url": "https://media.fixture.test/m/k6-hd.mp4",
+       "width": 300,
+       "height": 400,
+       "size": 99999
+      }
+     },
+     "md": {
+      "gif": {
+       "url": "https://media.fixture.test/m/k6-md.gif",
+       "width": 320,
+       "height": 427,
+       "size": 150000
+      }
+     },
+     "sm": {
+      "gif": {
+       "url": "https://media.fixture.test/m/k6-sm.gif",
+       "width": 220,
+       "height": 293,
+       "size": 60000
+      }
+     },
+     "xs": {
+      "gif": {
+       "url": "https://media.fixture.test/m/k6-xs.gif",
+       "width": 90,
+       "height": 120,
+       "size": 9000
+      }
+     }
+    }
+   }
+  ],
+  "current_page": 1,
+  "per_page": 24,
+  "has_next": true
+ }
+}

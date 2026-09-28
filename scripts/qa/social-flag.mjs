@@ -34,7 +34,8 @@ rec("routes answer 'not mine' while off", (await gate.handle({}, {}, { m: "GET",
 const gateSrc = readFileSync(join(DESK, "lib", "social", "index.mjs"), "utf8"), flagSrc = readFileSync(join(DESK, "lib", "social", "flag.mjs"), "utf8");
 const staticImports = (s) => [...s.matchAll(/^import .* from "([^"]+)";/gm)].map((m) => m[1]);
 rec("the gate statically imports only the switch", JSON.stringify(staticImports(gateSrc)) === JSON.stringify(["./flag.mjs"]), staticImports(gateSrc).join(", "));
-rec("the switch imports only node built-ins", staticImports(flagSrc).every((x) => x.startsWith("node:")));
+// (plus the release-channel gate, lib/features.mjs, which itself imports nothing of Dayspring's but the developer check)
+rec("the switch imports only node built-ins and the feature gate", staticImports(flagSrc).every((x) => x.startsWith("node:") || x === "../features.mjs"), staticImports(flagSrc).join(", "));
 process.env.DAYSPRING_SOCIAL = "1";
 rec("(on: the tools appear, so the check above means something)", gate.tools().length === 2);
 process.env.DAYSPRING_SOCIAL = "0";

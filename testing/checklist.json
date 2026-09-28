@@ -1,0 +1,2817 @@
+{
+  "version": 1,
+  "updated": "2026-09-28",
+  "intro": "Go through each feature step by step, simple to complex. Stable features get a quick smoke pass; new (beta) and in-progress (dev) features get the full list. Home-control items follow the stages of the home-control plan. Mark each test Pass, Fail, Skip or Blocked on the Testing page (Settings → This app → Testing).",
+  "items": [
+    {
+      "id": "schedule-01",
+      "feature": "schedule",
+      "title": "See today and add an item by voice",
+      "steps": [
+        "Open the Dayspring screen.",
+        "Say \"Dayspring, add a test block tomorrow at 3 p.m. for 30 minutes\".",
+        "Open the Schedule (📅) and go to tomorrow."
+      ],
+      "expected": "The block is there at 3:00–3:30 p.m. and Dayspring said it added it.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "schedule-02",
+      "feature": "schedule",
+      "title": "Move and resize in the week view",
+      "steps": [
+        "Open the Schedule, switch to Week.",
+        "Drag the test block to another day.",
+        "Drag its bottom edge to make it an hour long."
+      ],
+      "expected": "It moves and resizes, and stays that way after you reload the page.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "schedule-03",
+      "feature": "schedule",
+      "title": "Remove the test block",
+      "steps": [
+        "Say \"remove the test block\" (or open it and click Delete)."
+      ],
+      "expected": "It's gone from the schedule, and nothing else moved.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "voice-01",
+      "feature": "voice",
+      "title": "Wake word and a reply",
+      "steps": [
+        "Say \"Dayspring, what time is it?\"."
+      ],
+      "expected": "It answers out loud with the right time.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "voice-02",
+      "feature": "voice",
+      "title": "Works without an AI",
+      "steps": [
+        "In Settings → AI brain, note your provider, then turn it off (or unplug the internet).",
+        "Say \"set a timer for 1 minute\" and \"what's on my schedule today?\".",
+        "Put the AI back as it was."
+      ],
+      "expected": "Both work without the AI.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "voice-03",
+      "feature": "voice",
+      "title": "Typing instead of talking",
+      "steps": [
+        "Click ⌨ Type on the screen.",
+        "Type \"what's next\" and press Enter."
+      ],
+      "expected": "The answer appears; with Text only on, nothing is spoken.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "alarms-01",
+      "feature": "alarms",
+      "title": "An alarm rings and snoozes",
+      "steps": [
+        "Say \"set an alarm for 2 minutes from now\".",
+        "When it rings, say \"snooze\".",
+        "When it rings again, say \"stop\"."
+      ],
+      "expected": "It rings on time, snoozes, rings again, and stops.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "alarms-02",
+      "feature": "alarms",
+      "title": "Rings with the screen closed",
+      "steps": [
+        "Set an alarm for 2 minutes from now.",
+        "Close the Dayspring screen (not Dayspring itself).",
+        "Wait."
+      ],
+      "expected": "The desktop helper rings and shows a Snooze / Dismiss card.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "reminders-01",
+      "feature": "reminders",
+      "title": "Remind me in a few minutes",
+      "steps": [
+        "Say \"remind me to stretch in 2 minutes\"."
+      ],
+      "expected": "It says the reminder on time.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "reminders-02",
+      "feature": "reminders",
+      "title": "List and cancel",
+      "steps": [
+        "Say \"remind me to call the bank at 5 p.m.\".",
+        "Say \"what are my reminders?\".",
+        "Say \"cancel the bank reminder\"."
+      ],
+      "expected": "It lists it, then cancels it.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "timers-01",
+      "feature": "timers",
+      "title": "Two named timers",
+      "steps": [
+        "Say \"set a pasta timer for 2 minutes\" and \"set a tea timer for 1 minute\"."
+      ],
+      "expected": "Two cards count down; each rings with its name.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "timers-02",
+      "feature": "timers",
+      "title": "Cancel one timer",
+      "steps": [
+        "Start two timers.",
+        "Say \"cancel the pasta timer\"."
+      ],
+      "expected": "Only that one goes away.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "weather-01",
+      "feature": "weather",
+      "title": "Weather on the screen and by voice",
+      "steps": [
+        "Look at the weather on the screen.",
+        "Say \"what's the weather tomorrow?\"."
+      ],
+      "expected": "The screen shows your city's weather; the spoken forecast matches it.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "music-01",
+      "feature": "music",
+      "title": "Play from YouTube",
+      "steps": [
+        "Say \"play relaxing piano on YouTube\".",
+        "Say \"pause\", then \"resume\", then \"stop\"."
+      ],
+      "expected": "It plays on Dayspring's speaker, pauses, resumes and stops.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "music-02",
+      "feature": "music",
+      "title": "Play from Spotify",
+      "steps": [
+        "Sign in to Spotify once if asked.",
+        "Say \"play Here Comes the Sun on Spotify\"."
+      ],
+      "expected": "That song plays.",
+      "needs": [
+        "Spotify Premium"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "recipes-01",
+      "feature": "recipes",
+      "title": "Cooking mode",
+      "steps": [
+        "Open Recipes and pick a saved recipe (or import one from a recipe web page).",
+        "Say \"start cooking\", then \"next step\"."
+      ],
+      "expected": "Big text shows each step; step timers can be started.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "jokes-01",
+      "feature": "jokes",
+      "title": "A joke and a knock-knock",
+      "steps": [
+        "Say \"tell me a joke\".",
+        "Say \"knock knock\" and play along."
+      ],
+      "expected": "It tells a joke and plays the knock-knock game.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "personality-01",
+      "feature": "personality",
+      "title": "Change character and back",
+      "steps": [
+        "Open Settings → Personality and pick a character.",
+        "Ask \"how are you?\".",
+        "Set it back to how it was."
+      ],
+      "expected": "The answer sounds like that character; the old choice comes back.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "xp-01",
+      "feature": "xp",
+      "title": "Earn XP from a check-in",
+      "steps": [
+        "Say \"I finished my workout\" and answer the question it asks.",
+        "Open the Progress page."
+      ],
+      "expected": "XP goes up once, with the reason shown.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "xp-02",
+      "feature": "xp",
+      "title": "Badges page",
+      "steps": [
+        "Open Progress → Badges."
+      ],
+      "expected": "The badges show, with the earned ones highlighted.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "lantern-01",
+      "feature": "lantern",
+      "title": "Lantern bridge",
+      "steps": [
+        "With Lantern on this computer, open Settings → Lantern.",
+        "Say \"what's my next lesson?\"."
+      ],
+      "expected": "Settings shows Lantern connected; the answer names the next lesson.",
+      "needs": [
+        "Lantern installed"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "calls-01",
+      "feature": "calls",
+      "title": "Tune in",
+      "steps": [
+        "Start a Discord call with a friend (or a test call).",
+        "Click 🎧 Tune in and have them say \"Dayspring, what time is it?\"."
+      ],
+      "expected": "Dayspring answers into the call.",
+      "needs": [
+        "Discord or another call app",
+        "a second person or device"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "calls-02",
+      "feature": "calls",
+      "title": "Settings → Calls cards",
+      "steps": [
+        "Open Settings → Calls."
+      ],
+      "expected": "Each call app shows which microphone and speaker to pick.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "meetings-01",
+      "feature": "meetings",
+      "title": "Join a Google Meet",
+      "steps": [
+        "Start a Google Meet (you can be alone in it).",
+        "Paste its link on the screen or say \"Dayspring, join my meeting\".",
+        "Ask in the meeting \"Dayspring, what time is it?\"."
+      ],
+      "expected": "It joins (the tile shows bottom right), answers, and leaves when told.",
+      "needs": [
+        "a Google account"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "meetings-02",
+      "feature": "meetings",
+      "title": "Rehearsal mode",
+      "steps": [
+        "Open 📹 Meetings → Rehearse."
+      ],
+      "expected": "The mock meeting runs through the demo without joining anything.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "screen-01",
+      "feature": "screen",
+      "title": "Open modes",
+      "steps": [
+        "Open Dayspring as an app window, then as Dayspring mini, then full screen (the ⤢ / ⤡ buttons)."
+      ],
+      "expected": "Each opens the way chosen, never a second window.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "screen-02",
+      "feature": "screen",
+      "title": "Fit to screen",
+      "steps": [
+        "Open Settings → Screen → 📐 Fit to screen.",
+        "Drag an edge in and out."
+      ],
+      "expected": "The screen content follows the margins.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "notifications-01",
+      "feature": "notifications",
+      "title": "Desktop notification cards",
+      "steps": [
+        "In Settings → Notifications, click Test.",
+        "Switch to Quiet, then back to Active."
+      ],
+      "expected": "A card appears top right without stealing focus; Quiet silences spoken alerts.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "settings-01",
+      "feature": "settings",
+      "title": "Settings autosave and navigation",
+      "steps": [
+        "Open Settings, change your nickname, move to another section.",
+        "Reload the page."
+      ],
+      "expected": "The change was saved; every section in the list opens.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "updates-01",
+      "feature": "updates",
+      "title": "Check for updates",
+      "steps": [
+        "Open Settings → Updates → Check now."
+      ],
+      "expected": "It says you're up to date or offers the newer version with What's new.",
+      "needs": [
+        "internet"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "updates-02",
+      "feature": "updates",
+      "title": "Update channel choice",
+      "steps": [
+        "In Settings → Updates → Which versions, pick Development, then Production."
+      ],
+      "expected": "The choice saves; switching to Production from a development build offers to go back to the newest production version (with a backup) and asks first.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "updates-03",
+      "feature": "updates",
+      "title": "Install an update with a backup",
+      "steps": [
+        "When an update is offered, choose Update now.",
+        "Wait for the restart."
+      ],
+      "expected": "The new version starts; Settings → Updates history shows it installed; backups/ has a data and a program backup.",
+      "needs": [
+        "a newer release to install"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "permissions-01",
+      "feature": "permissions",
+      "title": "File access is respected",
+      "steps": [
+        "In Settings → Permissions choose \"Only the folders and files I choose\" with one test folder, Read only.",
+        "Ask Dayspring to create a file in that folder."
+      ],
+      "expected": "It refuses to write and says why.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "permissions-02",
+      "feature": "permissions",
+      "title": "Deleting goes to the Recycle Bin and asks",
+      "steps": [
+        "Allow Can delete files for the test folder.",
+        "Ask Dayspring to delete a test file there.",
+        "Say yes."
+      ],
+      "expected": "It asks first, then the file is in the Recycle Bin.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "activity-01",
+      "feature": "activity",
+      "title": "Activity log shows what happened",
+      "steps": [
+        "Open Settings → Activity log after the tests above."
+      ],
+      "expected": "Commands, tool calls and file changes are listed with times.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "faith-01",
+      "feature": "faith",
+      "title": "Devotion and a Bible passage",
+      "steps": [
+        "Say \"read me Psalm 23\"."
+      ],
+      "expected": "It reads the passage in your chosen version.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "connections-01",
+      "feature": "connections",
+      "title": "A connected calendar",
+      "steps": [
+        "In Settings → Apps & connections, connect a Google or Microsoft calendar.",
+        "Open the Schedule."
+      ],
+      "expected": "Its events show in the schedule, marked with their source.",
+      "needs": [
+        "a Google or Microsoft account"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "money-01",
+      "feature": "money",
+      "title": "Turn it on (it explains first)",
+      "steps": [
+        "Open the Money page from Settings → Permissions (Money review line).",
+        "Read the explanation and turn on Money review (read-only)."
+      ],
+      "expected": "It explains what it can and can't do before turning on; the switch stays off until you confirm.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "money-02",
+      "feature": "money",
+      "title": "Import a statement file",
+      "steps": [
+        "Download a CSV or OFX/QFX statement from your bank's website.",
+        "Say \"import my bank statement\" and drop the file in."
+      ],
+      "expected": "It reads the transactions and says how many it found.",
+      "needs": [
+        "a downloaded bank statement (CSV, OFX or QFX)"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "money-03",
+      "feature": "money",
+      "title": "Ask questions without an AI",
+      "steps": [
+        "With the AI off, ask \"what subscriptions do I have?\", \"how much did I spend on food?\" and \"what should I cancel?\"."
+      ],
+      "expected": "Sensible answers from your transactions, with no AI.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "money-04",
+      "feature": "money",
+      "title": "The report",
+      "steps": [
+        "Say \"show my money report\"."
+      ],
+      "expected": "The sortable table, monthly in/out, categories, top merchants, subscriptions and possible duplicates show on the Money page.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "money-05",
+      "feature": "money",
+      "title": "Reading a site (read-only)",
+      "steps": [
+        "Say \"open my bank\" and sign in yourself in Dayspring's money window.",
+        "Say \"review my transactions for the last three months\"."
+      ],
+      "expected": "It reads the pages; it stops at any sign-in, code or robot check for you, and never types a password.",
+      "needs": [
+        "an online banking, Venmo or Cash App login"
+      ],
+      "safety": "Money: only read-only actions are allowed. Watch the window; it must never click Pay, Send, Transfer or Cancel."
+    },
+    {
+      "id": "money-06",
+      "feature": "money",
+      "title": "Answers aren't kept",
+      "steps": [
+        "After a money question, open Settings → Activity log and your conversation history."
+      ],
+      "expected": "Money answers show as \"(a money review answer; not kept)\".",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "money-07",
+      "feature": "money",
+      "title": "Delete all money data",
+      "steps": [
+        "On the Money page, click Delete all my money data and confirm."
+      ],
+      "expected": "Everything is gone; the Money page starts fresh.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "money-08",
+      "feature": "money",
+      "title": "Off switch",
+      "steps": [
+        "In Settings → Features, switch off Money review.",
+        "Ask \"what subscriptions do I have?\" and open /money.html.",
+        "Switch it back on."
+      ],
+      "expected": "While off: no money answers, and the Money page isn't found. Back on: all works.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "images-01",
+      "feature": "images",
+      "title": "Pictures by voice, no AI",
+      "steps": [
+        "With the AI off, say \"show me pictures of golden retrievers\"."
+      ],
+      "expected": "A numbered grid of about 12 pictures appears with titles and sites.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "images-02",
+      "feature": "images",
+      "title": "View, more, more like this",
+      "steps": [
+        "Say \"show number 3\", then \"more\", then \"more like number 4\"."
+      ],
+      "expected": "Number 3 opens big; more pictures load; similar ones appear.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "images-03",
+      "feature": "images",
+      "title": "Narrow the results",
+      "steps": [
+        "Say \"only photos\", then \"bigger ones\", then \"only red ones\"."
+      ],
+      "expected": "The results change to match.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "images-04",
+      "feature": "images",
+      "title": "Save a picture",
+      "steps": [
+        "Say \"save that one\"."
+      ],
+      "expected": "It's saved in Pictures › Dayspring (or data\\images when Pictures isn't allowed) and it says where.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "images-05",
+      "feature": "images",
+      "title": "SafeSearch",
+      "steps": [
+        "Say \"set safe search to strict\", search again, then set it back to moderate."
+      ],
+      "expected": "The setting changes and is said back.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "images-06",
+      "feature": "images",
+      "title": "With an AI",
+      "steps": [
+        "With an AI on, ask \"show me mid-century desks and tell me which has a drawer\"."
+      ],
+      "expected": "Pictures show while it talks; it describes them without identifying any person.",
+      "needs": [
+        "an AI key (Claude recommended)"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "images-07",
+      "feature": "images",
+      "title": "Off switch",
+      "steps": [
+        "Switch off Pictures from the web in Settings → Features.",
+        "Say \"show me pictures of cats\".",
+        "Switch it back on."
+      ],
+      "expected": "While off, no grid appears (the request goes to the AI or says it can't). Back on, it works.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "vision-01",
+      "feature": "vision",
+      "title": "Read the text in a picture",
+      "steps": [
+        "Show a photo with text on the screen (or pick one of yours).",
+        "Say \"what does this say?\"."
+      ],
+      "expected": "It reads the text (Windows OCR, on this computer).",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "vision-02",
+      "feature": "vision",
+      "title": "Describe a picture (with AI)",
+      "steps": [
+        "Turn on Describe images with AI in Settings → Photos & people (it asks once).",
+        "Say \"describe this picture\"."
+      ],
+      "expected": "A clear description of the scene.",
+      "needs": [
+        "an AI that can see pictures (Claude)"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "vision-03",
+      "feature": "vision",
+      "title": "Describe a web picture",
+      "steps": [
+        "Search for pictures, open one, say \"describe this picture\"."
+      ],
+      "expected": "It describes it; people are described, never named.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "vision-04",
+      "feature": "vision",
+      "title": "Nothing sent without the yes",
+      "steps": [
+        "With Describe images with AI off, say \"describe this picture\"."
+      ],
+      "expected": "It asks first or uses on-computer text reading only.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "vision-05",
+      "feature": "vision",
+      "title": "Off switch",
+      "steps": [
+        "Switch off Picture descriptions in Settings → Features.",
+        "Say \"describe this picture\"."
+      ],
+      "expected": "It doesn't describe; switched back on it works again.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "faces-01",
+      "feature": "faces",
+      "title": "Turn on face recognition",
+      "steps": [
+        "In Settings → Photos & people, turn on Recognise faces in my photos.",
+        "Allow the one-time model download (about 72 MB)."
+      ],
+      "expected": "The models download and are checked; indexing starts slowly and can be paused.",
+      "needs": [
+        "internet for the one-time download",
+        "a folder of your own photos"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "faces-02",
+      "feature": "faces",
+      "title": "Pause and resume indexing",
+      "steps": [
+        "Click Pause, wait, then Resume."
+      ],
+      "expected": "Indexing stops and continues where it left off.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "faces-03",
+      "feature": "faces",
+      "title": "Name a face group",
+      "steps": [
+        "Open the People page.",
+        "Name an \"Unknown person\" group."
+      ],
+      "expected": "Everyone in that group gets the name.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "faces-04",
+      "feature": "faces",
+      "title": "Likely match question",
+      "steps": [
+        "After naming someone, look at their other photos' suggestions."
+      ],
+      "expected": "It asks \"Is this also …? NN% sure\" and never labels silently.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "faces-05",
+      "feature": "faces",
+      "title": "Who's in this picture?",
+      "steps": [
+        "Show one of your photos with a known person and say \"who is in this picture?\"."
+      ],
+      "expected": "It names the people it knows, and asks about the rest.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "faces-06",
+      "feature": "faces",
+      "title": "Merge, ignore, not a person",
+      "steps": [
+        "On the People page, merge two groups of the same person, ignore one, mark one \"not a person\"."
+      ],
+      "expected": "Each action works and sticks after reload.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "faces-07",
+      "feature": "faces",
+      "title": "A person's page",
+      "steps": [
+        "Say \"tell me about\" someone you named."
+      ],
+      "expected": "Their page: photos, relationship, notes, plans.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "faces-08",
+      "feature": "faces",
+      "title": "Delete face data",
+      "steps": [
+        "Click Delete all face data and confirm."
+      ],
+      "expected": "Face data is gone; people you named keep their profiles.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "medialib-01",
+      "feature": "medialib",
+      "title": "Play a song from this computer",
+      "steps": [
+        "Allow Dayspring to read your Music folder (Settings → Permissions).",
+        "Say \"play the song <a song you have> from my computer\"."
+      ],
+      "expected": "It finds and plays it on Dayspring's speaker.",
+      "needs": [
+        "music files on this computer"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "medialib-02",
+      "feature": "medialib",
+      "title": "Play by artist and shuffle a folder",
+      "steps": [
+        "Say \"play my <artist> mp3s\", then \"shuffle my music folder\"."
+      ],
+      "expected": "It plays that artist; shuffle plays in random order.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "medialib-03",
+      "feature": "medialib",
+      "title": "Find a video",
+      "steps": [
+        "Say \"find the video from <an event>\" or \"play the latest video in Downloads\"."
+      ],
+      "expected": "It finds it and plays it on the screen.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "medialib-04",
+      "feature": "medialib",
+      "title": "Pick from a list",
+      "steps": [
+        "Say \"list my music by <artist>\", then \"number 2\"."
+      ],
+      "expected": "A numbered list shows; number 2 plays.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "medialib-05",
+      "feature": "medialib",
+      "title": "Only allowed folders",
+      "steps": [
+        "Ask for a file in a folder Dayspring may not read."
+      ],
+      "expected": "It isn't found or played, and it says why.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "medialib-06",
+      "feature": "medialib",
+      "title": "Background scan",
+      "steps": [
+        "Add a new song to your Music folder.",
+        "Wait a few minutes (or say \"look for new music\")."
+      ],
+      "expected": "The new song can be found.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "medialib-07",
+      "feature": "medialib",
+      "title": "Off switch",
+      "steps": [
+        "Switch off Your own music and videos in Settings → Features and restart Dayspring.",
+        "Say \"play … from my computer\"."
+      ],
+      "expected": "It doesn't search your files (and the folder scan doesn't run). Back on, it works.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "drive-01",
+      "feature": "drive",
+      "title": "Connect Google Drive",
+      "steps": [
+        "In Settings → Apps & connections → Google, add an account with Drive switched on."
+      ],
+      "expected": "The account shows with Drive ✓.",
+      "needs": [
+        "a Google account"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "drive-02",
+      "feature": "drive",
+      "title": "Search Drive",
+      "steps": [
+        "Say \"search my Drive for budget\"."
+      ],
+      "expected": "Matching files are listed.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "drive-03",
+      "feature": "drive",
+      "title": "Play from Drive",
+      "steps": [
+        "Say \"play <a song or video in your Drive> from Drive\"."
+      ],
+      "expected": "It streams through Dayspring and plays.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "drive-04",
+      "feature": "drive",
+      "title": "Two accounts",
+      "steps": [
+        "Add a second Google account with a nickname.",
+        "Say \"search my work Drive for notes\"."
+      ],
+      "expected": "It searches the right account.",
+      "needs": [
+        "a second Google account"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "drive-05",
+      "feature": "drive",
+      "title": "Changes ask first",
+      "steps": [
+        "With Drive changes allowed, say \"move <file> to the Archive folder\"."
+      ],
+      "expected": "It asks before moving, and the move shows in Drive.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "drive-06",
+      "feature": "drive",
+      "title": "Off switch",
+      "steps": [
+        "Switch off Google Drive in Settings → Features.",
+        "Say \"search my Drive for budget\"."
+      ],
+      "expected": "No Drive search; back on it works.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "meetnotes-01",
+      "feature": "meetnotes",
+      "title": "Notes are announced first",
+      "steps": [
+        "Join a test Google Meet with Dayspring and say \"start taking notes\"."
+      ],
+      "expected": "It tells everyone (chat and aloud) before writing anything; the ● Notes sign shows.",
+      "needs": [
+        "a Google account",
+        "a test meeting"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "meetnotes-02",
+      "feature": "meetnotes",
+      "title": "Off the record",
+      "steps": [
+        "During notes, say \"don't record this part\", talk, then \"resume the notes\"."
+      ],
+      "expected": "That part isn't in the transcript.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "meetnotes-03",
+      "feature": "meetnotes",
+      "title": "Summary after the meeting",
+      "steps": [
+        "Leave the meeting.",
+        "Open 📹 Meetings → Past meetings."
+      ],
+      "expected": "The meeting is listed with a summary and transcript.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "meetnotes-04",
+      "feature": "meetnotes",
+      "title": "Search past meetings",
+      "steps": [
+        "Search Past meetings for a word that was said."
+      ],
+      "expected": "The meeting comes up.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "meetnotes-05",
+      "feature": "meetnotes",
+      "title": "Delete a meeting's notes",
+      "steps": [
+        "Delete a past meeting (confirm)."
+      ],
+      "expected": "It goes to the Recycle Bin.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "meetnotes-06",
+      "feature": "meetnotes",
+      "title": "Off switch",
+      "steps": [
+        "Switch off Meeting notes in Settings → Features.",
+        "Join a meeting."
+      ],
+      "expected": "No notes are taken or announced; the Notes controls are gone.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "meetinvite-01",
+      "feature": "meetinvite",
+      "title": "Invite by voice",
+      "steps": [
+        "Say \"set up a Google Meet with <your own second address> tomorrow at 7\"."
+      ],
+      "expected": "It reads the details back and waits for your yes.",
+      "needs": [
+        "a Google account with Calendar"
+      ],
+      "safety": "Real email: this sends a real message. Send it only to yourself or to someone who knows you're testing."
+    },
+    {
+      "id": "meetinvite-02",
+      "feature": "meetinvite",
+      "title": "Confirm sends it",
+      "steps": [
+        "Say \"yes\"."
+      ],
+      "expected": "Google emails the invitation; the event is on your calendar with a Meet link.",
+      "needs": [],
+      "safety": "Real email: this sends a real message. Send it only to yourself or to someone who knows you're testing."
+    },
+    {
+      "id": "meetinvite-03",
+      "feature": "meetinvite",
+      "title": "Cancel before sending",
+      "steps": [
+        "Ask for another invite, then say \"no\"."
+      ],
+      "expected": "Nothing is sent or created.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "meetinvite-04",
+      "feature": "meetinvite",
+      "title": "Change before sending",
+      "steps": [
+        "Ask for an invite, then \"make it 8 instead\", then yes."
+      ],
+      "expected": "The invite goes out for 8.",
+      "needs": [],
+      "safety": "Real email: this sends a real message. Send it only to yourself or to someone who knows you're testing."
+    },
+    {
+      "id": "meetinvite-05",
+      "feature": "meetinvite",
+      "title": "Off switch",
+      "steps": [
+        "Switch off Google Meet invitations in Settings → Features.",
+        "Ask for an invite."
+      ],
+      "expected": "It doesn't offer to send one.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "screenmove-01",
+      "feature": "screenmove",
+      "title": "Move from Settings",
+      "steps": [
+        "With two screens connected and Dayspring open, go to Settings → Screen.",
+        "Click the picture of the other screen."
+      ],
+      "expected": "The open Dayspring screen moves there straight away.",
+      "needs": [
+        "a second screen or TV"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "screenmove-02",
+      "feature": "screenmove",
+      "title": "Move by voice",
+      "steps": [
+        "Say \"move Dayspring to the other screen\", then \"…to my main screen\"."
+      ],
+      "expected": "It moves each time and says so.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "screenmove-03",
+      "feature": "screenmove",
+      "title": "Mini and full screen",
+      "steps": [
+        "Open Dayspring mini and move it; then full screen and move it."
+      ],
+      "expected": "Mini moves in place; full screen reopens full screen on the new screen.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "screenmove-04",
+      "feature": "screenmove",
+      "title": "Only one screen",
+      "steps": [
+        "Unplug the second screen and say \"move Dayspring to the TV\"."
+      ],
+      "expected": "It says it only sees one screen.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "screenmove-05",
+      "feature": "screenmove",
+      "title": "Off switch",
+      "steps": [
+        "Switch off Moving the screen in Settings → Features.",
+        "Pick another screen in Settings → Screen."
+      ],
+      "expected": "The choice is saved for next time, but the open screen doesn't move now.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "popfit-01",
+      "feature": "popfit",
+      "title": "Pop-ups inside the margins",
+      "steps": [
+        "Set big margins in Settings → Screen (or 📐 Fit to screen).",
+        "Open the Sound panel, the ⋯ menu, a notice and Settings on the Dayspring screen."
+      ],
+      "expected": "Each stays inside the margins with its ✕ and buttons reachable.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "popfit-02",
+      "feature": "popfit",
+      "title": "Live while dragging",
+      "steps": [
+        "Open a pop-up, then drag a green margin line."
+      ],
+      "expected": "The pop-up moves as you drag.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "popfit-03",
+      "feature": "popfit",
+      "title": "Tall content scrolls",
+      "steps": [
+        "Open a long list (the Meetings panel or notifications)."
+      ],
+      "expected": "It scrolls inside itself; Clear all stays in view.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "popfit-04",
+      "feature": "popfit",
+      "title": "Dayspring mini",
+      "steps": [
+        "Open Dayspring mini and a pop-up in it."
+      ],
+      "expected": "It fits inside the mini window.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "popfit-05",
+      "feature": "popfit",
+      "title": "Off switch",
+      "steps": [
+        "Switch off Pop-ups fit the screen margins and reload the screen."
+      ],
+      "expected": "Pop-ups use their old positions; back on, they fit again.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "floor-01",
+      "feature": "floor",
+      "title": "Your request comes first",
+      "steps": [
+        "Set a reminder for 1 minute from now.",
+        "Just before it's due, start asking a long question and keep talking."
+      ],
+      "expected": "The reminder waits until your answer is done, then comes out.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "floor-02",
+      "feature": "floor",
+      "title": "What were you going to say?",
+      "steps": [
+        "While something is held (the ● pill shows), say \"what were you going to say?\"."
+      ],
+      "expected": "It says what it was holding.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "floor-03",
+      "feature": "floor",
+      "title": "Alarms aren't held",
+      "steps": [
+        "Set an alarm and be talking when it's due."
+      ],
+      "expected": "The alarm rings on time.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "floor-04",
+      "feature": "floor",
+      "title": "Several held items",
+      "steps": [
+        "Let two reminders fall due while you talk."
+      ],
+      "expected": "They come out one at a time, most important first.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "floor-05",
+      "feature": "floor",
+      "title": "Off switch",
+      "steps": [
+        "Switch off the floor in Settings → Features.",
+        "Repeat the first test."
+      ],
+      "expected": "The reminder is said as soon as it's due, as before 1.6.0.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "spotifyresolver-01",
+      "feature": "spotifyresolver",
+      "title": "Plays the right thing",
+      "steps": [
+        "Say \"play christian folk music on Spotify\"."
+      ],
+      "expected": "A matching playlist or song, not a random pop playlist.",
+      "needs": [
+        "Spotify Premium"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "spotifyresolver-02",
+      "feature": "spotifyresolver",
+      "title": "A typo",
+      "steps": [
+        "Say \"play christian fold music on Spotify\"."
+      ],
+      "expected": "It still plays Christian folk.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "spotifyresolver-03",
+      "feature": "spotifyresolver",
+      "title": "A specific song",
+      "steps": [
+        "Say \"play Holy Forever by Chris Tomlin on Spotify\"."
+      ],
+      "expected": "That exact recording.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "spotifyresolver-04",
+      "feature": "spotifyresolver",
+      "title": "Off switch",
+      "steps": [
+        "Switch off Spotify plays what you asked for; play something.",
+        "Switch it back on."
+      ],
+      "expected": "Off: the first search result plays (the old way). On: the best match.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "devpreview-01",
+      "feature": "devpreview",
+      "title": "Only on the developer's computer",
+      "steps": [
+        "On a computer without the dev token, open /api/dev/status."
+      ],
+      "expected": "Not found (404).",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "devpreview-02",
+      "feature": "devpreview",
+      "title": "Every badge and character",
+      "steps": [
+        "On the developer's computer (with the token), open the developer preview."
+      ],
+      "expected": "Every badge's art and every character can be looked at and heard.",
+      "needs": [
+        "the developer token"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "devpreview-03",
+      "feature": "devpreview",
+      "title": "Doesn't earn anything",
+      "steps": [
+        "Try a secret character in the preview, then end the preview."
+      ],
+      "expected": "Nothing is unlocked for real; XP is unchanged.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "devpreview-04",
+      "feature": "devpreview",
+      "title": "Off switch",
+      "steps": [
+        "Switch off Developer preview in Settings → Features."
+      ],
+      "expected": "The preview routes are gone even with the token.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "email-01",
+      "feature": "email",
+      "title": "Email appears only where it should",
+      "steps": [
+        "On the production version, look for ✉ on the screen and Settings → Email.",
+        "On the development version, look again."
+      ],
+      "expected": "Production: no email anywhere. Development: the ✉ button and Settings → Email are there.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "email-23",
+      "feature": "email",
+      "title": "Allow Gmail sending in Google Cloud (Data Access)",
+      "steps": [
+        "Open the Google Cloud console for the project whose sign-in Dayspring uses.",
+        "Google Auth Platform → Data Access → Add or remove scopes: add gmail.send and gmail.modify (plus gmail.readonly if it isn't there), and save.",
+        "If the app is in Testing, make sure your Google account is listed as a test user."
+      ],
+      "expected": "Adding Gmail (next test) asks for reading, sending and organising mail, and all three work.",
+      "needs": [
+        "the Google Cloud project Dayspring signs in with"
+      ],
+      "safety": "",
+      "compat": [
+        "gmail"
+      ]
+    },
+    {
+      "id": "email-02",
+      "feature": "email",
+      "title": "Add Gmail (Google sign-in)",
+      "steps": [
+        "Settings → Email → Add → Gmail.",
+        "Sign in with Google in the browser and allow mail."
+      ],
+      "expected": "The mailbox shows as connected.",
+      "needs": [
+        "a Gmail account"
+      ],
+      "safety": "",
+      "compat": [
+        "gmail"
+      ]
+    },
+    {
+      "id": "email-03",
+      "feature": "email",
+      "title": "Add Outlook.com",
+      "steps": [
+        "Settings → Email → Add → Outlook.",
+        "Sign in with Microsoft."
+      ],
+      "expected": "Connected.",
+      "needs": [
+        "an Outlook.com or Hotmail account"
+      ],
+      "safety": "",
+      "compat": [
+        "outlook"
+      ]
+    },
+    {
+      "id": "email-04",
+      "feature": "email",
+      "title": "Add Yahoo with an app password",
+      "steps": [
+        "In Yahoo account security, make an app password.",
+        "Settings → Email → Add → Yahoo, paste the address and app password."
+      ],
+      "expected": "Connected; the password is never shown again.",
+      "needs": [
+        "a Yahoo Mail account"
+      ],
+      "safety": "",
+      "compat": [
+        "yahoo-mail"
+      ]
+    },
+    {
+      "id": "email-05",
+      "feature": "email",
+      "title": "Add iCloud Mail",
+      "steps": [
+        "Make an app-specific password at account.apple.com (needs two-factor).",
+        "Settings → Email → Add → iCloud."
+      ],
+      "expected": "Connected.",
+      "needs": [
+        "an iCloud Mail account"
+      ],
+      "safety": "",
+      "compat": [
+        "icloud-mail"
+      ]
+    },
+    {
+      "id": "email-06",
+      "feature": "email",
+      "title": "Add AOL Mail",
+      "steps": [
+        "Make an app password in AOL account security.",
+        "Settings → Email → Add → AOL."
+      ],
+      "expected": "Connected.",
+      "needs": [
+        "an AOL account"
+      ],
+      "safety": "",
+      "compat": [
+        "aol-mail"
+      ]
+    },
+    {
+      "id": "email-07",
+      "feature": "email",
+      "title": "Add Zoho Mail",
+      "steps": [
+        "In Zoho Mail settings, turn on IMAP access and make an app-specific password.",
+        "Settings → Email → Add → Zoho (pick your region)."
+      ],
+      "expected": "Connected.",
+      "needs": [
+        "a Zoho Mail account"
+      ],
+      "safety": "",
+      "compat": [
+        "zoho-mail"
+      ]
+    },
+    {
+      "id": "email-08",
+      "feature": "email",
+      "title": "Test button",
+      "steps": [
+        "Click Test on each mailbox."
+      ],
+      "expected": "Each says it can read and send (or says exactly what's wrong).",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "email-09",
+      "feature": "email",
+      "title": "Check new mail by voice",
+      "steps": [
+        "Send yourself an email from another account.",
+        "Say \"check my email\"."
+      ],
+      "expected": "It reads out who it's from and the subject.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "email-10",
+      "feature": "email",
+      "title": "Emails from someone",
+      "steps": [
+        "Say \"any emails from <sender>?\"."
+      ],
+      "expected": "It finds them.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "email-11",
+      "feature": "email",
+      "title": "Read one aloud",
+      "steps": [
+        "Say \"read the one from <sender>\"."
+      ],
+      "expected": "It reads the email (no hidden tracking images loaded).",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "email-12",
+      "feature": "email",
+      "title": "Open the Mail window",
+      "steps": [
+        "Say \"open my email\" or click ✉."
+      ],
+      "expected": "The Mail window opens with every mailbox.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "email-13",
+      "feature": "email",
+      "title": "Write and send with your yes",
+      "steps": [
+        "Say \"write an email to <your second address> saying testing Dayspring\".",
+        "Check the draft, then say \"send it\"."
+      ],
+      "expected": "It shows the draft, asks, and sends only after your yes.",
+      "needs": [],
+      "safety": "Real email: this sends a real message. Send it only to yourself or to someone who knows you're testing."
+    },
+    {
+      "id": "email-14",
+      "feature": "email",
+      "title": "Undo send",
+      "steps": [
+        "Send another test email and quickly say \"undo send\"."
+      ],
+      "expected": "It isn't sent.",
+      "needs": [],
+      "safety": "Real email: this sends a real message. Send it only to yourself or to someone who knows you're testing."
+    },
+    {
+      "id": "email-15",
+      "feature": "email",
+      "title": "Attachments",
+      "steps": [
+        "Write an email with a small attached file and send it to yourself."
+      ],
+      "expected": "It arrives with the attachment.",
+      "needs": [],
+      "safety": "Real email: this sends a real message. Send it only to yourself or to someone who knows you're testing."
+    },
+    {
+      "id": "email-16",
+      "feature": "email",
+      "title": "Reply and forward",
+      "steps": [
+        "Open a received test email; reply, then forward it to yourself."
+      ],
+      "expected": "Both arrive, with the original quoted.",
+      "needs": [],
+      "safety": "Real email: this sends a real message. Send it only to yourself or to someone who knows you're testing."
+    },
+    {
+      "id": "email-17",
+      "feature": "email",
+      "title": "Search and organize",
+      "steps": [
+        "Search the Mail window for a word; archive one message and mark one unread."
+      ],
+      "expected": "Search finds it; the changes show in your mail app too.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "email-18",
+      "feature": "email",
+      "title": "Summarize the inbox (AI)",
+      "steps": [
+        "With an AI on, say \"summarize my inbox\"."
+      ],
+      "expected": "A short summary; nothing is sent anywhere else.",
+      "needs": [
+        "an AI key"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "email-19",
+      "feature": "email",
+      "title": "Several mailboxes",
+      "steps": [
+        "With two mailboxes, send from the second one."
+      ],
+      "expected": "It's sent from the chosen mailbox.",
+      "needs": [],
+      "safety": "Real email: this sends a real message. Send it only to yourself or to someone who knows you're testing."
+    },
+    {
+      "id": "email-20",
+      "feature": "email",
+      "title": "New mail notice",
+      "steps": [
+        "Leave Dayspring running and send yourself an email."
+      ],
+      "expected": "Within a few minutes a quiet notice says new mail arrived (not during Quiet or a call).",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "email-21",
+      "feature": "email",
+      "title": "Remove a mailbox",
+      "steps": [
+        "Remove a mailbox in Settings → Email."
+      ],
+      "expected": "It's gone, and its stored password is deleted.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "email-22",
+      "feature": "email",
+      "title": "Off switch",
+      "steps": [
+        "On the development version, switch off Email in Settings → Features and reload.",
+        "Say \"check my email\"."
+      ],
+      "expected": "No ✉ button, no Settings → Email, the voice commands don't answer; back on, all return.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "gifs-01",
+      "feature": "gifs",
+      "title": "GIFs appear only where they should",
+      "steps": [
+        "On the production version, look for 🎞 GIFs and Settings → GIFs; on development, look again."
+      ],
+      "expected": "Production: no GIFs anywhere. Development: the button and settings are there.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "gifs-02",
+      "feature": "gifs",
+      "title": "Search with no keys",
+      "steps": [
+        "With no GIF keys set, say \"show me a GIF of a dancing cat\"."
+      ],
+      "expected": "GIFs from the web search appear, numbered.",
+      "needs": [],
+      "safety": "",
+      "compat": [
+        "web-gif-search"
+      ]
+    },
+    {
+      "id": "gifs-03",
+      "feature": "gifs",
+      "title": "Add a GIPHY key",
+      "steps": [
+        "Get a free key at developers.giphy.com.",
+        "Paste it in Settings → GIFs and click Test."
+      ],
+      "expected": "Test passes; searches now include GIPHY.",
+      "needs": [
+        "a free GIPHY key"
+      ],
+      "safety": "",
+      "compat": [
+        "giphy"
+      ]
+    },
+    {
+      "id": "gifs-04",
+      "feature": "gifs",
+      "title": "Add a KLIPY key",
+      "steps": [
+        "Get a free key from KLIPY.",
+        "Paste it in Settings → GIFs and click Test."
+      ],
+      "expected": "Test passes; searches include KLIPY.",
+      "needs": [
+        "a free KLIPY key"
+      ],
+      "safety": "",
+      "compat": [
+        "klipy"
+      ]
+    },
+    {
+      "id": "gifs-05",
+      "feature": "gifs",
+      "title": "The picker",
+      "steps": [
+        "Open 🎞 GIFs by the clock.",
+        "Try Search, Trending, Categories, Favorites and Recent."
+      ],
+      "expected": "Each tab works; more load as you scroll.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "gifs-06",
+      "feature": "gifs",
+      "title": "Voice while GIFs are up",
+      "steps": [
+        "Say \"number 4\", \"more\", \"only stickers\", \"clean ones only\"."
+      ],
+      "expected": "Each works.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "gifs-07",
+      "feature": "gifs",
+      "title": "Copy and paste",
+      "steps": [
+        "Say \"copy that one\" and paste into an email or chat app."
+      ],
+      "expected": "The GIF pastes.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "gifs-08",
+      "feature": "gifs",
+      "title": "Save and favourite",
+      "steps": [
+        "Say \"save that GIF\"; click ☆ on another."
+      ],
+      "expected": "Saved to Pictures › Dayspring GIFs; the favourite shows in Favorites.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "gifs-09",
+      "feature": "gifs",
+      "title": "Rating",
+      "steps": [
+        "Set the rating to G in Settings → GIFs and search again."
+      ],
+      "expected": "Only G-rated results.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "gifs-10",
+      "feature": "gifs",
+      "title": "A source failing",
+      "steps": [
+        "Paste a wrong key for one source and search."
+      ],
+      "expected": "Results still come from the others; a small chip says that source has trouble.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "gifs-11",
+      "feature": "gifs",
+      "title": "Tenor",
+      "steps": [
+        "Look for Tenor in Settings → GIFs."
+      ],
+      "expected": "It isn't offered (its API closed on June 30, 2026).",
+      "needs": [],
+      "safety": "",
+      "compat": [
+        "tenor"
+      ]
+    },
+    {
+      "id": "gifs-12",
+      "feature": "gifs",
+      "title": "Off switch",
+      "steps": [
+        "On development, switch off GIFs in Settings → Features and reload."
+      ],
+      "expected": "No button, no picker, no Settings → GIFs; \"show me a GIF\" isn't handled as a GIF.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "devices-01",
+      "feature": "devices",
+      "title": "Devices appear only where they should",
+      "steps": [
+        "On production, look for the Devices controls and Settings → Devices; on development, look again."
+      ],
+      "expected": "Production: none. Development: present.",
+      "needs": [],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "devices-25",
+      "feature": "devices",
+      "title": "Turn on the Devices permission (it starts Off)",
+      "steps": [
+        "Settings → Permissions (or Settings → Devices): find Devices. It is Off on a new install, so Dayspring can't switch anything.",
+        "Set it to Ask (or On). You can also set it per device later.",
+        "Say \"turn on fan 1\" before and after."
+      ],
+      "expected": "While Off, Dayspring refuses and says why; after Ask/On it switches (asking first on Ask).",
+      "needs": [],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "devices-02",
+      "feature": "devices",
+      "title": "Add a Kasa HS300 strip",
+      "steps": [
+        "Plug in the HS300 and set it up in the Kasa app.",
+        "In Settings → Devices → Add → TP-Link Kasa, type its IP address (or let Dayspring find it).",
+        "Name the outlets."
+      ],
+      "expected": "All 6 outlets show with names and watts.",
+      "needs": [
+        "Kasa HS300"
+      ],
+      "safety": "Power: whatever is plugged into the outlet turns off. Plug in a lamp for testing, never a computer, fridge, router or anything that heats.",
+      "stage": 1,
+      "compat": [
+        "kasa-hs300"
+      ]
+    },
+    {
+      "id": "devices-03",
+      "feature": "devices",
+      "title": "Switch an outlet by voice",
+      "steps": [
+        "Plug a lamp into outlet 2 and name it \"lamp\".",
+        "Say \"turn the lamp on\", then \"turn the lamp off\"."
+      ],
+      "expected": "The lamp turns on and off within a second; the activity log records each.",
+      "needs": [],
+      "safety": "Power: whatever is plugged into the outlet turns off. Plug in a lamp for testing, never a computer, fridge, router or anything that heats.",
+      "stage": 1,
+      "compat": [
+        "kasa-hs300"
+      ]
+    },
+    {
+      "id": "devices-04",
+      "feature": "devices",
+      "title": "Power use",
+      "steps": [
+        "With the lamp on, say \"what's drawing power?\"."
+      ],
+      "expected": "It names the lamp and its watts.",
+      "needs": [
+        "Kasa HS300 (power monitoring)"
+      ],
+      "safety": "",
+      "stage": 1,
+      "compat": [
+        "kasa-hs300"
+      ]
+    },
+    {
+      "id": "devices-05",
+      "feature": "devices",
+      "title": "Add a Kasa KP303",
+      "steps": [
+        "Settings → Devices → Add → TP-Link Kasa with the KP303's IP.",
+        "Switch each outlet."
+      ],
+      "expected": "All 3 outlets switch.",
+      "needs": [
+        "Kasa KP303"
+      ],
+      "safety": "Power: whatever is plugged into the outlet turns off. Plug in a lamp for testing, never a computer, fridge, router or anything that heats.",
+      "stage": 1,
+      "compat": [
+        "kasa-kp303"
+      ]
+    },
+    {
+      "id": "devices-06",
+      "feature": "devices",
+      "title": "Add a Shelly",
+      "steps": [
+        "Set up the Shelly on your Wi-Fi with the Shelly app.",
+        "Settings → Devices → Add → Shelly with its IP (and password if you set one).",
+        "Switch each channel."
+      ],
+      "expected": "Each channel switches; the state matches the Shelly app.",
+      "needs": [
+        "a Shelly Plus/Pro device"
+      ],
+      "safety": "Power: whatever is plugged into the outlet turns off. Plug in a lamp for testing, never a computer, fridge, router or anything that heats.",
+      "stage": 1,
+      "compat": [
+        "shelly-plus-plug-us",
+        "shelly-pro-4pm"
+      ]
+    },
+    {
+      "id": "devices-07",
+      "feature": "devices",
+      "title": "Add a Tapo strip",
+      "steps": [
+        "Settings → Devices → Add → TP-Link Tapo with its IP and your Tapo app email and password.",
+        "Switch each outlet."
+      ],
+      "expected": "Each outlet switches; the password isn't shown again.",
+      "needs": [
+        "a Tapo P300/P304M strip"
+      ],
+      "safety": "Power: whatever is plugged into the outlet turns off. Plug in a lamp for testing, never a computer, fridge, router or anything that heats.",
+      "stage": 1,
+      "compat": [
+        "tapo-p300"
+      ]
+    },
+    {
+      "id": "devices-08",
+      "feature": "devices",
+      "title": "Add a Meross strip (advanced)",
+      "steps": [
+        "Find your Meross device key (e.g. with Home Assistant's Meross LAN).",
+        "Settings → Devices → Add → Meross with the IP and key."
+      ],
+      "expected": "Each outlet switches.",
+      "needs": [
+        "a Meross MSS425F"
+      ],
+      "safety": "Power: whatever is plugged into the outlet turns off. Plug in a lamp for testing, never a computer, fridge, router or anything that heats.",
+      "stage": 1,
+      "compat": [
+        "meross-mss425f"
+      ]
+    },
+    {
+      "id": "devices-26",
+      "feature": "devices",
+      "title": "Logins for Kasa, Tapo, Shelly and Meross",
+      "steps": [
+        "Kasa on newer firmware (KP125M and recently updated HS300/KP303): add it with your TP-Link (Kasa app) email and password.",
+        "Tapo: your Tapo app email and password.",
+        "Shelly: the device's own password, if you turned on its login in the Shelly app.",
+        "Meross: the device key (Home Assistant's Meross LAN can show it).",
+        "Open Settings → Devices again after saving each one."
+      ],
+      "expected": "Each switches; no password or key is ever shown again (only \"saved\").",
+      "needs": [
+        "the account logins for the brands you own"
+      ],
+      "safety": "Power: whatever is plugged into the outlet turns off. Plug in a lamp for testing, never a computer, fridge, router or anything that heats.",
+      "stage": 1,
+      "compat": [
+        "kasa-kp125m",
+        "tapo-p300",
+        "shelly-pro-4pm",
+        "meross-mss425f"
+      ]
+    },
+    {
+      "id": "devices-09",
+      "feature": "devices",
+      "title": "Works without the internet",
+      "steps": [
+        "Unplug the router's internet cable (keep Wi-Fi on).",
+        "Switch outlets by voice with the AI off."
+      ],
+      "expected": "Everything local still works.",
+      "needs": [],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "devices-10",
+      "feature": "devices",
+      "title": "Aliases, rooms and groups",
+      "steps": [
+        "Give a device an alias (\"fan 2\") and a room; make a group.",
+        "Say \"turn fan 2 off\" and \"turn off the office\"."
+      ],
+      "expected": "Both work.",
+      "needs": [],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "devices-11",
+      "feature": "devices",
+      "title": "Critical outlets are protected",
+      "steps": [
+        "Mark the outlet with the router (or a stand-in lamp) as critical.",
+        "Say \"turn everything off\"."
+      ],
+      "expected": "The critical outlet stays on; turning it off by name asks for an exact confirmation.",
+      "needs": [],
+      "safety": "Use a lamp as a stand-in; don't actually cut power to the router or the Dayspring PC.",
+      "stage": 1
+    },
+    {
+      "id": "devices-12",
+      "feature": "devices",
+      "title": "Wake a computer (Wake-on-LAN)",
+      "steps": [
+        "On the other PC, turn on Wake-on-LAN in its BIOS/UEFI (often \"Wake on LAN\", \"Power On By PCI-E\" or similar), and in Windows: Device Manager → its network adapter → Power Management and Advanced → Wake on Magic Packet.",
+        "Add it in Settings → Devices with its MAC address.",
+        "Shut it down, then say \"turn on the shop computer\"."
+      ],
+      "expected": "It powers on.",
+      "needs": [
+        "a second PC on the same network"
+      ],
+      "safety": "",
+      "stage": 1,
+      "compat": [
+        "generic-wake-on-lan"
+      ]
+    },
+    {
+      "id": "devices-13",
+      "feature": "devices",
+      "title": "Home Assistant connection",
+      "steps": [
+        "In Home Assistant, make a long-lived access token.",
+        "Settings → Apps & connections → Home Assistant: its address and the token.",
+        "Say \"turn on <an HA light or switch>\"."
+      ],
+      "expected": "It works; Home Assistant's entities are listed.",
+      "needs": [
+        "Home Assistant"
+      ],
+      "safety": "",
+      "stage": 1,
+      "compat": [
+        "home-assistant"
+      ]
+    },
+    {
+      "id": "devices-14",
+      "feature": "devices",
+      "title": "Custom device (Tasmota/ESPHome)",
+      "steps": [
+        "Settings → Devices → Add → Custom, pick the Tasmota or ESPHome template, type its IP.",
+        "Switch it."
+      ],
+      "expected": "It switches and shows its state.",
+      "needs": [
+        "a Tasmota or ESPHome device"
+      ],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "devices-15",
+      "feature": "devices",
+      "title": "Schedules",
+      "steps": [
+        "Say \"turn the lamp on at <two minutes from now>\"."
+      ],
+      "expected": "It asks to confirm the schedule, then switches on time.",
+      "needs": [],
+      "safety": "Power: whatever is plugged into the outlet turns off. Plug in a lamp for testing, never a computer, fridge, router or anything that heats.",
+      "stage": 1
+    },
+    {
+      "id": "devices-16",
+      "feature": "devices",
+      "title": "WLED LED strip",
+      "steps": [
+        "Flash WLED on an ESP32 controller and connect the strip.",
+        "Settings → Devices → Add → WLED with its IP.",
+        "Say \"make the LED strip blue\", \"50 percent\", \"rainbow effect\"."
+      ],
+      "expected": "Colour, brightness and effects change.",
+      "needs": [
+        "a WLED controller and LED strip"
+      ],
+      "safety": "",
+      "stage": 2,
+      "compat": [
+        "wled"
+      ]
+    },
+    {
+      "id": "devices-17",
+      "feature": "devices",
+      "title": "Philips Hue",
+      "steps": [
+        "Settings → Devices → Add → Hue bridge, press the bridge's button when asked.",
+        "Say \"dim the living room to 20 percent warm\"."
+      ],
+      "expected": "Hue lights dim and warm.",
+      "needs": [
+        "a Hue bridge and bulbs"
+      ],
+      "safety": "",
+      "stage": 2,
+      "compat": [
+        "hue-bridge"
+      ]
+    },
+    {
+      "id": "devices-18",
+      "feature": "devices",
+      "title": "Govee strip over the LAN",
+      "steps": [
+        "In the Govee app, turn on LAN Control for the strip.",
+        "Add it in Settings → Devices.",
+        "Change its colour by voice."
+      ],
+      "expected": "It changes.",
+      "needs": [
+        "a Govee strip that supports LAN control"
+      ],
+      "safety": "",
+      "stage": 2,
+      "compat": [
+        "govee-lan-strip"
+      ]
+    },
+    {
+      "id": "devices-19",
+      "feature": "devices",
+      "title": "MagicHome Wi-Fi strip",
+      "steps": [
+        "Add the MagicHome controller (by IP, or through Home Assistant).",
+        "Change colour and brightness."
+      ],
+      "expected": "It changes.",
+      "needs": [
+        "a MagicHome/Zengge controller"
+      ],
+      "safety": "",
+      "stage": 2,
+      "compat": [
+        "magichome-wifi-strip"
+      ]
+    },
+    {
+      "id": "devices-20",
+      "feature": "devices",
+      "title": "Bluetooth LED strip",
+      "steps": [
+        "With the PC's Bluetooth (or an ESPHome Bluetooth proxy) near a Triones / Happy Lighting strip, add it in Settings → Devices.",
+        "Turn it on and change its colour."
+      ],
+      "expected": "It responds within a second or two.",
+      "needs": [
+        "a Triones/Happy Lighting BLE strip"
+      ],
+      "safety": "",
+      "stage": 2,
+      "compat": [
+        "triones-ble-strip"
+      ]
+    },
+    {
+      "id": "devices-21",
+      "feature": "devices",
+      "title": "Scenes",
+      "steps": [
+        "Make a scene \"movie mode\": lamp off, LED strip blue 20%.",
+        "Say \"movie mode\"."
+      ],
+      "expected": "Every step happens.",
+      "needs": [],
+      "safety": "",
+      "stage": 2
+    },
+    {
+      "id": "devices-22",
+      "feature": "devices",
+      "title": "Heat devices need an exact match and your yes",
+      "steps": [
+        "Mark an outlet's device as heat (a stand-in lamp labelled \"heater\").",
+        "Say \"turn everything on\", then \"turn on the heater\"."
+      ],
+      "expected": "\"Everything\" skips it; by name it asks for confirmation and turns it off after its auto-off time.",
+      "needs": [],
+      "safety": "Use a lamp as a stand-in. Never test with a real heater unattended.",
+      "stage": 3
+    },
+    {
+      "id": "devices-23",
+      "feature": "devices",
+      "title": "Remote and other people can't control safety devices",
+      "steps": [
+        "From Discord or a meeting, ask Dayspring to turn on the \"heater\"."
+      ],
+      "expected": "It refuses.",
+      "needs": [],
+      "safety": "",
+      "stage": 3
+    },
+    {
+      "id": "devices-24",
+      "feature": "devices",
+      "title": "Off switch",
+      "steps": [
+        "On development, switch off Smart devices in Settings → Features and reload."
+      ],
+      "expected": "No device controls, tools, voice commands, Settings → Devices, or schedules running.",
+      "needs": [],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "printers-01",
+      "feature": "printers",
+      "title": "Printers appear only where they should",
+      "steps": [
+        "On production, look for Printers; on development, look again."
+      ],
+      "expected": "Production: none. Development: present.",
+      "needs": [],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "printers-02",
+      "feature": "printers",
+      "title": "Prepare a Bambu printer for LAN (per model)",
+      "steps": [
+        "On the printer's screen, write down its IP address, its Access Code (Settings → Network / WLAN) and its serial number (Settings → Device).",
+        "X1 Carbon, X1, X1E, P1S, P1P, A1, A1 mini: turn on LAN Only Mode, then Developer Mode on the same page (firmware from 2025 on ignores commands from other software without Developer Mode; status still shows).",
+        "H2D and H2S: turn on LAN Only Mode and Developer Mode, and also LAN Only Liveview, or the camera stays dark.",
+        "Note: LAN Only Mode disconnects the printer from Bambu's cloud and the Bambu Handy app while it's on."
+      ],
+      "expected": "You have the IP, access code and serial number, and the printer is in LAN Only Mode with Developer Mode on (and LAN Only Liveview on an H2D).",
+      "needs": [
+        "a Bambu Lab printer"
+      ],
+      "safety": "",
+      "stage": 1,
+      "compat": [
+        "bambu-x1c",
+        "bambu-p1s",
+        "bambu-a1",
+        "bambu-h2d"
+      ]
+    },
+    {
+      "id": "printers-03",
+      "feature": "printers",
+      "title": "Add the Bambu printer",
+      "steps": [
+        "Settings → Printers → Add → Bambu Lab: IP, access code, serial."
+      ],
+      "expected": "It connects and shows status and temperatures.",
+      "needs": [],
+      "safety": "",
+      "stage": 1,
+      "compat": [
+        "bambu-x1c",
+        "bambu-p1s",
+        "bambu-a1",
+        "bambu-h2d"
+      ]
+    },
+    {
+      "id": "printers-04",
+      "feature": "printers",
+      "title": "Status by voice",
+      "steps": [
+        "Say \"what's printer 1 doing?\"."
+      ],
+      "expected": "It says idle/printing, progress, time left and temperatures.",
+      "needs": [],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "printers-05",
+      "feature": "printers",
+      "title": "Printer camera",
+      "steps": [
+        "Say \"show printer 1's camera\"."
+      ],
+      "expected": "The camera view opens on the screen.",
+      "needs": [],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "printers-06",
+      "feature": "printers",
+      "title": "Pause and resume a print",
+      "steps": [
+        "During a small test print, say \"pause printer 1\", then \"resume printer 1\"."
+      ],
+      "expected": "It pauses (asks first) and resumes.",
+      "needs": [],
+      "safety": "Heat: a printer's bed and nozzle get hot enough to burn. Stay nearby, keep the area clear, and be ready to switch it off at the wall.",
+      "stage": 1
+    },
+    {
+      "id": "printers-07",
+      "feature": "printers",
+      "title": "Start a print needs a clear bed and your yes",
+      "steps": [
+        "Queue a small test file.",
+        "Say \"start the print on printer 1\"."
+      ],
+      "expected": "It asks you to confirm the bed is clear, then asks yes/no, and only then starts.",
+      "needs": [],
+      "safety": "Heat: a printer's bed and nozzle get hot enough to burn. Stay nearby, keep the area clear, and be ready to switch it off at the wall. Motion: the printer's head and bed move on their own. Keep hands, cables and pets clear before saying yes.",
+      "stage": 1
+    },
+    {
+      "id": "printers-08",
+      "feature": "printers",
+      "title": "Stop a print",
+      "steps": [
+        "During the test print, say \"stop printer 1\"."
+      ],
+      "expected": "It asks to confirm, then stops.",
+      "needs": [],
+      "safety": "Heat: a printer's bed and nozzle get hot enough to burn. Stay nearby, keep the area clear, and be ready to switch it off at the wall.",
+      "stage": 1
+    },
+    {
+      "id": "printers-09",
+      "feature": "printers",
+      "title": "Failure alert",
+      "steps": [
+        "Pull the filament during a test print (or unplug the camera)."
+      ],
+      "expected": "Dayspring alerts you and pauses if it can.",
+      "needs": [],
+      "safety": "Heat: a printer's bed and nozzle get hot enough to burn. Stay nearby, keep the area clear, and be ready to switch it off at the wall.",
+      "stage": 1
+    },
+    {
+      "id": "printers-10",
+      "feature": "printers",
+      "title": "Ender 5 Plus over USB",
+      "steps": [
+        "Connect the Ender 5 Plus to the PC by USB and turn it on.",
+        "Find its COM port: Windows Device Manager → Ports (COM & LPT) (it shows as a USB serial device, e.g. COM3). Close Cura, Pronterface or anything else using that port.",
+        "Settings → Printers → Add → USB (Marlin): pick that COM port (115200 baud unless you changed it).",
+        "Say \"what's the Ender doing?\"."
+      ],
+      "expected": "Temperatures and state show.",
+      "needs": [
+        "Creality Ender 5 Plus",
+        "USB cable"
+      ],
+      "safety": "",
+      "stage": 1,
+      "compat": [
+        "creality-ender-5-plus"
+      ]
+    },
+    {
+      "id": "printers-11",
+      "feature": "printers",
+      "title": "Ender 5 Plus through OctoPrint",
+      "steps": [
+        "In OctoPrint, make an API key.",
+        "Settings → Printers → Add → OctoPrint: address and key."
+      ],
+      "expected": "Status, temperatures and the OctoPrint webcam show.",
+      "needs": [
+        "OctoPrint on a Raspberry Pi"
+      ],
+      "safety": "",
+      "stage": 1,
+      "compat": [
+        "creality-ender-5-plus-octoprint"
+      ]
+    },
+    {
+      "id": "printers-12",
+      "feature": "printers",
+      "title": "Ender 5 Plus through Klipper",
+      "steps": [
+        "Settings → Printers → Add → Klipper (Moonraker): its address."
+      ],
+      "expected": "Status and temperatures show.",
+      "needs": [
+        "Klipper with Moonraker"
+      ],
+      "safety": "",
+      "stage": 1,
+      "compat": [
+        "creality-ender-5-plus-klipper"
+      ]
+    },
+    {
+      "id": "printers-13",
+      "feature": "printers",
+      "title": "Heat off when idle",
+      "steps": [
+        "Heat the bed by hand (preheat) and leave it idle."
+      ],
+      "expected": "Dayspring reminds you, and turns the heat off after the set time if you allow that.",
+      "needs": [],
+      "safety": "Heat: a printer's bed and nozzle get hot enough to burn. Stay nearby, keep the area clear, and be ready to switch it off at the wall.",
+      "stage": 1
+    },
+    {
+      "id": "printers-14",
+      "feature": "printers",
+      "title": "Off switch",
+      "steps": [
+        "On development, switch off 3D printers in Settings → Features."
+      ],
+      "expected": "No printer controls, tools, voice commands or status polling.",
+      "needs": [],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "cameras-01",
+      "feature": "cameras",
+      "title": "Cameras appear only where they should",
+      "steps": [
+        "On production, look for Cameras; on development, look again."
+      ],
+      "expected": "Production: none. Development: present.",
+      "needs": [],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "cameras-02",
+      "feature": "cameras",
+      "title": "A USB webcam",
+      "steps": [
+        "Plug in a webcam.",
+        "Settings → Cameras → Add → USB and pick it.",
+        "Say \"show the webcam\"."
+      ],
+      "expected": "The live view shows on the screen.",
+      "needs": [
+        "a USB webcam"
+      ],
+      "safety": "",
+      "stage": 1,
+      "compat": [
+        "usb-webcam"
+      ]
+    },
+    {
+      "id": "cameras-03",
+      "feature": "cameras",
+      "title": "Snapshot",
+      "steps": [
+        "Say \"take a snapshot from the webcam\"."
+      ],
+      "expected": "A picture is saved and shown; the activity log says so.",
+      "needs": [],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "cameras-04",
+      "feature": "cameras",
+      "title": "An IP camera (RTSP)",
+      "steps": [
+        "Turn on RTSP in the camera's app (Reolink, Amcrest, Hikvision…).",
+        "Settings → Cameras → Add, pick the brand, type its IP, user and password.",
+        "Say \"show the shop camera\"."
+      ],
+      "expected": "The live view shows.",
+      "needs": [
+        "an IP camera with RTSP"
+      ],
+      "safety": "",
+      "stage": 1,
+      "compat": [
+        "reolink-rtsp"
+      ]
+    },
+    {
+      "id": "cameras-05",
+      "feature": "cameras",
+      "title": "Tapo C camera",
+      "steps": [
+        "In the Tapo app, set a camera account (Advanced settings).",
+        "Add it in Settings → Cameras → Tapo."
+      ],
+      "expected": "The live view shows.",
+      "needs": [
+        "a Tapo C200/C210/C310"
+      ],
+      "safety": "",
+      "stage": 1,
+      "compat": [
+        "tapo-c-series"
+      ]
+    },
+    {
+      "id": "cameras-06",
+      "feature": "cameras",
+      "title": "ONVIF discovery",
+      "steps": [
+        "Click Find cameras in Settings → Cameras."
+      ],
+      "expected": "ONVIF cameras on your network are listed.",
+      "needs": [],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "cameras-07",
+      "feature": "cameras",
+      "title": "Snapshots on a schedule",
+      "steps": [
+        "Set the shop camera to take a snapshot every 10 minutes.",
+        "Wait 30 minutes."
+      ],
+      "expected": "Three snapshots are saved.",
+      "needs": [],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "cameras-08",
+      "feature": "cameras",
+      "title": "Motion alerts",
+      "steps": [
+        "Turn on motion alerts for a camera, walk in front of it."
+      ],
+      "expected": "An alert with a snapshot appears (not during Quiet).",
+      "needs": [],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "cameras-09",
+      "feature": "cameras",
+      "title": "Recordings",
+      "steps": [
+        "Record 30 seconds on request, then play it back."
+      ],
+      "expected": "The clip plays.",
+      "needs": [],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "cameras-10",
+      "feature": "cameras",
+      "title": "GoPro",
+      "steps": [
+        "Pair a GoPro (HERO9 or newer) as the setup explains.",
+        "Take a photo and show the live preview."
+      ],
+      "expected": "Both work.",
+      "needs": [
+        "a GoPro HERO9–13"
+      ],
+      "safety": "",
+      "stage": 1,
+      "compat": [
+        "gopro-hero-9-13"
+      ]
+    },
+    {
+      "id": "cameras-11",
+      "feature": "cameras",
+      "title": "Trail camera photos",
+      "steps": [
+        "Set up your trail camera brand as Settings → Cameras explains (email forwarding or the SD-card folder).",
+        "Add a few photos that way."
+      ],
+      "expected": "They show up under that camera.",
+      "needs": [
+        "a trail camera (e.g. Spypoint) or its SD card"
+      ],
+      "safety": "",
+      "stage": 1,
+      "compat": [
+        "spypoint"
+      ]
+    },
+    {
+      "id": "cameras-12",
+      "feature": "cameras",
+      "title": "Passwords stay sealed",
+      "steps": [
+        "Open Settings → Cameras after adding a camera."
+      ],
+      "expected": "No password is shown; the saved address has no password in it.",
+      "needs": [],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "cameras-13",
+      "feature": "cameras",
+      "title": "Works offline",
+      "steps": [
+        "Disconnect the internet (keep the home network).",
+        "Show a local camera."
+      ],
+      "expected": "Local cameras still work.",
+      "needs": [],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "cameras-15",
+      "feature": "cameras",
+      "title": "Add your own cameras",
+      "steps": [
+        "Settings → Cameras → Add: pick the kind (USB, IP/RTSP, ONVIF, HTTP snapshot, GoPro, Home Assistant, email or folder trail camera).",
+        "Enter its address and login (RTSP/ONVIF/HTTP) or pick it from the list; for a trail camera, the email rule or the folder.",
+        "Name it and give it a room, then press Test.",
+        "Say \"show me the <name> camera\"."
+      ],
+      "expected": "Each camera's test picture shows, and it opens by name.",
+      "needs": [
+        "your cameras"
+      ],
+      "safety": "Cameras facing the street or neighbours: turn on \"public facing\" so people are never recognised or named.",
+      "stage": 1
+    },
+    {
+      "id": "cameras-14",
+      "feature": "cameras",
+      "title": "Off switch",
+      "steps": [
+        "On development, switch off Cameras in Settings → Features."
+      ],
+      "expected": "No camera page, controls, tools or monitoring.",
+      "needs": [],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "remote-01",
+      "feature": "remote",
+      "title": "Remote appears only where it should",
+      "steps": [
+        "On production, look for Settings → Devices & sign-in; on development, look again."
+      ],
+      "expected": "Production: none. Development: present.",
+      "needs": [],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "remote-11",
+      "feature": "remote",
+      "title": "Apply the remote hub SQL (only with your OK)",
+      "steps": [
+        "Read docs/dev/remote-hub.sql. It adds Dayspring's remote-control tables and functions to your Supabase hub (the one Lantern uses).",
+        "Only if you're happy with it: in the Supabase dashboard → SQL editor, run it once.",
+        "Nothing in Dayspring applies it for you."
+      ],
+      "expected": "The script runs without errors; Settings → Devices & sign-in can then sign in.",
+      "needs": [
+        "your Supabase hub"
+      ],
+      "safety": "Changes your hub's database. Take a backup first; never run it on a hub you don't own.",
+      "stage": 1
+    },
+    {
+      "id": "remote-02",
+      "feature": "remote",
+      "title": "Sign in on two computers",
+      "steps": [
+        "On two Dayspring computers (development version), sign in with the same account."
+      ],
+      "expected": "Each lists the other.",
+      "needs": [
+        "two computers with Dayspring"
+      ],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "remote-03",
+      "feature": "remote",
+      "title": "Pair and approve the second computer",
+      "steps": [
+        "On the second computer, sign in (Settings → Devices & sign-in).",
+        "On the first computer, a pairing request appears: compare the code shown on both screens.",
+        "Approve it only if the codes match."
+      ],
+      "expected": "It's approved; nothing works until you approve it, and a wrong code is refused.",
+      "needs": [],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "remote-04",
+      "feature": "remote",
+      "title": "A command from the laptop",
+      "steps": [
+        "From the laptop, say \"turn on the lamp at home\"."
+      ],
+      "expected": "The home computer does it and says so on both.",
+      "needs": [],
+      "safety": "Power: whatever is plugged into the outlet turns off. Plug in a lamp for testing, never a computer, fridge, router or anything that heats.",
+      "stage": 1
+    },
+    {
+      "id": "remote-05",
+      "feature": "remote",
+      "title": "Wake the home computer",
+      "steps": [
+        "From the laptop, say \"turn on my home computer\"."
+      ],
+      "expected": "The home PC wakes (through another Dayspring on the same network).",
+      "needs": [],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "remote-06",
+      "feature": "remote",
+      "title": "Safety rules still apply",
+      "steps": [
+        "From the laptop, ask to turn on a heat device at home."
+      ],
+      "expected": "It needs the same exact match and your yes.",
+      "needs": [],
+      "safety": "",
+      "stage": 3
+    },
+    {
+      "id": "remote-07",
+      "feature": "remote",
+      "title": "Offline behaviour",
+      "steps": [
+        "Disconnect one computer from the internet and send it a command."
+      ],
+      "expected": "It says the other computer can't be reached; nothing is queued silently for later heat devices.",
+      "needs": [],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "remote-08",
+      "feature": "remote",
+      "title": "Revoke a computer",
+      "steps": [
+        "Remove a computer on the other one."
+      ],
+      "expected": "Its commands are refused from then on.",
+      "needs": [],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "remote-09",
+      "feature": "remote",
+      "title": "The activity log",
+      "steps": [
+        "Open Settings → Activity log on both."
+      ],
+      "expected": "Each remote command is logged with where it came from.",
+      "needs": [],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "remote-10",
+      "feature": "remote",
+      "title": "Off switch",
+      "steps": [
+        "On development, switch off Multi-device remote control."
+      ],
+      "expected": "No remote routes, tools or background link.",
+      "needs": [],
+      "safety": "",
+      "stage": 1
+    },
+    {
+      "id": "social-01",
+      "feature": "social",
+      "title": "Off by default even in development",
+      "steps": [
+        "On the development version, look for anything about sharing with friends."
+      ],
+      "expected": "Nothing shows; no requests are made.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "social-02",
+      "feature": "social",
+      "title": "Never in production",
+      "steps": [
+        "On production, turn on data/dev-settings.json social.enabled."
+      ],
+      "expected": "It stays off (only the developer's environment switch can turn it on).",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "social-03",
+      "feature": "social",
+      "title": "Developer switch",
+      "steps": [
+        "As the developer, start Dayspring with DAYSPRING_SOCIAL=1 and the mock server."
+      ],
+      "expected": "The social routes answer; no key is made until asked.",
+      "needs": [
+        "the developer setup"
+      ],
+      "safety": ""
+    }
+  ]
+}

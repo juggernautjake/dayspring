@@ -99,6 +99,27 @@ for (const [text, want, notWant, state] of NEGATIVES) {
   const p = I.plan(text, state);
   check(`"${text}" is ${want}, not ${notWant}`, p.intent === want, p.intent);
 }
+// ---------------- collisions between the home-control families (development features, so on the dev channel) --------
+{
+  const before = process.env.DAYSPRING_CHANNEL;
+  process.env.DAYSPRING_CHANNEL = "dev";
+  for (const [text, want, notWant] of [
+    ["is the tv on", "devices.status", null], ["is the TV on?", "devices.status", null], ["is the television on", "devices.status", null], ["are the lights on", "devices.status", null],
+    ["is my computer on", "devices.status", "medialib.play"], ["is anything still on", "devices.status", "discover"],
+    ["show me the printer camera", "printers.camera", "cameras.show"], ["show me printer 3's camera", "printers.camera", "cameras.show"], ["show me the camera on the p1s", "printers.camera", "cameras.show"],
+    ["show the x1c camera", "printers.camera", "cameras.show"], ["show me the ender camera", "printers.camera", "cameras.show"],
+    ["show me the front camera", "cameras.show", "printers.camera"], ["show me the webcam", "cameras.show", "printers.camera"],
+    ["what's on right now?", "sched.now", "devices.status"], ["what's on right now", "sched.now", "devices.status"], ["what should i be doing right now", "sched.now", "devices.status"],
+    ["what's on tv", null, "devices.status"],
+  ]) {
+    const p = I.plan(text, {});
+    check(`collision: "${text}" is ${want ?? "not " + notWant}${want && notWant ? `, not ${notWant}` : ""}`, (want ? p.intent === want : true) && (notWant ? p.intent !== notWant : true), p.ranked.slice(0, 3).map((r) => `${r.id}:${r.score}`).join(", "));
+  }
+  // the runner hands printers.camera to lib/devices, which passes printer words to lib/printers (its camera answer)
+  const pc = I.plan("show me printer 3's camera", {});
+  check("collision: printers.camera plans the devices runner with the words", pc.action?.do === "devices" && pc.action?.id === "printers.camera" && /printer 3/.test(pc.action?.text ?? ""), JSON.stringify(pc.action));
+  if (before === undefined) delete process.env.DAYSPRING_CHANNEL; else process.env.DAYSPRING_CHANNEL = before;
+}
 // ---------------- actions (dry run) ----------------
 for (const [text, want, state] of ACTIONS) {
   const p = I.plan(text, state ?? {});

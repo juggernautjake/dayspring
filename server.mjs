@@ -87,6 +87,7 @@ import * as recipes from "./lib/recipes.mjs";
 import * as intents from "./lib/intents/index.mjs";
 import * as web from "./lib/web.mjs";
 import * as imageRoutes from "./lib/image-routes.mjs";   // pictures from the web on the screen (lib/imagesearch)
+import * as gifRoutes from "./lib/gifs/routes.mjs";   // GIFs from GIPHY, KLIPY, Imgur and the web, and the GIF picker (lib/gifs)
 import * as socialRoutes from "./lib/social/index.mjs";   // sharing with friends: OFF (hidden dev switch social.enabled); inert when off (lib/social)
 import * as visionRoutes from "./lib/vision-routes.mjs";   // Settings → Photos & people, the People page (lib/vision, lib/people)
 import * as floorRoutes from "./lib/floor-routes.mjs";
@@ -95,6 +96,14 @@ import * as floor from "./lib/floor.mjs";
 import * as vision from "./lib/vision/index.mjs";
 import * as medialibRoutes from "./lib/medialib/routes.mjs";   // the owner's own music and videos, and Google Drive streaming (lib/medialib)
 import * as peopleComms from "./lib/people/comms.mjs";
+import * as mailRoutes from "./lib/mail/routes.mjs";   // email: every mailbox, the Mail window, the editor, Settings → Email (lib/mail)
+import * as features from "./lib/features.mjs";   // release channels and feature stages: features.on(id) gates routes, pages, jobs
+import * as featureRoutes from "./lib/feature-routes.mjs";   // /api/features, /api/compat, /api/testing
+import * as cameraRoutes from "./lib/cameras/routes.mjs";   // cameras: webcams, IP/security, GoPro, trail cams; monitor, alerts, recordings (lib/cameras)
+import * as remoteRoutes from "./lib/remote/routes.mjs";   // Settings → Devices & sign-in: his Dayspring computers linked securely (lib/remote; feature "remote")
+import * as remote from "./lib/remote/index.mjs";
+import * as smarthomeRoutes from "./lib/devices/routes.mjs";   // smart plugs, strips, lights, scenes and schedules: /api/smarthome (lib/devices; feature "devices")
+import * as printerRoutes from "./lib/printers/routes.mjs";   // 3D printers (Bambu LAN, Ender over USB, OctoPrint, Klipper): /api/printers (lib/printers; feature "printers")
 // A fresh install: create the data folder and any missing data files (empty, nothing personal) before anything runs.
 firstrun.ensure();
 // What each newly connected page is told first: who has the microphone and the listening state (so a page opened while
@@ -103,8 +112,9 @@ addHello("micOwner", () => lantern.micOwner());
 addHello("listenState", () => settings.get().listenState ?? "active");
 addHello("notices", () => firstrun.notices());
 // The Settings/setup wizard, updates and the in-app guide each answer their own /api routes.
-const ROUTES = [setupRoutes, updateRoutes, helpRoutes, discordRoutes, callRoutes, callsRoutes, meetRoutes, studyRoutes, playerRoutes, ambientRoutes, windowRoutes, documentRoutes, connectorRoutes, fsRoutes, toolingRoutes, welcomeRoutes, discoverRoutes, calendarRoutes, lanternRoutes, aboutRoutes, intentRoutes, personaRoutes, xpRoutes, imageRoutes, activityRoutes, moneyRoutes, visionRoutes, socialRoutes, floorRoutes, devRoutes, medialibRoutes];
+const ROUTES = [featureRoutes, setupRoutes, updateRoutes, helpRoutes, discordRoutes, callRoutes, callsRoutes, meetRoutes, studyRoutes, playerRoutes, ambientRoutes, windowRoutes, documentRoutes, connectorRoutes, fsRoutes, toolingRoutes, welcomeRoutes, discoverRoutes, calendarRoutes, lanternRoutes, aboutRoutes, intentRoutes, personaRoutes, xpRoutes, imageRoutes, activityRoutes, moneyRoutes, visionRoutes, socialRoutes, floorRoutes, devRoutes, medialibRoutes, gifRoutes, mailRoutes, cameraRoutes, remoteRoutes, smarthomeRoutes, printerRoutes];
 imageRoutes.setDeps({ openUrl: async (u) => (await import("./lib/browsers.mjs")).openUrl(u, owner.displayBrowser()) });
+gifRoutes.setDeps({ openUrl: async (u) => (await import("./lib/browsers.mjs")).openUrl(u, owner.displayBrowser()) });
 // 🎧 Tune in: what it hears addressed to Dayspring goes through the same assistant
 tunein.setChat(chat);
 // DAYSPRING_DISPLAY=1: this computer shows the Dayspring screen (any screen: a TV, a monitor…), so it keeps it open and
@@ -318,6 +328,8 @@ async function api(req, res, url) {
   const q = url.searchParams;
 
   if (m !== "GET" && /^\/(chat|tts|blocks|routines|tasks|media|player|reader|documents|setup|welcome|study|snooze|voice|call|tunein)\b/.test(p)) updater.touch();
+  // a feature that's off in this build (or switched off) has no routes: 404, as if it weren't there (its /…/enabled probe still answers)
+  { const off = /\/enabled$/.test(p) ? null : features.routeBlocked(p); if (off) return send(res, 404, { error: `no route ${m} ${p}`, feature: off, off: true }); }
   for (const r of ROUTES) if (await r.handle(req, res, { m, p, q, send, readJSON, restart: restartSelf })) return;
 
   // ---- starting and stopping (scripts/launch.mjs, the window bar) ----
@@ -711,11 +723,18 @@ async function api(req, res, url) {
     if (uc) { transcripts.log({ role: "dayspring", text: uc, surface: key }); return send(res, 200, { reply: uc, changes: [], usage: null }); }
     const tc = await callRoutes.command(message.trim()).catch(() => null);
     if (tc) { transcripts.log({ role: "dayspring", text: tc, surface: key }); return send(res, 200, { reply: tc, changes: [], usage: null }); }
+    // cameras: "show me the front camera", "any activity on the trail cam?", "play last night's deer clip" (lib/cameras)
+    const cc = await cameraRoutes.command(message.trim()).catch((e) => { console.log(`cameras: ${e.message}`); return null; });
+    if (cc) { transcripts.log({ role: "dayspring", text: cc, surface: key }); return send(res, 200, { reply: cc, changes: [], usage: null, intent: "cameras" }); }
+    // GIFs (before pictures: "a GIF of …" is a GIF): "show me a GIF of a dancing cat", and while they're up: "number 4",
+    // "more", "save that GIF", "copy that one", "only stickers", "clean ones only" (lib/gifs/routes.mjs)
+    const gc = await gifRoutes.command(message.trim()).catch((e) => { console.log(`gifs: ${e.message}`); return null; });
+    if (gc) { transcripts.log({ role: "dayspring", text: gc, surface: key }); return send(res, 200, { reply: gc, changes: [], usage: null, intent: "gifs" }); }
     // "show me pictures of …", and while pictures are up: "show number 3", "more", "save that one", "close images"
     const ic = await imageRoutes.command(message.trim()).catch((e) => { console.log(`images: ${e.message}`); return null; });
     if (ic) { transcripts.log({ role: "dayspring", text: ic, surface: key }); return send(res, 200, { reply: ic, changes: [], usage: null, intent: "images" }); }
     // his own music and videos, and Google Drive: "play … from my computer", "shuffle my music folder", "number 2" (lib/medialib)
-    const ml = await (await import("./lib/medialib/skills.mjs")).command(message.trim(), { surface: key }).catch((e) => { console.log(`media library: ${e.message}`); return null; });
+    const ml = !(features.on("medialib") || features.on("drive")) ? null : await (await import("./lib/medialib/skills.mjs")).command(message.trim(), { surface: key }).catch((e) => { console.log(`media library: ${e.message}`); return null; });
     if (ml) { transcripts.log({ role: "dayspring", text: ml.reply, surface: key }); return send(res, 200, { reply: ml.reply, changes: ml.played ? ["media"] : [], usage: null, intent: "medialib", ...(ml.listen ? { listen: true } : {}) }); }
     const t0 = Date.now();
     lastChatAt = Date.now();
@@ -749,11 +768,12 @@ async function api(req, res, url) {
 }
 
 // Page names: /display (the Dayspring screen; /tv is its older name), /setup (first-run wizard and Settings), /help (the guide)
-const PAGES = { "/": "/index.html", "/tv": "/tv.html", "/display": "/tv.html", "/mini": "/tv.html", "/history": "/history.html", "/setup": "/setup.html", "/settings": "/setup.html", "/help": "/help.html", "/welcome": "/welcome.html", "/recipes": "/recipes.html", "/progress": "/progress.html" };
+const PAGES = { "/": "/index.html", "/tv": "/tv.html", "/display": "/tv.html", "/mini": "/tv.html", "/history": "/history.html", "/setup": "/setup.html", "/settings": "/setup.html", "/help": "/help.html", "/welcome": "/welcome.html", "/recipes": "/recipes.html", "/progress": "/progress.html", "/gifs": "/gifs.html" };
 async function serveStatic(res, pathname) {
   // until setup is done, the Dayspring screen (and the plain address, which a new user is most likely to type) sends people to the wizard
   if ((pathname === "/" || pathname === "/tv" || pathname === "/display" || pathname === "/mini" || pathname === "/setup" || pathname === "/settings") && !owner.setupDone()) { res.writeHead(302, { location: "/welcome" }); return res.end(); }
   const rel = PAGES[pathname] ?? pathname;
+  if (features.pageBlocked(rel)) { res.writeHead(404); return res.end("not found"); }   // a feature that's off has no pages
   const file = join(PUBLIC, rel);
   if (!file.startsWith(PUBLIC)) { res.writeHead(403); return res.end(); }
   try {
@@ -810,6 +830,8 @@ createServer(async (req, res) => {
     else if (await studyRoutes.handlePage(req, res, { m: req.method, pathname: url.pathname, q: url.searchParams })) return;
     // an emailed "Connect to Lantern" sign-in link comes back here (/lantern/auth/callback)
     else if (await lanternRoutes.handlePage(req, res, { m: req.method, pathname: url.pathname })) return;
+    // an emailed sign-in link for this device comes back here (/remote/auth/callback)
+    else if (await remoteRoutes.handlePage(req, res, { m: req.method, pathname: url.pathname })) return;
     else await serveStatic(res, url.pathname);
   } catch (err) {
     const status = err?.status ?? 400;
@@ -835,6 +857,9 @@ createServer(async (req, res) => {
   // Lantern (the learning app), if it's on this computer: presence, events, "one voice, one ear"
   lantern.setDeps({ tunein, callbridge });
   lantern.start({ port: PORT, announce: (x) => announcer.announce(x) });
+  // his other Dayspring computers (only if this one signed in before, and only with the "remote" feature on)
+  remote.start({ port: PORT, version: lantern.version(), announce: (x) => announcer.announce(x), broadcast: (t, d) => announcer.broadcast(t, d),
+    openUrl: async (u) => (await import("./lib/browsers.mjs")).openUrl(u, owner.displayBrowser()) }).catch((e) => console.log(`remote: ${e.message}`));
   // Make sure today has its routines so the first screen isn't empty.
   const added = store.applyRoutines(store.todayISO());
   console.log(`Dayspring desk  →  http://localhost:${PORT}`);
@@ -861,7 +886,7 @@ createServer(async (req, res) => {
   });
   knowledge.map();   // builds the folder map if it is missing or a day old
   if (owner.feature("photos")) import("./lib/photos.mjs").then((p) => p.scan()).catch(() => {});   // the photo list, built in the background
-  if (DISPLAY_MODE) vision.start({ announce: (x) => announcer.announce(x) });   // faces in the photos (only if turned on), people questions
+  if (DISPLAY_MODE) features.startJob("faces", "vision.start", () => vision.start({ announce: (x) => announcer.announce(x) }));   // faces in the photos (only if turned on), people questions
   // While the media browser is open, keep the screen's "now playing" card in step with Spotify.
   setInterval(async () => {
     if (!browser.isOpen() || announcer.clientCount() === 0) return;
@@ -942,20 +967,38 @@ createServer(async (req, res) => {
   discover.start();
   // connected apps that work in the background: weather alerts, calendar subscriptions, news feeds
   connectors.startBackground({ announce: (x) => announcer.announce(x) });
+  // cameras: each saved camera's schedule, motion checks, recording and alerts (only on the owner's own Dayspring; lib/cameras)
+  features.startJob("cameras", "cameras.monitor", () => import("./lib/cameras/index.mjs").then((c) => c.start()));
+  // smart devices: their schedules (and auto-off / left-open alerts); 3D printers: connections, print watching (lib/devices, lib/printers)
+  features.startJob("devices", "devices.schedules", () => startHome());
+  features.startJob("printers", "printers.poll", () => startPrinters());
   // clashes between calendars are noticed and announced; the optional copy of the schedule onto Google/Outlook
   import("./lib/conflicts.mjs").then((c) => c.startWatcher({ announce: announcer.announce, broadcast: announcer.broadcast })).catch(() => {});
   import("./lib/calsync.mjs").then((c) => c.startBackground()).catch(() => {});              // now and then: popular videos and articles about the owner's interests
   ambient.keepFresh();           // the living sky: sunrise/sunset, weather and wind for the owner's location
   discordRoutes.init();          // the Discord bot logs in only when a bot token is set; otherwise it stays off
   // his own music and videos: joins the music sources now, looks through the allowed folders a little later, slowly
-  import("./lib/medialib/skills.mjs").then((m) => m.registerSources()).catch(() => {});
-  setTimeout(() => import("./lib/medialib/library.mjs").then((l) => l.scanSoon()).catch(() => {}), 90_000).unref?.();
+  features.startJob("medialib", "medialib.sources", () => import("./lib/medialib/skills.mjs").then((m) => m.registerSources()));
+  setTimeout(() => features.startJob("medialib", "medialib.scan", () => import("./lib/medialib/library.mjs").then((l) => l.scanSoon())), 90_000).unref?.();
   if (TUNNEL) startTunnel();
   else if (t.publicUrl) console.log(`Public URL (from .env): ${t.publicUrl}  → point Twilio webhooks here or run with --tunnel`);
 });
 
 // Installing the private speech recognition (whisper.cpp) from the Dayspring screen, with the owner's OK
 const sttJob = { running: false, error: null };
+
+// Smart devices and 3D printers (lib/devices, lib/printers): announcements go through the floor like everything else; the
+// printers tell the device rules whether an outlet may be cut (printing or hot); USB printing holds the PC awake.
+async function startHome() {
+  const [dv, pr] = await Promise.all([import("./lib/devices/index.mjs"), import("./lib/printers/index.mjs").catch(() => null)]);
+  dv.start({ announce: (x) => announcer.announce(x), broadcast: (t, d) => announcer.broadcast(t, d), ownerName: () => owner.name(), printerStatus: (id) => pr?.powerStatus(id) ?? null });
+}
+async function startPrinters() {
+  const [pr, awake, vset] = await Promise.all([import("./lib/printers/index.mjs"), import("./lib/printers/awake.mjs"), import("./lib/vision/settings.mjs").catch(() => null)]);
+  const ffmpeg = await import("ffmpeg-static").then((m) => m.default).catch(() => null);
+  await pr.startUp({ announce: (x) => announcer.announce(x), broadcast: (t, d) => announcer.broadcast(t, d), keepAwake: (id, on) => awake.hold(id, on), ffmpeg,
+    visionConsent: () => Boolean(vset?.get?.().aiDescribe), notify: (text) => (notify.notifyReady().canSend ? notify.sendSms(text) : Promise.resolve(null)) });
+}
 
 // Timers (lib/timers.mjs) ring through the same announcements as everything else; recipes search the web the same way
 // Dayspring's own search does. A timer that ended while Dayspring was closed rings once it's back (the first tick).

@@ -1,0 +1,231 @@
+{
+  "category": "ai-voice",
+  "label": "Voice and AI providers",
+  "description": "The AI brain Dayspring thinks with, the voices it speaks with, and how it hears you. Dayspring still works with no AI at all (built-in skills), and has free voices and private on-computer speech recognition.",
+  "entries": [
+    {
+      "id": "anthropic-claude",
+      "brand": "Anthropic",
+      "model": "Claude",
+      "category": "ai-voice",
+      "connection": "cloud",
+      "offline": false,
+      "status": "verified",
+      "capabilities": ["conversation", "tools", "vision", "web-search"],
+      "notes": "In the owner's daily use (September 2026). Dayspring's main AI brain: real conversations, all of Dayspring's tools (schedule, files, email, cameras, printers), looking at pictures, and web search. Needs an Anthropic API key, which is paid by use.",
+      "howToSetUp": [
+        "Make an API key at platform.claude.com (Settings → API keys) and add some credit.",
+        "In Dayspring, open Settings → AI brain, choose Claude (Anthropic), and paste the key.",
+        "Press Test to check it answers."
+      ],
+      "links": ["https://platform.claude.com/settings/keys", "https://docs.claude.com/"],
+      "lastChecked": "2026-09-28",
+      "features": ["voice"]
+    },
+    {
+      "id": "openai-gpt",
+      "brand": "OpenAI",
+      "model": "ChatGPT models (API)",
+      "category": "ai-voice",
+      "connection": "cloud",
+      "offline": false,
+      "status": "expected",
+      "capabilities": ["conversation", "tools", "vision"],
+      "notes": "Supported as an AI brain through OpenAI's API (a ChatGPT subscription is not the same as API access; the API is paid by use). Conversations use the same shape as with Claude, so switching doesn't lose them. Web search is only available with Claude.",
+      "howToSetUp": [
+        "Make an API key at platform.openai.com (API keys) and add some credit.",
+        "In Dayspring, open Settings → AI brain, choose ChatGPT (OpenAI), and paste the key.",
+        "Press Test to check it answers."
+      ],
+      "links": ["https://platform.openai.com/docs"],
+      "lastChecked": "2026-09-28",
+      "features": ["voice"]
+    },
+    {
+      "id": "xai-grok",
+      "brand": "xAI",
+      "model": "Grok (API)",
+      "category": "ai-voice",
+      "connection": "cloud",
+      "offline": false,
+      "status": "expected",
+      "capabilities": ["conversation", "tools", "vision"],
+      "notes": "Supported as an AI brain through xAI's OpenAI-compatible API, paid by use.",
+      "howToSetUp": [
+        "Make an API key in the xAI console.",
+        "In Dayspring, open Settings → AI brain, choose Grok (xAI), and paste the key.",
+        "Press Test to check it answers."
+      ],
+      "links": ["https://docs.x.ai/"],
+      "lastChecked": "2026-09-28",
+      "features": ["voice"]
+    },
+    {
+      "id": "ollama",
+      "brand": "Ollama",
+      "model": "Local models (Llama and others)",
+      "category": "ai-voice",
+      "connection": "local",
+      "offline": true,
+      "status": "expected",
+      "capabilities": ["conversation", "tools"],
+      "notes": "A free AI brain that runs on this computer through Ollama: nothing leaves the PC and no internet is needed once the model is downloaded. It's slower and less capable than the paid services, and needs a reasonably strong computer (about 8 GB of free memory for the default 8B model).",
+      "howToSetUp": [
+        "Download and install Ollama from ollama.com.",
+        "Download a model, for example by running \"ollama pull llama3.1:8b\" once.",
+        "In Dayspring, open Settings → AI brain and choose Local model (Ollama, free).",
+        "Press Test to check it answers."
+      ],
+      "links": ["https://ollama.com/download"],
+      "lastChecked": "2026-09-28",
+      "features": ["voice"]
+    },
+    {
+      "id": "google-gemini",
+      "brand": "Google",
+      "model": "Gemini",
+      "category": "ai-voice",
+      "connection": "cloud",
+      "offline": false,
+      "status": "not-supported",
+      "reason": "Not built in yet: Dayspring's AI brain supports Claude, ChatGPT, Grok and Ollama.",
+      "capabilities": [],
+      "notes": "Gemini may be added later.",
+      "howToSetUp": [
+        "Choose one of the supported brains in Settings → AI brain instead: Claude, ChatGPT, Grok, or the free local model with Ollama."
+      ],
+      "links": ["https://ai.google.dev/"],
+      "lastChecked": "2026-09-28",
+      "features": ["voice"]
+    },
+    {
+      "id": "elevenlabs",
+      "brand": "ElevenLabs",
+      "model": "ElevenLabs voices",
+      "category": "ai-voice",
+      "connection": "cloud",
+      "offline": false,
+      "status": "verified",
+      "capabilities": ["text-to-speech", "voice-library", "custom-voices"],
+      "notes": "In the owner's daily use (September 2026). Natural, expressive voices; Dayspring's default voice with a key is Matilda. Your own ElevenLabs voice library (custom and cloned voices) can be used when the key is allowed to list it. A free tier is available; heavier use is paid.",
+      "howToSetUp": [
+        "Make an account at elevenlabs.io and create an API key.",
+        "In Dayspring, open Settings → Voice, choose ElevenLabs, and paste the key.",
+        "Pick a voice and press Test."
+      ],
+      "links": ["https://elevenlabs.io/docs"],
+      "lastChecked": "2026-09-28",
+      "features": ["voice"]
+    },
+    {
+      "id": "openai-tts",
+      "brand": "OpenAI",
+      "model": "OpenAI voices (text to speech)",
+      "category": "ai-voice",
+      "connection": "cloud",
+      "offline": false,
+      "status": "expected",
+      "capabilities": ["text-to-speech"],
+      "notes": "OpenAI's voices (Alloy, Coral, Nova, Sage, Shimmer and more), with the OpenAI API key. Coral is the default.",
+      "howToSetUp": [
+        "Make an OpenAI API key (the same one works for the ChatGPT brain).",
+        "In Dayspring, open Settings → Voice, choose OpenAI, and paste the key if it isn't there already.",
+        "Pick a voice and press Test."
+      ],
+      "links": ["https://platform.openai.com/docs/guides/text-to-speech"],
+      "lastChecked": "2026-09-28",
+      "features": ["voice"]
+    },
+    {
+      "id": "windows-voices",
+      "brand": "Microsoft",
+      "model": "Free Windows and browser voices",
+      "category": "ai-voice",
+      "connection": "local",
+      "offline": true,
+      "status": "expected",
+      "capabilities": ["text-to-speech"],
+      "notes": "The voices built into Windows (like Zira and David) spoken by the Dayspring screen's browser. Free, and they work with no internet. This is what Dayspring uses when no voice service is set up.",
+      "howToSetUp": [
+        "Nothing to set up: open Settings → Voice and choose the free voices.",
+        "More voices can be added in Windows Settings → Time & language → Speech → Manage voices."
+      ],
+      "links": ["https://support.microsoft.com/windows"],
+      "lastChecked": "2026-09-28",
+      "features": ["voice"]
+    },
+    {
+      "id": "edge-natural-voices",
+      "brand": "Microsoft",
+      "model": "Edge \"Online (Natural)\" voices",
+      "category": "ai-voice",
+      "connection": "cloud",
+      "offline": false,
+      "status": "expected",
+      "capabilities": ["text-to-speech"],
+      "notes": "When the Dayspring screen runs in Microsoft Edge, the free voices include Edge's natural-sounding online voices. They're free but need the internet; without it, Dayspring falls back to the Windows voices.",
+      "howToSetUp": [
+        "Choose Microsoft Edge as the browser for the Dayspring screen (Settings → Screen).",
+        "In Settings → Voice, choose the free voices and pick one marked Online (Natural)."
+      ],
+      "links": ["https://support.microsoft.com/microsoft-edge"],
+      "lastChecked": "2026-09-28",
+      "features": ["voice"]
+    },
+    {
+      "id": "whisper-local",
+      "brand": "whisper.cpp",
+      "model": "Speech recognition on this computer",
+      "category": "ai-voice",
+      "connection": "local",
+      "offline": true,
+      "status": "verified",
+      "capabilities": ["speech-to-text", "private"],
+      "notes": "In the owner's daily use (September 2026). Dayspring's private speech recognition: whisper.cpp runs on this computer, so nothing you say leaves the PC and no internet is needed. It's a one-time download of about 200 MB. Used for listening in Brave and Firefox, for \"Tune in\", for the Discord bot, and whenever you choose \"On this computer\".",
+      "howToSetUp": [
+        "In Dayspring, open Settings → Screen → Speech recognition and choose On this computer (private).",
+        "Let Dayspring download the speech model once (about 200 MB).",
+        "Say the wake word to check it hears you."
+      ],
+      "links": ["https://github.com/ggml-org/whisper.cpp"],
+      "lastChecked": "2026-09-28",
+      "features": ["voice"]
+    },
+    {
+      "id": "chrome-web-speech",
+      "brand": "Google",
+      "model": "Chrome speech recognition",
+      "category": "ai-voice",
+      "connection": "cloud",
+      "offline": false,
+      "status": "expected",
+      "capabilities": ["speech-to-text"],
+      "notes": "Chrome's built-in speech recognition, which sends the audio to Google to turn into words. Fast, free, and needs the internet. If it fails with a network error, Dayspring switches to the private recognition on this computer when that's installed.",
+      "howToSetUp": [
+        "Use Chrome for the Dayspring screen and allow the microphone when asked.",
+        "In Settings → Screen → Speech recognition, leave it on Automatic or choose The browser."
+      ],
+      "links": ["https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API"],
+      "lastChecked": "2026-09-28",
+      "features": ["voice"]
+    },
+    {
+      "id": "edge-web-speech",
+      "brand": "Microsoft",
+      "model": "Edge speech recognition",
+      "category": "ai-voice",
+      "connection": "cloud",
+      "offline": false,
+      "status": "expected",
+      "capabilities": ["speech-to-text"],
+      "notes": "Microsoft Edge's built-in speech recognition, which uses Microsoft's online speech service. Needs the internet. If it fails, Dayspring can use the private recognition on this computer instead.",
+      "howToSetUp": [
+        "Use Microsoft Edge for the Dayspring screen and allow the microphone when asked.",
+        "In Settings → Screen → Speech recognition, leave it on Automatic or choose The browser."
+      ],
+      "links": ["https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API"],
+      "lastChecked": "2026-09-28",
+      "features": ["voice"]
+    }
+  ]
+}

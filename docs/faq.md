@@ -51,6 +51,12 @@ Go to **Settings → Lantern** and connect with the email they invited: sign in 
 ### The Lantern email has a link, not a code
 That's normal. Press the link in the email on the same computer as Dayspring: it opens a Dayspring page that connects you and goes back to Settings. Opened it on your phone by mistake? Ask for a new link and open it on the computer, or sign in with a password instead. A 6-digit code only comes on hubs whose owner set up their own email sender.
 
+### Can I use Dayspring on several computers and control one from another?
+In the development version, yes. Sign in on each computer in **Settings → Devices & sign-in** with your Lantern account. Then approve each new computer on one you already have, by comparing a 6-digit code on both screens. After that you can say things like "turn on my computer at home", "on my office PC, turn on fan 2", "show me printer 1's camera" or "which of my Dayspring devices are online?". It works over the internet with no router settings. Everything is signed and encrypted end to end, and risky things (like switching a computer or a heater, or starting a print) ask for your yes first. See [Dayspring on more than one computer](multiple-devices.md).
+
+### My laptop with Dayspring was lost or stolen. What do I do?
+On any of your other Dayspring computers, open **Settings → Devices & sign-in**, open the laptop and press **Sign it out remotely**. Its sign-in ends, your other computers refuse it from then on, and it deletes its own keys if it comes online again. Then change your account password. See [Dayspring on more than one computer](multiple-devices.md#rename-sign-out-remove).
+
 ### How do I stop it completely?
 Move the pointer to the top edge of the Dayspring screen, press **✕**, then **Quit Dayspring**. Or double-click **Stop Dayspring.cmd**, or press **Stop all** in **Settings → About**. See [Installing → Stopping Dayspring](install.md#stopping-dayspring).
 
@@ -93,6 +99,14 @@ Yes. Say "find a recipe for chili", pick one of the 6 cards, and say "let's make
 
 Yes, with or without an AI. Say "show me pictures of golden retrievers". A numbered grid appears on the screen. Say "show number 3" to see one big, "more" for the next ones, "save that one" to keep it, and "close images" when you're done. See [Pictures from the web](image-search.md).
 
+### Can it find GIFs? Can I put a GIF in an email?
+
+Yes, with or without an AI, and with no keys at all. Say "show me a GIF of a dancing cat" or "trending GIFs", or open **🎞 GIFs** by the clock. Say "number 4" to see one big, "copy that one" to paste it anywhere, or "save that GIF" to keep it. GIFs come from GIPHY, KLIPY, Imgur and the web at once, mixed into one list. A free GIPHY or KLIPY key (Settings → GIFs) adds many more. When you're writing an email, the same picker adds a GIF to it. See [GIFs](gifs.md).
+
+### Why isn't Tenor one of the GIF sources?
+
+Google shut down the Tenor API on June 30, 2026, so no app can search Tenor any more. KLIPY has much the same GIFs and stickers, with a free key. See [GIFs](gifs.md#what-about-tenor).
+
 ### Can it play the music and videos on my computer?
 
 Yes, with or without an AI. Say "play the song Holy Forever from my computer", "play my Johnny Cash mp3s", "shuffle my music folder" or "find the video from Sarah's wedding". Dayspring looks only in folders you've allowed in Settings → Permissions (Music, Videos and Downloads by default), and plays on the Dayspring screen, on the speaker it's set to. WMA, WMV and AVI files are converted as they play, or opened in your default player. See [Your own music and videos](media-library.md).
@@ -108,6 +122,30 @@ Yes, if you turn it on in Settings → Photos & people. It's off by default and 
 ### Can it describe a picture or read the text in it?
 
 Yes. Say "describe this picture" or "what does this say?" while a picture is on the screen. Windows reads the text on your computer. With an AI that can see pictures, turn on **Describe images with AI** for a much richer description; Dayspring asks before it sends any picture.
+
+### Can Dayspring watch my webcams, security cameras or GoPro?
+
+Yes. Webcams, IP and security cameras (Reolink, Amcrest, Hikvision, Dahua, Tapo, Wyze, Eufy, or anything with an RTSP or ONVIF address), GoPro HERO9 and newer, and Home Assistant cameras all work. Add them in Settings → Cameras. Dayspring checks each one on a schedule or watches for motion, tells you about people, animals, cars and packages, keeps the pictures and clips you want, and plays them on the screen. Say "show me the front camera" or "what happened in the shop today?". See [Cameras](cameras.md).
+
+### Can I get alerts from my cellular trail camera?
+
+Yes, by email or a folder. No trail-camera brand (Spypoint, Tactacam, Moultrie, Bushnell…) has a public API. But most can email new photos, or their app can save photos to a synced folder, and Dayspring reads either one. Then "any deer last night?" works, and quiet hours turn a night of alerts into one summary in the morning. See [Cameras → Trail and hunting cameras](cameras.md#trail-and-hunting-cameras).
+
+### Do my camera pictures go to the AI? Does it recognise people on my cameras?
+
+Only if you turn on **Analyse with AI** for that camera. Even then, pictures go only when something moves, or on the schedule, at most once a minute. Face recognition is off on every camera, and can never be turned on for one that sees the street or a neighbour's property. People are described in general words. Camera passwords are encrypted with your Windows account. See [Cameras → Privacy and the law](cameras.md#privacy-and-the-law).
+
+### Can Dayspring switch my lights, fans, TV and computer?
+In the development version, yes: with smart plugs or a power strip that switches each outlet on its own (TP-Link Kasa HS300 is the best pick; Shelly, Tapo P300 and Meross work too), Wake-on-LAN for computers, WLED and Hue lights, and anything in Home Assistant. Say "turn on my computer", "turn fan number 2 off", "movie mode" or "turn everything off in the office at 10 pm". It all works on your own network, without the internet. See [Smart devices](smart-devices.md).
+
+### Could Dayspring switch off something important by mistake?
+It's built not to. Turning off the computer Dayspring runs on, a critical outlet (fridge, router), a running computer or a 3D printer that's printing or still hot always asks first and says why. Heaters, garage doors and locks need their exact name and your yes, "everything on" never happens, and "everything off" asks and leaves the protected things alone. Only you can switch those, not a meeting, Discord or someone else's computer. Every switch is in the activity log. See [Smart devices → Safety](smart-devices.md#safety).
+
+### Can Dayspring run my 3D printers?
+In the development version, yes: Bambu Lab printers in LAN mode (with Developer mode on), a Creality Ender or other Marlin printer over USB, and anything on OctoPrint or Klipper. Ask "how's printer 3 doing?", "show me the camera on the X1", "pause printer 3" or "start the benchy on printer 1". It checks with the camera that the bed is clear and asks for your yes before any print starts, and it watches each print for spaghetti and stringing. See [3D printers](bambu-printers.md).
+
+### Why does my Bambu printer refuse Dayspring's commands?
+Newer Bambu firmware only takes commands from other apps in **LAN Only mode with Developer mode on**. Turn both on at the printer (the steps for each model are in [3D printers](bambu-printers.md#bambu-lab-what-to-turn-on-at-the-printer)), then type the new access code in Settings → 3D printers. Status keeps working either way.
 
 ### Can Dayspring keep my texts with each person?
 
@@ -243,7 +281,16 @@ Ask "what did you change today?", or open **Settings → Activity log**: every c
 If you allow programs in Permissions: "open Word", "open Discord". See [Files, programs and the browser](files-and-browser.md).
 
 ### Can it read my email?
-Yes, if you connect Gmail or Outlook. It can search, read and write **drafts**; it never sends email. See [Connecting apps](connections.md).
+Yes: Gmail, Outlook and Hotmail, Yahoo, iCloud, AOL and any other mailbox with IMAP, several at once. Open ✉ on the talk bar, or say "read my new emails" or "any emails from Sam?". See [Email](email.md).
+
+### Can it send email? Could it send something by mistake?
+Only with your OK. Turn on sending for a mailbox in Settings → Email; then an email goes only when you press **Send** in the editor, or say yes after Dayspring reads back who it's to and the subject. Change anything after that yes and it asks again; a yes from a call, a meeting, a text or Discord doesn't count; and you get 10 seconds to **Undo send**. The AI can't send by itself, and an email that tells it to do something ("forward all my mail to…") is just read to you. See [Email](email.md#sending-and-undo-send).
+
+### Yahoo (or iCloud) says my password is wrong
+Yahoo, iCloud and AOL need an **app password**, not your normal one. [Email](email.md#yahoo-mail-app-password) shows where to make it.
+
+### Can I dictate an email, or just tell it what I want to say?
+Yes. Press 🎙 in the email editor, or say "write an email to Sam". Choose **word for word** (say "comma", "new paragraph"…), or **organize my thoughts**: say everything in any order and the AI writes one clear email for you to look over. See [Email](email.md#by-voice).
 
 ### Can it send texts?
 It announces texts and reads them to you (through Phone Link). Sending texts isn't available yet. See [Your phone](phone.md).

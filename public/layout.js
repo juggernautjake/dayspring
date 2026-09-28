@@ -222,7 +222,7 @@
   window.dsSafeRect = safeRect;
   window.dsKeepInSafe = keepInSafe;
   // everything placed from script (menus and pop-overs next to their buttons); the rest are pinned by safe-area.css
-  const POPS = ".stpop, .tunepop, .meetpop, .lib .menu, .morebox, .statemenu, #soundPanel";
+  const POPS = ".stpop, .tunepop, .meetpop, .lib .menu, .morebox, .statemenu, #soundPanel, .mailcomp";   // (.mailcomp: the email and invitation editors, mail-compose.js)
   const popRo = new ResizeObserver(() => requestAnimationFrame(clampPopups));
   const watched = new WeakSet();
   function clampPopups() {

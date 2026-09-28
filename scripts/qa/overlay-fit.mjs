@@ -30,7 +30,7 @@ spawnSync(process.execPath, [join(DESK, "scripts", "export.mjs"), APP], { encodi
 spawnSync("cmd.exe", ["/d", "/c", "mklink", "/J", join(APP, "node_modules"), join(DESK, "node_modules")], { windowsHide: true });
 mkdirSync(join(APP, "data"), { recursive: true });
 writeFileSync(join(APP, "data", "owner.json"), JSON.stringify({ name: "Tester", setupDone: true, display: "primary" }));
-const env = { ...process.env, PORT: String(PORT), DAYSPRING_DISPLAY: "", DAYSPRING_TV: "", DAYSPRING_NO_BROWSER: "1", DAYSPRING_DEVICES_DRYRUN: "1", DAYSPRING_NO_OVERLAY: "1", DAYSPRING_NO_ECO: "1", DS_PROFILE: "DayspringQA" };
+const env = { ...process.env, PORT: String(PORT), DAYSPRING_DISPLAY: "", DAYSPRING_TV: "", DAYSPRING_NO_BROWSER: "1", DAYSPRING_DEVICES_DRYRUN: "1", DAYSPRING_NO_OVERLAY: "1", DAYSPRING_NO_ECO: "1", DS_PROFILE: "DayspringQA", DAYSPRING_CHANNEL: "dev" };   // (dev: features still in progress, like the GIF picker, are on)
 const server = spawn(process.execPath, ["server.mjs"], { cwd: APP, env, stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
 let serverLog = ""; server.stdout.on("data", (d) => (serverLog += d)); server.stderr.on("data", (d) => (serverLog += d));
 const up = async () => { try { return (await fetch(`${BASE}/api/build`, { signal: AbortSignal.timeout(2000) })).ok; } catch { return false; } };
@@ -86,6 +86,9 @@ const POPUPS = [
   { name: "Sound panel", live: true, box: "#soundPanel", open: (p) => p.evaluate(() => window.dsSound.open()), wait: 900, ctl: "header button, .x", close: "#soundPanel .x" },
   { name: "Active/Quiet/Off menu", box: "#stateMenu", open: (p) => p.evaluate(() => document.getElementById("stateBtn").click()), after: (p) => p.evaluate(() => { document.getElementById("stateMenu").hidden = true; }) },
   { name: "update prompt", live: true, box: "#dsUpdate", open: (p) => p.evaluate((L) => window.dsUpdates.show({ available: true, latest: "9.9.9", current: "1.6.1", notes: Array.from({ length: 14 }, (_, i) => `- Change number ${i + 1}: ${L.slice(0, 90)}`).join("\n") }), LONG), close: "#dsUpdate .x" },
+  // (the Favorites tab: nothing is searched, so no GIF source is ever asked from here. Before the secret character card,
+  // which sits on top of everything for up to 9 s)
+  { name: "GIF picker", live: true, box: "#dsGifs", open: (p) => p.evaluate(() => window.dsGifPicker.open({ tab: "favorites" })), wait: 900, ctl: ".g-bar button, .g-search button, .g-filters button, .g-filters select", close: "#dsGifs .g-x" },
   { name: "badge reveal", box: ".brev-card", open: (p) => p.evaluate(() => { window.dsBadges?.reveal({ key: "study:qa", name: "Steady Learner", citation: "For showing up to study, again and again.", polished: "Studied five days in a row", tier: 1 }); }), wait: 1200, close: ".brev-ok" },
   { name: "secret character card", live: true, box: ".sfx-card", open: (p) => p.evaluate(() => window.dsSecretsFx.card({ icon: "🦴", name: "The Caveman", reveal: "Ugg! New friend.", found: 1, total: 6 })), close: ".sfx-card button" },
   { name: "Lantern card", live: true, box: ".lnstack .lncard", open: (p) => p.evaluate(() => window.dispatchEvent(new CustomEvent("ds-test-lantern", { detail: { id: "qa" + Date.now() } }))), wait: 700, close: ".lnstack .lncard .x" },

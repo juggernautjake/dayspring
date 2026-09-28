@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Camera · Dayspring</title>
+<style>
+  :root { --bg: #060812; --fg: #eef0ff; --dim: #aab2d8; --line: rgba(170,180,255,.2); --card: rgba(20,24,50,.9); --accent: #8fb8ff; }
+  body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, "Segoe UI", sans-serif; display: grid; grid-template-rows: auto 1fr auto; }
+  header, footer { padding: 12px 16px; display: flex; gap: .6em; align-items: center; flex-wrap: wrap; }
+  h1 { font-weight: 400; font-size: 18px; margin: 0; flex: 1 1 auto; }
+  main { display: grid; place-items: center; padding: 8px; min-height: 0; }
+  img { max-width: 100%; max-height: calc(100vh - 140px); border-radius: 10px; border: 1px solid var(--line); background: #000; }
+  button { font: inherit; color: var(--fg); background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: .45em .9em; cursor: pointer; }
+  button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+  .hint { color: var(--dim); font-size: 14px; }
+  .bad { color: #ff9fb0; }
+</style>
+</head>
+<body>
+<header><h1 id="title">Camera</h1><button type="button" id="refresh">New picture</button><button type="button" id="live" aria-pressed="false">Live</button></header>
+<main><img id="img" alt="The camera picture"><p id="none" class="hint" hidden>No picture yet.</p></main>
+<footer><span id="note" class="hint" aria-live="polite"></span></footer>
+<script>
+// A camera on one of his other Dayspring devices, over the encrypted relay (lib/remote). Stills on request; "Live" asks
+// for a new still every few seconds for two minutes, then pauses (bandwidth-friendly, and nothing runs unwatched).
+(() => {
+  const q = new URLSearchParams(location.search);
+  const device = q.get("device") || "", action = q.get("action") || "printers.camera", target = q.get("target") || "";
+  const img = document.getElementById("img"), note = document.getElementById("note"), liveBtn = document.getElementById("live");
+  let frameMs = 3000, maxMs = 120000, timer = null, liveSince = 0, busy = false, lastUrl = null;
+  document.getElementById("title").textContent = (target ? target.charAt(0).toUpperCase() + target.slice(1) + " · " : "") + "camera";
+  fetch("/api/remote/status").then((r) => r.json()).then((s) => { frameMs = s.limits?.liveFrameMs || frameMs; maxMs = s.limits?.liveMaxMs || maxMs; }).catch(() => {});
+  const show = (url) => { if (lastUrl?.startsWith("blob:")) URL.revokeObjectURL(lastUrl); lastUrl = url; img.src = url; img.hidden = false; document.getElementById("none").hidden = true; };
+  if (q.get("still")) show("/api/remote/still/" + encodeURIComponent(q.get("still")));
+  else { img.hidden = true; document.getElementById("none").hidden = false; }
+  async function fresh() {
+    if (busy || !device) return;
+    busy = true;
+    try {
+      const r = await fetch("/api/remote/camera?" + new URLSearchParams({ device, action, target }));
+      if (!r.ok) { const j = await r.json().catch(() => ({})); note.className = "bad"; note.textContent = j.error || "No picture came back."; if (r.status === 409) stopLive(); return; }
+      show(URL.createObjectURL(await r.blob()));
+      note.className = "hint"; note.textContent = "Updated " + new Date().toLocaleTimeString();
+    } catch { note.className = "bad"; note.textContent = "Dayspring isn't answering."; }
+    finally { busy = false; }
+  }
+  function stopLive(msg) { clearInterval(timer); timer = null; liveBtn.setAttribute("aria-pressed", "false"); liveBtn.textContent = "Live"; if (msg) { note.className = "hint"; note.textContent = msg; } }
+  liveBtn.onclick = () => {
+    if (timer) return stopLive("Paused.");
+    liveSince = Date.now(); liveBtn.setAttribute("aria-pressed", "true"); liveBtn.textContent = "Pause";
+    fresh();
+    timer = setInterval(() => { if (Date.now() - liveSince > maxMs) return stopLive("Paused after two minutes. Press Live to keep watching."); if (!document.hidden) fresh(); }, frameMs);
+  };
+  document.getElementById("refresh").onclick = fresh;
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,688 @@
+{
+  "category": "power",
+  "label": "Power strips and plugs",
+  "description": "Smart power strips, plugs and relays that switch things on and off, plus the other ways Dayspring can power a device: waking a computer over the network and turning a TV on or to standby over HDMI. The recommended ones work on your home network with no internet.",
+  "entries": [
+    {
+      "id": "kasa-hs300",
+      "brand": "TP-Link Kasa",
+      "model": "HS300 smart power strip (6 outlets)",
+      "category": "power",
+      "connection": "lan",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "on-off",
+        "per-outlet",
+        "power-monitoring",
+        "schedules"
+      ],
+      "notes": "Recommended. Six outlets, each switched on its own and each with its own power reading (watts), so Dayspring can answer \"what's drawing power?\". The three USB ports are always on. Dayspring talks to it directly on your network with Kasa's local protocol; no cloud is used. Newer hardware versions may ask for your TP-Link login once. Passes Dayspring's simulator tests (September 2026): Kasa's local protocol, each outlet. Not yet tried on a real one.",
+      "howToSetUp": [
+        "Set up the strip in the Kasa app so it joins your Wi-Fi, and give each outlet a name.",
+        "In the Kasa app, open the strip, tap the gear icon and note its IP address under Device info (or find it in your router's device list).",
+        "Ask your router to always give the strip the same IP address (often called a DHCP reservation), so Dayspring can always find it.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick TP-Link Kasa and type the IP address (or use Find devices).",
+        "If Dayspring asks for a login, enter the email and password of your TP-Link (Kasa app) account; they stay sealed on this computer.",
+        "Name each outlet the way you'll say it (for example \"printer 3\" or \"fan 2\") and try switching one."
+      ],
+      "links": [
+        "https://www.kasasmart.com",
+        "https://python-kasa.readthedocs.io",
+        "https://www.home-assistant.io/integrations/tplink/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "kasa-kp303",
+      "brand": "TP-Link Kasa",
+      "model": "KP303 smart power strip (3 outlets)",
+      "category": "power",
+      "connection": "lan",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "on-off",
+        "per-outlet",
+        "schedules"
+      ],
+      "notes": "Three switchable outlets plus two always-on USB ports. No power readings. Controlled directly by Dayspring with Kasa's local protocol. Passes Dayspring's simulator tests (September 2026): Kasa's local protocol, each outlet. Not yet tried on a real one.",
+      "howToSetUp": [
+        "Set up the strip in the Kasa app and name the three outlets.",
+        "Note the strip's IP address (Kasa app → the strip → gear icon → Device info) and reserve it in your router.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick TP-Link Kasa and enter the IP address (or use Find devices).",
+        "Name each outlet and test it."
+      ],
+      "links": [
+        "https://www.kasasmart.com",
+        "https://python-kasa.readthedocs.io"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "kasa-kp400",
+      "brand": "TP-Link Kasa",
+      "model": "KP400 / EP40 outdoor smart plug (2 outlets)",
+      "category": "power",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "per-outlet",
+        "schedules"
+      ],
+      "notes": "Weather-resistant plug with two outlets switched separately, for outdoor lights, fountains or holiday lights. No power readings. The EP40 is the newer version of the same idea. Works directly with Dayspring on your network.",
+      "howToSetUp": [
+        "Plug it into a covered outdoor outlet and set it up in the Kasa app; make sure your Wi-Fi reaches that spot.",
+        "Note its IP address in the Kasa app (gear icon → Device info) and reserve it in your router.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick TP-Link Kasa and enter the IP address.",
+        "Name the two outlets (for example \"porch lights\" and \"fountain\") and test them."
+      ],
+      "links": [
+        "https://www.kasasmart.com",
+        "https://python-kasa.readthedocs.io"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "kasa-ep10",
+      "brand": "TP-Link Kasa",
+      "model": "EP10 / HS103 mini smart plug",
+      "category": "power",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "schedules"
+      ],
+      "notes": "A single-outlet plug, handy for a lamp or a fan. No power readings (the KP115 and EP25 plugs add them). Works directly with Dayspring on your network.",
+      "howToSetUp": [
+        "Set up the plug in the Kasa app.",
+        "Note its IP address in the Kasa app (gear icon → Device info) and reserve it in your router.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick TP-Link Kasa and enter the IP address.",
+        "Give it a name you'll say out loud, such as \"desk lamp\", and test it."
+      ],
+      "links": [
+        "https://www.kasasmart.com",
+        "https://python-kasa.readthedocs.io"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "kasa-kp125m",
+      "brand": "TP-Link Kasa",
+      "model": "KP125M smart plug (Matter, energy monitoring)",
+      "category": "power",
+      "connection": "matter-ha",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "on-off",
+        "power-monitoring",
+        "schedules"
+      ],
+      "notes": "A Matter plug with power readings. The most reliable way is Matter through Home Assistant. It uses TP-Link's newer login-checked local protocol rather than the classic Kasa one, so adding it directly as a Kasa device needs your TP-Link login and may not work on every firmware. Passes Dayspring's simulator tests (September 2026): Added directly as a Kasa device with your TP-Link login, over TP-Link's newer KLAP local protocol. Not yet tried on a real one.",
+      "howToSetUp": [
+        "Make sure Home Assistant is running and connected to Dayspring (Settings → Apps & connections).",
+        "In the Home Assistant app on your phone, add a Matter device and scan the QR code on the plug.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Matter (through Home Assistant) and choose the plug.",
+        "Name it and test switching it on and off."
+      ],
+      "links": [
+        "https://www.kasasmart.com",
+        "https://www.home-assistant.io/integrations/matter/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "shelly-plus-plug-us",
+      "brand": "Shelly",
+      "model": "Plus Plug US",
+      "category": "power",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "power-monitoring",
+        "schedules"
+      ],
+      "notes": "Recommended. A plug with power readings and a documented local web API that needs no cloud account at all. Dayspring talks to it directly.",
+      "howToSetUp": [
+        "Plug it in and join it to your Wi-Fi with the Shelly app (or by connecting to its own Wi-Fi and opening its web page).",
+        "Note its IP address (Shelly app → the plug → Settings → Device information) and reserve it in your router.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Shelly and enter the IP address (or use Find devices).",
+        "If you set a password on the Shelly, enter it when asked.",
+        "Name it and test it."
+      ],
+      "links": [
+        "https://www.shelly.com",
+        "https://shelly-api-docs.shelly.cloud/",
+        "https://www.home-assistant.io/integrations/shelly/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "shelly-pro-4pm",
+      "brand": "Shelly",
+      "model": "Pro 4PM (4-channel DIN-rail relay with power metering)",
+      "category": "power",
+      "connection": "lan",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "on-off",
+        "per-outlet",
+        "power-monitoring",
+        "schedules"
+      ],
+      "notes": "Four switched circuits, each with a power reading, mounted in an electrical panel or enclosure. Has Wi-Fi and a wired network port. It is wired into mains power, so an electrician should install it. Dayspring controls each channel directly. Passes Dayspring's simulator tests (September 2026): A Gen2 Pro/Plus 4PM-class relay with a password set (digest login): each channel and its power reading. Not yet tried on a real one.",
+      "howToSetUp": [
+        "Have an electrician install it and wire the four circuits you want to control.",
+        "Connect it to your network (plug in a network cable, or join Wi-Fi with the Shelly app) and reserve its IP address in your router.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Shelly and enter the IP address.",
+        "Name each of the four channels and test them one at a time."
+      ],
+      "links": [
+        "https://www.shelly.com",
+        "https://shelly-api-docs.shelly.cloud/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "shelly-plus-2pm",
+      "brand": "Shelly",
+      "model": "Plus 2PM (2-channel relay with power metering)",
+      "category": "power",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "per-outlet",
+        "power-monitoring",
+        "open-close"
+      ],
+      "notes": "A small relay that fits behind a switch or in a box and controls two circuits, or one motor (blinds, shades) in cover mode. Dayspring's Shelly support switches the two channels; cover mode works through Home Assistant. Mains wiring: have an electrician install it.",
+      "howToSetUp": [
+        "Have an electrician install it behind the switch or in a junction box.",
+        "Join it to your Wi-Fi with the Shelly app and reserve its IP address in your router.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Shelly and enter the IP address.",
+        "Name both channels and test them."
+      ],
+      "links": [
+        "https://www.shelly.com",
+        "https://shelly-api-docs.shelly.cloud/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "shelly-1pm-mini-gen3",
+      "brand": "Shelly",
+      "model": "1PM Mini Gen3",
+      "category": "power",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "power-monitoring"
+      ],
+      "notes": "A tiny single-channel relay with power readings that fits behind a wall switch or inside an appliance's junction box. Same local API as other current Shelly devices. Mains wiring: have an electrician install it.",
+      "howToSetUp": [
+        "Have an electrician install it behind the switch or in the device's box.",
+        "Join it to your Wi-Fi with the Shelly app and reserve its IP address in your router.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Shelly and enter the IP address.",
+        "Name it and test it."
+      ],
+      "links": [
+        "https://www.shelly.com",
+        "https://shelly-api-docs.shelly.cloud/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "tapo-p300",
+      "brand": "TP-Link Tapo",
+      "model": "P300 smart power strip (3 outlets, EU/UK)",
+      "category": "power",
+      "connection": "lan",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "on-off",
+        "per-outlet",
+        "schedules"
+      ],
+      "notes": "Sold in Europe and the UK. Three separately switched outlets. Tapo devices are controlled on your own network, but they check your TP-Link account email and password, so Dayspring needs those once. They're kept sealed on this computer. Passes Dayspring's simulator tests (September 2026): Tapo's local protocol with your TP-Link login. Not yet tried on a real one.",
+      "howToSetUp": [
+        "Set up the strip in the Tapo app and name the outlets.",
+        "Find its IP address in the Tapo app (the strip → gear icon → Device info) and reserve it in your router.",
+        "In Dayspring, open Settings → Devices, choose Add a device and pick TP-Link Tapo.",
+        "Enter the IP address and the email and password you use in the Tapo app.",
+        "Name each outlet and test them."
+      ],
+      "links": [
+        "https://www.tapo.com",
+        "https://python-kasa.readthedocs.io"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "tapo-p304m",
+      "brand": "TP-Link Tapo",
+      "model": "P304M smart power strip (US, energy monitoring)",
+      "category": "power",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "per-outlet",
+        "power-monitoring",
+        "schedules"
+      ],
+      "notes": "A US Tapo strip with separately switched outlets and energy monitoring. It also supports Matter. Uses the same login-checked local protocol as other Tapo devices.",
+      "howToSetUp": [
+        "Set up the strip in the Tapo app and name the outlets.",
+        "Find its IP address in the Tapo app and reserve it in your router.",
+        "In Dayspring, open Settings → Devices, choose Add a device and pick TP-Link Tapo.",
+        "Enter the IP address and your Tapo app email and password.",
+        "Name each outlet and test them."
+      ],
+      "links": [
+        "https://www.tapo.com",
+        "https://python-kasa.readthedocs.io"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "tapo-p110",
+      "brand": "TP-Link Tapo",
+      "model": "P110 / P115 smart plug (energy monitoring)",
+      "category": "power",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "power-monitoring",
+        "schedules"
+      ],
+      "notes": "Single-outlet plugs with power readings (P110 in Europe/UK, P115 in the US). Controlled locally; needs your Tapo account login once.",
+      "howToSetUp": [
+        "Set up the plug in the Tapo app.",
+        "Find its IP address in the Tapo app and reserve it in your router.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick TP-Link Tapo and enter the IP address and your Tapo app email and password.",
+        "Name it and test it."
+      ],
+      "links": [
+        "https://www.tapo.com",
+        "https://python-kasa.readthedocs.io"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "meross-mss425f",
+      "brand": "Meross",
+      "model": "MSS425F smart surge protector strip",
+      "category": "power",
+      "connection": "lan",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "on-off",
+        "per-outlet"
+      ],
+      "notes": "For advanced users. The outlets and the USB ports (switched together as one group) can be controlled on your network, but only with your Meross device key, which the Meross app doesn't show. Tools such as the Meross LAN add-on for Home Assistant can reveal it. Kasa, Shelly and Tapo are simpler. Passes Dayspring's simulator tests (September 2026): Meross's local protocol. Not yet tried on a real one.",
+      "howToSetUp": [
+        "Set up the strip in the Meross app.",
+        "Get your Meross device key (for example from the Meross LAN integration in Home Assistant, which shows it after you sign in once).",
+        "Find the strip's IP address in your router's device list and reserve it.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Meross (advanced) and enter the IP address and the key.",
+        "Name the outlets and test them."
+      ],
+      "links": [
+        "https://www.meross.com",
+        "https://github.com/krahabb/meross_lan"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "tasmota-plug",
+      "brand": "Tasmota (open firmware)",
+      "model": "Any plug or strip running Tasmota",
+      "category": "power",
+      "connection": "lan",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "on-off",
+        "per-outlet",
+        "power-monitoring"
+      ],
+      "notes": "Tasmota is free firmware for many cheap Wi-Fi plugs (some sold with it pre-installed). Dayspring uses its built-in Tasmota template: simple web requests or MQTT messages. Power readings are available through Home Assistant. Passes Dayspring's simulator tests (September 2026): Tasmota's HTTP commands. Not yet tried on a real one.",
+      "howToSetUp": [
+        "Buy a plug that comes with Tasmota already installed, or have a technical helper flash it.",
+        "Join it to your Wi-Fi using its setup page and reserve its IP address in your router.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Custom (HTTP or MQTT) and choose the Tasmota template.",
+        "Enter the IP address (or your MQTT broker and the device's name), then test it."
+      ],
+      "links": [
+        "https://tasmota.github.io/docs/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "esphome-relay",
+      "brand": "ESPHome (open firmware)",
+      "model": "ESP32 / ESP8266 relay board or plug",
+      "category": "power",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "per-outlet"
+      ],
+      "notes": "ESPHome turns a cheap ESP32 or ESP8266 board into a local device. Dayspring switches it with the ESPHome web-server template, or through Home Assistant, which supports ESPHome natively.",
+      "howToSetUp": [
+        "Install ESPHome on the board (the ESPHome web installer or Home Assistant's ESPHome add-on), with the web server option turned on.",
+        "Reserve the board's IP address in your router.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Custom (HTTP or MQTT) and choose the ESPHome template.",
+        "Enter the IP address and the switch's name from your ESPHome setup, then test it."
+      ],
+      "links": [
+        "https://esphome.io",
+        "https://www.home-assistant.io/integrations/esphome/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "tuya-smart-life-plug",
+      "brand": "Tuya / Smart Life (many brands)",
+      "model": "Tuya-based Wi-Fi plugs and strips",
+      "category": "power",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "per-outlet",
+        "power-monitoring"
+      ],
+      "notes": "Many cheap plugs sold under dozens of brand names use Tuya inside and the Smart Life app. They can be controlled locally, but each device has a secret \"local key\" that must be pulled from Tuya's developer site once. Home Assistant's community local Tuya integrations do this today; Dayspring's own local Tuya support is planned. Firmware updates can sometimes change the key.",
+      "howToSetUp": [
+        "Set up the plug in the Smart Life or Tuya app.",
+        "Create a free Tuya developer account and link your Smart Life app to it, then use a tool such as TinyTuya's setup wizard to list each device's ID and local key (a technical helper can do this in a few minutes).",
+        "In Home Assistant, install a local Tuya integration (for example LocalTuya or Tuya Local) and add the plug with its ID and key.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the plug."
+      ],
+      "links": [
+        "https://github.com/jasonacox/tinytuya",
+        "https://github.com/rospogrigio/localtuya",
+        "https://developer.tuya.com"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "generic-wake-on-lan",
+      "brand": "Any computer",
+      "model": "Wake-on-LAN (the PC's network card)",
+      "category": "power",
+      "connection": "lan",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "wake"
+      ],
+      "notes": "Turns on a sleeping or shut-down computer by sending a \"magic packet\" over your home network. It can only turn things on; to sleep or shut down a PC, that PC needs Dayspring running on it. Works best with a wired network connection; Wi-Fi wake support varies by computer. Passes Dayspring's simulator tests (September 2026): Sending the wake-up (magic) packet. Not yet tried on a real one.",
+      "howToSetUp": [
+        "On the computer you want to wake, turn on Wake-on-LAN in its BIOS or UEFI settings (often under Power Management).",
+        "In Windows on that computer, open Device Manager → Network adapters → your adapter → Properties, and turn on \"Wake on Magic Packet\" (Power Management and Advanced tabs).",
+        "Find its MAC address: open Command Prompt and run ipconfig /all, then copy the Physical Address.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Wake-on-LAN and paste the MAC address.",
+        "Shut the computer down and test \"turn on my home computer\"."
+      ],
+      "links": [
+        "https://en.wikipedia.org/wiki/Wake-on-LAN",
+        "https://www.home-assistant.io/integrations/wake_on_lan/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "pulse-eight-usb-cec",
+      "brand": "Pulse-Eight",
+      "model": "USB-CEC adapter (TV on / standby)",
+      "category": "power",
+      "connection": "usb",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "wake",
+        "standby"
+      ],
+      "notes": "Most PC graphics cards don't send HDMI-CEC, the signal a TV uses to turn on or go to standby. This small adapter sits between the PC and the TV and adds it. Dayspring uses the libCEC cec-client program to send the commands.",
+      "howToSetUp": [
+        "Connect the adapter between the PC's HDMI output and the TV, and plug its USB cable into the PC.",
+        "Install libCEC (from Pulse-Eight), which includes the cec-client program.",
+        "Turn on HDMI-CEC in the TV's settings (brands call it Anynet+, SimpLink, Bravia Sync and so on).",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick HDMI-CEC (USB adapter) and test \"TV on\" and \"TV off\"."
+      ],
+      "links": [
+        "https://www.pulse-eight.com",
+        "https://github.com/Pulse-Eight/libcec"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "belkin-wemo",
+      "brand": "Belkin",
+      "model": "Wemo smart plugs",
+      "category": "power",
+      "connection": "lan",
+      "offline": true,
+      "status": "untested",
+      "capabilities": [
+        "on-off",
+        "power-monitoring"
+      ],
+      "notes": "Belkin ended the Wemo app and cloud service in early 2026. Plugs that are already on your Wi-Fi still answer on your local network, and Home Assistant's Wemo integration talks to them locally, so they may keep working that way. Setting up a new or reset Wemo is no longer practical. Don't buy new ones.",
+      "howToSetUp": [
+        "Keep the plug on your Wi-Fi; don't reset it.",
+        "In Home Assistant, add the Wemo integration; it finds the plugs on your network.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the plug.",
+        "If it stops working, replace it with a Kasa, Shelly or Tapo plug."
+      ],
+      "links": [
+        "https://www.home-assistant.io/integrations/wemo/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "wyze-plug",
+      "brand": "Wyze",
+      "model": "Wyze Plug / Plug Outdoor",
+      "category": "power",
+      "connection": "cloud",
+      "offline": false,
+      "status": "not-supported",
+      "reason": "Wyze plugs are only controllable through Wyze's cloud and app. There's no official local or public API, so they can't work offline and Dayspring can't reach them.",
+      "capabilities": [
+        "on-off"
+      ],
+      "notes": "Use a plug with a local API instead.",
+      "howToSetUp": [
+        "Replace it with a Kasa, Shelly or Tapo plug, which Dayspring controls directly without the internet."
+      ],
+      "links": [
+        "https://www.wyze.com"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "amazon-smart-plug",
+      "brand": "Amazon",
+      "model": "Amazon Smart Plug",
+      "category": "power",
+      "connection": "cloud",
+      "offline": false,
+      "status": "not-supported",
+      "reason": "It only works with Alexa. Amazon provides no local or public control API for it.",
+      "capabilities": [
+        "on-off"
+      ],
+      "notes": "Keep it for Alexa if you like, but Dayspring can't switch it.",
+      "howToSetUp": [
+        "Use a Kasa, Shelly or Tapo plug for anything you want Dayspring to control."
+      ],
+      "links": [
+        "https://www.amazon.com"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "govee-smart-plug",
+      "brand": "Govee",
+      "model": "Govee Wi-Fi smart plugs",
+      "category": "power",
+      "connection": "cloud",
+      "offline": false,
+      "status": "not-supported",
+      "reason": "Govee plugs have no local control; they can only be reached through Govee's cloud API, which needs the internet, a developer key and has request limits. Dayspring has no Govee cloud connection, and a cloud-only plug doesn't fit the work-offline goal.",
+      "capabilities": [
+        "on-off"
+      ],
+      "notes": "Govee's local (LAN) control exists only for some of its lights and strips, not its plugs.",
+      "howToSetUp": [
+        "Replace it with a Kasa, Shelly or Tapo plug for local, offline control."
+      ],
+      "links": [
+        "https://developer.govee.com"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "ge-cync-plug",
+      "brand": "GE Cync",
+      "model": "Cync Wi-Fi / Bluetooth smart plug",
+      "category": "power",
+      "connection": "cloud",
+      "offline": false,
+      "status": "not-supported",
+      "reason": "Cync plugs are controlled through the Cync cloud and app (or its Bluetooth mesh) with no official local API.",
+      "capabilities": [
+        "on-off"
+      ],
+      "notes": "Some newer Cync products support Matter; a Matter version can be paired to Home Assistant and then used in Dayspring.",
+      "howToSetUp": [
+        "If your plug's box shows the Matter logo, pair it to Home Assistant as a Matter device, then add it in Settings → Devices as a Home Assistant entity.",
+        "Otherwise, replace it with a Kasa, Shelly or Tapo plug."
+      ],
+      "links": [
+        "https://www.home-assistant.io/integrations/matter/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "shelly-25-gen1",
+      "brand": "Shelly",
+      "model": "Shelly 2.5 (SHSW-25, Gen1)",
+      "category": "power",
+      "connection": "lan",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "on-off",
+        "per-outlet",
+        "power-monitoring"
+      ],
+      "notes": "The older two-channel Shelly relay with power metering (first-generation HTTP API). Dayspring switches each channel directly. Mains wiring: have an electrician install it. Passes Dayspring's simulator tests (September 2026): the first-generation (Gen1) API. Not yet tried on a real one.",
+      "howToSetUp": [
+        "Have an electrician install it behind the switch or in a junction box.",
+        "Join it to your Wi-Fi with the Shelly app and reserve its IP address in your router.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Shelly and enter the IP address (and its login, if you set one).",
+        "Name both channels and test them."
+      ],
+      "links": [
+        "https://www.shelly.com",
+        "https://shelly-api-docs.shelly.cloud/gen1/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    }
+  ]
+}

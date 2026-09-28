@@ -1,0 +1,528 @@
+{
+  "category": "lights",
+  "label": "Bulbs and lights",
+  "description": "Smart bulbs, lamps, dimmers and light hubs. Dayspring talks to a Hue bridge directly; most other lights come in through Home Assistant, which controls them on your own network.",
+  "entries": [
+    {
+      "id": "hue-bridge",
+      "brand": "Philips Hue",
+      "model": "Hue Bridge with any Hue bulbs, lamps or fixtures",
+      "category": "lights",
+      "connection": "lan",
+      "offline": true,
+      "status": "tested-sim",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "color-temperature",
+        "scenes"
+      ],
+      "notes": "Recommended. Dayspring talks to the bridge's local API directly; the bridge talks to the bulbs over Zigbee. No cloud is needed once paired. White-only bulbs support brightness (and warmth for White Ambiance). Passes Dayspring's simulator tests (September 2026): The Hue bridge's local API. Not yet tried on a real one.",
+      "howToSetUp": [
+        "Set up the bridge and bulbs in the Hue app as usual.",
+        "In Dayspring, open Settings → Devices, choose Add a device and pick Philips Hue bridge; Dayspring looks for the bridge on your network.",
+        "When asked, press the round button on top of the bridge, then pair within 30 seconds.",
+        "Pick the lights and rooms you want, name them, and test \"desk lamp 50 percent\"."
+      ],
+      "links": [
+        "https://www.philips-hue.com",
+        "https://developers.meethue.com",
+        "https://www.home-assistant.io/integrations/hue/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "hue-bluetooth-bulb",
+      "brand": "Philips Hue",
+      "model": "Hue bulbs used with Bluetooth only (no bridge)",
+      "category": "lights",
+      "connection": "ble",
+      "offline": true,
+      "status": "not-supported",
+      "reason": "Without a bridge, Hue bulbs are controlled only by the Hue phone app over Bluetooth, which has no documented protocol for computers. Dayspring can't control them that way.",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "color-temperature"
+      ],
+      "notes": "Hue Bluetooth bulbs also speak Zigbee, so they become fully supported once they're on a Hue bridge or a Home Assistant Zigbee coordinator.",
+      "howToSetUp": [
+        "Add a Hue bridge and move the bulbs onto it in the Hue app, then add the bridge in Settings → Devices.",
+        "Or pair the bulbs to a Zigbee coordinator in Home Assistant and add them in Settings → Devices as Home Assistant entities."
+      ],
+      "links": [
+        "https://www.philips-hue.com"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "wiz-bulb",
+      "brand": "WiZ",
+      "model": "WiZ Wi-Fi bulbs and lamps",
+      "category": "lights",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "color-temperature",
+        "effects"
+      ],
+      "notes": "WiZ lights answer local commands on your network. Home Assistant's WiZ integration uses them without the cloud; Dayspring reaches them through Home Assistant.",
+      "howToSetUp": [
+        "Set up the bulbs in the WiZ app and make sure local communication is allowed in the app's settings.",
+        "In Home Assistant, add the WiZ integration; it finds the bulbs on your network.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the lights."
+      ],
+      "links": [
+        "https://www.wizconnected.com",
+        "https://www.home-assistant.io/integrations/wiz/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "lifx-bulb",
+      "brand": "LIFX",
+      "model": "LIFX Wi-Fi bulbs",
+      "category": "lights",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "color-temperature",
+        "effects"
+      ],
+      "notes": "LIFX has a documented local LAN protocol. Home Assistant's LIFX integration uses it; Dayspring reaches the bulbs through Home Assistant.",
+      "howToSetUp": [
+        "Set up the bulbs in the LIFX app.",
+        "In Home Assistant, add the LIFX integration; it finds the bulbs on your network.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the bulbs."
+      ],
+      "links": [
+        "https://www.lifx.com",
+        "https://www.home-assistant.io/integrations/lifx/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "kasa-kl130",
+      "brand": "TP-Link Kasa",
+      "model": "KL130 color bulb (and other Kasa bulbs)",
+      "category": "lights",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "color-temperature"
+      ],
+      "notes": "Kasa bulbs use the same local protocol as Kasa plugs. Dayspring's own Kasa support covers plugs and strips; bulbs come in through Home Assistant's TP-Link integration.",
+      "howToSetUp": [
+        "Set up the bulb in the Kasa app and reserve its IP address in your router.",
+        "In Home Assistant, add the TP-Link Smart Home integration and the bulb.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the bulb."
+      ],
+      "links": [
+        "https://www.kasasmart.com",
+        "https://www.home-assistant.io/integrations/tplink/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "tapo-l530",
+      "brand": "TP-Link Tapo",
+      "model": "L530 color bulb (and other Tapo bulbs)",
+      "category": "lights",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "color-temperature"
+      ],
+      "notes": "Controlled locally through Home Assistant's TP-Link integration, which needs your Tapo app email and password once (Tapo checks them even on your own network).",
+      "howToSetUp": [
+        "Set up the bulb in the Tapo app and reserve its IP address in your router.",
+        "In Home Assistant, add the TP-Link Smart Home integration with the bulb's IP address and your Tapo login.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the bulb."
+      ],
+      "links": [
+        "https://www.tapo.com",
+        "https://www.home-assistant.io/integrations/tplink/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "nanoleaf-shapes",
+      "brand": "Nanoleaf",
+      "model": "Shapes / Canvas / Elements light panels",
+      "category": "lights",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "color-temperature",
+        "effects"
+      ],
+      "notes": "Nanoleaf's Wi-Fi panels have a local API that Home Assistant's Nanoleaf integration uses. Effects you've made in the Nanoleaf app can be picked by name.",
+      "howToSetUp": [
+        "Set up the panels in the Nanoleaf app.",
+        "In Home Assistant, add the Nanoleaf integration; when asked, hold the power button on the controller for 5 to 7 seconds until the lights flash.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the panels."
+      ],
+      "links": [
+        "https://nanoleaf.me",
+        "https://www.home-assistant.io/integrations/nanoleaf/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "ikea-dirigera",
+      "brand": "IKEA",
+      "model": "DIRIGERA hub with IKEA smart lights",
+      "category": "lights",
+      "connection": "matter-ha",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "color-temperature"
+      ],
+      "notes": "The DIRIGERA hub can share its lights with other systems as a Matter bridge. Pair it to Home Assistant's Matter integration and its lights show up there locally.",
+      "howToSetUp": [
+        "Set up the hub and lights in the IKEA Home smart app and update the hub.",
+        "In the IKEA app, turn on sharing to another Matter system to get a pairing code.",
+        "In Home Assistant, add a Matter device with that code.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Matter (through Home Assistant) and choose the lights."
+      ],
+      "links": [
+        "https://www.ikea.com",
+        "https://www.home-assistant.io/integrations/matter/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "zigbee-bulb-ha",
+      "brand": "Any Zigbee brand",
+      "model": "Zigbee bulbs (IKEA, Innr, Sengled Zigbee, Hue and others) via Home Assistant",
+      "category": "lights",
+      "connection": "zigbee-ha",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "color-temperature"
+      ],
+      "notes": "Zigbee bulbs work without Wi-Fi or the internet once paired to a Zigbee coordinator (a USB stick) in Home Assistant. Mains-powered Zigbee bulbs also strengthen the Zigbee network.",
+      "howToSetUp": [
+        "Plug a Zigbee coordinator into the Home Assistant computer (see Smart-home hubs) and add the ZHA or Zigbee2MQTT integration.",
+        "In Home Assistant, choose Add device, then put the bulb into pairing mode (usually by switching it off and on several times; see its manual).",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the bulb."
+      ],
+      "links": [
+        "https://www.home-assistant.io/integrations/zha/",
+        "https://www.zigbee2mqtt.io"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "matter-bulb-ha",
+      "brand": "Any Matter brand",
+      "model": "Matter bulbs (Wi-Fi or Thread) via Home Assistant",
+      "category": "lights",
+      "connection": "matter-ha",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "color-temperature"
+      ],
+      "notes": "Any bulb with the Matter logo can be paired to Home Assistant and controlled locally. Thread bulbs also need a Thread border router (see Smart-home hubs).",
+      "howToSetUp": [
+        "In the Home Assistant app on your phone, choose Add device → Matter and scan the bulb's QR code.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Matter (through Home Assistant) and choose the bulb."
+      ],
+      "links": [
+        "https://www.home-assistant.io/integrations/matter/",
+        "https://csa-iot.org/all-solutions/matter/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "govee-wifi-bulb",
+      "brand": "Govee",
+      "model": "Govee Wi-Fi bulbs with LAN Control",
+      "category": "lights",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "color-temperature"
+      ],
+      "notes": "Only some Govee models support local LAN control, and it has to be switched on in the Govee app. Home Assistant's Govee lights local integration uses it. Models without LAN control are cloud-only.",
+      "howToSetUp": [
+        "Set up the bulb in the Govee Home app, open its settings and turn on LAN Control (if the option isn't there, the model doesn't support it).",
+        "In Home Assistant, add the Govee lights local integration.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the bulb."
+      ],
+      "links": [
+        "https://www.govee.com",
+        "https://www.home-assistant.io/integrations/govee_light_local/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "yeelight-bulb",
+      "brand": "Yeelight",
+      "model": "Yeelight Wi-Fi bulbs and lamps",
+      "category": "lights",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "color-temperature"
+      ],
+      "notes": "Yeelight lights have a local control mode that must be switched on in the Yeelight app (LAN Control). Home Assistant's Yeelight integration uses it.",
+      "howToSetUp": [
+        "Set up the light in the Yeelight app and turn on LAN Control in its settings.",
+        "In Home Assistant, add the Yeelight integration.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the light."
+      ],
+      "links": [
+        "https://www.yeelight.com",
+        "https://www.home-assistant.io/integrations/yeelight/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "lutron-caseta",
+      "brand": "Lutron",
+      "model": "Caséta dimmers and switches (Smart Bridge)",
+      "category": "lights",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "scenes"
+      ],
+      "notes": "In-wall dimmers and switches that control ordinary bulbs. The Smart Bridge has a local connection that Home Assistant's Lutron Caséta integration uses. Wiring the switches is mains work.",
+      "howToSetUp": [
+        "Install the switches (or have an electrician do it) and set them up with the Lutron app and Smart Bridge.",
+        "In Home Assistant, add the Lutron Caséta integration and press the small button on the back of the bridge when asked.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the lights."
+      ],
+      "links": [
+        "https://www.casetawireless.com",
+        "https://www.home-assistant.io/integrations/lutron_caseta/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "shelly-wall-dimmer",
+      "brand": "Shelly",
+      "model": "Shelly dimmers (Dimmer 2, Plus Wall Dimmer, Dimmer Gen3)",
+      "category": "lights",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness"
+      ],
+      "notes": "In-wall dimmers with Shelly's local API. Dayspring's own Shelly support switches relays on and off; for brightness, add the dimmer through Home Assistant's Shelly integration. Mains wiring: have an electrician install it.",
+      "howToSetUp": [
+        "Have an electrician install the dimmer, then join it to Wi-Fi with the Shelly app.",
+        "In Home Assistant, add the Shelly integration with the dimmer's IP address.",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the light."
+      ],
+      "links": [
+        "https://www.shelly.com",
+        "https://www.home-assistant.io/integrations/shelly/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "tuya-wifi-bulb",
+      "brand": "Tuya / Smart Life (many brands)",
+      "model": "Tuya-based Wi-Fi bulbs",
+      "category": "lights",
+      "connection": "lan",
+      "offline": true,
+      "status": "expected",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "color-temperature"
+      ],
+      "notes": "Cheap bulbs that use the Smart Life app. Local control needs each bulb's local key, pulled once from Tuya's developer site, and a community local Tuya integration in Home Assistant. Dayspring's own local Tuya support is planned.",
+      "howToSetUp": [
+        "Set up the bulb in the Smart Life app.",
+        "Get the bulb's device ID and local key with a tool such as TinyTuya's setup wizard (a technical helper can do this).",
+        "In Home Assistant, add the bulb with a local Tuya integration (LocalTuya or Tuya Local).",
+        "In Dayspring, open Settings → Devices, choose Add a device, pick Home Assistant entity and choose the bulb."
+      ],
+      "links": [
+        "https://github.com/jasonacox/tinytuya",
+        "https://github.com/rospogrigio/localtuya"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "ge-cync-bulb",
+      "brand": "GE Cync",
+      "model": "Cync Wi-Fi and Bluetooth bulbs",
+      "category": "lights",
+      "connection": "cloud",
+      "offline": false,
+      "status": "not-supported",
+      "reason": "Cync bulbs are controlled through the Cync cloud or the phone app's Bluetooth mesh, with no official local API.",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "color-temperature"
+      ],
+      "notes": "Newer Cync bulbs that show the Matter logo can be paired to Home Assistant instead.",
+      "howToSetUp": [
+        "If the bulb supports Matter, pair it to Home Assistant as a Matter device and add it in Settings → Devices.",
+        "Otherwise, replace it with a Hue, WiZ, Zigbee or Matter bulb."
+      ],
+      "links": [
+        "https://www.home-assistant.io/integrations/matter/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "wyze-bulb",
+      "brand": "Wyze",
+      "model": "Wyze Bulb / Bulb Color",
+      "category": "lights",
+      "connection": "cloud",
+      "offline": false,
+      "status": "not-supported",
+      "reason": "Wyze bulbs are cloud-only, with no official local or public API.",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "color-temperature"
+      ],
+      "notes": "Use a bulb with local control instead.",
+      "howToSetUp": [
+        "Replace it with a Hue, WiZ, LIFX, Zigbee or Matter bulb."
+      ],
+      "links": [
+        "https://www.wyze.com"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    },
+    {
+      "id": "sengled-bulb",
+      "brand": "Sengled",
+      "model": "Sengled Wi-Fi bulbs",
+      "category": "lights",
+      "connection": "cloud",
+      "offline": false,
+      "status": "not-supported",
+      "reason": "Sengled Wi-Fi bulbs depend on Sengled's cloud, which has had long outages, and have no local API. (Sengled's Zigbee bulbs are different: they work with any Zigbee coordinator.)",
+      "capabilities": [
+        "on-off",
+        "brightness",
+        "color",
+        "color-temperature"
+      ],
+      "notes": "If yours is a Zigbee model (it needed a hub when you bought it), see the Zigbee bulbs entry instead.",
+      "howToSetUp": [
+        "If it's a Sengled Zigbee bulb, pair it to a Zigbee coordinator in Home Assistant and add it in Settings → Devices.",
+        "If it's a Wi-Fi bulb, replace it with a Hue, WiZ, LIFX, Zigbee or Matter bulb."
+      ],
+      "links": [
+        "https://www.home-assistant.io/integrations/zha/"
+      ],
+      "lastChecked": "2026-09-28",
+      "features": [
+        "devices"
+      ]
+    }
+  ]
+}

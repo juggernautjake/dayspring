@@ -1,0 +1,108 @@
+{
+ "data": [
+  {
+   "id": "alb1",
+   "title": "Cat dancing in the kitchen",
+   "is_album": true,
+   "link": "https://imgur.com/a/alb1",
+   "nsfw": false,
+   "tags": [
+    {
+     "name": "cats"
+    }
+   ],
+   "images": [
+    {
+     "id": "i1a",
+     "title": null,
+     "description": null,
+     "type": "image/jpeg",
+     "animated": false,
+     "width": 400,
+     "height": 300,
+     "size": 500000,
+     "link": "https://i.fixture.test/m/i1a.jpg",
+     "mp4": "https://i.fixture.test/m/i1a.mp4",
+     "gifv": "https://i.fixture.test/m/i1a.gifv",
+     "nsfw": false
+    },
+    {
+     "id": "i1b",
+     "title": null,
+     "description": null,
+     "type": "image/gif",
+     "animated": true,
+     "width": 400,
+     "height": 300,
+     "size": 500000,
+     "link": "https://i.fixture.test/m/i1b.gif",
+     "mp4": "https://i.fixture.test/m/i1b.mp4",
+     "gifv": "https://i.fixture.test/m/i1b.gifv",
+     "nsfw": false
+    }
+   ]
+  },
+  {
+   "id": "i2",
+   "title": "Dancing cat at night",
+   "description": null,
+   "type": "image/gif",
+   "animated": true,
+   "width": 400,
+   "height": 300,
+   "size": 500000,
+   "link": "https://i.fixture.test/m/i2.gif",
+   "mp4": "https://i.fixture.test/m/i2.mp4",
+   "gifv": "https://i.fixture.test/m/i2.gifv",
+   "nsfw": false,
+   "is_album": false
+  },
+  {
+   "id": "i3",
+   "title": "A still photo",
+   "description": null,
+   "type": "image/jpeg",
+   "animated": false,
+   "width": 400,
+   "height": 300,
+   "size": 500000,
+   "link": "https://i.fixture.test/m/i3.gif",
+   "mp4": "https://i.fixture.test/m/i3.mp4",
+   "gifv": "https://i.fixture.test/m/i3.gifv",
+   "nsfw": false,
+   "is_album": false
+  },
+  {
+   "id": "i4",
+   "title": "Mature cat",
+   "description": null,
+   "type": "image/gif",
+   "animated": true,
+   "width": 400,
+   "height": 300,
+   "size": 500000,
+   "link": "https://i.fixture.test/m/i4.gif",
+   "mp4": "https://i.fixture.test/m/i4.mp4",
+   "gifv": "https://i.fixture.test/m/i4.gifv",
+   "nsfw": true,
+   "is_album": false
+  },
+  {
+   "id": "i5",
+   "title": "Cat does the moonwalk",
+   "description": null,
+   "type": "image/gif",
+   "animated": true,
+   "width": 400,
+   "height": 300,
+   "size": 500000,
+   "link": "https://i.fixture.test/m/i5.gif",
+   "mp4": "https://i.fixture.test/m/i5.mp4",
+   "gifv": "https://i.fixture.test/m/i5.gifv",
+   "nsfw": false,
+   "is_album": false
+  }
+ ],
+ "success": true,
+ "status": 200
+}

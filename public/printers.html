@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>3D printers · Dayspring</title>
+<link rel="icon" href="/favicon.ico">
+<link rel="stylesheet" href="/fonts/fonts.css">
+<link rel="stylesheet" href="/safe-area.css">
+<style>
+  :root{--bg:#070916;--panel:rgba(22,26,56,.78);--edge:rgba(160,170,255,.14);--edge2:rgba(170,180,255,.28);--ink:#eef0ff;--muted:#a4abcc;--indigo:#7c8cff;--gold:#ffd27a;--mint:#7ee3b0;--rose:#ff8fa3;--sky:#8fd8ff;color-scheme:dark}
+  *{box-sizing:border-box}[hidden]{display:none!important}
+  html,body{height:100%;margin:0}
+  body{background:radial-gradient(1100px 650px at 85% -10%,rgba(124,140,255,.2),transparent 60%),var(--bg);color:var(--ink);font-family:Outfit,"Segoe UI",system-ui,sans-serif;
+    font-size:clamp(14px,min(1.15vw,2.4vh),19px);line-height:1.4;display:flex;flex-direction:column;overflow:hidden}
+  button,select,input{font:inherit;color:inherit}
+  :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .btn{background:rgba(255,255,255,.06);border:1px solid var(--edge2);border-radius:.7em;padding:.28em .75em;cursor:pointer;white-space:nowrap}
+  .btn:hover{background:rgba(124,140,255,.28)} .btn.main{background:var(--indigo);border-color:var(--indigo);color:#0b0f22;font-weight:600} .btn.danger{border-color:rgba(255,143,163,.55);color:var(--rose)}
+  .btn:disabled{opacity:.5;cursor:default}
+  .top{display:flex;align-items:center;gap:.6em;padding:.5em .9em;border-bottom:1px solid var(--edge);flex:0 0 auto;flex-wrap:wrap}
+  .top h1{margin:0;font-weight:500;font-size:1.25em;white-space:nowrap}
+  .sp{flex:1}
+  main{flex:1 1 auto;min-height:0;overflow:auto;padding:.8em .9em 1.4em}
+  .msg{min-height:1.3em;color:var(--gold);margin:.1em 0 .5em}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,24em),1fr));gap:.8em}
+  .card{background:var(--panel);border:1px solid var(--edge);border-radius:1em;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+  .card.alert{border-color:rgba(255,143,163,.7)}
+  .cam{position:relative;background:#050714;aspect-ratio:16/9}
+  .cam img{width:100%;height:100%;object-fit:contain;display:block}
+  .cam .none{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:.9em;padding:1em;text-align:center}
+  .cam .live{position:absolute;top:.4em;left:.5em;font-size:.75em;background:rgba(0,0,0,.55);border-radius:.5em;padding:0 .4em}
+  .cam .zoom{position:absolute;top:.35em;right:.4em}
+  .body{padding:.6em .75em;display:flex;flex-direction:column;gap:.45em}
+  .hd{display:flex;align-items:center;gap:.5em;flex-wrap:wrap}
+  .hd b{font-size:1.1em;font-weight:500}
+  .pill{font-size:.78em;border-radius:.7em;padding:.05em .55em;background:rgba(124,140,255,.25)}
+  .pill.printing{background:rgba(126,227,176,.3)} .pill.paused{background:rgba(255,210,122,.3)} .pill.failed,.pill.offline{background:rgba(255,143,163,.3)}
+  .bar{height:.55em;border-radius:.3em;background:rgba(255,255,255,.08);overflow:hidden} .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--indigo),var(--mint))}
+  .facts{display:flex;gap:.4em .9em;flex-wrap:wrap;font-size:.88em;color:var(--muted)} .facts b{color:var(--ink);font-weight:500}
+  .ams{display:flex;gap:.3em;flex-wrap:wrap} .tray{display:flex;align-items:center;gap:.25em;font-size:.78em;background:rgba(255,255,255,.05);border-radius:.5em;padding:.05em .4em}
+  .tray i{width:.85em;height:.85em;border-radius:50%;border:1px solid rgba(255,255,255,.4);display:inline-block}
+  .row{display:flex;gap:.4em;flex-wrap:wrap;align-items:center}
+  .row select{background:rgba(255,255,255,.06);border:1px solid var(--edge2);border-radius:.6em;padding:.2em .4em}
+  .row input[type=text]{flex:1;min-width:8em;background:rgba(255,255,255,.06);border:1px solid var(--edge2);border-radius:.6em;padding:.25em .5em}
+  details{border-top:1px solid var(--edge);padding-top:.35em} summary{cursor:pointer;color:var(--muted);font-size:.9em}
+  .q{display:grid;gap:.3em;margin:.35em 0}
+  .q .it{display:flex;gap:.4em;align-items:center;background:rgba(255,255,255,.04);border-radius:.5em;padding:.25em .45em;font-size:.9em}
+  .q .it span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .errs{color:var(--rose);font-size:.88em} .errs a{color:var(--sky)}
+  .alerts{font-size:.88em} .alerts .a{display:flex;gap:.4em;align-items:center} .alerts img{width:4.4em;border-radius:.3em}
+  .bedres{font-size:.9em} .bedres.ok{color:var(--mint)} .bedres.bad{color:var(--rose)}
+  .empty{color:var(--muted);padding:1em 0}
+  /* pop-ups: the big camera and the questions, inside the safe area */
+  .dlg{position:fixed;z-index:50;background:rgba(3,5,14,.78)}
+  .dlg .box{background:#12163a;border:1px solid var(--edge2);border-radius:1em;padding:1em 1.1em;width:min(34em,100%)}
+  .dlg .box img{max-width:100%;max-height:40vh;border-radius:.5em;display:block;margin:.4em auto}
+  .dlg .box .row{justify-content:flex-end;position:sticky;bottom:0;background:#12163a;padding-top:.4em}
+  .big .box{width:min(90em,100%);padding:.5em}
+  .big .box img{max-height:calc(var(--safe-h, 100vh) - 7em);width:auto}
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>🖨️ 3D printers</h1>
+  <span class="sp"></span>
+  <button class="btn" id="refresh" type="button" title="Refresh">⟳</button>
+  <button class="btn" id="settings" type="button">⚙ Set up</button>
+  <button class="btn" id="close" type="button" title="Close (Esc)" hidden>✕</button>
+</div>
+<main>
+  <div class="msg" id="msg" role="status" aria-live="polite"></div>
+  <div class="cards" id="cards"></div>
+</main>
+<div class="dlg safe-cover" id="dlg" hidden role="dialog" aria-modal="true" aria-labelledby="dlgText"><div class="box"><p id="dlgText"></p><img id="dlgImg" alt="" hidden><div class="row"><button class="btn" id="dlgNo" type="button">Cancel</button><button class="btn main" id="dlgYes" type="button">Yes</button></div></div></div>
+<div class="dlg big safe-cover" id="bigCam" hidden role="dialog" aria-modal="true" aria-label="Camera"><div class="box"><div class="row" style="justify-content:space-between;position:static"><b id="bigName"></b><button class="btn" id="bigClose" type="button">✕ Close</button></div><img id="bigImg" alt="Live camera"></div></div>
+<script src="/printers.js"></script>
+</body>
+</html>
