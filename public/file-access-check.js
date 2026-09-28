@@ -10,7 +10,8 @@
     if (!p?.confirmPending) return;
     const card = document.createElement("div");
     card.id = "faCheck"; card.setAttribute("role", "region"); card.setAttribute("aria-label", "Please confirm file access");
-    card.style.cssText = "position:fixed;left:1.2em;bottom:1.2em;z-index:60;max-width:26em;background:rgba(16,19,44,.96);color:#eef0ff;border:1px solid rgba(255,210,122,.55);border-radius:1em;padding:.9em 1em;font:inherit;font-size:max(14px,.9em);box-shadow:0 10px 40px rgba(0,0,0,.5)";
+    // where it sits (bottom left, inside the screen margins) and its largest size: safe-area.css (#faCheck)
+    card.style.cssText = "position:fixed;z-index:60;background:rgba(16,19,44,.96);color:#eef0ff;border:1px solid rgba(255,210,122,.55);border-radius:1em;padding:.9em 1em;font:inherit;font-size:max(14px,.9em);box-shadow:0 10px 40px rgba(0,0,0,.5)";
     card.innerHTML = `<b style="font-weight:600">Please confirm what Dayspring may do with your files</b>
       <p style="margin:.4em 0 .6em;color:#c9cdea">Dayspring now asks everyone to choose this. Yours was kept exactly as it was: ${esc(p.summary)}</p>
       <div style="display:flex;gap:.5em;flex-wrap:wrap"><button type="button" data-k="keep" style="background:linear-gradient(135deg,#7c8cff,#a78bfa);border:0;color:#fff;border-radius:.7em;padding:.45em 1em;cursor:pointer;font:inherit">Keep it</button>

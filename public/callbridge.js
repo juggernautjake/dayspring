@@ -77,8 +77,10 @@
     pop = document.createElement("div"); pop.className = "tunepop"; pop.innerHTML = `<button class="x plain" aria-label="Close">✕</button>` + html;
     document.body.appendChild(pop);
     const r = wrap.getBoundingClientRect();
-    pop.style.top = Math.max(8, Math.min(innerHeight - pop.offsetHeight - 8, r.bottom + 8)) + "px";
-    pop.style.left = Math.max(8, Math.min(innerWidth - pop.offsetWidth - 8, r.right - pop.offsetWidth)) + "px";
+    const S = window.dsSafeRect?.() ?? { left: 0, top: 0, right: innerWidth, bottom: innerHeight };   // inside the screen's margins
+    pop.style.top = Math.max(S.top + 8, Math.min(S.bottom - pop.offsetHeight - 8, r.bottom + 8)) + "px";
+    pop.style.left = Math.max(S.left + 8, Math.min(S.right - pop.offsetWidth - 8, r.right - pop.offsetWidth)) + "px";
+    window.dsKeepInSafe?.(pop);
     $(".x", pop).onclick = closePop;
     return pop;
   }

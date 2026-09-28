@@ -1,0 +1,122 @@
+/* =====================================================================================================================
+   Every pop-up fits inside the screen's margins (Settings → Screen, 📐 Fit to screen, dragging the green lines).
+   A TV can crop each edge (overscan), so the margins are the part of the screen the owner can really see. layout.js keeps
+   --st/--sb (top/bottom, vh) and --sl/--sr (left/right, vw) on <html> in step with the saved margins, live while the
+   edges are dragged; the four --safe-* variables below follow them, so everything here moves the moment they change or
+   the window is resized. Dayspring mini (a small desktop window) uses its whole window: its safe area is the window.
+
+     --safe-top/right/bottom/left   the margins            --safe-w/-h   the safe rectangle's size
+     --safe-cx                      its horizontal centre  --safe-gap    the breathing room pop-ups keep from its edges
+
+   Loaded last on the Dayspring screen (after every add-on's own styles), with "html body" in front so it wins.
+   Anything positioned from script (the ⋯ menus, the Active/Quiet/Off menu, study and tune-in pop-overs, the library's
+   menus) is also kept inside the same rectangle by window.dsKeepInSafe (layout.js), again whenever it changes.
+   ===================================================================================================================== */
+:root{--safe-top:var(--st, var(--sy, 0px));--safe-right:var(--sr, var(--sx, 0px));--safe-bottom:var(--sb, var(--sy, 0px));--safe-left:var(--sl, var(--sx, 0px))}
+html.mini{--safe-top:0px;--safe-right:0px;--safe-bottom:0px;--safe-left:0px}
+html{--safe-w:calc(100vw - var(--safe-left) - var(--safe-right));--safe-h:calc(100vh - var(--safe-top) - var(--safe-bottom));
+  --safe-cx:calc(var(--safe-left) + (100vw - var(--safe-left) - var(--safe-right)) / 2);--safe-gap:10px}
+
+/* ---------- the shared utilities (for anything new): pinned inside, never bigger than the safe rectangle ---------- */
+.safe-fit{max-width:calc(var(--safe-w) - 2 * var(--safe-gap));max-height:calc(var(--safe-h) - 2 * var(--safe-gap));overflow:auto}
+.safe-cover{position:fixed;inset:0;display:grid;place-items:center;
+  padding:calc(var(--safe-top) + var(--safe-gap)) calc(var(--safe-right) + var(--safe-gap)) calc(var(--safe-bottom) + var(--safe-gap)) calc(var(--safe-left) + var(--safe-gap))}
+.safe-cover > *{max-width:100%;max-height:100%;overflow:auto}
+
+/* ---------- screens that fill the safe area ---------- */
+html body .calwrap{inset:calc(.6em + var(--safe-top)) calc(.6em + var(--safe-right)) calc(.6em + var(--safe-bottom)) calc(.6em + var(--safe-left))}
+html body .media.video{inset:calc(1em + var(--safe-top)) calc(1em + var(--safe-right)) calc(1em + var(--safe-bottom)) calc(1em + var(--safe-left))}
+html body .media.full{inset:0}
+html body .media.audio{left:calc(1.2em + var(--safe-left));bottom:calc(1.2em + var(--safe-bottom));max-width:calc(var(--safe-w) - 2.4em)}
+html body .reader{inset:calc(.8em + var(--safe-top)) calc(.8em + var(--safe-right)) calc(.8em + var(--safe-bottom)) calc(.8em + var(--safe-left))}
+html body .fyl{left:calc(var(--safe-left) + 1em);right:calc(var(--safe-right) + 1em);top:calc(var(--safe-top) + 1em);bottom:calc(var(--safe-bottom) + 1em)}
+html body .rpanel{top:calc(1em + var(--safe-top));bottom:calc(1em + var(--safe-bottom));left:var(--safe-cx);width:min(44em, calc(var(--safe-w) - 2em))}
+html body .lib{left:calc(1.2em + var(--safe-left));top:calc(1em + var(--safe-top));bottom:calc(1em + var(--safe-bottom));
+  width:calc((var(--safe-w) - 2.4em - 1.3em) * .6078);max-width:calc(var(--safe-w) - 2.4em)}
+html body #dsImages{inset:max(4vh, calc(var(--safe-top) + var(--safe-gap))) max(3vw, calc(var(--safe-right) + var(--safe-gap))) max(4vh, calc(var(--safe-bottom) + var(--safe-gap))) max(3vw, calc(var(--safe-left) + var(--safe-gap)))}
+html.mini body #dsImages{inset:0}
+html body .meetnotes{inset:max(4vh, calc(var(--safe-top) + var(--safe-gap))) max(4vw, calc(var(--safe-right) + var(--safe-gap))) max(4vh, calc(var(--safe-bottom) + var(--safe-gap))) max(4vw, calc(var(--safe-left) + var(--safe-gap)))}
+html body #dsxCook{top:max(4vh, calc(var(--safe-top) + var(--safe-gap)), var(--pop-top, 0px));bottom:max(4vh, calc(var(--safe-bottom) + var(--safe-gap)), var(--pop-bottom-inset, 0px));
+  left:max(4vw, calc(var(--safe-left) + var(--safe-gap)));right:max(4vw, calc(var(--safe-right) + var(--safe-gap)))}
+html body #dsxRecipes{top:max(5vh, calc(var(--safe-top) + var(--safe-gap)), var(--pop-top, 0px));bottom:max(5vh, calc(var(--safe-bottom) + var(--safe-gap)), var(--pop-bottom-inset, 0px));
+  left:max(4vw, calc(var(--safe-left) + var(--safe-gap)));right:max(4vw, calc(var(--safe-right) + var(--safe-gap)))}
+html.mini body #dsxCook, html.mini body #dsxRecipes{inset:0}
+html body #dsxCount{inset:var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left)}
+
+/* ---------- dialogs over a dimmed screen: the backdrop covers everything, the box is centred in the safe area ---------- */
+html body .overlay{padding:var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left)}
+html body .overlay .box{max-width:min(40em, 100%);max-height:100%;overflow:auto}
+html body .alarm .box{max-width:calc(100% - 1em)}
+html body .detail{padding:calc(1em + var(--safe-top)) calc(1em + var(--safe-right)) calc(1em + var(--safe-bottom)) calc(1em + var(--safe-left))}
+html body .detail .dbox{max-width:100%;max-height:100%}
+html body .detail:fullscreen{padding:1em}
+html body .wconfirm{padding:calc(var(--safe-top) + var(--safe-gap)) calc(var(--safe-right) + var(--safe-gap)) calc(var(--safe-bottom) + var(--safe-gap)) calc(var(--safe-left) + var(--safe-gap))}
+html body .wconfirm .wbox{max-width:100%;max-height:100%;overflow:auto}
+html body .wconfirm .row{position:sticky;bottom:0;padding-top:.4em;background:rgba(20,24,54,.98)}
+/* the badge reveal and the badge details (the reveal also keeps clear of the talk controls: see mini.css) */
+html body .brev{padding:max(var(--safe-gap), calc(var(--safe-top) - var(--pop-top, 0px) + var(--safe-gap))) calc(var(--safe-right) + var(--safe-gap))
+  max(var(--safe-gap), calc(var(--safe-bottom) - var(--pop-bottom-inset, 0px) + var(--safe-gap))) calc(var(--safe-left) + var(--safe-gap))}
+html body .brev-card{max-width:100%;max-height:100%;overflow:auto}
+html body .brev-card .brev-ok{position:sticky;bottom:0}
+html body .bdlg{padding:calc(var(--safe-top) + 16px) calc(var(--safe-right) + 16px) calc(var(--safe-bottom) + 16px) calc(var(--safe-left) + 16px)}
+html body .bdlg-card{max-width:100%;max-height:100%}
+html body .bdlg-x{position:sticky;float:right;top:0;right:auto;margin:-14px -10px 0 6px;z-index:2}
+html body .mlimg{padding:calc(var(--safe-top) + var(--safe-gap)) calc(var(--safe-right) + var(--safe-gap)) calc(var(--safe-bottom) + 2.4em) calc(var(--safe-left) + var(--safe-gap))}
+html body .mlimg img{max-width:calc(var(--safe-w) - 2 * var(--safe-gap));max-height:calc(var(--safe-h) - var(--safe-gap) - 2.4em)}
+html body .mlimg p{bottom:calc(var(--safe-bottom) + .6em);left:var(--safe-left);right:var(--safe-right)}
+html body #dsStopped{padding:calc(var(--safe-top) + 2em) calc(var(--safe-right) + 2em) calc(var(--safe-bottom) + 2em) calc(var(--safe-left) + 2em);overflow:auto}
+/* 📐 Fit to screen: its instructions sit in the middle of the frame being set (they follow the lines as they move) */
+html body .fitcal .fcbox{left:var(--safe-cx);top:calc(var(--safe-top) + var(--safe-h) / 2);
+  max-width:calc(var(--safe-w) - 2 * var(--safe-gap));max-height:calc(var(--safe-h) - 2 * var(--safe-gap))}
+
+/* ---------- the window bar: just inside the top margin (a TV crops what's above it) ---------- */
+html body .wbar{left:var(--safe-left);right:var(--safe-right);top:calc(var(--safe-top) + 2px)}
+
+/* ---------- the notification stack (top right): never runs off the bottom; it scrolls, Clear all stays in reach ---------- */
+html body .toasts{top:max(calc(1em + var(--safe-top)), var(--pop-top, 0px));right:calc(1em + var(--safe-right));
+  max-width:calc(var(--safe-w) - 2em);
+  max-height:min(var(--pop-max, 100vh), calc(100vh - var(--safe-bottom) - 1em - max(calc(1em + var(--safe-top)), var(--pop-top, 0px))))}
+html.mini body .toasts{top:max(calc(.5em + var(--safe-top)), var(--pop-top, 0px));left:calc(.5em + var(--safe-left));right:calc(.5em + var(--safe-right));max-width:none;
+  max-height:min(var(--pop-max, 100vh), calc(100vh - var(--safe-bottom) - .5em - max(calc(.5em + var(--safe-top)), var(--pop-top, 0px))))}
+html body .toasts{scroll-padding-bottom:2.8em}   /* scrolling to a card never leaves it under the sticky Clear all */
+html body .toasts .clearall{position:sticky;bottom:0;z-index:2;flex:0 0 auto}
+html body .toasts .toast{flex:0 0 auto}
+html body #dsxTimers{right:calc(16px + var(--safe-right));top:calc(86px + var(--safe-top));max-width:calc(var(--safe-w) - 32px);max-height:calc(var(--safe-h) - 102px);overflow:auto}
+html.mini body #dsxTimers{top:auto;bottom:calc(54px + var(--safe-bottom));right:calc(8px + var(--safe-right))}
+html body .toasts #dsxTimers{position:static;inset:auto;width:auto;max-height:none;overflow:visible}
+
+/* ---------- cards pinned to an edge or corner ---------- */
+html body .sndpanel{right:calc(1em + var(--safe-right));top:calc(1em + var(--safe-top));width:min(30em, calc(var(--safe-w) - 2em));max-height:calc(var(--safe-h) - 2em)}
+@media (max-width: 520px){ html body .sndpanel{right:auto;left:calc(.5em + var(--safe-left));width:calc(var(--safe-w) - 1em)} }
+html body .mlpanel{right:calc(1em + var(--safe-right));top:calc(1em + var(--safe-top));width:min(30em, calc(var(--safe-w) - 2em));max-height:calc(var(--safe-h) - 2em)}
+html body .mixer{right:calc(1em + var(--safe-right));bottom:calc(4.2em + var(--safe-bottom));width:min(24em, calc(var(--safe-w) - 2em));max-height:calc(var(--safe-h) - 5.2em);overflow:auto}
+html body .panel{right:calc(1.2em + var(--safe-right));bottom:calc(4em + var(--safe-bottom));width:min(26em, 42vw, calc(var(--safe-w) - 2.4em));max-width:calc(var(--safe-w) - 2.4em);max-height:calc(var(--safe-h) - 5em);overflow:auto}
+html body .meetres{right:calc(1.2em + var(--safe-right));top:calc(4.5em + var(--safe-top));max-width:calc(var(--safe-w) - 2.4em);max-height:calc(var(--safe-h) - 5.5em);overflow:auto}
+html.mini body .meetres{left:calc(.6em + var(--safe-left));right:calc(.6em + var(--safe-right));top:auto;bottom:calc(5em + var(--safe-bottom));max-height:calc(var(--safe-h) - 6em)}
+html body .lnstack{right:calc(1em + var(--safe-right));bottom:calc(1em + var(--safe-bottom));width:min(25em, calc(var(--safe-w) - 2em));
+  max-height:min(calc(100vh - var(--ctl-bottom, 0px) - 2.5em), calc(var(--safe-h) - 2em))}
+html body .sttcard{right:calc(1em + var(--safe-right));bottom:calc(1em + var(--safe-bottom));max-width:min(24em, calc(var(--safe-w) - 2em));
+  max-height:min(calc(100vh - var(--ctl-bottom, 0px) - 2.5em), calc(var(--safe-h) - 2em))}
+html body #faCheck{left:calc(1.2em + var(--safe-left));bottom:calc(1.2em + var(--safe-bottom));max-width:min(26em, calc(var(--safe-w) - 2.4em));max-height:calc(var(--safe-h) - 2.4em);overflow:auto}
+html body .sfx-card{top:max(calc(16px + var(--safe-top)), var(--pop-top, 0px));right:calc(16px + var(--safe-right));max-width:min(26em, calc(var(--safe-w) - 32px));
+  max-height:calc(100vh - var(--safe-bottom) - 16px - max(calc(16px + var(--safe-top)), var(--pop-top, 0px)));overflow:auto}
+html body .xp-badge{left:max(12px, calc(var(--safe-left) + 4px));bottom:max(12px, calc(var(--safe-bottom) + 4px))}
+html.mini body .xp-badge{left:8px;bottom:8px}
+/* centred along the bottom: centred in the safe area, not the window (the margins can differ left and right) */
+html body #dsUpdate{left:var(--safe-cx);bottom:max(calc(var(--safe-bottom) + 1.2em), var(--pop-bottom-inset, 0px));width:min(40em, calc(var(--safe-w) - 2em));overflow:auto;
+  max-height:min(70vh, calc(100vh - max(calc(var(--safe-bottom) + 1.2em), var(--pop-bottom-inset, 0px)) - max(var(--pop-top, 0px), calc(var(--safe-top) + 1em))))}
+html body .dsx-card{left:var(--safe-cx);bottom:max(12vh, calc(var(--safe-bottom) + 1em), var(--pop-bottom-inset, 0px));width:min(560px, calc(var(--safe-w) - 2em));
+  max-height:calc(100vh - max(12vh, calc(var(--safe-bottom) + 1em), var(--pop-bottom-inset, 0px)) - max(var(--pop-top, 0px), calc(var(--safe-top) + 1em)));overflow-y:auto}
+html body .tunecard{left:var(--safe-cx);bottom:calc(1.2em + var(--safe-bottom));max-width:min(40em, calc(var(--safe-w) - 2em));max-height:calc(var(--safe-h) - 2.4em);overflow:auto}
+html body #skypill{left:var(--safe-cx);bottom:calc(.8em + var(--safe-bottom));max-width:calc(var(--safe-w) - 1em)}
+html body .eco-meet-card{left:var(--safe-cx);bottom:max(6.5em, calc(var(--safe-bottom) + 1em));max-width:calc(var(--safe-w) - 2em)}
+html body .eco-snd{top:calc(1em + var(--safe-top));right:calc(1em + var(--safe-right));width:min(26rem, calc(var(--safe-w) - 2em));max-height:calc(var(--safe-h) - 2em)}
+
+/* ---------- pop-overs placed next to their button (kept inside by dsKeepInSafe; never bigger than the safe area) ---------- */
+html body .morebox, html body .statemenu, html body .tunepop, html body .meetpop, html body .lib .menu{
+  max-width:calc(var(--safe-w) - 2 * var(--safe-gap));max-height:calc(var(--safe-h) - 2 * var(--safe-gap));overflow:auto}
+html body .stpop{max-width:calc(var(--safe-w) - 2 * var(--safe-gap));max-height:min(78vh, 40em, calc(var(--safe-h) - 2 * var(--safe-gap)));overflow:auto}
+/* a pop-over you opened sits above the corner badges (the XP badge could cover the Meetings panel's buttons in mini) */
+html body .tunepop, html body .meetpop{z-index:41}
+/* their ✕ stays at the top while the rest scrolls */
+html body .tunepop .x, html body .meetpop .x{position:sticky;float:right;top:0;right:auto;margin:-.5em -.5em 0 .4em;z-index:2}

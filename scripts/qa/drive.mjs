@@ -30,6 +30,7 @@ const codes = new Map();                 // code → { email, scope }
 const refresh = new Map();               // refresh token → email
 const access = new Map();                // access token → email
 const revoked = [];
+const created = [];                     // every event created: { email, body, query }
 const seen = [];                         // every Drive/Calendar/Gmail request: { email, method, path, query, range, auth }
 let n = 0;
 const VIDEO = Buffer.from(Array.from({ length: 6000 }, (_, i) => i % 251));
@@ -124,7 +125,7 @@ const mock = http.createServer(async (req, res) => {
   // Calendar
   if (p === "/calendar/v3/users/me/calendarList") return json(res, 200, { items: [{ id: email, summary: email, primary: true, selected: true }] });
   if ((m = /^\/calendar\/v3\/calendars\/([^/]+)\/events$/.exec(p)) && req.method === "GET") return json(res, 200, { items: [{ id: `ev-${email.split("@")[0]}`, summary: `${email.split("@")[0]} meeting`, start: { dateTime: "2026-09-28T10:00:00" }, end: { dateTime: "2026-09-28T11:00:00" }, organizer: { self: true } }] });
-  if ((m = /^\/calendar\/v3\/calendars\/([^/]+)\/events$/.exec(p)) && req.method === "POST") { const b = JSON.parse((await body(req)).toString()); return json(res, 200, { id: `new-${email}`, summary: b.summary, htmlLink: "https://calendar.example/e" }); }
+  if ((m = /^\/calendar\/v3\/calendars\/([^/]+)\/events$/.exec(p)) && req.method === "POST") { const b = JSON.parse((await body(req)).toString()); created.push({ email, body: b, query: Object.fromEntries(q) }); const meetOn = b.conferenceData?.createRequest && q.get("conferenceDataVersion") === "1"; return json(res, 200, { id: `new-${email}`, summary: b.summary, htmlLink: "https://calendar.example/e", ...(meetOn ? { hangoutLink: "https://meet.google.com/abc-defg-hij" } : {}) }); }
   if ((m = /^\/calendar\/v3\/calendars\/([^/]+)\/events\/([^/?]+)$/.exec(p)) && req.method === "PATCH") return json(res, 200, { id: m[2], summary: "moved", htmlLink: "x" });
   // Gmail
   if (p === "/gmail/v1/users/me/messages") return json(res, 200, { messages: [{ id: `msg-${email.split("@")[0]}` }] });
@@ -152,6 +153,7 @@ const imp = (p) => import(pathToFileURL(join(DESK, p)).href);
 const google = await imp("lib/connectors/google.mjs");
 const drive = await imp("lib/connectors/drive.mjs");
 const connectors = await imp("lib/connectors/index.mjs");
+(await imp("lib/media.mjs"))._setPolicy({ videosAllowed: true });   // not the real schedule: a study block right now would refuse videos
 const confirm = await imp("lib/confirm.mjs");
 const activity = await imp("lib/activity.mjs");
 const permissions = await imp("lib/permissions.mjs");
@@ -405,6 +407,29 @@ const get = (path, headers = {}, method = "GET", data = null) => new Promise((ok
   check("“…from my work drive”: that Drive's file, streamed through Dayspring", /Wedding March.*from Work's Drive/.test(r?.reply ?? "") && /^\/api\/drive\/stream\?ref=g2%3Awa1march$/.test(q?.src ?? ""), `${r?.reply} ${q?.src}`);
   const res = await get(q.src.replace(/^\/api/, "/api"), { range: "bytes=0-99" });
   check("…and it plays (Range through the proxy)", res.status === 206 && res.body.equals(SONG.subarray(0, 100)));
+}
+
+// ---- 11. Google Meet invitations (meet_invite): asks first, then Google emails the invitations ------------------------------
+{
+  const confirm = await imp("lib/confirm.mjs");
+  const ask = { title: "Dayspring demo", date: "2026-09-28", start: "19:00", minutes: 45, invitees: ["Friend@Example.com", "pal@example.org"] };
+  created.length = 0;
+  let r = await connectors.runTool("meet_invite", ask);
+  check("meet_invite asks first: nothing is created and nobody is emailed before the owner's yes", r.needsConfirm && r.confirm_token && created.length === 0 && /friend@example\.com, pal@example\.org/.test(r.text), JSON.stringify(r));
+  let r2 = await connectors.runTool("meet_invite", { ...ask, confirm_token: r.confirm_token });
+  check("…the model can't approve it by itself (no yes from the owner yet)", r2.needsConfirm && created.length === 0, JSON.stringify(r2));
+  confirm.userSaid("yes");
+  r2 = await connectors.runTool("meet_invite", { ...ask, confirm_token: r2.confirm_token });
+  const c = created[0];
+  check("after the owner's yes: one event with a new Google Meet, invitations sent by Google (sendUpdates=all)", created.length === 1 && c.query.conferenceDataVersion === "1" && c.query.sendUpdates === "all" && c.body.conferenceData?.createRequest?.conferenceSolutionKey?.type === "hangoutsMeet", JSON.stringify(c));
+  check("…with both people invited (emails tidied), 7:00–7:45 PM", JSON.stringify(c.body.attendees) === JSON.stringify([{ email: "friend@example.com" }, { email: "pal@example.org" }]) && /T19:00:00$/.test(c.body.start.dateTime) && /T19:45:00$/.test(c.body.end.dateTime), JSON.stringify(c.body));
+  check("…and it hands back the Meet link", r2.meet === "https://meet.google.com/abc-defg-hij" && /meet\.google\.com/.test(r2.said), JSON.stringify(r2));
+  const bad = await connectors.runTool("meet_invite", { ...ask, invitees: ["sam"] });
+  check("a name without an email address is refused (it asks for the email)", /aren't email addresses: sam/.test(bad.error ?? ""), JSON.stringify(bad));
+  const token = (await connectors.runTool("meet_invite", ask)).confirm_token;
+  confirm.userSaid("yes");
+  const changed = await connectors.runTool("meet_invite", { ...ask, invitees: ["someone@else.com"], confirm_token: token });
+  check("a yes only covers the exact invitation it was asked about (a different guest list asks again)", changed.needsConfirm && created.length === 1, JSON.stringify(changed));
 }
 
 app.close(); mock.close();

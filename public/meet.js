@@ -89,8 +89,10 @@
   function place() {
     if (!pop) return;
     const r = wrap.getBoundingClientRect();
-    pop.style.top = Math.max(8, Math.min(innerHeight - pop.offsetHeight - 8, r.bottom + 8)) + "px";
-    pop.style.left = Math.max(8, Math.min(innerWidth - pop.offsetWidth - 8, r.right - pop.offsetWidth)) + "px";
+    const S = window.dsSafeRect?.() ?? { left: 0, top: 0, right: innerWidth, bottom: innerHeight };   // inside the screen's margins
+    pop.style.top = Math.max(S.top + 8, Math.min(S.bottom - pop.offsetHeight - 8, r.bottom + 8)) + "px";
+    pop.style.left = Math.max(S.left + 8, Math.min(S.right - pop.offsetWidth - 8, r.right - pop.offsetWidth)) + "px";
+    window.dsKeepInSafe?.(pop);
   }
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && pop) closePop(); });
   let pre = null, cfg = null;
@@ -161,6 +163,7 @@
   async function loadPre() {
     if (!pop) return;
     try { pre = await api("/meet/preflight"); } catch { return; }
+    if (!pop) return;   // closed while it was loading
     const ul = $("#meetPre", pop); if (!ul) return;
     ul.innerHTML = pre.items.map((i) => `<li><span>${i.ok ? "✅" : "⬜"}</span><span>${esc(i.label)}<small>${esc(i.detail)}</small></span><span>${
       i.action === "signin" ? `<button data-a="signin">Sign in…</button>` : i.action === "soundtest" ? `<button data-a="sound">Test</button>` : i.action?.startsWith("confirm:") ? `<button data-a="${esc(i.action)}">${i.ok ? "Undo" : "Done"}</button>` : i.action === "rehearse" && !i.ok ? `<button data-a="rehearse">Rehearse</button>` : ""}</span></li>`).join("")

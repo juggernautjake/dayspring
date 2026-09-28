@@ -2,7 +2,7 @@
 //   • Toolbars never spill: labels shorten, then the least-used buttons move into a "⋯ More" menu.
 //   • Text picks the longest version that fits (the date, times, the exam's place; see layout.css ".fitv").
 //   • When a column runs out of height, small cards go compact, then fold away (they come back when there's room).
-//   • Pop-ups are kept inside the screen.
+//   • Pop-ups are kept inside the screen's margins (the safe area: safe-area.css, dsSafeRect, dsKeepInSafe).
 //   • The window bar: move the pointer to the top edge for 🔊 Sound, ⛶ full screen, — minimize, □ maximize, 👁 hide, ✕ exit.
 (() => {
   const $ = (s, r = document) => r.querySelector(s);
@@ -51,10 +51,12 @@
     host.appendChild(btn);
     const m = { btn, box, host, items: [] };
     const place = () => {
-      const r = btn.getBoundingClientRect(), b = box.getBoundingClientRect(), vw = innerWidth, vh = innerHeight, pad = 8;
-      let left = Math.min(r.right - b.width, vw - b.width - pad); left = Math.max(pad, left);
-      let top = r.bottom + 6; if (top + b.height > vh - pad) top = Math.max(pad, r.top - b.height - 6);
-      box.style.left = left + "px"; box.style.top = top + "px";
+      // below the ⋯ (above it if there's no room), inside the screen's margins
+      const r = btn.getBoundingClientRect(), b = box.getBoundingClientRect(), S = safeRect(), pad = 8;
+      let left = Math.min(r.right - b.width, S.right - b.width - pad); left = Math.max(S.left + pad, left);
+      let top = r.bottom + 6; if (top + b.height > S.bottom - pad) top = Math.max(S.top + pad, r.top - b.height - 6);
+      box.style.left = left + "px"; box.style.top = top + "px"; box.style.right = box.style.bottom = "auto";
+      keepInSafe(box);
     };
     m.open = () => { box.hidden = false; btn.setAttribute("aria-expanded", "true"); place(); (box.querySelector("button, select, input") ?? box).focus?.(); };
     m.close = (refocus) => { if (box.hidden) return; box.hidden = true; btn.setAttribute("aria-expanded", "false"); if (refocus) btn.focus(); };
@@ -191,17 +193,43 @@
   let queued = 0;
   const schedule = () => { if (!queued) queued = requestAnimationFrame(() => { queued = 0; refit(); }); };
 
-  /* ---------------- pop-ups stay inside the screen ---------------- */
-  const POPS = ".stpop, .tunepop, .lib .menu, #soundPanel, .detail .dbox";
+  /* ---------------- pop-ups stay inside the screen's margins (the safe area) ---------------- */
+  // safe-area.css turns the margins into --safe-top/right/bottom/left (Dayspring mini: its whole window). An invisible
+  // fixed box pinned to them measures the safe rectangle in pixels for anything placed from script.
+  const probe = document.createElement("div");
+  probe.id = "dsSafeArea"; probe.setAttribute("aria-hidden", "true");
+  probe.style.cssText = "position:fixed;top:var(--safe-top,0px);right:var(--safe-right,0px);bottom:var(--safe-bottom,0px);left:var(--safe-left,0px);visibility:hidden;pointer-events:none;z-index:-1";
+  document.body.appendChild(probe);
+  function safeRect() {
+    const r = probe.getBoundingClientRect();
+    if (!(r.width > 0 && r.height > 0)) return { left: 0, top: 0, right: innerWidth, bottom: innerHeight, width: innerWidth, height: innerHeight };
+    return { left: r.left, top: r.top, right: r.right, bottom: r.bottom, width: r.width, height: r.height };
+  }
+  // Move a fixed pop-up (placed by script next to its button) back inside the safe rectangle, keeping a small gap. Its
+  // size is already capped by safe-area.css, so it always fits. Returns true if it moved.
+  const GAP = 6;
+  function keepInSafe(el) {
+    if (!el || !el.isConnected || el.hidden || getComputedStyle(el).position !== "fixed") return false;
+    const cs = getComputedStyle(el), S = safeRect();
+    const w = el.offsetWidth, h = el.offsetHeight; if (!w || !h) return false;
+    const left = parseFloat(cs.left), top = parseFloat(cs.top); if (!isFinite(left) || !isFinite(top)) return false;
+    let x = Math.min(left, S.right - GAP - w); x = Math.max(x, S.left + GAP);
+    let y = Math.min(top, S.bottom - GAP - h); y = Math.max(y, S.top + GAP);
+    if (Math.abs(x - left) < 0.5 && Math.abs(y - top) < 0.5) return false;
+    el.style.left = x + "px"; el.style.top = y + "px"; el.style.right = "auto"; el.style.bottom = "auto";
+    return true;
+  }
+  window.dsSafeRect = safeRect;
+  window.dsKeepInSafe = keepInSafe;
+  // everything placed from script (menus and pop-overs next to their buttons); the rest are pinned by safe-area.css
+  const POPS = ".stpop, .tunepop, .meetpop, .lib .menu, .morebox, .statemenu, #soundPanel";
+  const popRo = new ResizeObserver(() => requestAnimationFrame(clampPopups));
+  const watched = new WeakSet();
   function clampPopups() {
-    const vw = innerWidth, vh = innerHeight, pad = 6;
     for (const el of $$(POPS)) {
-      if (!visible(el) || getComputedStyle(el).position !== "fixed") continue;
-      const r = el.getBoundingClientRect();
-      let dx = 0, dy = 0;
-      if (r.right > vw - pad) dx = vw - pad - r.right; if (r.left + dx < pad) dx = pad - r.left;
-      if (r.bottom > vh - pad) dy = vh - pad - r.bottom; if (r.top + dy < pad) dy = pad - r.top;
-      if (dx || dy) { el.style.left = r.left + dx + "px"; el.style.top = r.top + dy + "px"; el.style.right = "auto"; el.style.bottom = "auto"; }
+      if (el.hidden || !el.offsetWidth) continue;
+      if (!watched.has(el)) { watched.add(el); popRo.observe(el); }   // it grows (more text, a longer list): check again
+      keepInSafe(el);
     }
   }
 
@@ -212,6 +240,14 @@
   const mo = new MutationObserver((list) => { if (list.some((r) => !(r.target.closest?.(".morebox")))) schedule(); });
   const bodyMo = new MutationObserver(() => requestAnimationFrame(clampPopups));
   bodyMo.observe(document.body, { childList: true });
+  // a menu that's shown again (hidden → visible) is checked too
+  new MutationObserver((list) => { if (list.some((r) => r.target.matches?.(POPS))) requestAnimationFrame(clampPopups); })
+    .observe(document.body, { subtree: true, attributes: true, attributeFilter: ["hidden"] });
+  // the margins changed (Settings, or dragging the 📐 lines) or the window was resized: straight away, not after a refit
+  let clampQueued = 0;
+  const clampSoon = () => { if (!clampQueued) clampQueued = requestAnimationFrame(() => { clampQueued = 0; clampPopups(); }); };
+  new MutationObserver(clampSoon).observe(document.documentElement, { attributes: true, attributeFilter: ["style", "class"] });
+  addEventListener("resize", clampSoon);
   function observe() { for (const el of WATCH) mo.observe(el, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["hidden"] }); }
   new MutationObserver(schedule).observe(document.documentElement, { attributes: true, attributeFilter: ["style"] });   // the margin (--os) changed
   addEventListener("resize", schedule);
@@ -241,10 +277,16 @@
   // the top band that brings it up: the cropped margin (a TV hides it) plus a little inside the visible area
   // (the bar sits just above the content; the whole band from the very top down to the content's top edge brings it up)
   const contentTop = () => { const tops = $$(".screen > .col").map((c) => c.getBoundingClientRect()).filter((r) => r.height > 0).map((r) => r.top); return tops.length ? Math.min(...tops) : parseFloat(getComputedStyle(bar).top) || 0; };
+  // Only the thin strip at the very top (plus a TV's cropped margin) brings it up, and only after the pointer rests there
+  // briefly: the clock and date sit just below, so passing over them (or coming in from the title bar) mustn't cover them.
+  const margin = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--st") || getComputedStyle(document.documentElement).getPropertyValue("--sy")) || 0;
+  let dwell = 0;
   addEventListener("pointermove", (e) => {
-    const t = contentTop(), barBottom = bar.getBoundingClientRect().bottom;
-    if (e.clientY <= t + 14) showBar(); else if (bar.classList.contains("show") && e.clientY > Math.max(t, barBottom) + 24) hideBarSoon();
+    const band = Math.min(contentTop(), margin()) + 12, barBottom = bar.getBoundingClientRect().bottom;
+    if (e.clientY <= band) { if (!bar.classList.contains("show") && !dwell) dwell = setTimeout(() => { dwell = 0; showBar(); }, 350); }
+    else { clearTimeout(dwell); dwell = 0; if (bar.classList.contains("show") && e.clientY > Math.max(band, barBottom) + 24) hideBarSoon(); }
   }, { passive: true });
+  document.documentElement.addEventListener("pointerleave", () => { clearTimeout(dwell); dwell = 0; if (bar.classList.contains("show")) hideBarSoon(); });
   // the keyboard way: Alt shows it (like a window's menu bar)
   addEventListener("keydown", (e) => { if (e.key === "Alt" && !e.repeat) { showBar(); hideBarSoon(); } });
   bar.addEventListener("pointerleave", hideBarSoon);

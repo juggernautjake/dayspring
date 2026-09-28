@@ -1063,7 +1063,9 @@
       if (t) { const cs = getComputedStyle(t), base = parseFloat(cs.top) || 0; if (!upper) stackTop = base; else stackTop = Math.max(base, bottom + gap);
         const tr = t.getBoundingClientRect(), overlapsX = tr.left < right && left < tr.right;
         if (!overlapsX && tr.width > 0) { vars["--pop-top"] = "0px"; stackTop = base; } }
-      vars["--pop-max"] = Math.max(80, Math.round((upper ? H - gap : top - gap) - stackTop)) + "px";
+      // …and never past the bottom margin (the part of a TV that crops the edge: see safe-area.css)
+      const floor = Math.min(H, window.dsSafeRect?.().bottom ?? H);
+      vars["--pop-max"] = Math.max(80, Math.round((upper ? floor - gap : Math.min(top, floor) - gap) - stackTop)) + "px";
       const k = JSON.stringify(vars); if (k === last) return; last = k;
       for (const [n, v] of Object.entries(vars)) root.style.setProperty(n, v);
     }
@@ -3309,7 +3311,9 @@
     if (!m.hidden) { m.hidden = true; return; }
     m.hidden = false; paintStateMenu();
     const r = b.getBoundingClientRect(), w = m.offsetWidth;
-    m.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left)) + "px"; m.style.top = Math.min(innerHeight - m.offsetHeight - 8, r.bottom + 6) + "px";
+    const S = window.dsSafeRect?.() ?? { left: 0, top: 0, right: innerWidth, bottom: innerHeight };   // inside the screen's margins
+    m.style.left = Math.max(S.left + 8, Math.min(S.right - w - 8, r.left)) + "px"; m.style.top = Math.max(S.top + 8, Math.min(S.bottom - m.offsetHeight - 8, r.bottom + 6)) + "px";
+    window.dsKeepInSafe?.(m);
     m.querySelector("button")?.focus();
   }
   $("#stateBtn")?.addEventListener("click", (e) => { e.stopPropagation(); openStateMenu(); });

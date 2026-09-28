@@ -73,6 +73,7 @@ try { symlinkSync(OUT, join(MUSIC, "linked"), "junction"); } catch { /* junction
 check("ffmpeg made the test files (MP3, M4A, FLAC, Opus, WMA, MP4, WebM)", Object.values(F).every(existsSync));
 
 const imp = (p) => import(pathToFileURL(join(DESK, p)).href);
+(await imp("lib/media.mjs"))._setPolicy({ videosAllowed: true });   // not the real schedule: a study block right now would refuse videos
 const permissions = await imp("lib/permissions.mjs");
 const activity = await imp("lib/activity.mjs");
 const settings = await imp("lib/settings.mjs");

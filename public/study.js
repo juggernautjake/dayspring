@@ -61,12 +61,15 @@
   document.addEventListener("pointerdown", (e) => { if (pop && !pop.contains(e.target) && !e.target.closest?.("#examCard,#courses .course:not(.lnc)")) closePop(); }, true);
 
   function place(el, anchor) {
-    const a = anchor.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight, vw = innerWidth, vh = innerHeight;
+    // beside the card, inside the screen's margins (the safe area)
+    const a = anchor.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight, S = window.dsSafeRect?.() ?? { left: 0, top: 0, right: innerWidth, bottom: innerHeight };
     let left = a.right + 12, top = a.top;
-    if (left + w > vw - 10) left = a.left - w - 12;
-    if (left < 10) left = Math.max(10, Math.min(vw - w - 10, a.left));
-    if (top + h > vh - 10) top = Math.max(10, vh - h - 10);
+    if (left + w > S.right - 10) left = a.left - w - 12;
+    if (left < S.left + 10) left = Math.max(S.left + 10, Math.min(S.right - w - 10, a.left));
+    if (top + h > S.bottom - 10) top = Math.max(S.top + 10, S.bottom - h - 10);
+    top = Math.max(S.top + 10, top);
     el.style.left = left + "px"; el.style.top = top + "px";
+    window.dsKeepInSafe?.(el);
   }
 
   async function show(course, anchor) {

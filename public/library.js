@@ -173,9 +173,10 @@
       ${mine.length ? mine.slice(0, 12).map((p) => `<button data-s="pl:${esc(p.name)}">☰ Add to ${esc(p.name)}</button>`).join("") : `<div class="empty" style="padding:.3em .7em">No playlists of yours to add to.</div>`}<hr>
       <button data-s="open">↗ Open in Spotify</button>`;
     root.appendChild(menuEl);
-    const r = btn.getBoundingClientRect(), mw = 240;
-    menuEl.style.left = Math.max(8, Math.min(innerWidth - mw - 8, r.right - mw)) + "px";
-    menuEl.style.top = Math.max(8, Math.min(innerHeight - menuEl.offsetHeight - 8, r.bottom + 4)) + "px";
+    const r = btn.getBoundingClientRect(), mw = 240, S = window.dsSafeRect?.() ?? { left: 0, top: 0, right: innerWidth, bottom: innerHeight };
+    menuEl.style.left = Math.max(S.left + 8, Math.min(S.right - mw - 8, r.right - mw)) + "px";
+    menuEl.style.top = Math.max(S.top + 8, Math.min(S.bottom - menuEl.offsetHeight - 8, r.bottom + 4)) + "px";
+    window.dsKeepInSafe?.(menuEl);
     menuEl.querySelector("button")?.focus();
     menuEl.onclick = async (e) => {
       const s = e.target.closest("[data-s]")?.dataset.s; if (!s) return;
@@ -284,9 +285,10 @@
       ${lists.map((l) => `<button data-m="add:${esc(l.id)}">☰ Add to ${esc(l.name)}</button>`).join("")}<button data-m="newlist">＋ New playlist with this…</button><hr>
       <button data-m="open">↗ Open in my browser</button><button data-m="copy">⧉ Copy link</button>${ref.startsWith("q:") ? `<button data-m="unqueue">✕ Remove from queue</button>` : ""}`;
     root.appendChild(menuEl);
-    const r = btn.getBoundingClientRect(), mw = 230;
-    menuEl.style.left = Math.max(8, Math.min(innerWidth - mw - 8, r.right - mw)) + "px";
-    menuEl.style.top = Math.min(innerHeight - menuEl.offsetHeight - 8, r.bottom + 4) + "px";
+    const r = btn.getBoundingClientRect(), mw = 230, S = window.dsSafeRect?.() ?? { left: 0, top: 0, right: innerWidth, bottom: innerHeight };
+    menuEl.style.left = Math.max(S.left + 8, Math.min(S.right - mw - 8, r.right - mw)) + "px";
+    menuEl.style.top = Math.max(S.top + 8, Math.min(S.bottom - menuEl.offsetHeight - 8, r.bottom + 4)) + "px";
+    window.dsKeepInSafe?.(menuEl);
     menuEl.querySelector("button")?.focus();
     menuEl.onclick = async (e) => {
       const m = e.target.closest("[data-m]")?.dataset.m; if (!m) return;

@@ -2,6 +2,29 @@
 
 All notable changes to Dayspring. Versions follow [semantic versioning](https://semver.org).
 
+## 1.6.1 (2026-09-27)
+
+**Pop-ups always fit inside your screen margins.** On a TV, notices, question cards, update prompts, menus and panels could run off the edge, sometimes far enough to hide their buttons or their ✕. Now every pop-up stays inside the margins you set in Settings → Screen (or with 📐 Fit to screen), and moves straight away when you change them, even while you drag the green lines, or when the window changes size.
+- This covers notifications, the file-access card, the update prompt, "are you sure?" boxes, the Sound panel, the ⋯ More menus, the Active/Quiet/Off menu, the badge reveal and badge details, the secret character card, Lantern's cards, the Meetings panel, the pictures grid and picture viewer, your media list, search results, the document reader, suggestion and timer cards, Settings and Help, the alarm and 📐 Fit to screen itself.
+- Dialogs are centred inside your margins. Anything too tall scrolls inside itself, so its buttons and close control are always in reach.
+- The notification stack never runs off the bottom of the screen: it scrolls, and **Clear all** stays in view.
+- The window bar (move the pointer to the very top) now appears inside your top margin, so a TV can't crop it.
+- Dayspring mini does the same inside its own window.
+
+**The screen looks right again when the small window is maximized.** If you maximized Dayspring mini, it stretched the compact layout across the whole screen. A big mini window now shows the full Dayspring screen, and the compact layout comes back when the window is small again. A maximized size is no longer remembered as the mini size.
+
+**The screen listens again.** After 1.6.0 the screen could show "Automated view: not listening" and skip Spotify. That's fixed.
+
+**No more Chrome warning bar.** The "unsupported command-line flag" bar at the top of the Dayspring screen is gone.
+
+**The window bar stays out of the way.** It only slides down when the pointer rests for a moment in the thin strip at the very top of the screen, not when you pass over the clock and date.
+
+**Send Google Meet invitations from Dayspring.** Say "set up a Google Meet with sam@… tomorrow at 7". Dayspring reads it back and waits for your yes, then Google emails the invites.
+
+**"Join my next meeting" joins the next meeting on your Google Calendar.**
+
+**Fixes.** Closing the Meetings panel while it was still loading no longer causes an error.
+
 ## 1.6.0 (2026-09-27)
 
 **After you update: please confirm your file access once.** A small card on the Dayspring screen asks you to confirm what Dayspring may do with your files (or review it in Settings → Permissions). Your old setting is kept exactly as it was, nothing is widened, and **deleting files is now off until you turn it on** (Settings → Permissions → **Can delete files**).
