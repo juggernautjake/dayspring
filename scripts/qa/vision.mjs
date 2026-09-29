@@ -18,6 +18,7 @@
 //   L. voice commands without AI, and the server's routes (settings default off, /photos/next)
 //   node scripts/qa/vision.mjs [--keep]
 import "./guard-data.mjs";   // first: tests never write to the real data folder
+import { qaPort } from "./port.mjs";   // a free port (or QA_PORT), so parallel runs never collide
 import { spawn, spawnSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, copyFileSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -374,7 +375,7 @@ try {
   faces.stopWorker(); helper.stop();
 
   // the server, briefly: routes and defaults on a fresh data folder
-  const PORT = 4793, BASE = `http://127.0.0.1:${PORT}`;
+  const PORT = await qaPort(4793), BASE = `http://127.0.0.1:${PORT}`;
   rmSync(join(APP, "data", "vision.json"), { force: true });
   const srv = spawn(process.execPath, ["server.mjs"], { cwd: APP, env: { ...process.env, PORT: String(PORT) }, stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
   let log = ""; srv.stdout.on("data", (d) => (log += d)); srv.stderr.on("data", (d) => (log += d));

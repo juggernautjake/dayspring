@@ -10,6 +10,7 @@
 //      private and localhost addresses, other schemes, and other websites' pages (localRequest)
 //   node scripts/qa/images.mjs [--keep]
 import "./guard-data.mjs";   // first: tests never write to the real data folder
+import { qaPort } from "./port.mjs";   // a free port (or QA_PORT), so parallel runs never collide
 import { spawn, spawnSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
@@ -22,7 +23,7 @@ const FIX = join(DESK, "scripts", "qa", "fixtures", "images");
 // playwright-core from the exported copy next to this project (…/dayspring-app), else this app's own; QA_PLAYWRIGHT overrides
 const PW = process.env.QA_PLAYWRIGHT ?? pathToFileURL([join(DESK, "..", "..", "..", "dayspring-app", "node_modules", "playwright-core", "index.mjs"), join(DESK, "node_modules", "playwright-core", "index.mjs")].find((p) => existsSync(p)) ?? "").href;
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
-const PORT = 4796, BASE = `http://127.0.0.1:${PORT}`;
+const PORT = await qaPort(4796), BASE = `http://127.0.0.1:${PORT}`;
 const KEEP = process.argv.includes("--keep");
 const TMP = mkdtempSync(join(tmpdir(), "ds-images-")), APP = join(TMP, "app"), PICS = join(TMP, "Pictures"), IMGDIR = join(TMP, "saved");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

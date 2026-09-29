@@ -338,15 +338,17 @@
     { id: "assistant", icon: "✨", title: "Your assistant",
       render: () => { const o = S.owner; const humor = ["none", "light, friendly teasing", "dry and witty", "goofy and playful"]; const custom = o.humor && !humor.includes(o.humor); return `
         <h1>Name your assistant</h1>
-        <p class="lead">Keep "Dayspring" or give it any name you like. Say its name to wake it up, like "Hey Dayspring, what's next?"</p>
-        <div class="row">${field("aname", "Assistant's name", text("aname", o.assistantName || "Dayspring", "Dayspring"))}${field("wake", "Wake words", text("wake", (o.wakeWords ?? []).join(", "), "dayspring"), "What you say to get its attention. Separate them with commas. \"Hey …\" works automatically.")}</div>
+        <p class="lead">Keep "Dayspring" or give it any name you like (up to 19 characters). Say its name to wake it up, like "Hey Dayspring, what's next?", or pick your own wake words.</p>
+        ${window.dsNaming ? window.dsNaming.html(o) : `<div class="row">${field("aname", "Assistant's name", text("aname", o.assistantName || "Dayspring", "Dayspring"))}${field("wake", "Wake words", text("wake", (o.wakeWords ?? []).join(", "), "dayspring"), "What you say to get its attention. Separate them with commas. \"Hey …\" works automatically.")}</div>`}
         <div class="field"><span class="lbl" id="hu-l">Sense of humor</span>${chipGroup("humor", [["none", "Just the facts"], ["light, friendly teasing", "Light and friendly"], ["dry and witty", "Dry and witty"], ["goofy and playful", "Goofy and playful"], ["custom", "Something else…"]], [custom ? "custom" : o.humor || "light, friendly teasing"], false).replace('class="chips"', 'class="chips" role="group" aria-labelledby="hu-l"')}</div>
         <div id="humorCustomWrap" ${custom ? "" : "hidden"}>${field("humorCustom", "Describe it", text("humorCustom", custom ? o.humor : "", "like a cheerful coach"))}</div>
         <div class="msg" id="m"></div>`; },
-      mount: () => { $("[data-chips=humor]").addEventListener("change", () => { $("#humorCustomWrap").hidden = chipsOf("humor")[0] !== "custom"; }); },
+      mount: () => { $("[data-chips=humor]").addEventListener("change", () => { $("#humorCustomWrap").hidden = chipsOf("humor")[0] !== "custom"; }); if (window.dsNaming && $("#namingBox")) window.dsNaming.mount($("#namingBox")); },
       save: async () => {
         const h = chipsOf("humor")[0];
-        const r = await post("/setup/owner", { assistantName: val("aname") || "Dayspring", wakeWords: val("wake") || (val("aname") || "Dayspring").toLowerCase(), humor: h === "custom" ? val("humorCustom") || "light, friendly teasing" : h });
+        // the name and wake words (public/naming-settings.js: checked the same way as by voice), then the humor
+        if (window.dsNaming && $("#namingBox")) await window.dsNaming.save();
+        const r = await post("/setup/owner", window.dsNaming && $("#namingBox") ? { humor: h === "custom" ? val("humorCustom") || "light, friendly teasing" : h } : { assistantName: val("aname") || "Dayspring", wakeWords: val("wake") || (val("aname") || "Dayspring").toLowerCase(), humor: h === "custom" ? val("humorCustom") || "light, friendly teasing" : h });
         S.owner = r.owner; $("#brandName").textContent = S.owner.assistantName || "Dayspring";
       } },
 
@@ -361,6 +363,7 @@
       render: () => { const a = S.ai, P = a.providers; const cur = a.provider; return `
         <h1>Choose an AI brain</h1>
         <p class="lead">Dayspring works without one. It can manage your schedule, set reminders, play music and answer simple commands. Connect an AI and it can hold real conversations, plan your day with you, look things up, and help with almost anything.</p>
+        ${!wizard && window.DayspringAI ? `<h2>Switch quickly</h2>${window.DayspringAI.topHtml()}<h2>Set one up</h2>` : ""}
         ${choiceGroup("provider", [
           { value: "none", title: "No AI (free)", desc: "Built-in commands only. You can add one any time.", tag: "Free" },
           { value: "anthropic", title: "Claude", desc: "By Anthropic. Warm, careful, great at planning. Can search the web.", tag: "Pay as you go", paid: true },
@@ -382,17 +385,21 @@
           const p = chosen("provider"), info = S.ai.providers[p], el = $("#aiDetail");
           if (p === "none" || !info) { el.innerHTML = `<div class="note">That's fine: everything else still works. You can connect an AI later in Settings → AI brain. The guide explains each option: <a href="/help#ai-providers">AI providers</a>.</div>`; return; }
           const same = S.ai.provider === p;
+          // Ollama: the live panel (installed? running? its models, recommendations, pulls, the tool-use test, options)
+          if (p === "ollama" && window.DayspringAI) { el.innerHTML = window.DayspringAI.ollamaHtml(); window.DayspringAI.mountOllama({ savedUrl: S.keys.OLLAMA_URL?.value || "", currentModel: same ? S.ai.model : "" }); return; }
           const keyBox = info.keyVar ? `
             <div class="field"><label for="key">${esc(info.label)} API key</label>
               <div class="row" style="gap:.5em;align-items:center"><input type="password" id="key" placeholder="${S.keys[info.keyVar]?.set ? "Saved. Paste a new one to replace it." : "Paste your key here"}" autocomplete="off" style="flex:1 1 16em"><button type="button" class="btn small" id="getKey">Get a key ↗</button></div>
               <div class="hint">${keyStatus(info.keyVar)} &nbsp;Your key is kept only in this computer's .env file.</div></div>
             <div class="note">${{ anthropic: "Sign in at <b>platform.claude.com</b>, then go to <b>Billing</b>, add a few dollars of credit, and create a key under <b>API keys</b>. Everyday use usually costs a few dollars a month.", openai: "Sign in at <b>platform.openai.com</b>, add credit under <b>Billing</b>, then create a key under <b>API keys</b>. A ChatGPT Plus subscription is separate and doesn't include API use.", xai: "Sign in at <b>console.x.ai</b>, add credit, then create an API key." }[p]} <a href="/help#ai-providers">Step-by-step guide</a></div>` : `
             ${field("ollamaUrl", "Ollama address", text("ollamaUrl", S.keys.OLLAMA_URL?.value || "http://127.0.0.1:11434", "http://127.0.0.1:11434", "url"))}
-            <div class="note">1. Install Ollama from <b>ollama.com/download</b> <button type="button" class="btn small" id="getKey">Open ↗</button><br>2. Open a terminal and run <code>ollama pull llama3.1:8b</code> (about 5 GB).<br>3. Press <b>Test</b> below.</div>`;
+            <div class="note">1. Install Ollama from <b>ollama.com/download</b> <button type="button" class="btn small" id="getKey">Open ↗</button><br>2. Come back here: Dayspring shows the models that suit this computer, with a Pull button.</div>`;
           el.innerHTML = `${keyBox}
             <div class="field"><label for="model">Model</label><div class="row" style="gap:.5em;align-items:center"><select id="model" style="flex:1 1 14em"><option value="">Recommended (${esc(info.defaultModel)})</option></select><button type="button" class="btn small" id="loadModels">Refresh list</button></div>
               <div class="hint">You can leave this on Recommended.</div></div>
-            <div class="row" style="gap:.5em;align-items:center"><button type="button" class="btn" id="test">Test</button><span id="testOut" class="hint"></span></div>`;
+            <div class="row" style="gap:.5em;align-items:center"><button type="button" class="btn" id="test">Test</button><span id="testOut" class="hint"></span></div>
+            ${p === "anthropic" && window.DayspringAI ? window.DayspringAI.claudeHtml() : ""}`;
+          if (p === "anthropic") window.DayspringAI?.mountClaude();
           $("#getKey").onclick = () => openLink(info.keyUrl);
           const loadModels = async () => {
             try { const r = await api("/setup/ai/models?provider=" + p); const cm = same ? S.ai.model : ""; $("#model").innerHTML = `<option value="">Recommended (${esc(info.defaultModel)})</option>` + r.models.filter((x) => x !== info.defaultModel).map((x) => `<option ${x === cm ? "selected" : ""}>${esc(x)}</option>`).join(""); } catch { /* keep the default */ }
@@ -404,7 +411,7 @@
             try {
               const r = await post("/setup/ai/test", { provider: p, key: $("#key")?.value.trim() || undefined, model: $("#model").value || undefined, url: val("ollamaUrl") || undefined });
               $("#testOut").className = r.ok ? "status ok" : "status bad";
-              $("#testOut").textContent = r.ok ? `✓ It works (${(r.ms / 1000).toFixed(1)}s, ${r.model})` : "✗ " + friendlyAiError(r.error);
+              $("#testOut").textContent = r.ok ? `✓ It works (${(r.ms / 1000).toFixed(1)}s, ${r.model})${r.usedDefault && r.text ? " " + r.text : ""}` : "✗ " + (r.code ? r.error : friendlyAiError(r.error));
             } catch (e) { $("#testOut").className = "status bad"; $("#testOut").textContent = "✗ " + e.message; }
             $("#test").disabled = false;
           };
@@ -412,13 +419,23 @@
         $("[data-group=provider]").addEventListener("change", draw);
         draw();
         mountWithoutAi();
+        // the quick switch: one click changes the brain (and keeps each one's settings); the chooser below follows
+        if (!wizard) window.DayspringAI?.mountTop(async () => { try { S.ai = (await api("/setup/state")).ai; } catch { /* keep */ } $$(`[data-group="provider"] .choice`).forEach((c) => { c.classList.toggle("on", c.dataset.value === S.ai.provider); c.setAttribute("aria-checked", c.dataset.value === S.ai.provider); }); draw(); });
       },
-      save: async () => {
+      save: async (again) => {
         const p = chosen("provider");
         if (!p) return;
         msg($("#m"), p === "none" ? "" : "Testing and saving…");
-        const r = await post("/setup/ai", { provider: p, key: $("#key")?.value.trim() || undefined, model: $("#model")?.value || undefined, url: val("ollamaUrl") || undefined });
-        if (!r.ok) throw new Error("That didn't work: " + friendlyAiError(r.error));
+        const r = await post("/setup/ai", { provider: p, key: $("#key")?.value.trim() || undefined, model: $("#model")?.value || undefined, url: val("ollamaUrl") || undefined, saveAnyway: again === "anyway" || undefined });
+        // only busy or offline: the key may be fine, so it can be saved anyway (a rejected key never is)
+        if (!r.ok && r.temporary) {
+          setTimeout(() => {
+            $("#m")?.insertAdjacentHTML("beforeend", ` <button type="button" class="btn small" id="saveAnyway">Save anyway</button>`);
+            $("#saveAnyway").onclick = async () => { try { await SECTIONS.find((x) => x.id === "ai").save("anyway"); toast("Saved ✓"); } catch (e) { msg($("#m"), e.message, "bad"); } };
+          }, 0);
+          throw new Error("✗ " + r.error);
+        }
+        if (!r.ok) throw new Error("That didn't work: " + (r.code ? r.error : friendlyAiError(r.error)));
         S.ai = r.ai; S.keys = (await api("/setup/keys")).keys;
         msg($("#m"), p === "none" ? "Okay, no AI for now." : `✓ Connected: ${r.ai.label}`, "ok");
       } },
@@ -840,6 +857,13 @@
       mount: () => window.DayspringGifSettings?.mount($("#card"), { toast, onLeave }),
       save: async () => { if (window.DayspringGifSettings) await window.DayspringGifSettings.save(); } },
 
+    // ------------------------------------------------------------------------------------------------ maps (public/maps-settings.js)
+    // Free OpenStreetMap or Google (a key, Test, the safe-key guide), an optional OpenRouteService key, units, travel mode, spoken steps.
+    { id: "maps", icon: "🗺️", title: "Maps", settingsOnly: true, enabled: () => window.DayspringMapsSettings?.enabled !== false,   // (the "maps" release feature)
+      render: () => window.DayspringMapsSettings ? window.DayspringMapsSettings.html() : `<h1>Maps</h1><p class="lead">This page didn't load. Reload to try again.</p>`,
+      mount: () => window.DayspringMapsSettings?.mount($("#card"), { toast, onLeave, openLink }),
+      save: async () => { if (window.DayspringMapsSettings) await window.DayspringMapsSettings.save(); } },
+
     // ------------------------------------------------------------------------------------------------ lantern
     { id: "lantern", icon: "🏮", title: "Lantern", settingsOnly: true,
       render: () => `
@@ -1022,7 +1046,7 @@
     { id: "updates", icon: "⬆️", title: "Updates", settingsOnly: true,
       render: () => `
         <h1>Updates</h1>
-        <p class="lead">Dayspring checks for a new version when it starts and every few hours. Your schedule, settings and keys are backed up first and are never replaced. If a new version doesn't start, the old one comes back by itself.</p>
+        <p class="lead">Dayspring${S.owner?.assistantName && S.owner.assistantName !== "Dayspring" ? ` (the app your assistant, ${esc(S.owner.assistantName)}, runs in)` : ""} checks for a new version when it starts and every few hours. Your schedule, settings and keys are backed up first and are never replaced. If a new version doesn't start, the old one comes back by itself.</p>
         <div id="upBox" aria-live="polite"><div class="hint">Looking…</div></div>
         <h2>When a new version comes out</h2>
         ${choiceGroup("upWhen", [
@@ -1102,7 +1126,7 @@
     { id: "about", icon: "ℹ️", title: "About", settingsOnly: true,
       render: () => `
         <h1>About Dayspring</h1>
-        <p class="lead">Dayspring ${esc(S.version ?? "")}. It runs on this computer; your schedule, settings and keys stay here.</p>
+        <p class="lead">Dayspring ${esc(S.version ?? "")}${S.owner?.assistantName && S.owner.assistantName !== "Dayspring" ? `, with your assistant, ${esc(S.owner.assistantName)}` : ""}. It runs on this computer; your schedule, settings and keys stay here.</p>
         <h2>Running parts</h2>
         <p class="hint">Everything of Dayspring's that's running now. In Task Manager, look for <b>Dayspring</b> (with <b>Dayspring Server</b> under it) and helpers named Dayspring Speech, Dayspring Notifications, Dayspring Keep Awake and Dayspring Audio Capture. The Dayspring window itself shows under its browser (Edge, Chrome…), using its own Dayspring profile.</p>
         <div id="procBox" class="tablewrap"><div class="hint">Looking…</div></div>
@@ -1368,7 +1392,7 @@
   const GUIDE = { welcome: ["getting-started", "Getting started"], you: ["settings-reference/you", "About you"], assistant: ["settings-reference/your-assistant", "Your assistant"],
     location: ["settings-reference/where-you-are", "Where you are"], ai: ["ai-providers", "AI providers"], voice: ["voices", "Voices"], sound: ["audio-devices", "Speakers and microphones"],
     week: ["schedule/routine-and-fixed-blocks", "Your usual week"], features: ["settings-reference/features--apps", "Features & apps"], apps: ["connections", "Connecting apps"], email: ["email", "Email"],
-    permissions: ["permissions", "Permissions"], photos: ["photos-and-people", "Photos & people"], cameras: ["cameras", "Cameras"], devices: ["smart-devices", "Smart devices"], printers: ["bambu-printers", "3D printers"], gifs: ["gifs", "GIFs"], activity: ["permissions/the-activity-log", "The activity log"], remote: ["multiple-devices", "Dayspring on more than one computer"], screen: ["display-setup/fitting-dayspring-to-your-screen", "Fitting Dayspring to your screen"], sky: ["display-setup/the-living-sky", "The living sky"],
+    permissions: ["permissions", "Permissions"], photos: ["photos-and-people", "Photos & people"], cameras: ["cameras", "Cameras"], devices: ["smart-devices", "Smart devices"], printers: ["bambu-printers", "3D printers"], gifs: ["gifs", "GIFs"], maps: ["maps", "Maps and directions"], activity: ["permissions/the-activity-log", "The activity log"], remote: ["multiple-devices", "Dayspring on more than one computer"], screen: ["display-setup/fitting-dayspring-to-your-screen", "Fitting Dayspring to your screen"], sky: ["display-setup/the-living-sky", "The living sky"],
     done: ["tutorials", "Tutorials: how do I…?"] };
   const guideLink = (id) => { const g = GUIDE[id]; if (!g) return ""; const embed = params.get("embed");
     return `<p class="hint guide-link" style="margin-top:1.4em">❓ Need help? <a href="/help${embed ? "?embed=1" : ""}#${g[0]}"${embed ? "" : ' target="_blank" rel="noopener"'}>Open the guide for this step: ${esc(g[1])}</a> · <a href="/help${embed ? "?embed=1" : ""}#settings-reference"${embed ? "" : ' target="_blank" rel="noopener"'}>every setting explained</a></p>`; };

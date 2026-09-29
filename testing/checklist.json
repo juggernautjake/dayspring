@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-09-28",
+  "updated": "2026-09-29",
   "intro": "Go through each feature step by step, simple to complex. Stable features get a quick smoke pass; new (beta) and in-progress (dev) features get the full list. Home-control items follow the stages of the home-control plan. Mark each test Pass, Fail, Skip or Blocked on the Testing page (Settings → This app → Testing).",
   "items": [
     {
@@ -77,6 +77,174 @@
       "safety": ""
     },
     {
+      "id": "voice-20",
+      "feature": "voice",
+      "title": "Local AI (Ollama): set up and test",
+      "steps": [
+        "Open Settings → AI brain and choose Ollama.",
+        "Read what it says: \"isn't installed\" (with an Install link), \"installed but not running\" (with Start Ollama), or \"running, version …, models: …\".",
+        "If no model is listed, press Pull next to the recommended one (qwen2.5:3b on a computer without a graphics card) and watch the progress bar.",
+        "Pick it as the model for commands and press Test tool use."
+      ],
+      "expected": "The status matches reality, the pull finishes, and Test tool use shows three ✓ (the timer, the reminder at 23:00, tomorrow's schedule).",
+      "needs": [
+        "Ollama installed (ollama.com/download)"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "voice-21",
+      "feature": "voice",
+      "title": "Local AI: everyday commands",
+      "steps": [
+        "With Ollama as the AI brain, say \"remind me to drink water at 11pm\".",
+        "Say \"what's on my schedule tomorrow?\" and \"when is my dentist appointment?\".",
+        "Say \"play some Hillsong on Spotify\", then \"play a video about sharpening chisels\".",
+        "Say \"who won the Royals game last night?\" and \"tell me a fun fact about owls\"."
+      ],
+      "expected": "One reminder at 11 p.m. tonight (never hourly), the right schedule answers, music and a video start, and the answers are short and friendly, never mentioning tools, code or errors.",
+      "needs": [
+        "Ollama with a tool model"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "voice-22",
+      "feature": "voice",
+      "title": "Local AI: speed and fallback",
+      "steps": [
+        "Ask two or three questions, then open Settings → AI brain → Ollama → Speed.",
+        "Quit Ollama (right-click the llama icon → Quit) and ask a question.",
+        "Open Settings → AI brain again."
+      ],
+      "expected": "Speed shows the first word, first sentence and whole-answer times. With Ollama stopped, Dayspring answers with its built-in commands and says once that the local AI isn't running (or Claude answers, if that's the chosen fallback); Settings says \"installed but not running\" with a Start Ollama button.",
+      "needs": [
+        "Ollama"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "voice-23",
+      "feature": "voice",
+      "title": "Switch the AI brain and model",
+      "steps": [
+        "On the screen, open ⋯ → 🧠 AI brain and choose No AI; ask something.",
+        "Say \"use Ollama\", then \"what model are you using?\".",
+        "If a Claude key is saved: say \"use Opus\", then \"switch to Haiku\", then \"switch to Claude\".",
+        "Restart Dayspring and say \"which AI are you using?\"."
+      ],
+      "expected": "Each switch happens at once with a toast or a spoken yes; No AI answers from the built-in commands; the choice survives the restart; models that aren't available are named with what is.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "voice-24",
+      "feature": "voice",
+      "title": "A Claude key that works",
+      "steps": [
+        "In Settings → AI brain → Claude, paste a key with a space or quotes around it and press Test.",
+        "Paste a wrong key (change one letter) and press Test.",
+        "Press Check my Claude connection.",
+        "Say \"check my AI key\"."
+      ],
+      "expected": "The pasted key is cleaned and works; a wrong key says it isn't valid and how to make a new one (and isn't saved); the check lists key saved (last 4 only), reachable, credit, model and the time taken.",
+      "needs": [
+        "A Claude key"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "naming-01",
+      "feature": "naming",
+      "title": "Rename it by voice",
+      "steps": [
+        "Say \"Dayspring, your name is Nova\".",
+        "It reads it back (\"Okay, call me Nova from now on? Say yes.\"). Say \"yes\".",
+        "Say \"Nova, what's your name?\", then \"Nova, what were you called before?\"."
+      ],
+      "expected": "\"Great, I'm Nova now!\", then \"I'm Nova.\" and \"I started out as Dayspring.\" The panel's label says Nova and the window title is \"Nova · Dayspring\".",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "naming-02",
+      "feature": "naming",
+      "title": "A made-up name and how to say it",
+      "steps": [
+        "Settings → Your assistant: name it \"Computa\", How to say it \"compootah\", press ▶ Hear it, then Save.",
+        "Say \"Computa, what time is it?\" and \"Computer, what time is it?\".",
+        "Say \"my computer is slow\" (a normal sentence)."
+      ],
+      "expected": "The voice says \"compootah\". Both wake it and it answers; \"my computer is slow\" does not wake it.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "naming-03",
+      "feature": "naming",
+      "title": "Your own wake words (up to 3)",
+      "steps": [
+        "Say \"Computa, add Jarvis as a wake word\", then \"yes\".",
+        "Say \"Jarvis, what are your wake words?\".",
+        "In Settings → Your assistant, try adding a fourth one, and a wake word of just \"Hey\"."
+      ],
+      "expected": "It answers to both and lists them. A fourth wake word and \"Hey\" alone are refused with a reason.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "naming-04",
+      "feature": "naming",
+      "title": "Train my wake word",
+      "steps": [
+        "Say \"Computa, train my wake word\" (or Settings → Your assistant → Train on the Dayspring screen).",
+        "When the card says \"Now\", say the wake word on its own, five times, with a short pause in between."
+      ],
+      "expected": "The card shows how many times it understood you and which spellings it learned (and a tip if the word is short or an everyday word). Afterwards it wakes more reliably.",
+      "needs": [
+        "a microphone"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "naming-05",
+      "feature": "naming",
+      "title": "Lantern's name stays Lantern's",
+      "steps": [
+        "Say \"your name is Lantern\".",
+        "In Settings, try the wake word \"Lanterns\"."
+      ],
+      "expected": "Both are refused, and it explains that Lantern (the learning app) would answer too.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "naming-06",
+      "feature": "naming",
+      "title": "The new name everywhere",
+      "steps": [
+        "With Tune in on, have someone on the call say \"Computa, what's the capital of France?\".",
+        "If the Discord bot is set up: check its nickname in your server.",
+        "Open Meetings → Rehearse: read the hello in the meeting chat."
+      ],
+      "expected": "Tune in answers; the bot's nickname is the new name (or Settings → Discord says it needs the Change Nickname permission); the meeting hello says \"I'm Computa\".",
+      "needs": [
+        "Tune in, Discord or Meetings, as available"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "naming-07",
+      "feature": "naming",
+      "title": "Back to Dayspring",
+      "steps": [
+        "Say \"go back to Dayspring\", then \"yes\"."
+      ],
+      "expected": "\"Okay, I'm Dayspring again!\" The label and window title say Dayspring.",
+      "needs": [],
+      "safety": ""
+    },
+    {
       "id": "alarms-01",
       "feature": "alarms",
       "title": "An alarm rings and snoozes",
@@ -124,6 +292,21 @@
       ],
       "expected": "It lists it, then cancels it.",
       "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "reminders-03",
+      "feature": "reminders",
+      "title": "Remind me to drink water at a clock time",
+      "steps": [
+        "Say \"Dayspring, remind me to drink water at 11pm\".",
+        "Say \"what are my reminders?\".",
+        "Say \"remind me to drink water every hour\", then \"stop the water reminders\"."
+      ],
+      "expected": "The first is ONE reminder at 11 p.m. (tomorrow if 11 p.m. has passed), never an hourly one. The list shows it. The hourly one starts and stops when asked.",
+      "needs": [
+        "no AI"
+      ],
       "safety": ""
     },
     {
@@ -869,6 +1052,161 @@
         "Say \"play … from my computer\"."
       ],
       "expected": "It doesn't search your files (and the folder scan doesn't run). Back on, it works.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "fileviewer-01",
+      "feature": "fileviewer",
+      "title": "Find a file by name and open it",
+      "steps": [
+        "In Settings → Permissions, make sure Documents (or a test folder) is allowed with \"Can look\".",
+        "Say \"find my resume\" (or the name of a file you have).",
+        "Say \"open the PDF called\" and the name of a PDF you have."
+      ],
+      "expected": "One clear match opens straight away in the viewer on the screen, and Dayspring says \"Opening … from Documents\".",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "fileviewer-02",
+      "feature": "fileviewer",
+      "title": "Several matches, a number, typos and spoken numbers",
+      "steps": [
+        "Say \"find the\" and a word that's in the names of several files.",
+        "Say \"number 2\".",
+        "Say a picture's name with a typo or its number spoken (\"show me the picture named IMG five seven eight two\")."
+      ],
+      "expected": "A numbered list with small pictures, folders, sizes, dates and types; \"number 2\" opens the second; the misspelled or spoken name still finds the right file.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "fileviewer-03",
+      "feature": "fileviewer",
+      "title": "Dates, folders and kinds",
+      "steps": [
+        "Say \"open last week's budget spreadsheet\" (or a spreadsheet you changed in the last two weeks).",
+        "Say \"find photos from\" and a year you have photos from.",
+        "Say \"find the\" and a file name \"in Downloads\"."
+      ],
+      "expected": "Only files of that kind, from that time or in that folder are found.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "fileviewer-04",
+      "feature": "fileviewer",
+      "title": "Nothing found, and what it says",
+      "steps": [
+        "Say \"find the pdf called quantum banana\".",
+        "Say the name of a file that's in a folder you haven't allowed."
+      ],
+      "expected": "It says it couldn't find it, suggests close names if there are any, lists the folders it looked in, and says how to allow more in Settings → Permissions. Files in folders you didn't allow never appear.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "fileviewer-05",
+      "feature": "fileviewer",
+      "title": "Pictures in the viewer",
+      "steps": [
+        "Open a photo.",
+        "Zoom with the mouse wheel, + and −, Fit and 100%; drag it around; rotate and flip it.",
+        "Press ▶ to go to the next picture in the folder, then start the slideshow.",
+        "Press ℹ."
+      ],
+      "expected": "Every control works; the info panel shows the date taken, the camera and the size. HEIC photos show too (Windows needs the HEIF extension).",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "fileviewer-06",
+      "feature": "fileviewer",
+      "title": "Video and audio in the viewer",
+      "steps": [
+        "Open a video (one with a .srt file of the same name next to it, if you have one).",
+        "Seek, skip 10 seconds, change the speed and volume, turn captions on, try picture-in-picture.",
+        "Open a WMV or AVI if you have one."
+      ],
+      "expected": "It plays on the screen with all the controls; captions show; a WMV/AVI is converted as it plays.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "fileviewer-07",
+      "feature": "fileviewer",
+      "title": "PDFs: pages, search and read aloud",
+      "steps": [
+        "Open a PDF with several pages.",
+        "Use the page thumbnails, ◀ ▶, zoom, Fit width and Fit page, rotate.",
+        "Type a word in the search box and press Enter.",
+        "Say \"read this page\", then \"stop reading\"."
+      ],
+      "expected": "Pages draw sharply; search jumps to the matches and marks them; Dayspring reads the page aloud in its own voice and stops when asked.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "fileviewer-08",
+      "feature": "fileviewer",
+      "title": "Text, code, Markdown, CSV, Word, Excel, PowerPoint and zip",
+      "steps": [
+        "Open a .txt or code file, a Markdown file, a CSV, a Word document, an Excel workbook, a PowerPoint and a .zip.",
+        "In the CSV, click a column heading twice.",
+        "In the zip, click a small file inside."
+      ],
+      "expected": "Code is coloured; Markdown is formatted; the CSV sorts both ways (numbers as numbers); Word shows its headings; Excel shows each sheet as a tab; PowerPoint shows each slide's text and pictures; a small file inside the zip opens in the viewer.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "fileviewer-09",
+      "feature": "fileviewer",
+      "title": "Voice and the remote while viewing",
+      "steps": [
+        "With a picture open, say \"zoom in\", \"rotate\", \"next\", \"start slideshow\", \"close\".",
+        "With a PDF open, say \"page 3\" and \"search for\" a word in it.",
+        "Use only the arrow keys, Enter, + −, F and Esc."
+      ],
+      "expected": "Each command works at once, without the AI; the keyboard alone can do everything.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "fileviewer-10",
+      "feature": "fileviewer",
+      "title": "Delete, copy and open in the default app follow the permissions",
+      "steps": [
+        "Copy a throwaway file into an allowed folder and open it in the viewer.",
+        "⋯ → Delete… with \"Can delete files\" off, then on.",
+        "⋯ → Save a copy; ⋯ → Open in the default app with Programs off, then on."
+      ],
+      "expected": "Delete is refused while it's off; when on, it asks \"Are you sure?\" and the file goes to the Recycle Bin. The copy appears next to it. Opening in the default app needs the Programs permission (and asks if it's set to ask). Everything is in the activity log.",
+      "needs": [],
+      "safety": "Use a throwaway copy for the delete test. Deleted files go to the Recycle Bin and can be restored from there."
+    },
+    {
+      "id": "fileviewer-11",
+      "feature": "fileviewer",
+      "title": "The AI finds and opens files",
+      "steps": [
+        "With Claude or Ollama as the AI brain, say \"can you find my lease and put it on the screen?\" (or a file you have).",
+        "Then ask \"summarize it\"."
+      ],
+      "expected": "The AI finds it with its file tools and opens it in the viewer; the file's words go to the AI only for the summary you asked for. With No AI, nothing goes anywhere.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "fileviewer-12",
+      "feature": "fileviewer",
+      "title": "Off switch",
+      "steps": [
+        "Switch off Finding files and the file viewer in Settings → Features and restart Dayspring.",
+        "Say \"open the PDF called\" and a file's name."
+      ],
+      "expected": "The viewer doesn't open and the name index isn't built. Back on, it works.",
       "needs": [],
       "safety": ""
     },
@@ -1788,6 +2126,137 @@
         "On development, switch off GIFs in Settings → Features and reload."
       ],
       "expected": "No button, no picker, no Settings → GIFs; \"show me a GIF\" isn't handled as a GIF.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "maps-01",
+      "feature": "maps",
+      "title": "Maps appears only where it should",
+      "steps": [
+        "On production, look for 🗺 Maps by the clock and Settings → Maps; on development, look again."
+      ],
+      "expected": "Production: neither. Development: both.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "maps-02",
+      "feature": "maps",
+      "title": "Search and near home with no key (free maps)",
+      "steps": [
+        "Settings → Where you are: make sure home is set.",
+        "Settings → Maps: Maps = Automatic, no Google key saved. The status says OpenStreetMap is in use.",
+        "Open 🗺 Maps. Type the name of your town slowly: suggestions appear after you pause. Pick one.",
+        "Say \"find coffee near me\". Then \"where's the nearest gas station?\"."
+      ],
+      "expected": "The town shows on the map. Coffee places near home are listed and numbered (nearest first) with their distance, and pins match the numbers. The nearest gas station is said with its distance. The © OpenStreetMap credit is on the map.",
+      "needs": [
+        "the internet"
+      ],
+      "safety": "",
+      "compat": [
+        "osm-nominatim",
+        "photon-komoot",
+        "osm-tiles"
+      ]
+    },
+    {
+      "id": "maps-03",
+      "feature": "maps",
+      "title": "Directions, modes, alternatives and avoiding roads",
+      "steps": [
+        "Say \"directions to\" a place you know about 10 minutes away.",
+        "Click another grey route on the map, then Walk, then Drive again.",
+        "Tick Avoid highways.",
+        "Type another start in From and press Go."
+      ],
+      "expected": "Distance, time and arrival time are said; the route is drawn with any alternatives in grey; the list shows the steps. Switching routes and modes redraws it. Avoid highways changes the route (or says it couldn't). The typed start is used.",
+      "needs": [
+        "the internet",
+        "home set in Where you are"
+      ],
+      "safety": "",
+      "compat": [
+        "osrm-fossgis"
+      ]
+    },
+    {
+      "id": "maps-04",
+      "feature": "maps",
+      "title": "Step-by-step spoken directions",
+      "steps": [
+        "With a route showing, say \"read the directions\".",
+        "Say \"next step\" three times, \"previous step\", then \"repeat that\".",
+        "Say \"how far is it?\" and \"what's my ETA?\".",
+        "Say \"demo the directions\" and start talking while it runs; then \"stop the directions\"."
+      ],
+      "expected": "Each step is said naturally (\"In half a mile, turn left onto Main Street.\"), the highlighted step follows, previous and repeat work. Distance and ETA are answered. In the demo a step waits while you talk (the floor), and Stop ends it.",
+      "needs": [
+        "the internet"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "maps-05",
+      "feature": "maps",
+      "title": "A Google Maps key: guide, Test, automatic switch",
+      "steps": [
+        "Follow Settings → Maps → How to make a Google Maps key safely: enable the three APIs, restrict the key to them, set daily quotas and a budget alert.",
+        "Paste the key, Save key, then Test.",
+        "Open 🗺 Maps and search for a restaurant; ask for transit directions somewhere.",
+        "Set Maps to \"Always the free OpenStreetMap maps\" and search again."
+      ],
+      "expected": "Test says search and directions work (or names the API to turn on). With the key, the window says Google Maps, the map is Google's, results have ratings/hours only if that extra is on, and Transit works. Forced to OpenStreetMap, the free maps are used again. The key is never shown back.",
+      "needs": [
+        "a Google Cloud project with billing",
+        "the internet"
+      ],
+      "safety": "Google charges past the free monthly amounts: set the daily quotas and a budget alert before testing.",
+      "compat": [
+        "google-maps-platform"
+      ]
+    },
+    {
+      "id": "maps-06",
+      "feature": "maps",
+      "title": "Send to phone and the QR code",
+      "steps": [
+        "With a route showing, press 📱 Send to phone (or say \"send the directions to my phone\").",
+        "Scan the QR code with your phone's camera and open the link."
+      ],
+      "expected": "If Dayspring is signed in to your other devices, the link arrives there; otherwise it says so. The QR code opens the same trip in Google Maps on the phone.",
+      "needs": [
+        "a phone with a camera"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "maps-07",
+      "feature": "maps",
+      "title": "Schedule: Directions and \"leave by\"",
+      "steps": [
+        "Add a schedule item for later today with a line in its notes: Where: (a real address nearby).",
+        "Open it in the Schedule app (📅).",
+        "Press ⏰ Remind me, then 🗺 Directions."
+      ],
+      "expected": "It says \"You need to leave by … to make your …\" with the trip time from home. The reminder is set for that time. Directions closes the schedule and shows the route in the Maps window.",
+      "needs": [
+        "the internet",
+        "home set in Where you are"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "maps-08",
+      "feature": "maps",
+      "title": "The window fits the screen and closes",
+      "steps": [
+        "With Settings → Screen margins set, open 🗺 Maps; drag it, resize it from the corner, double-click the title bar.",
+        "Open Dayspring mini and the Maps window there.",
+        "Press Esc; say \"close the map\"."
+      ],
+      "expected": "It always stays inside the margins with every button reachable; mini fills the window with the map on top; Esc and \"close the map\" close it.",
       "needs": [],
       "safety": ""
     },
@@ -3327,6 +3796,246 @@
       ],
       "expected": "The default theme, the orb, and expression mode off, straight away on every screen.",
       "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "conversation-01",
+      "feature": "conversation",
+      "title": "Ending the conversation closes the listening window",
+      "steps": [
+        "Turn the AI off in Settings → AI brain (or unplug the internet) so Dayspring works without AI.",
+        "Say \"Dayspring, what time is it?\", then, while it's still listening, say \"thanks\".",
+        "Say \"Dayspring, set a timer for 2 minutes, thanks\"."
+      ],
+      "expected": "\"Thanks\" gets a short \"You're welcome!\" and the listening window closes right away (no waiting). The timer starts with no \"What's it for?\" question, and the window closes. Cancel the timer afterwards.",
+      "needs": [
+        "no AI"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "conversation-02",
+      "feature": "conversation",
+      "title": "Endings that aren't endings",
+      "steps": [
+        "Say \"Dayspring, thanks for the reminder, now set a timer for 1 minute\".",
+        "Say \"Dayspring, never mind the timer, cancel it\".",
+        "Say \"Dayspring, remind me to say thank you at 5 pm\"."
+      ],
+      "expected": "The timer is set (not treated as a goodbye), then cancelled; the reminder is \"say thank you\" at 5 p.m.",
+      "needs": [
+        "no AI"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "commands-03",
+      "feature": "commands",
+      "title": "Any setting by voice, and \"undo that\"",
+      "steps": [
+        "Say \"set the volume to 40\", \"make the text bigger\", \"use 24-hour time\", \"hide the clock\", \"one column\".",
+        "Check the screen after each one.",
+        "Say \"undo that\" after the last one, then \"show the clock\", \"use 12-hour time\", \"reset the text size\", \"automatic layout\", and put the volume back."
+      ],
+      "expected": "Each change happens at once and Dayspring says what changed (and what it was). \"Undo that\" puts the last change back. The clock shows 24-hour time until you switch back.",
+      "needs": [
+        "no AI"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "commands-04",
+      "feature": "commands",
+      "title": "Asking about a setting",
+      "steps": [
+        "Say \"what's my wake word set to?\", \"what's the volume?\", \"is night mode on?\"."
+      ],
+      "expected": "Each gets a plain answer with the current value.",
+      "needs": [
+        "no AI"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "commands-05",
+      "feature": "commands",
+      "title": "Security settings wait for a yes",
+      "steps": [
+        "Say \"turn off web search\", then \"no\".",
+        "Say \"allow deleting files\", then \"no\".",
+        "Say \"give yourself access to all my files\"."
+      ],
+      "expected": "Nothing changes without your yes: the first two ask \"Say yes to change it\" and \"no\" leaves them alone; the last one says it can only be changed in Settings.",
+      "needs": [
+        "no AI"
+      ],
+      "safety": "Answer no: this test should not change your permissions."
+    },
+    {
+      "id": "commands-06",
+      "feature": "commands",
+      "title": "The sky and the background by voice",
+      "steps": [
+        "Say \"make it rain for 1 minute\", \"make it night\", \"change the scenery to mountains\", \"turn off the stars\", \"pause the animation\".",
+        "Wait a minute, then say \"show the real sky again\" and \"resume the animation\"."
+      ],
+      "expected": "Each change shows on the screen right away; the rain stops by itself after a minute; the mountains become the closest scene (hills) and Dayspring says so; the real sky comes back at the end.",
+      "needs": [
+        "no AI"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "commands-07",
+      "feature": "commands",
+      "title": "The screen by voice",
+      "steps": [
+        "Say \"compact mode\", then \"expand\".",
+        "Say \"dayspring panel on the left\", then \"automatic layout\".",
+        "With two screens, say \"move to the other screen\", then \"move to the main screen\"."
+      ],
+      "expected": "The window shrinks and grows back; the panel moves left and back; the screen moves over and back.",
+      "needs": [
+        "no AI"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "commands-08",
+      "feature": "commands",
+      "title": "Scheduling with repeats",
+      "steps": [
+        "Say \"add test gym every Monday Wednesday Friday at 6am for an hour\".",
+        "Open the Schedule on the week view.",
+        "Say \"cancel Friday's test gym\", then \"undo that\".",
+        "Say \"cancel all test gym\"."
+      ],
+      "expected": "Test gym shows on Monday, Wednesday and Friday at 6–7 a.m.; Friday's disappears and comes back with undo; \"cancel all\" ends the series after the next one.",
+      "needs": [
+        "no AI"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "commands-09",
+      "feature": "commands",
+      "title": "Moving and repeating the last thing",
+      "steps": [
+        "Say \"schedule a test appointment tomorrow at 3pm\", then \"no thanks\" to the reminder question.",
+        "Say \"move it to 4\", then \"make it recurring\" and answer \"every other week\".",
+        "Say \"stop repeating\", then remove it."
+      ],
+      "expected": "It moves to 4 p.m.; Dayspring asks how often (one question) and then it repeats every two weeks; \"stop repeating\" keeps just the next one.",
+      "needs": [
+        "no AI"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "commands-10",
+      "feature": "commands",
+      "title": "Timers to a clock time and every-few-minutes reminders",
+      "steps": [
+        "Say \"set a timer for\" a time about 5 minutes from now (like \"set a timer for 3:45\").",
+        "Say \"every 30 minutes remind me to stand up\", then \"stop reminding me to stand up\".",
+        "Say \"remind me to drink water at 11pm\"."
+      ],
+      "expected": "The timer counts down to that time; the stand-up reminder is set and then stopped; the water reminder is once at 11 p.m. (\"Just once\"), never every hour.",
+      "needs": [
+        "no AI"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "commands-11",
+      "feature": "commands",
+      "title": "Alarms with days, a label and a gentle wake",
+      "steps": [
+        "Say \"set an alarm for weekdays at 6:30 called test with the bells and a gentle wake\".",
+        "Say \"what alarms do I have?\".",
+        "Say \"skip tomorrow's alarm\", then \"turn off my weekday alarms\", then \"delete the 6:30 alarm\"."
+      ],
+      "expected": "The alarm is listed as 6:30 a.m. on weekdays with its label, sound and gentle wake; skipping, switching off and deleting each say what they did.",
+      "needs": [
+        "no AI"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "commands-12",
+      "feature": "commands",
+      "title": "Your name, where you live and what you like",
+      "steps": [
+        "Say \"call me\" and a nickname, then \"what's my name?\".",
+        "Say \"I live in\" your town and state (for example \"I live in Springfield, Illinois\").",
+        "Say \"I like kayaking\", then \"what do you know about me?\", then \"forget that I like kayaking\"."
+      ],
+      "expected": "The nickname is used; the town is found and read back (\"…, got it. Weather and sunrise will use that.\"); the interest is saved, read back and then forgotten. Nothing leaves this computer except the town lookup.",
+      "needs": [
+        "no AI",
+        "internet (for the town lookup)"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "commands-13",
+      "feature": "commands",
+      "title": "Two requests at once",
+      "steps": [
+        "Say \"set the volume to 60 and make it snow\".",
+        "Say \"show the real sky again\" afterwards."
+      ],
+      "expected": "Both happen, and both are answered.",
+      "needs": [
+        "no AI"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "conversation-03",
+      "feature": "conversation",
+      "title": "\"Stop\" cuts Dayspring off, and it keeps listening",
+      "steps": [
+        "Ask something with a long answer, like \"Dayspring, tell me a fun fact\" or \"what's on my schedule this week\".",
+        "While it's still talking, say \"stop\" (no wake word).",
+        "Right away, say \"Dayspring, what time is it?\".",
+        "Try \"that's enough\" and \"shh\" the same way."
+      ],
+      "expected": "It stops mid-sentence within a moment, says nothing about stopping, and the very next \"Dayspring, …\" is answered normally. The listening light goes back to Ready, never to Stopped.",
+      "needs": [
+        "no AI"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "conversation-04",
+      "feature": "conversation",
+      "title": "\"Stop\" and the music",
+      "steps": [
+        "Play some music.",
+        "Ask a question and say \"stop\" while Dayspring answers.",
+        "Then say \"Dayspring, stop\" while nothing is being said."
+      ],
+      "expected": "The first \"stop\" only stops Dayspring's voice (the music keeps playing); the second stops the music.",
+      "needs": [
+        "no AI",
+        "music"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "conversation-05",
+      "feature": "conversation",
+      "title": "\"No thanks\" to a question, in the production version",
+      "steps": [
+        "On a production install (Settings → This app shows Production), with no AI, say \"Dayspring, add dentist tomorrow at 3pm\".",
+        "When it asks a follow-up question (\"Want a reminder before it?\"), say \"no thanks, that's all\".",
+        "Say \"Dayspring, what time is it?\"."
+      ],
+      "expected": "The dentist appointment is added, the question is dropped (no reminder is made), the listening window closes at once, and the next \"Dayspring, …\" is answered normally.",
+      "needs": [
+        "no AI"
+      ],
       "safety": ""
     }
   ]

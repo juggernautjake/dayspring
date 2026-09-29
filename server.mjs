@@ -40,6 +40,7 @@ import { offerRestart } from "./lib/voiceskills.mjs";
 import * as owner from "./lib/owner.mjs";
 import * as firstrun from "./lib/firstrun.mjs";
 import * as setupRoutes from "./lib/setup-routes.mjs";
+import * as ollamaRoutes from "./lib/ollama/routes.mjs";   // Settings → AI brain → Ollama, and the quick AI switch
 import * as updateRoutes from "./lib/update-routes.mjs";
 import * as helpRoutes from "./lib/help-routes.mjs";
 import * as updater from "./lib/updater.mjs";
@@ -82,6 +83,9 @@ import * as lanternRoutes from "./lib/lantern-routes.mjs";
 import * as intentRoutes from "./lib/intent-routes.mjs";
 import * as xpRoutes from "./lib/xp-routes.mjs";   // XP: earned by checking in on real tasks (lib/xp)
 import * as personaRoutes from "./lib/persona-routes.mjs";   // Settings → Personality (lib/persona)
+import * as namingRoutes from "./lib/naming-routes.mjs";   // Settings → Your assistant: its name, how it's said, the wake words, training (lib/naming.mjs)
+import * as wakeword from "./lib/wakeword.mjs";   // the wake words, heard the same way everywhere (public/wakeword.js)
+import * as namingCmd from "./lib/commands/naming.mjs";   // "your name is Nova", "answer to Jarvis": before the other quick commands
 import * as timers from "./lib/timers.mjs";
 import * as recipes from "./lib/recipes.mjs";
 import * as intents from "./lib/intents/index.mjs";
@@ -100,6 +104,7 @@ import * as mbRoutes from "./lib/mediabrowser/routes.mjs";   // the Music & Vide
 import * as mbrowser from "./lib/mediabrowser/index.mjs";
 import * as mediasignin from "./lib/mediasignin.mjs";
 import * as medialibRoutes from "./lib/medialib/routes.mjs";   // the owner's own music and videos, and Google Drive streaming (lib/medialib)
+import * as viewerRoutes from "./lib/finder/routes.mjs";   // finding files by name, and the file viewer (lib/finder, public/viewer.js)
 import * as peopleComms from "./lib/people/comms.mjs";
 import * as mailRoutes from "./lib/mail/routes.mjs";   // email: every mailbox, the Mail window, the editor, Settings → Email (lib/mail)
 import * as features from "./lib/features.mjs";   // release channels and feature stages: features.on(id) gates routes, pages, jobs
@@ -110,6 +115,8 @@ import * as remote from "./lib/remote/index.mjs";
 import * as smarthomeRoutes from "./lib/devices/routes.mjs";   // smart plugs, strips, lights, scenes and schedules: /api/smarthome (lib/devices; feature "devices")
 import * as printerRoutes from "./lib/printers/routes.mjs";   // 3D printers (Bambu LAN, Ender over USB, OctoPrint, Klipper): /api/printers (lib/printers; feature "printers")
 import * as looksRoutes from "./lib/looks/routes.mjs";   // Settings → Look & feel: colour themes, avatars, expression mode (lib/looks; features "themes", "avatar")
+import * as mapsRoutes from "./lib/maps/routes.mjs";   // Maps: the map panel, search, directions and spoken steps: /api/maps (lib/maps; feature "maps")
+import * as maps from "./lib/maps/index.mjs";
 // A fresh install: create the data folder and any missing data files (empty, nothing personal) before anything runs.
 firstrun.ensure();
 // What each newly connected page is told first: who has the microphone and the listening state (so a page opened while
@@ -118,7 +125,9 @@ addHello("micOwner", () => lantern.micOwner());
 addHello("listenState", () => settings.get().listenState ?? "active");
 addHello("notices", () => firstrun.notices());
 // The Settings/setup wizard, updates and the in-app guide each answer their own /api routes.
-const ROUTES = [featureRoutes, setupRoutes, updateRoutes, helpRoutes, discordRoutes, callRoutes, callsRoutes, meetRoutes, studyRoutes, playerRoutes, ambientRoutes, windowRoutes, documentRoutes, connectorRoutes, fsRoutes, toolingRoutes, welcomeRoutes, discoverRoutes, calendarRoutes, lanternRoutes, aboutRoutes, intentRoutes, personaRoutes, xpRoutes, imageRoutes, activityRoutes, moneyRoutes, visionRoutes, socialRoutes, floorRoutes, devRoutes, mbRoutes, videoRoutes, medialibRoutes, gifRoutes, mailRoutes, cameraRoutes, remoteRoutes, smarthomeRoutes, printerRoutes, looksRoutes];
+const ROUTES = [featureRoutes, ollamaRoutes, setupRoutes, updateRoutes, helpRoutes, discordRoutes, callRoutes, callsRoutes, meetRoutes, studyRoutes, playerRoutes, ambientRoutes, windowRoutes, documentRoutes, connectorRoutes, fsRoutes, toolingRoutes, welcomeRoutes, discoverRoutes, calendarRoutes, lanternRoutes, aboutRoutes, intentRoutes, personaRoutes, xpRoutes, imageRoutes, activityRoutes, moneyRoutes, visionRoutes, socialRoutes, floorRoutes, devRoutes, mbRoutes, videoRoutes, medialibRoutes, viewerRoutes, gifRoutes, mailRoutes, cameraRoutes, remoteRoutes, smarthomeRoutes, printerRoutes, looksRoutes, mapsRoutes, namingRoutes];
+// Maps: the panel's "maps" event, spoken steps through the floor, home from Settings → Where you are (no GPS here), his phone
+maps.start({ broadcast: (t, d) => announcer.broadcast(t, d), announce: (x) => announcer.announce(x), home: () => owner.get().location, notify: (msg) => remote.notify("all", msg) });
 imageRoutes.setDeps({ openUrl: async (u) => (await import("./lib/browsers.mjs")).openUrl(u, owner.displayBrowser()) });
 gifRoutes.setDeps({ openUrl: async (u) => (await import("./lib/browsers.mjs")).openUrl(u, owner.displayBrowser()) });
 // 🎧 Tune in: what it hears addressed to Dayspring goes through the same assistant
@@ -189,7 +198,7 @@ const PUBLIC = join(here, "public");
 const PORT = Number(process.env.PORT) || 4747;
 const TUNNEL = process.argv.includes("--tunnel");
 
-const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".mjs": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png", ".woff2": "font/woff2", ".txt": "text/plain; charset=utf-8", ".ico": "image/x-icon" };
+const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".mjs": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png", ".woff2": "font/woff2", ".txt": "text/plain; charset=utf-8", ".ico": "image/x-icon", ".wasm": "application/wasm" };
 
 // In-memory conversations, one per surface (desk panel, Dayspring screen). Restarting starts fresh; the schedule persists.
 const histories = { desk: [], tv: [] };
@@ -374,8 +383,8 @@ async function api(req, res, url) {
     const r = stt.ready();
     if (!r.ok) return send(res, 503, { needsInstall: true, why: r.why, installing: sttJob.running });
     const wake = q.get("purpose") !== "request";
-    const name = owner.assistant();
-    try { const t = await stt.transcribe(pcm, { speed: wake ? "fast" : "accurate", prompt: wake ? `Hey ${name}, what's the weather? ${name}, tell us a joke.` : "" }); return send(res, 200, { text: t.text, ms: t.ms }); }
+    // (the wake words written into a sentence: whisper then spells a made-up word like "Computa" the owner's way)
+    try { const t = await stt.transcribe(pcm, { speed: wake ? "fast" : "accurate", prompt: wake ? wakeword.hint() : "" }); return send(res, 200, { text: t.text, ms: t.ms }); }
     catch (e) { return send(res, e.status ?? 500, { error: e.message }); }
   }
   if (m === "GET" && p === "/stt/status") return send(res, 200, { ...stt.ready(), installing: sttJob.running, error: sttJob.error, engine: settings.get().speechEngine ?? "auto" });
@@ -423,13 +432,14 @@ async function api(req, res, url) {
   }
   if (m === "POST" && p === "/voice") { const { id } = await readJSON(req); return send(res, 200, voice.setVoice(id)); }
   if (m === "GET" && p === "/tv/config") {
-    // wake words from Settings ("dayspring" → also "hey dayspring"); DAYSPRING_WAKE_PHRASES in .env still overrides
-    const words = owner.get().wakeWords?.length ? owner.get().wakeWords : [owner.assistant().toLowerCase()];
-    const phrases = (process.env.DAYSPRING_WAKE_PHRASES ? process.env.DAYSPRING_WAKE_PHRASES.split(",") : [...words, ...words.map((w) => "hey " + w)]).map((x) => x.trim().toLowerCase()).filter(Boolean);
+    // wake words from Settings → Your assistant (DAYSPRING_WAKE_PHRASES in an older .env only adds to them)
+    // (wake: everything public/wakeword.js needs to hear them the way the server does: lib/wakeword.mjs)
+    const wake = wakeword.clientConfig();
+    const phrases = wake.words.map((w) => w.text);
     // the owner's device type hints (data/devices.json "typeHints"), so the screen sorts their speakers and headsets right
     let typeHints = {};
     try { typeHints = JSON.parse(readSync(join(here, "data", "devices.json"), "utf8")).typeHints ?? {}; } catch { /* none */ }
-    return send(res, 200, { wakePhrases: phrases, voice: voice.voiceReady(), hasKey: hasKey(), model: modelName(), notes: files.NOTES(), fileRoot: files.ROOT(), setupDone: owner.setupDone(), ownerName: owner.get().name, assistantName: owner.assistant(), typeHints, features: owner.get().features });
+    return send(res, 200, { wakePhrases: phrases, wake, voice: voice.voiceReady(), hasKey: hasKey(), model: modelName(), notes: files.NOTES(), fileRoot: files.ROOT(), setupDone: owner.setupDone(), ownerName: owner.get().name, assistantName: owner.assistant(), typeHints, features: owner.get().features });
   }
   if (m === "GET" && p === "/learning") return send(res, 200, learning.progress());
   if (m === "GET" && p === "/history") {
@@ -715,6 +725,10 @@ async function api(req, res, url) {
     if (!message?.trim()) return send(res, 400, { error: "message is required" });
     const key = surface === "tv" ? "tv" : "desk";
     transcripts.log({ role: "user", text: message.trim(), surface: key });
+    // its name and wake words first ("your name is Nova", "what were you called before?", "answer to Jarvis", and the yes to
+    // its read-back): "called…" and "call you…" aren't files or phone calls here (lib/commands/naming.mjs)
+    { const nm = await namingCmd.handle(message.trim(), { surface: key }).catch(() => null);
+      if (nm) { floor.owner("message", key); floor.replied(key, nm); transcripts.log({ role: "dayspring", text: nm.reply, surface: key }); return send(res, 200, { ...nm, changes: nm.changes ?? [], usage: null }); } }
     // "tune in" / "tune out" / "answer into the call": handled right away, no AI needed
     // while a video is showing, "full screen" and "exit full screen" are the video's (lib/video/controls.mjs)
     { const vw = video.pictureWord(message.trim()) ? await video.command(message.trim(), { surface: key }).catch(() => null) : null;
@@ -722,6 +736,9 @@ async function api(req, res, url) {
     // "minimize", "hide yourself", "show yourself", "close the screen": the display window, right away
     const wc = await windowRoutes.command(message.trim()).catch(() => null);
     if (wc) { transcripts.log({ role: "dayspring", text: wc, surface: key }); return send(res, 200, { reply: wc, changes: [], usage: null }); }
+    // "turn off the AI", "switch to Claude", "use Ollama", "which AI are you using?": right away, no AI needed (lib/ai-switch.mjs)
+    { const ai = await import("./lib/ai-switch.mjs").then((a) => a.command(message.trim())).catch(() => null);
+      if (ai) { floor.owner("message", key); transcripts.log({ role: "dayspring", text: ai, surface: key }); announcer.broadcast("aiswitch", {}); return send(res, 200, { reply: ai, changes: ["settings"], usage: null, intent: "ai.switch" }); } }
     // "join my meeting", a pasted Meet link, "bring the meeting back", "let Rich ask", "mute", "leave the meeting"…
     const mc = await meetRoutes.command(message.trim()).catch((e) => { console.log(`meet: ${e.message}`); return null; });
     if (mc) { transcripts.log({ role: "dayspring", text: mc, surface: key }); return send(res, 200, { reply: mc, changes: [], usage: null }); }
@@ -767,6 +784,9 @@ async function api(req, res, url) {
     // his own music and videos, and Google Drive: "play … from my computer", "shuffle my music folder", "number 2" (lib/medialib)
     const ml = !(features.on("medialib") || features.on("drive")) ? null : await (await import("./lib/medialib/skills.mjs")).command(message.trim(), { surface: key }).catch((e) => { console.log(`media library: ${e.message}`); return null; });
     if (ml) { transcripts.log({ role: "dayspring", text: ml.reply, surface: key }); return send(res, 200, { reply: ml.reply, changes: ml.played ? ["media"] : [], usage: null, intent: "medialib", ...(ml.listen ? { listen: true } : {}) }); }
+    // his files by name, and the viewer: "find my resume", "open the PDF called lease agreement", "number 2", "zoom in" (lib/finder)
+    const fv = !features.on("fileviewer") ? null : await (await import("./lib/finder/skills.mjs")).command(message.trim(), { surface: key }).catch((e) => { console.log(`file finder: ${e.message}`); return null; });
+    if (fv) { transcripts.log({ role: "dayspring", text: fv.reply, surface: key }); return send(res, 200, { reply: fv.reply, changes: [], usage: null, intent: "fileviewer", ...(fv.listen ? { listen: true } : {}) }); }
     const t0 = Date.now();
     lastChatAt = Date.now();
     const before = chatLocks[key]; let unlock; chatLocks[key] = new Promise((r) => { unlock = r; });
@@ -774,7 +794,9 @@ async function api(req, res, url) {
     try {
       await before.catch(() => {});
       devlog.log("sent", { surface: key, text: message.trim(), historyLen: histories[key].length });
-      try { out = await chat(histories[key], message.trim(), key === "tv" ? { surface: "tv", photo: photoOnScreen, typed: Boolean(typed) } : { surface: "desk", typed: true }); }
+      // "Pick for me" (off unless chosen): a quick command goes to the fast model, for this one request (lib/llm.mjs)
+      const llmMod = await import("./lib/llm.mjs");
+      try { out = await llmMod.withModel(llmMod.autoModel(message.trim()), () => chat(histories[key], message.trim(), key === "tv" ? { surface: "tv", photo: photoOnScreen, typed: Boolean(typed) } : { surface: "desk", typed: true })); }
       catch (err) { devlog.log("error", { where: "chat", surface: key, text: message.trim(), status: err?.status ?? null, error: String(err?.message ?? err).slice(0, 500), ms: Date.now() - t0 }); throw err; }
       histories[key] = out.history;
     } finally { unlock(); }
@@ -791,7 +813,9 @@ async function api(req, res, url) {
     if (out.restart) setTimeout(restartSelf, 3500);      // after "Restarting, I'll be right back" has been said
     return send(res, 200, { reply: out.reply, changes: out.changes, usage: out.usage, conversation: Boolean(key === "tv" && (session.current() || out.open)), quiet: Boolean(out.quiet), speed: out.speed ?? null, photo: out.photo ?? null, panel: out.panel ?? null,
       // what the no-AI understanding adds: a list to pick from, a help link, something for the screen to do
-      ...Object.fromEntries(["suggest", "link", "clientRun", "clientShow", "count", "timers", "cooking", "cookingDone", "recipes", "recipeView", "listen", "joke", "intent", "openPage", "offerSearch", "dismissTimers", "miss", "dictating", "webResults", "breathing", "show", "devVoice", "support", "offer", "trivia"].filter((k) => out[k] !== undefined).map((k) => [k, out[k]])) });
+      ...Object.fromEntries(["suggest", "link", "clientRun", "clientShow", "count", "timers", "cooking", "cookingDone", "recipes", "recipeView", "listen", "joke", "intent", "openPage", "offerSearch", "dismissTimers", "miss", "dictating", "webResults", "breathing", "show", "devVoice", "support", "offer", "trivia",
+        // (lib/commands: he ended the conversation, so the screen stops listening at once; the parts of "this and that")
+        "close", "closing", "parts", "security"].filter((k) => out[k] !== undefined).map((k) => [k, out[k]])) });
   }
   if (m === "POST" && p === "/chat/reset") { const { surface } = await readJSON(req).catch(() => ({})); histories[surface === "tv" ? "tv" : "desk"] = []; return send(res, 200, { ok: true }); }
 
@@ -883,6 +907,8 @@ createServer(async (req, res) => {
   process.on("exit", () => { try { if (readFileNow(PIDFILE, "utf8") === String(process.pid)) unlinkSync(PIDFILE); } catch { /* gone */ } });
   // after an update: this is the new version running, so the update worked (Settings → Updates shows it in the history)
   { const pv = updater.confirmStarted(); if (pv) console.log(`Updated from ${pv.from} to ${pv.to}.`); }
+  // a local model (Ollama): load it now and keep it loaded, so the first question doesn't wait (nothing with any other AI, or none)
+  import("./lib/ollama/index.mjs").then((o) => o.startWarm()).then((w) => { if (w?.ok) console.log(`Local AI warmed up (${w.model}, ${Math.round(w.ms / 100) / 10} s).`); else if (w?.state) console.log(`Local AI: ${w.state}`); }).catch(() => {});
   // an update from 1.0.0 took the downloaded helpers (bin/) away with the old files: bring them back
   try { if (updater.restoreHelpers()) console.log("Put the downloaded helpers (bin) back after the update."); } catch { /* not important */ }
   // Lantern (the learning app), if it's on this computer: presence, events, "one voice, one ear"
@@ -1013,6 +1039,7 @@ createServer(async (req, res) => {
   mediasignin.startHealth();
   features.startJob("medialib", "medialib.sources", () => import("./lib/medialib/skills.mjs").then((m) => m.registerSources()));
   setTimeout(() => features.startJob("medialib", "medialib.scan", () => import("./lib/medialib/library.mjs").then((l) => l.scanSoon())), 90_000).unref?.();
+  setTimeout(() => features.startJob("fileviewer", "fileviewer.scan", () => import("./lib/finder/index.mjs").then((x) => x.scanSoon())), 150_000).unref?.();
   if (TUNNEL) startTunnel();
   else if (t.publicUrl) console.log(`Public URL (from .env): ${t.publicUrl}  → point Twilio webhooks here or run with --tunnel`);
 });
@@ -1043,10 +1070,14 @@ function startTimersAndRecipes() {
     alarm: (a) => {
       const d = new Date(a.at), hm = d.toTimeString().slice(0, 5);
       if (a.kind === "reminder") return announcer.announce({ kind: "reminder", hm, text: `Reminder: ${a.label}.`, reminder: { id: a.id, text: a.label } });
-      announcer.announce({ kind: "alarm", alarm: true, hm, text: a.label ? `It's time: ${a.label}.` : "It's time. This is your alarm." });
+      // (how it rings, when it was set with a sound, a volume, a snooze length, a gentle start or a flashing screen)
+      const how = Object.fromEntries(["sound", "volume", "snooze", "gentle", "flash"].filter((k) => a[k] !== undefined).map((k) => [k, a[k]]));
+      announcer.announce({ kind: "alarm", alarm: true, hm, text: a.label ? `It's time: ${a.label}.` : "It's time. This is your alarm.", ...how, alarmId: a.id });
     },
   });
   timers.startTicking();
+  // changes that put themselves back ("make it rain for 10 minutes", "go quiet until 3") end on time, even after a restart
+  import("./lib/commands/index.mjs").then((c) => c.start()).catch((e) => console.log(`commands: ${e.message}`));
   // the no-AI understanding is indexed once, now, so no one waits for it on their first request (about a second)
   setTimeout(() => { try { intents.stats(); } catch (e) { console.log(`intents: ${e.message}`); } }, 300);
   recipes.setDeps({ search: (query, o) => web.search(query, o), emit: (type, data) => announcer.broadcast(type, data) });

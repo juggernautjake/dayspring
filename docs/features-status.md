@@ -22,9 +22,9 @@ Which of Dayspring's features are finished, new, or still being built, and which
 | Feature | id | Area | Stage | Since | Tests | Confirmed |
 |---|---|---|---|---|---|---|
 | Schedule and calendar | `schedule` | Your day | Stable | 1.0.0 | 3 |  |
-| Voice and talking | `voice` | Talking to Dayspring | Stable | 1.0.0 | 3 |  |
+| Voice and talking | `voice` | Talking to Dayspring | Stable | 1.0.0 | 8 |  |
 | Alarms | `alarms` | Your day | Stable | 1.0.0 | 2 |  |
-| Reminders | `reminders` | Your day | Stable | 1.0.0 | 2 |  |
+| Reminders | `reminders` | Your day | Stable | 1.0.0 | 3 |  |
 | Timers | `timers` | Your day | Stable | 1.3.0 | 2 |  |
 | Weather | `weather` | Your day | Stable | 1.0.0 | 1 |  |
 | Music (Spotify and YouTube) | `music` | Music and media | Stable | 1.0.0 | 2 |  |
@@ -59,6 +59,9 @@ Which of Dayspring's features are finished, new, or still being built, and which
 | The Music & Video browser | `mediabrowser` | Music and media | Beta (New) | 1.7.2 | 14 |  |
 | Colour themes | `themes` | Screen | Beta (New) | 1.7.2 | 6 |  |
 | Avatars and expression mode | `avatar` | Screen | Beta (New) | 1.7.2 | 11 |  |
+| Finding files and the file viewer | `fileviewer` | Your files | Beta (New) | 1.7.3 | 12 |  |
+| Stop and goodbye | `conversation` | Talking to Dayspring | Beta (New) | 1.7.3 | 5 |  |
+| Renaming the assistant and wake words | `naming` | Talking to Dayspring | Beta (New) | 1.7.3 | 7 |  |
 | Developer preview | `devpreview` | This app | Beta (New) | 1.6.0 | 4 |  |
 | Email | `email` | Apps and connections | In progress (dev) | 1.7.0 | 23 |  |
 | GIFs | `gifs` | Music and media | In progress (dev) | 1.7.0 | 12 |  |
@@ -66,6 +69,8 @@ Which of Dayspring's features are finished, new, or still being built, and which
 | 3D printers | `printers` | Home control | In progress (dev) | 1.7.0 | 14 |  |
 | Cameras | `cameras` | Home control | In progress (dev) | 1.7.0 | 15 |  |
 | Multi-device remote control | `remote` | Home control | In progress (dev) | 1.7.0 | 11 |  |
+| Everyday commands without AI | `commands` | Talking to Dayspring | In progress (dev) | 1.8.0 | 11 |  |
+| Maps and directions | `maps` | Apps and connections | In progress (dev) | 1.8.0 | 8 |  |
 | Sharing with friends | `social` | Apps and connections | In progress (dev) | 1.6.0 | 3 |  |
 
 ## Beta (New) features
@@ -86,6 +91,9 @@ Which of Dayspring's features are finished, new, or still being built, and which
 - **The Music & Video browser** (`mediabrowser`, since 1.7.2): One window over Spotify (playlists, Liked Songs, albums, artists, top songs, history, queue), YouTube (watch history, playlists, subscriptions, queue), your own files and Drive, with live search as you type; plus signing in to YouTube and Spotify in the media window. Hidden when off: routes `/api/mb`; 2 AI tool patterns; intents `mediabrowser.`; 3 screen elements.
 - **Colour themes** (`themes`, since 1.7.2): Settings → Look & feel: 15 colour themes (Rose, Sage, Ocean, Candy, Light, High Contrast…), your own from 2–3 colours, Surprise me, a live preview, and "switch to the pink theme". Hidden when off: routes `/api/looks/theme`, `/api/looks/surprise`; Settings `looks`.
 - **Avatars and expression mode** (`avatar`, since 1.7.2): Five animated avatars, your own picture (one per state if you like), a look per personality, and expression mode: GIFs and memes that fit the feeling and the personality (off until you turn it on). Hidden when off: routes `/api/looks/avatar`, `/api/looks/persona`, `/api/looks/template`, `/api/expressions`; Settings `looks`; 2 screen elements.
+- **Finding files and the file viewer** (`fileviewer`, since 1.7.3): "Find my resume", "open the PDF called lease agreement", "show me the picture named IMG_5782": finds your files and pictures by name (typos, dates, folders, file types), and opens them in one viewer on the screen: pictures (zoom, rotate, slideshow), video and audio, PDFs (pages, search, read aloud), text and code, Word, Excel and CSV, PowerPoint and zip files. Hidden when off: routes `/api/viewer`; 3 AI tool patterns; 2 screen elements; jobs `fileviewer.scan`.
+- **Stop and goodbye** (`conversation`, since 1.7.3): "Stop", "that's enough", "shh" or "never mind" cut Dayspring off mid-sentence (even while it's talking) and keep listening for its name; "thanks, that's all", "bye" or "no thanks" end the conversation at once, and a question it asked is dropped. Hidden when off: routes `/api/commands/stop`.
+- **Renaming the assistant and wake words** (`naming`, since 1.7.3): Give the assistant its own name by voice or in Settings → Your assistant ("your name is Nova", "go back to being Dayspring"), how it's said, up to three wake words ("Hey Nova", "Computer"), "also accept" words, a sensitivity, and "Train my wake word". Meetings, Discord and the screen all answer to it. Hidden when off: routes `/api/wake/train`, `/api/wake/trained`; 1 screen element.
 - **Developer preview** (`devpreview`, since 1.6.0): On the developer's own computer only (signed, computer-bound token): every badge's art and every character. Hidden when off: routes `/api/dev`.
 
 ## In progress (dev) features
@@ -96,6 +104,8 @@ Which of Dayspring's features are finished, new, or still being built, and which
 - **3D printers** (`printers`, since 1.7.0): Bambu Lab (LAN) and Creality Ender 5 Plus (USB, OctoPrint or Klipper): status, camera, pause, start with a bed-clear check and your yes. Hidden when off: routes `/api/printers`; pages `/printers.html`; 2 AI tool patterns; intents `printers.`, `printer.`; Settings `printers`; 2 screen elements; jobs `printers.poll`.
 - **Cameras** (`cameras`, since 1.7.0): Webcams, IP cameras (RTSP / ONVIF), GoPro, printer cameras and trail cameras: live view, snapshots, motion alerts, recordings. Hidden when off: routes `/api/cameras`; pages `/cameras.html`; 2 AI tool patterns; intents `cameras.`, `camera.`; Settings `cameras`; 2 screen elements; jobs `cameras.monitor`, `cameras.record`.
 - **Multi-device remote control** (`remote`, since 1.7.0): Several Dayspring computers linked securely: control one from another ("turn on my home computer" from the laptop). Hidden when off: routes `/api/remote`; pages `/remote-view.html`; 1 AI tool pattern; intents `remote.`; Settings `remote`, `signin`; jobs `remote.engine`.
+- **Everyday commands without AI** (`commands`, since 1.8.0): (Ending a conversation and "stop" are the "Stop and goodbye" feature, in production.) Every setting by voice with "undo that"; the sky, the background and the screen ("make it rain for 10 minutes"); the schedule with repeats ("gym every Monday Wednesday Friday at 6am"); alarms with days, labels, sounds, snooze and a gentle wake; timers to a clock time; "every 30 minutes remind me to stand up"; your name, where you live and what you like ("I live in Springfield, Illinois"); two requests at once. Hidden when off: routes `/api/commands`.
+- **Maps and directions** (`maps`, since 1.8.0): A map window with search ("find coffee near me"), directions for driving, walking, cycling and transit, spoken step-by-step guidance, "leave by" for schedule items, and sending a trip to your phone. Free OpenStreetMap maps with no key; Google Maps when you add a key. Hidden when off: routes `/api/maps`; 1 AI tool pattern; Settings `maps`; 4 screen elements.
 - **Sharing with friends** (`social`, since 1.6.0): Sharing memories with friends. Also behind its own developer switch (lib/social/flag.mjs); off by default even in development. Hidden when off: checks `features.on()` in its own code.
 
 ## Stable features

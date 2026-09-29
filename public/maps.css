@@ -1,0 +1,97 @@
+/* The Maps window (public/maps.js). Like the Music & Video browser: a window inside the screen's safe area (safe-area.css
+   sets --safe-*), docked with a small gap, or floating after it's dragged or resized (maps.js keeps it inside). In
+   Dayspring mini it fills the window. Narrow: the map on top, the list below. Colours: the screen's glass blue-to-violet. */
+#dsMaps{--mp-ink:#f4f5ff;--mp-mute:rgba(222,226,255,.72);--mp-edge:rgba(124,140,255,.34);--mp-edge2:rgba(255,255,255,.09);--mp-acc:#7c8cff;--mp-acc2:#a78bfa;--mp-tile:rgba(255,255,255,.05);--mp-cur:rgba(124,140,255,.28);
+  position:fixed;z-index:41;display:flex;flex-direction:column;background-color:#0d1030;background-image:linear-gradient(160deg,#191d45,#0b0d21);color:var(--mp-ink);border:1px solid var(--mp-edge);border-radius:1.2em;
+  font:15px/1.35 Outfit,"Segoe UI",system-ui,sans-serif;box-shadow:0 30px 90px rgba(0,0,0,.62),0 0 60px rgba(124,140,255,.2);overflow:hidden;min-width:300px;min-height:300px;
+  top:calc(var(--safe-top, 0px) + var(--safe-gap, 10px));bottom:calc(var(--safe-bottom, 0px) + var(--safe-gap, 10px));
+  left:max(calc(var(--safe-left, 0px) + var(--safe-gap, 10px)), calc(50vw - 46em));right:max(calc(var(--safe-right, 0px) + var(--safe-gap, 10px)), calc(50vw - 46em));
+  animation:mpin .3s cubic-bezier(.2,.8,.2,1) both}
+@keyframes mpin{from{opacity:0;transform:translateY(.6em) scale(.99)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){#dsMaps{animation:none}}
+#dsMaps.float{right:auto;bottom:auto}
+html.mini #dsMaps:not(.float){inset:0;border-radius:0}
+#dsMaps[hidden],#dsMapsPill[hidden],#dsMaps [hidden]{display:none!important}
+#dsMaps *{box-sizing:border-box}
+#dsMaps button,#dsMaps select,#dsMaps input{font:inherit;color:inherit}
+#dsMaps :focus-visible{outline:2px solid #b9c3ff;outline-offset:2px}
+#dsMaps .mp-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:.6em;padding:.32em .75em;font-size:.9em;cursor:pointer;white-space:nowrap}
+#dsMaps .mp-btn:hover,#dsMaps .mp-btn:focus-visible{background:rgba(124,140,255,.3);outline:none}
+#dsMaps .mp-btn.mp-go{background:linear-gradient(135deg,var(--mp-acc),var(--mp-acc2));border-color:transparent;color:#0b0f22;font-weight:600}
+#dsMaps .mp-btn[aria-pressed="true"]{background:rgba(124,140,255,.42);border-color:var(--mp-acc)}
+#dsMaps .mp-btn:disabled{opacity:.45;cursor:default}
+/* title bar: drag to move, double-click to dock */
+#dsMaps .mp-bar{display:flex;align-items:center;gap:.5em;padding:.5em .7em .45em 1em;cursor:move;user-select:none;touch-action:none;border-bottom:1px solid var(--mp-edge2);flex-wrap:wrap}
+#dsMaps .mp-title{font-weight:600;font-size:1.08em;white-space:nowrap}
+#dsMaps .mp-prov{font-size:.78em;color:var(--mp-mute);border:1px solid var(--mp-edge2);border-radius:1em;padding:.1em .6em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:22em}
+#dsMaps .mp-sp{flex:1}
+#dsMaps .mp-win{display:flex;gap:.3em;cursor:default}
+#dsMaps .mp-win button{width:2.1em;height:2em;padding:0;display:grid;place-items:center;border-radius:.6em;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);cursor:pointer}
+#dsMaps .mp-win button:hover,#dsMaps .mp-win button:focus-visible{background:rgba(124,140,255,.35)}
+#dsMaps .mp-win .mp-x:hover,#dsMaps .mp-win .mp-x:focus-visible{background:rgba(220,70,110,.75)}
+/* the two halves */
+#dsMaps .mp-main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(17em,24em) 1fr}
+#dsMaps.narrow .mp-main{grid-template-columns:1fr;grid-template-rows:minmax(8em,42%) 1fr}
+#dsMaps.narrow .mp-mapwrap{order:-1}
+#dsMaps .mp-side{min-height:0;display:flex;flex-direction:column;border-right:1px solid var(--mp-edge2)}
+#dsMaps.narrow .mp-side{border-right:0;border-top:1px solid var(--mp-edge2)}
+#dsMaps .mp-search{position:relative;display:flex;gap:.4em;align-items:center;padding:.6em .7em .3em;flex-wrap:wrap}
+#dsMaps .mp-q{flex:1 1 10em;min-width:0;font-size:1.05em;padding:.45em .8em;border-radius:.8em;border:1px solid var(--mp-edge);background:rgba(255,255,255,.07)}
+#dsMaps .mp-near{display:flex;align-items:center;gap:.35em;font-size:.86em;color:var(--mp-mute);cursor:pointer;white-space:nowrap}
+#dsMaps .mp-sugg{position:absolute;left:.7em;right:.7em;top:100%;z-index:5;list-style:none;margin:0;padding:.3em;background:#161a3f;border:1px solid var(--mp-edge);border-radius:.8em;box-shadow:0 14px 40px rgba(0,0,0,.5);max-height:18em;overflow:auto}
+#dsMaps .mp-sugg li{padding:.4em .6em;border-radius:.5em;cursor:pointer;display:grid;gap:.05em}
+#dsMaps .mp-sugg li[aria-selected="true"],#dsMaps .mp-sugg li:hover{background:var(--mp-cur)}
+#dsMaps .mp-sugg .mp-sa{font-size:.8em;color:var(--mp-mute)}
+#dsMaps .mp-body{flex:1;min-height:0;overflow:auto;padding:.3em .7em .8em}
+#dsMaps .mp-note{font-size:.84em;color:var(--mp-mute);margin:.35em 0}
+#dsMaps .mp-err{color:#ffb4c6;font-size:.9em;margin:.4em 0}
+#dsMaps .mp-h{font-size:.82em;letter-spacing:.04em;text-transform:uppercase;color:var(--mp-mute);margin:.8em 0 .35em}
+/* results */
+#dsMaps .mp-res{list-style:none;margin:0;padding:0;display:grid;gap:.4em}
+#dsMaps .mp-res li{display:grid;grid-template-columns:auto 1fr;gap:.2em .6em;padding:.5em .6em;border-radius:.8em;background:var(--mp-tile);border:1px solid var(--mp-edge2);cursor:pointer}
+#dsMaps .mp-res li.mp-sel{border-color:var(--mp-acc);background:var(--mp-cur)}
+#dsMaps .mp-n{min-width:1.7em;height:1.7em;border-radius:1em;background:var(--mp-acc);color:#0b0f22;font-weight:700;font-size:.85em;display:grid;place-items:center;padding:0 .35em}
+#dsMaps .mp-res .mp-nm{font-weight:600}
+#dsMaps .mp-res .mp-ad,#dsMaps .mp-res .mp-mt{font-size:.84em;color:var(--mp-mute);grid-column:2}
+#dsMaps .mp-res .mp-acts{grid-column:2;display:flex;gap:.35em;flex-wrap:wrap;margin-top:.2em}
+#dsMaps .mp-res details{grid-column:2;font-size:.82em;color:var(--mp-mute)}
+/* the route */
+#dsMaps .mp-trip{display:grid;gap:.35em;margin:.3em 0}
+#dsMaps .mp-trip label{font-size:.82em;color:var(--mp-mute)}
+#dsMaps .mp-from{display:flex;gap:.35em}
+#dsMaps .mp-from input{flex:1;min-width:0;padding:.35em .6em;border-radius:.6em;border:1px solid var(--mp-edge2);background:rgba(255,255,255,.06)}
+#dsMaps .mp-to{font-weight:600}
+#dsMaps .mp-modes{display:flex;gap:.25em;flex-wrap:wrap;padding:.18em;border-radius:.8em;background:rgba(255,255,255,.05);border:1px solid var(--mp-edge2)}
+#dsMaps .mp-modes button{flex:1;background:transparent;border:0;border-radius:.6em;padding:.32em .5em;font-size:.88em;color:var(--mp-mute);cursor:pointer;white-space:nowrap}
+#dsMaps .mp-modes button[aria-pressed="true"]{background:linear-gradient(135deg,rgba(124,140,255,.5),rgba(167,139,250,.42));color:var(--mp-ink)}
+#dsMaps .mp-modes button:disabled{opacity:.4;cursor:not-allowed}
+#dsMaps .mp-avoid{display:flex;gap:.8em;flex-wrap:wrap;font-size:.86em;color:var(--mp-mute)}
+#dsMaps .mp-avoid label{display:flex;gap:.3em;align-items:center;cursor:pointer}
+#dsMaps .mp-alts{display:grid;gap:.3em}
+#dsMaps .mp-alts button{text-align:left;display:grid;grid-template-columns:auto 1fr;gap:0 .5em;padding:.4em .6em;border-radius:.7em;background:var(--mp-tile);border:1px solid var(--mp-edge2);cursor:pointer}
+#dsMaps .mp-alts button[aria-pressed="true"]{border-color:var(--mp-acc);background:var(--mp-cur)}
+#dsMaps .mp-alts .mp-dur{font-weight:600}
+#dsMaps .mp-alts .mp-via{grid-column:1/-1;font-size:.82em;color:var(--mp-mute)}
+#dsMaps .mp-ctl{display:flex;gap:.35em;flex-wrap:wrap;margin:.5em 0 .3em}
+#dsMaps .mp-cur{padding:.55em .7em;border-radius:.8em;background:linear-gradient(135deg,rgba(124,140,255,.28),rgba(167,139,250,.2));border:1px solid var(--mp-edge);font-size:1.02em;margin:.3em 0}
+#dsMaps .mp-steps{list-style:none;margin:0;padding:0;display:grid;gap:.2em}
+#dsMaps .mp-steps li{display:grid;grid-template-columns:auto 1fr auto;gap:.5em;align-items:start;padding:.35em .5em;border-radius:.6em;cursor:pointer;font-size:.92em}
+#dsMaps .mp-steps li:hover{background:var(--mp-tile)}
+#dsMaps .mp-steps li.mp-on{background:var(--mp-cur);outline:1px solid var(--mp-acc)}
+#dsMaps .mp-steps li.mp-past{opacity:.55}
+#dsMaps .mp-steps .mp-sd{font-size:.82em;color:var(--mp-mute);white-space:nowrap}
+#dsMaps .mp-links{display:flex;gap:.35em;flex-wrap:wrap;margin-top:.7em}
+/* the map */
+#dsMaps .mp-mapwrap{position:relative;min-height:0;min-width:0;background:#0a0c1c}
+#dsMaps .mp-map,#dsMaps .mp-gmap{position:absolute;inset:0;width:100%;height:100%;border:0}
+#dsMaps .leaflet-container{background:#dde3ea;font:12px/1.3 system-ui,sans-serif}
+#dsMaps .mp-pin{width:1.8em;height:1.8em;border-radius:1em 1em 1em 0;transform:rotate(-45deg);background:#7c8cff;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.45);display:grid;place-items:center}
+#dsMaps .mp-pin b{transform:rotate(45deg);color:#0b0f22;font:700 12px system-ui,sans-serif}
+#dsMaps .mp-pin.mp-psel{background:#a78bfa}
+#dsMaps .mp-pin.mp-phome{background:#34d399}
+#dsMaps .mp-qr{position:absolute;right:.8em;bottom:1.8em;z-index:500;background:#fff;color:#111;border-radius:.8em;padding:.6em;box-shadow:0 10px 30px rgba(0,0,0,.5);text-align:center;max-width:min(15em,80%)}
+#dsMaps .mp-qr svg{display:block;width:100%;height:auto}
+#dsMaps .mp-qr p{margin:.3em 0 0;font-size:.78em}
+#dsMaps .mp-busy{position:absolute;left:50%;top:.8em;transform:translateX(-50%);z-index:500;background:rgba(13,16,48,.9);border:1px solid var(--mp-edge);border-radius:1em;padding:.25em .9em;font-size:.88em}
+#dsMaps .mp-grip{position:absolute;right:0;bottom:0;width:1.2em;height:1.2em;cursor:nwse-resize;background:linear-gradient(135deg,transparent 50%,rgba(255,255,255,.3) 50%);border-bottom-right-radius:1.2em;z-index:600}
+#dsMapsPill{position:fixed;z-index:41;bottom:calc(var(--safe-bottom, 0px) + var(--safe-gap, 10px));left:calc(var(--safe-left, 0px) + var(--safe-gap, 10px));background:linear-gradient(135deg,#7c8cff,#a78bfa);color:#0b0f22;border:0;border-radius:1.2em;padding:.45em 1em;font:600 14px Outfit,"Segoe UI",system-ui,sans-serif;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.5)}

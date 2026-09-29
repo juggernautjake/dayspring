@@ -16,6 +16,7 @@
 //      (mocked SDK) and the media window's page control: every control, the buttons, the keys, the grid and the queue panels
 //   node scripts/qa/video.mjs [--verbose] [--no-browser] [--keep]
 import "./guard-data.mjs";   // first: tests never write to the real data folder
+import { qaPort } from "./port.mjs";   // a free port (or QA_PORT), so parallel runs never collide
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -394,7 +395,7 @@ async function screenTests() {
   if (!PW || !existsSync(CHROME)) { rec("headless Chrome and playwright-core are here", false, PW ?? "no playwright-core"); return; }
   const { chromium } = await import(pathToFileURL(PW).href);
   // a throwaway Dayspring (the export, its own empty data), pointed at the pretend YouTube
-  const APP = join(TMP, "app"), PORT = 4776, BASE = `http://127.0.0.1:${PORT}`;
+  const APP = join(TMP, "app"), PORT = await qaPort(4776), BASE = `http://127.0.0.1:${PORT}`;
   const ex = spawnSync(process.execPath, [join(DESK, "scripts", "export.mjs"), APP], { encoding: "utf8" });
   if (ex.status !== 0) { rec("the throwaway copy exported", false, (ex.stdout + ex.stderr).slice(-400)); return; }
   spawnSync("cmd.exe", ["/d", "/c", "mklink", "/J", join(APP, "node_modules"), join(DESK, "node_modules")], { windowsHide: true });

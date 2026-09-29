@@ -3,11 +3,17 @@
 //
 //   const llm = createLLM({ getConfig: () => ({ provider, keys: { anthropic, openai, xai }, model, ollamaUrl }) });
 //   llm.ready() · llm.complete({ system, prompt }) · llm.messages(body) · llm.chatWithToolsOpenAI({...}) · llm.test() · llm.models()
+//   llm.chatWithTools({...}) (Ollama: native tools, tool selection, argument repair; others: chatWithToolsOpenAI)
+//   llm.warm({ system }) (Ollama: load the model and keep it loaded) · llm.ollama (the raw client: tags, ps, pull, embed…)
 //
 // No environment variables are read here: the app passes a getter (fromEnv() builds one from process.env, the way
 // Dayspring's .env is laid out). Conversations are kept in one neutral shape (Anthropic-style blocks: text, tool_use,
 // tool_result) so switching providers never breaks a conversation; OpenAI-compatible providers are translated.
 // Uses fetch only (no SDK), so it has no dependencies. Tests pass their own fetch.
+
+// Local models (Ollama): native tool calling, the text tool-call parser, tool selection, argument repair, warm-up
+import { createOllama, chatWithToolsOllama, normalizeOllamaUrl, THINKING_MODEL } from "./llm-local.mjs";
+export * from "./llm-local.mjs";
 
 export const PROVIDERS = {
   anthropic: { label: "Claude (Anthropic)", keyName: "anthropic", keyVar: "ANTHROPIC_API_KEY", defaultModel: "claude-sonnet-5", webSearch: true, base: "https://api.anthropic.com/v1", keyUrl: "https://platform.claude.com/settings/keys" },
@@ -24,6 +30,10 @@ export function fromEnv(env = process.env, { modelVar = null } = {}) {
     keys: { anthropic: env.ANTHROPIC_API_KEY ?? "", openai: env.OPENAI_API_KEY ?? "", xai: env.XAI_API_KEY ?? "" },
     model: env.AI_MODEL || (modelVar ? env[modelVar] : "") || "",
     ollamaUrl: env.OLLAMA_URL || "",
+    // local-model tuning (all optional): context size, tools per request, how long the model stays loaded, a separate
+    // (bigger) model for plain conversation, how long to wait for the first word before giving up
+    ollama: { numCtx: Number(env.OLLAMA_NUM_CTX) || 4096, maxCtx: Number(env.OLLAMA_MAX_CTX) || 8192, toolsN: Number(env.OLLAMA_TOOLS_N) || 10, keepAlive: env.OLLAMA_KEEP_ALIVE || "30m",
+      chatModel: env.OLLAMA_CHAT_MODEL || "", firstTokenMs: (Number(env.OLLAMA_FIRST_TOKEN_S) || 8) * 1000 },
     bases: { anthropic: env.ANTHROPIC_BASE_URL || "", openai: env.OPENAI_BASE_URL || "", xai: env.XAI_BASE_URL || "" },
   });
 }
@@ -68,10 +78,38 @@ export function createLLM({ getConfig, fetch: f = globalThis.fetch } = {}) {
     return j;
   }
 
+  // ---- local models: Ollama's own API (keep_alive, context size, streaming, native tool calls) ----
+  const oc = () => ({ numCtx: 4096, maxCtx: 8192, toolsN: 10, keepAlive: "30m", chatModel: "", firstTokenMs: 8000, ...(cfg().ollama ?? {}) });
+  const ollama = createOllama({ url: () => normalizeOllamaUrl(cfg().ollamaUrl), fetch: f });
+  // warm(): load the model now and keep it loaded (call it at start and when the model changes)
+  async function warm({ system = "" } = {}) {
+    if (provider() !== "ollama") return { skipped: true };
+    const o = oc(), out = { model: modelName() };
+    out.ms = (await ollama.warm(modelName(), { keepAlive: o.keepAlive, numCtx: o.numCtx, system })).ms;
+    if (o.chatModel && o.chatModel !== modelName()) await ollama.warm(o.chatModel, { keepAlive: o.keepAlive, numCtx: o.numCtx }).catch(() => null);
+    return out;
+  }
+  async function ollamaText({ system = "", prompt, maxTokens = 400, timeoutMs = 45_000, model = null, onText = null, images = null }) {
+    const o = oc(), m = model || o.chatModel || modelName();
+    const est = Math.ceil((system.length + String(prompt).length) / 3.6) + maxTokens + 64;
+    const r = await ollama.chat({ model: m, stream: Boolean(onText), onText, keepAlive: o.keepAlive, timeoutMs, firstTokenMs: onText ? o.firstTokenMs * 2 : 0,
+      messages: [...(system ? [{ role: "system", content: system }] : []), { role: "user", content: prompt, ...(images ? { images } : {}) }],
+      options: { num_ctx: est > o.numCtx ? Math.max(o.maxCtx, o.numCtx) : o.numCtx, num_predict: maxTokens, temperature: 0.4 } });
+    return r.content.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+  }
+  // The same turn as chatWithToolsOpenAI, for a local model: native tool calls, only the tools that matter (select),
+  // arguments repaired, a tool it wasn't shown recovered. See chatWithToolsOllama in llm-local.mjs for the options.
+  async function chatWithTools(o) {
+    if (provider() !== "ollama") return chatWithToolsOpenAI(o);
+    const c = oc();
+    return chatWithToolsOllama({ ollama, model: modelName(), numCtx: c.numCtx, maxCtx: c.maxCtx, keepAlive: c.keepAlive, firstTokenMs: c.firstTokenMs, ...o });
+  }
+
   // One-shot text (announcements, summaries, short compositions)
   async function complete({ system = "", prompt, maxTokens = 400, timeoutMs = 45_000 }) {
     const p = provider();
     if (!ready()) throw err("no AI is set up", 401);
+    if (p === "ollama") return ollamaText({ system, prompt, maxTokens, timeoutMs });
     if (p === "anthropic") {
       const r = await messages({ max_tokens: maxTokens, ...(system ? { system } : {}), messages: [{ role: "user", content: prompt }] }, { timeoutMs });
       return (r.content ?? []).filter((b) => b.type === "text").map((b) => b.text).join("").trim();
@@ -127,7 +165,7 @@ export function createLLM({ getConfig, fetch: f = globalThis.fetch } = {}) {
     } catch { return [PROVIDERS[p]?.defaultModel].filter(Boolean); }
   }
 
-  return { PROVIDERS, provider, ready, modelName, label, canSearchWeb, complete, messages, chatWithToolsOpenAI, test, models, baseUrl };
+  return { PROVIDERS, provider, ready, modelName, label, canSearchWeb, complete, messages, chatWithToolsOpenAI, chatWithTools, test, models, baseUrl, ollama, warm, localOptions: oc, isLocal: () => provider() === "ollama", thinkingModel: (m) => THINKING_MODEL.test(m ?? modelName()) };
 }
 
 // neutral (Anthropic-style) → OpenAI chat messages

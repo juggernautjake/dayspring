@@ -1,6 +1,7 @@
 // ecosystem-core: the shared parts of Dayspring and Lantern. Import the pieces you need:
 //   import { createLLM, fromEnv } from "ecosystem-core/llm"   (or from this index)
 export { createLLM, fromEnv, PROVIDERS, ANTHROPIC_MODELS, toOpenAI } from "./llm.mjs";
+export { createOllama, chatWithToolsOllama, parseToolCalls, createToolIndex, repairArgs, recommendModels, MODEL_CATALOG, toOllamaTools, toOllamaMessages, guessCapabilities, normalizeOllamaUrl } from "./llm-local.mjs";
 export { createVoice, VOICES, OPENAI_VOICES, DESCRIBE, OPENAI_DESCRIBE, TONES, toneAt, speakable } from "./voice.mjs";
 export { CHAINS, pickBrowserVoice, defaultsFor, pickOpenAIVoice } from "../shared/voices-defaults.mjs";
 export { createWeb, readable, safeUrl } from "./web.mjs";

@@ -12,6 +12,7 @@
 // and its tap, a desk-panel request holding things, Quiet and "stop listening" unchanged.
 //   node scripts/qa/floor.mjs [--unit] [--keep]
 import "./guard-data.mjs";   // first: tests never write to the real data folder
+import { qaPort } from "./port.mjs";   // a free port (or QA_PORT), so parallel runs never collide
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -225,7 +226,7 @@ async function screen() {
   const require = createRequire(import.meta.url);
   const { chromium } = require("playwright-core");
   const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
-  const PORT = 4799, BASE = `http://127.0.0.1:${PORT}`;
+  const PORT = await qaPort(4799), BASE = `http://127.0.0.1:${PORT}`;
   const TMP = mkdtempSync(join(tmpdir(), "ds-floor-")), APP = join(TMP, "app");
   spawnSync(process.execPath, [join(DESK, "scripts", "export.mjs"), APP], { encoding: "utf8" });
   spawnSync("cmd.exe", ["/d", "/c", "mklink", "/J", join(APP, "node_modules"), join(DESK, "node_modules")], { windowsHide: true });

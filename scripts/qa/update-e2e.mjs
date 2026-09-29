@@ -5,6 +5,7 @@
 // "when I'm not using it" (idle) · and, with --old, Dayspring 1.0.0's own updater installing this version.
 // Servers run hidden on spare ports; browser launches are written to a log instead of opening anything.
 import "./guard-data.mjs";   // first: tests never write to the real data folder
+import { qaPort } from "./port.mjs";
 import { spawn, spawnSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
@@ -84,6 +85,7 @@ const API = `http://127.0.0.1:${gh.address().port}`;
 
 // ---- helpers -----------------------------------------------------------------------------------------------------------
 let portN = 4793;
+const nextPort = () => qaPort(portN++, { env: null });   // (the next free one: never a busy port)
 function install(from, label, { seed = true } = {}) {
   const dir = join(BASE, "app-" + label);
   cpSync(from, dir, { recursive: true, filter: (p) => !/[\\/](node_modules|\.git)([\\/]|$)/.test(p.slice(from.length)) });
@@ -119,7 +121,7 @@ const listBackups = (dir) => { try { return readdirSync(join(dir, "backups")); }
 
 try {
   // 1. install now → the new version starts and confirms
-  if (want("now")) { latest = "B"; failDownload = false; const port = portN++; const dir = install(A, "now");
+  if (want("now")) { latest = "B"; failDownload = false; const port = await nextPort(); const dir = install(A, "now");
     const r = await runIn(dir, `import * as u from "./lib/updater.mjs"; const x = await u.install({ how: "now" }); console.log(JSON.stringify(x));`, envFor(port));
     check("install now: files replaced", ver(dir) === "1.0.2" && existsSync(join(dir, "NEW-MARKER.txt")), r.stderr.trim().slice(0, 200));
     check("install now: data and .env kept", dataKept(dir));
@@ -135,14 +137,14 @@ try {
     await stop(dir, port); }
 
   // 2. a failed download changes nothing
-  if (want("faildl")) { latest = "B"; failDownload = true; const port = portN++; const dir = install(A, "faildl");
+  if (want("faildl")) { latest = "B"; failDownload = true; const port = await nextPort(); const dir = install(A, "faildl");
     const r = await runIn(dir, `import * as u from "./lib/updater.mjs"; try { await u.install({ how: "now" }); console.log("no error?"); } catch (e) { console.log("ERR " + e.message); }`, envFor(port));
     check("failed download: reported", /ERR/.test(r.stdout), r.stdout.trim().slice(0, 160));
     check("failed download: nothing changed", ver(dir) === "1.0.1" && !existsSync(join(dir, "NEW-MARKER.txt")) && dataKept(dir));
     failDownload = false; }
 
   // 3. a new version that doesn't start → the old one comes back
-  if (want("rollback")) { latest = "bad"; const port = portN++; const dir = install(A, "rollback");
+  if (want("rollback")) { latest = "bad"; const port = await nextPort(); const dir = install(A, "rollback");
     await runIn(dir, `import * as u from "./lib/updater.mjs"; await u.install({ how: "now" });`, envFor(port));
     check("broken version: was installed", ver(dir) === "1.0.3");
     const t0 = Date.now(); const l = await launch(dir, ["--restart", "--verify"], envFor(port));
@@ -154,7 +156,7 @@ try {
     await stop(dir, port); }
 
   // 4. "next time I open Dayspring"
-  if (want("launch")) { latest = "B"; const port = portN++; const dir = install(A, "launch");
+  if (want("launch")) { latest = "B"; const port = await nextPort(); const dir = install(A, "launch");
     const r = await runIn(dir, `import * as u from "./lib/updater.mjs"; console.log(JSON.stringify(await u.choose("launch")));`, envFor(port));
     check("next launch: downloaded, not installed yet", ver(dir) === "1.0.1" && existsSync(join(dir, "updates", "1.0.2")), r.stdout.trim().slice(0, 160));
     const l = await launch(dir, [], envFor(port));
@@ -165,7 +167,7 @@ try {
     await stop(dir, port); }
 
   // 5. "when I'm not using it" (idle): the server installs it itself and restarts
-  if (want("idle")) { latest = "B"; const port = portN++; const dir = install(A, "idle");
+  if (want("idle")) { latest = "B"; const port = await nextPort(); const dir = install(A, "idle");
     writeFileSync(join(dir, "data", "updates.json"), JSON.stringify({ when: "idle", history: [] }));
     const env = envFor(port, { DAYSPRING_UPDATE_FIRST_MS: "1500", DAYSPRING_UPDATE_IDLE_MIN: "0.05", DAYSPRING_UPDATE_IDLE_TICK_MS: "2500" });
     await launch(dir, [], env);
@@ -180,13 +182,13 @@ try {
 
   // 7. release channels: production never sees a pre-release; development takes the newest of -dev and production
   const bi = (dir) => { try { return JSON.parse(readFileSync(join(dir, "build-info.json"), "utf8")).channel; } catch { return null; } };
-  if (want("channel-stable")) { latest = "B"; prereleases = ["D"]; const port = portN++; const dir = install(A, "ch-stable");
+  if (want("channel-stable")) { latest = "B"; prereleases = ["D"]; const port = await nextPort(); const dir = install(A, "ch-stable");
     const r = await runIn(dir, `import * as u from "./lib/updater.mjs"; const i = await u.check(); console.log(JSON.stringify({ ch: u.channel(), latest: i.latest, zip: i.zip, pre: i.prerelease }));`, envFor(port));
     const o = (() => { try { return JSON.parse(r.stdout.trim().split(/\r?\n/).pop()); } catch { return {}; } })();
     check("production channel: offered the production release, not the pre-release", o.ch === "stable" && o.latest === "1.0.2" && /\/dl\/B\.zip$/.test(o.zip ?? "") && o.pre === false, r.stdout.trim().slice(-200) + r.stderr.trim().slice(0, 200));
     check("production channel: never asked for the release list", !requests.some((u) => /releases\?/.test(u))); }
 
-  if (want("channel-dev")) { latest = "B"; prereleases = ["D"]; const port = portN++; const dir = install(A, "ch-dev");
+  if (want("channel-dev")) { latest = "B"; prereleases = ["D"]; const port = await nextPort(); const dir = install(A, "ch-dev");
     const set = await runIn(dir, `import * as u from "./lib/updater.mjs"; u.setChannel("dev"); const i = await u.check(); console.log(JSON.stringify({ ch: u.channel(), latest: i.latest, zip: i.zip, pre: i.prerelease, available: i.available }));`, envFor(port));
     const o = (() => { try { return JSON.parse(set.stdout.trim().split(/\r?\n/).pop()); } catch { return {}; } })();
     check("development channel: offered the newest -dev pre-release (skipping drafts, betas, older -dev)", o.ch === "dev" && o.latest === "1.1.0-dev.2" && o.pre === true && o.available === true, set.stdout.trim().slice(-200) + set.stderr.trim().slice(0, 200));
@@ -228,7 +230,7 @@ try {
   if (OLD && want("old")) {
     const from = ver(OLD), newer = ["A", "B", "C"].find((k) => VERS[k].localeCompare(from, undefined, { numeric: true }) > 0);
     latest = newer; const to = VERS[newer];
-    const port = portN++; const dir = install(OLD, "from-" + from);
+    const port = await nextPort(); const dir = install(OLD, "from-" + from);
     // 1.0.0 runs "tar" from PATH: on Windows that is System32's (a Git Bash PATH would put GNU tar first)
     const winEnv = { ...envFor(port), PATH: join(process.env.SystemRoot ?? "C:\\Windows", "System32") + ";" + (process.env.PATH ?? "") };
     const r = await runAsync(["scripts/update.mjs", "--yes"], { cwd: dir, env: winEnv });

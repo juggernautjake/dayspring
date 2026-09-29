@@ -7,6 +7,7 @@
 //   • "pop it out" by voice/typing does the same as the button
 //   node scripts/qa/no-window.mjs [--quick] [--keep]      --quick: 60 s of background searching instead of 180 s
 import "./guard-data.mjs";   // first: tests never write to the real data folder
+import { qaPort } from "./port.mjs";   // a free port (or QA_PORT), so parallel runs never collide
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -19,7 +20,7 @@ const require = createRequire(import.meta.url);
 const { chromium } = require("playwright-core");
 const { playwrightChannel } = await import("../../lib/browsers.mjs");
 const QUICK = process.argv.includes("--quick"), KEEP = process.argv.includes("--keep");
-const PORT = 4798, BASE = `http://127.0.0.1:${PORT}`;
+const PORT = await qaPort(4798), BASE = `http://127.0.0.1:${PORT}`;
 const TMP = mkdtempSync(join(tmpdir(), "ds-nowindow-")), APP = join(TMP, "app");
 const LOG = join(TMP, "browser-launches.log"), MEDIA = join(TMP, "media-profile"), SEARCH = join(TMP, "search-profile");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

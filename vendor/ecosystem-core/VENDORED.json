@@ -1,6 +1,6 @@
 {
   "name": "ecosystem-core",
-  "version": "0.3.0",
-  "syncedAt": "2026-09-27T15:33:07.577Z",
+  "version": "0.4.1",
+  "syncedAt": "2026-09-29T06:56:22.710Z",
   "note": "Copied by scripts/sync-core.mjs. Edit ecosystem-core itself, then sync again."
 }

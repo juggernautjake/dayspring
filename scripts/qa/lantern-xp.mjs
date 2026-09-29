@@ -5,6 +5,7 @@
 // Learning tab and the study-card XP chips in a headless browser.
 //   node scripts/qa/lantern-xp.mjs [--keep] [--live]      (--live: also READ the real Lantern on :4321 — GET only)
 import "./guard-data.mjs";   // first: tests never write to the real data folder
+import { qaPort } from "./port.mjs";   // a free port (or QA_PORT), so parallel runs never collide
 import { spawn, spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createServer, request } from "node:http";
@@ -16,7 +17,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const DESK = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const require = createRequire(import.meta.url);
 const { chromium } = require("playwright-core");
-const PORT = 4798, BASE = `http://127.0.0.1:${PORT}`, MOCK = 4797;
+const PORT = await qaPort(4798), BASE = `http://127.0.0.1:${PORT}`, MOCK = await qaPort(4797, { env: null });
 const TMP = mkdtempSync(join(tmpdir(), "ds-lxp-")), APP = join(TMP, "app"), ECO = join(TMP, "eco");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let fail = 0, pass = 0;

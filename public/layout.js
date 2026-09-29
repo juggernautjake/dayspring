@@ -41,6 +41,7 @@
   }
 
   /* ---------------- "⋯ More" menus ---------------- */
+  const allMores = [];
   function makeMore(host, label) {
     const btn = document.createElement("button");
     btn.type = "button"; btn.className = "morebtn"; btn.textContent = "⋯"; btn.hidden = true;
@@ -50,6 +51,7 @@
     document.body.appendChild(box);
     host.appendChild(btn);
     const m = { btn, box, host, items: [] };
+    allMores.push(m);
     const place = () => {
       // below the ⋯ (above it if there's no room), inside the screen's margins
       const r = btn.getBoundingClientRect(), b = box.getBoundingClientRect(), S = safeRect(), pad = 8;
@@ -122,7 +124,7 @@
       { apply: () => moveToMore(more, $("#setBtn")), undo: () => {} },
       { apply: () => moveToMore(more, $("#musicBtn")), undo: () => {} },
       cls(clock, "fit-compact"),
-    ], () => restoreMore(more));
+    ], () => { restoreMore(more); moveToMore(more, $("#aiBtn")); });   // 🧠 AI brain always lives in the ⋯ menu (ai-switch.js)
   }
   // the Dayspring panel's header: Dayspring · Ready · ✋ Stop 🎧 ▾ ⌨ Type 🔇 ↻ 💬
   const head = $(".talkhead"), tt = $(".talktools");
@@ -172,6 +174,8 @@
     if (now - lastRun < 1000) { if (++runs > 25) { clearTimeout(refit.later); refit.later = setTimeout(schedule, 400); return; } } else { runs = 0; lastRun = now; }
     busy = true; mo.disconnect();
     const focused = document.activeElement;
+    // a ⋯ menu that's open stays open through a refit (the screen updates while he's choosing)
+    const wasOpen = allMores.filter((m) => !m.box.hidden);
     try {
       for (const f of fitters) {
         for (let i = f.steps.length - 1; i >= 0; i--) f.steps[i].undo();
@@ -181,6 +185,7 @@
         f.applied = i;
       }
       for (const el of $$(".fitv")) if (el !== date) fitVariants(el);
+      for (const m of wasOpen) if (m.items.length && !m.btn.hidden && m.box.hidden) { m.box.hidden = false; m.btn.setAttribute("aria-expanded", "true"); }
       clampPopups();
       // moving a focused button in or out of a ⋯ menu drops keyboard focus: put it back (or on the ⋯ that now holds it)
       if (focused && focused !== document.body && document.activeElement !== focused) {

@@ -191,6 +191,7 @@
       <p class="muted">${x.readOnly ? `This comes from ${esc(x.sourceLabel ?? "another calendar")}; change it there.` : `Change it in ${esc(x.openIn ?? "its app")}, or ask Dayspring to move it.`}</p>`;
     const op = $("#cOpen"); if (op) op.onclick = (e) => { e.preventDefault(); openLink(x.link); };
     const bz = $("#cBusy"); if (bz) bz.onchange = async () => { try { await send("POST", "/calendar/busy", { id: x.id, busy: bz.checked }); toast(bz.checked ? "Counted as busy" : "Not counted as busy"); render(); } catch (e) { toast(e.message); } };
+    window.dsMapsCal?.decorate($("#cBody"), { where: x.where, notes: x.notes, date: x.date, start: x.allDay ? "" : x.start, title: x.title });   // 🗺 Directions and "leave by" (public/maps-cal.js)
     openPanel("#card");
   }
   $("#card").addEventListener("click", (e) => { if (e.target.closest("[data-fixes]")) openConflicts("week"); });
@@ -555,6 +556,7 @@
     ruleToForm(series ? b.repeat : null);
     $("#fDel").hidden = !b; $("#fDel").classList.remove("arm"); $("#fDel").textContent = "Delete"; delArmed = 0;
     $("#fWarn").innerHTML = b?.clash ? clashLine(b.clash) : "";
+    if ($("#fMaps")) { $("#fMaps").innerHTML = ""; if (b) window.dsMapsCal?.decorate($("#fMaps"), { notes: b.description, date: b.date, start: b.start, title: b.title }); }   // a "Where:" line in the notes (public/maps-cal.js)
     setScope("one");
     openPanel("#drawer");
     setTimeout(() => $("#fTitle").focus({ preventScroll: true }), 200);

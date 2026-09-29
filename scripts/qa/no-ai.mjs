@@ -7,6 +7,7 @@
 //   C. Stop drops a reply that's still on its way (no late answer is shown or said)
 //   node scripts/qa/no-ai.mjs [--keep]
 import "./guard-data.mjs";   // first: tests never write to the real data folder
+import { qaPort } from "./port.mjs";   // a free port (or QA_PORT), so parallel runs never collide
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -17,7 +18,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const DESK = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const require = createRequire(import.meta.url);
 const { chromium } = require("playwright-core");
-const PORT = 4791, BASE = `http://127.0.0.1:${PORT}`;
+const PORT = await qaPort(4791), BASE = `http://127.0.0.1:${PORT}`;
 const TMP = mkdtempSync(join(tmpdir(), "ds-noai-")), APP = join(TMP, "app");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let fail = 0, pass = 0;
@@ -136,13 +137,16 @@ try {
   check("a finished timer: the card with its name, Dismiss / +5 min / Snooze", s.ringing && /toast/.test(s.ringText) && /Dismiss/.test(s.ringText) && /\+5 min/.test(s.ringText), s.ringText);
   await page.click("#dsxRing button.main"); await page.waitForTimeout(800);
   check("Dismiss clears it everywhere", !(await st()).ringing && (await api("/timers")).ringing.length === 0);
+  // (the reply and its "cooking" event can take longer than a fixed pause on a busy computer: each check waits for
+  // its own result, up to 8 s, instead of reading the screen after 0.9 s)
+  const until = async (fn, ms = 8000) => { const end = Date.now() + ms; let v; while (Date.now() < end) { v = await st(); if (fn(v)) return v; await page.waitForTimeout(150); } return st(); };
   await typeIt("let's make scrambled eggs");
-  s = await st();
+  s = await until((x) => x.cooking && /eggs/i.test(x.cookText));
   check("cooking mode: the big-text view", s.cooking && /eggs/i.test(s.cookText), s.cookText.slice(0, 80));
   await typeIt("next step");
-  check("… 'next step' moves on", /Step 1 of/.test((await st()).cookText));
+  check("… 'next step' moves on", /Step 1 of/.test((await until((x) => /Step 1 of/.test(x.cookText ?? ""))).cookText));
   await typeIt("stop cooking");
-  check("… and 'stop cooking' closes it", !(await st()).cooking);
+  check("… and 'stop cooking' closes it", !(await until((x) => !x.cooking)).cooking);
   await page.evaluate(() => window.dsExtras._show.results({ query: "pancakes", more: true, results: Array.from({ length: 6 }, (_, i) => ({ n: i + 1, tempId: "r" + (i + 1), title: `Test pancakes <b>${i + 1}</b>`, site: "example.com", time: 10 + i, servings: 4, rating: { value: 4.5, count: 10 }, ingredients: 6, image: null })) }));
   s = await st();
   check("recipe results: 6 cards, text shown as text (no HTML)", s.recipeCards === 6 && (await page.$$eval("#dsxRecipes b", (x) => x.length)) === 0, s.recipeCards);

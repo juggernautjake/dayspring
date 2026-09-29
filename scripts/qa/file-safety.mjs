@@ -10,6 +10,7 @@
 //      redaction, the hash chain (verifies, and catches an edit or a removed line), keeping 120 days, and undo
 //   node scripts/qa/file-safety.mjs [--keep] [--no-ui]
 import "./guard-data.mjs";   // first: tests never write to the real data folder
+import { qaPort } from "./port.mjs";   // a free port (or QA_PORT), so parallel runs never collide
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, rmdirSync, writeFileSync, symlinkSync, lstatSync } from "node:fs";
 import { tmpdir, homedir } from "node:os";
@@ -20,7 +21,7 @@ const DESK = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 // playwright-core from the exported copy next to this project (…/dayspring-app), else this app's own; QA_PLAYWRIGHT overrides
 const PW = process.env.QA_PLAYWRIGHT ?? pathToFileURL([join(DESK, "..", "..", "..", "dayspring-app", "node_modules", "playwright-core", "index.mjs"), join(DESK, "node_modules", "playwright-core", "index.mjs")].find((p) => existsSync(p)) ?? "").href;
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
-const PORT = 4792, BASE = `http://127.0.0.1:${PORT}`;
+const PORT = await qaPort(4792), BASE = `http://127.0.0.1:${PORT}`;
 const args = process.argv.slice(2);
 const TMP = mkdtempSync(join(tmpdir(), "ds-filesafety-")), APP = join(TMP, "app"), HOME = join(TMP, "home");
 const DOCS = join(HOME, "Documents"), BIN = join(TMP, "recycle");

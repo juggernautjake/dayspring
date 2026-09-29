@@ -9,6 +9,7 @@
 //   5. no dev token or private key anywhere in the source or the export; the privacy scan catches both
 //   node scripts/qa/dev-preview.mjs [--keep]
 import "./guard-data.mjs";   // first: tests never write to the real data folder
+import { qaPort } from "./port.mjs";   // a free port (or QA_PORT), so parallel runs never collide
 import { spawn, spawnSync } from "node:child_process";
 import { createHash, generateKeyPairSync } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
@@ -28,7 +29,7 @@ const DESK = resolve(join(dirname(fileURLToPath(import.meta.url)), "..", ".."));
 const require = createRequire(import.meta.url);
 const { chromium } = require("playwright-core");
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
-const PORT = 4798, BASE = `http://127.0.0.1:${PORT}`;
+const PORT = await qaPort(4798), BASE = `http://127.0.0.1:${PORT}`;
 const TMP = mkdtempSync(join(tmpdir(), "ds-devpreview-")), APP = join(TMP, "app");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let fail = 0, pass = 0, skipped = 0;

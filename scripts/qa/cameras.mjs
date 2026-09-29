@@ -19,6 +19,7 @@
 //      ● REC sign and alert card inside the margins
 //   node scripts/qa/cameras.mjs [--keep] [--no-ui]
 import "./guard-data.mjs";   // first: tests never write to the real data folder
+import { qaPort } from "./port.mjs";   // a free port (or QA_PORT), so parallel runs never collide
 import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { createSocket } from "node:dgram";
@@ -544,7 +545,7 @@ try {
     sc.cameras = sc.cameras.filter((c) => [httpCam.id, trailCam.id, shop.id].includes(c.id)).map((c) => ({ ...c, schedule: { ...c.schedule, mode: "off" } }));
     writeFileSync(join(APP, "data", "cameras.json"), JSON.stringify(sc, null, 2));
     cpSync(process.env.DAYSPRING_CAMERAS_DIR, join(APP, "data", "cameras"), { recursive: true });
-    const PORT = 4793, BASE = `http://127.0.0.1:${PORT}`;
+    const PORT = await qaPort(4793), BASE = `http://127.0.0.1:${PORT}`;
     const env = { ...process.env, PORT: String(PORT), DAYSPRING_DISPLAY: "", DAYSPRING_TV: "", DAYSPRING_NO_BROWSER: "1", DAYSPRING_DEVICES_DRYRUN: "1", DAYSPRING_NO_OVERLAY: "1", DAYSPRING_NO_ECO: "1", DAYSPRING_NO_KEEPAWAKE: "1",
       DAYSPRING_REMINDER_CHANNEL: "off", DAYSPRING_CAMERAS: "1", DAYSPRING_CHANNEL: "dev", DS_PROFILE: "DayspringQA" };
     for (const k of ["DAYSPRING_CAMERAS_FILE", "DAYSPRING_CAMERAS_DIR", "DAYSPRING_CAMERAS_STATE", "DAYSPRING_CONNECTORS_DIR", "DAYSPRING_VISION_SETTINGS", "DAYSPRING_ACTIVITY_DIR", "DAYSPRING_CAMERAS_FAKE_USB_LIST"]) delete env[k];

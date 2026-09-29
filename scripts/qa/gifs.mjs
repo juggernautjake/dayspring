@@ -13,6 +13,7 @@
 //      number 2"), works from the keyboard, fits the safe area, and Settings → GIFs saves, tests keys and reorders
 //   node scripts/qa/gifs.mjs [--keep]
 import "./guard-data.mjs";   // first: tests never write to the real data folder
+import { qaPort } from "./port.mjs";   // a free port (or QA_PORT), so parallel runs never collide
 import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
@@ -25,7 +26,7 @@ const DESK = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const FIX = join(DESK, "scripts", "qa", "fixtures", "gifs"), IMGFIX = join(DESK, "scripts", "qa", "fixtures", "images");
 const PW = process.env.QA_PLAYWRIGHT ?? pathToFileURL([join(DESK, "..", "..", "..", "dayspring-app", "node_modules", "playwright-core", "index.mjs"), join(DESK, "node_modules", "playwright-core", "index.mjs")].find((p) => existsSync(p)) ?? "").href;
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
-const PORT = 4798, BASE = `http://127.0.0.1:${PORT}`;
+const PORT = await qaPort(4798), BASE = `http://127.0.0.1:${PORT}`;
 const KEEP = process.argv.includes("--keep");
 const TMP = mkdtempSync(join(tmpdir(), "ds-gifs-")), APP = join(TMP, "app"), PICS = join(TMP, "Pictures");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

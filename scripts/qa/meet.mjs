@@ -322,6 +322,30 @@ try {
     tunein._setTranscribe(null);
   }
 
+  // (1.7.3: the host passes the configured name and wake words into ecosystem-core's address parser, read live)
+  console.log("\n— a renamed assistant: its own name and wake words —");
+  {
+    host.setDeps({ meetNames: () => ["nova", "computa"] });
+    let n = events.length;
+    await say("Rich Alvarez", "Nova, what's 2 plus 2?");
+    let a = await answered(n);
+    check("“Nova, …” (the assistant's configured name) is answered as Dayspring", a.length >= 1 && (a[0].as ?? "dayspring") === "dayspring", JSON.stringify(a[0] ?? {}).slice(0, 160));
+    n = events.length; const before = (await sent()).length;
+    await chat("Rich Alvarez", "@Computa what's 6 plus 1?");
+    a = await answered(n); await sleep(400);
+    check("the chat: “@Computa …” (a wake word) is answered in the chat", a.length >= 1 && (await sent()).slice(before).some((m) => /\b7\b/.test(m)), (await sent()).slice(before).join(" | ").slice(0, 160));
+    n = events.length;
+    await say("Rich Alvarez", "Dayspring, what's 5 plus 5?");
+    a = await answered(n);
+    check("“Dayspring, …” still works after the rename", a.length >= 1);
+    host.setDeps({ meetNames: () => [] });                // renamed back mid-meeting: read on the next caption
+    n = events.length;
+    await say("Rich Alvarez", "Nova, what's 3 plus 3?");
+    await sleep(2600);
+    check("…and once the name is gone, “Nova, …” isn't anyone", !since(n).some((e) => e.type === "meet" && e.kind === "answer"));
+    host.setDeps({ meetNames: undefined });
+  }
+
   console.log("\n— the meeting ends —");
   {
     check("this meeting's answers are kept while it runs", host.recent().length >= 3);

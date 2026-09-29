@@ -1,6 +1,6 @@
 {
   "name": "dayspring",
-  "version": "1.7.2",
+  "version": "1.7.3",
   "private": true,
   "type": "module",
   "description": "Dayspring: a friendly voice assistant and day planner for Windows that lives on any screen. Free by default; better with an AI key.",
@@ -49,6 +49,8 @@
   },
   "devDependencies": {
     "aedes": "^1.2.0",
+    "pdfjs-dist": "^6.3.289",
+    "prismjs": "^1.30.0",
     "quill": "^2.0.3",
     "selfsigned": "^5.5.0",
     "smtp-server": "^3.19.15"

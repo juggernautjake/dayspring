@@ -12,7 +12,7 @@
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   // Esc closes only what's on top. Every open overlay is found here and the top one (highest layer, then the one
   // added last) is marked on the key event (e.dsTop); each overlay's own Esc handler only acts when it's the one.
-  const ESC_ROOTS = ".wconfirm, .fitcal, #dsUpdate, .stpop, .tunepop, .morebox, #soundPanel, .fyl, #lib, .rpanel, #reader, #detail, #media.video, #calwrap, #pagewrap, #dsImages, #dsGifs, #dsMB";
+  const ESC_ROOTS = ".wconfirm, .fitcal, #dsUpdate, .stpop, .tunepop, .morebox, #soundPanel, .fyl, #lib, .rpanel, #reader, #detail, #media.video, #calwrap, #pagewrap, #dsImages, #dsGifs, #dsMB, #dsMaps";
   const shown = (el) => el.isConnected && !el.hidden && !el.closest("[hidden]") && getComputedStyle(el).display !== "none" && getComputedStyle(el).visibility !== "hidden";
   const layerOf = (el) => { for (let x = el; x && x !== document.body; x = x.parentElement) { const z = parseInt(getComputedStyle(x).zIndex, 10); if (!Number.isNaN(z)) return z; } return 0; };
   window.dsTopOverlay = () => {
@@ -41,7 +41,8 @@
     link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
   };
   const icon = (k) => `<svg class="ic" viewBox="0 0 24 24">${ICON[k] ?? ICON.flex}</svg>`;
-  const hm12 = (t) => { const [h, m] = t.split(":").map(Number); return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`; };
+  // (24-hour time when Settings or "use 24-hour time" says so: window.__ds24, kept by renderClock)
+  const hm12 = (t) => { const [h, m] = t.split(":").map(Number); return window.__ds24 ? `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}` : `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`; };
   const toMin = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
   const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
   const cap = (s) => s.replace(/\b\w/g, (c) => c.toUpperCase());
@@ -181,11 +182,12 @@
   let lastClock = "";
   function renderClock() {
     const d = new Date();
-    const s = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    window.__ds24 = Boolean(prefs.clock24);
+    const s = window.__ds24 ? d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false }) : d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
     if (s !== lastClock) {
-      const [hm, ap] = s.split(" "), prev = lastClock.split(" ")[0] ?? "";
+      const [hm, ap = ""] = s.split(" "), prev = lastClock.split(" ")[0] ?? "";
       $("#clock").innerHTML = [...hm].map((ch, i) => ch === ":" ? '<span class="colon">:</span>'
-        : `<span class="${prev.length === hm.length && prev[i] !== ch && lastClock ? "roll" : ""}">${ch}</span>`).join("") + `<span class="ap">${ap}</span>`;
+        : `<span class="${prev.length === hm.length && prev[i] !== ch && lastClock ? "roll" : ""}">${ch}</span>`).join("") + (ap ? `<span class="ap">${ap}</span>` : "");
       lastClock = s;
     }
     const L = (o) => d.toLocaleDateString("en-US", o);
@@ -1564,9 +1566,11 @@
     tuneIn(true, 1500 + text.length * 75);
     setMood(moodFor(text, v.tone));
     stage("speak", text, chip ?? null);
+    const g0 = speechGen;                 // a stop while the voice is still being fetched means: don't say it at all
     try {
       const blob = await prefetch(text, v);
       pending.delete(vkey(text, v));
+      if (g0 !== speechGen) return;
       // an empty answer means "free voices": the page speaks for itself
       if (!blob.size) throw Object.assign(new Error("browser voice"), { browserVoice: true });
       const url = URL.createObjectURL(blob);
@@ -1588,7 +1592,7 @@
       if (e && e.name === "NotAllowedError") { needStart(text); return; }
       usingFallbackVoice = true;
       if (!e?.browserVoice) dlog("error", { where: "tts", error: String(e?.message ?? e).slice(0, 200), fallback: "browser voice" });
-      await browserSpeak(text, v);
+      if (g0 === speechGen) await browserSpeak(text, v);
     } finally {
       // let go of this clip's element and audio node (a screen on for weeks would otherwise keep every one)
       try { voiceNode?.disconnect(); } catch { /* gone */ }
@@ -2320,7 +2324,7 @@
   document.addEventListener("keydown", (e) => {
     const box = $("#media");
     if (box.hidden || !(P.source === "youtube" || (P.source === "file" && P.video)) || !P.video) return;
-    if (!$("#calwrap").hidden || !$("#pagewrap").hidden || detailOpen() || window.dsLibrary?.isOpen?.() || window.dsVideoPanels?.isOpen?.() || window.dsMB?.isOpen?.()) return;
+    if (!$("#calwrap").hidden || !$("#pagewrap").hidden || detailOpen() || window.dsLibrary?.isOpen?.() || window.dsVideoPanels?.isOpen?.() || window.dsMB?.isOpen?.() || window.dsMaps?.isOpen?.()) return;
     if (e.ctrlKey || e.altKey || e.metaKey) return;
     if (/INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName ?? "") && e.key !== "Escape") return;
     const k = e.key; let done = true;
@@ -2585,9 +2589,16 @@
     };
   }
   let micBlocked = false;
-  let rec = null, mode = "idle", commandTimer = null, paused = false, interimEl = null, wakeRe = /\bdayspring\b[,.!?]?\s*(.*)$/i;
+  let rec = null, mode = "idle", commandTimer = null, paused = false, interimEl = null, wakeRe = /\bdayspring\b[,.!?]?\s*(.*)$/i, wakeM = null;
+  // Settings changed the name or the wake words (public/assistant-name.js): hear the new ones from now on
+  window.dsSetWake = (w) => { if (!w?.words) return; config.wake = w; config.wakePhrases = w.words.map((x) => x.text); if (w.name) assistantName = w.name; buildWake(); if (mode === "idle" && !paused) setMic("wait", idleText()); };
+  // the recognizer's guesses for one phrase (n-best): its best, unless another guess has the wake word and the best doesn't
+  const bestOf = (r) => { const t0 = String(r[0]?.transcript ?? "").trim(); if (r.length < 2 || wakeRe.test(t0)) return t0; for (let k = 1; k < r.length; k++) { const t = String(r[k]?.transcript ?? "").trim(); if (t && wakeRe.test(t)) return t; } return t0; };
   function buildWake() {
-    // speech recognition writes "Dayspring" many ways: "day spring", "daysprings", "day-spring"
+    // the owner's name and wake words, heard the way the server hears them (public/wakeword.js: sound-alikes, the
+    // pronunciation, what training learned, only at the start or after a pause); wakeRe keeps the RegExp shape
+    if (window.dsWake && config.wake?.words?.length) { wakeM = window.dsWake.createMatcher(config.wake); wakeRe = window.dsWake.regexLike(wakeM); window.dsWakeMatcher = wakeM; return; }
+    // (an older server: speech recognition writes "Dayspring" many ways: "day spring", "daysprings", "day-spring")
     const phrases = [...new Set(config.wakePhrases.flatMap((p) => /^dayspring$/i.test(p) ? [p, "day spring", "day-spring", "daysprings", "day springs", "dayspring's"] : [p]))];
     const alts = phrases.sort((a, b) => b.length - a.length).map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s+"));
     wakeRe = new RegExp(`\\b(?:${alts.join("|")})\\b[,.!?]?\\s*(.*)$`, "i");
@@ -2621,7 +2632,7 @@
   }, 4000);
   function startListening() {
     if (!isSpeaker) return;             // another Dayspring screen is the one listening (no double replies)
-    if (listenState === "off" || micMuted) { setMic("", listenState === "off" ? "Dayspring is off: not listening" : "Not listening · tap 🎤 to listen"); return; }
+    if (listenState === "off" || micMuted) { setMic("", listenState === "off" ? `${assistantName} is off: not listening` : "Not listening · tap 🎤 to listen"); return; }
     if (window.dsMicOwner && window.dsMicOwner !== "dayspring") { setMic("", "Lantern is listening. Say “take the mic back” by typing, or use Settings → Lantern."); return; }
     if (!NativeSR && !srLocal) chooseSR();
     if (sttMissing && srLocal) { setMic("", "Listening needs Dayspring's private speech recognition"); return; }
@@ -2629,7 +2640,8 @@
     if (navigator.webdriver && !window.__dsAllowAutomatedListen) { setMic("", "Automated view: not listening."); return; }
     if (rec || paused) return;
     rec = srLocal ? new LocalRec() : new NativeSR();
-    rec.lang = "en-US"; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 1;
+    rec.lang = "en-US"; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 5;   // (5 guesses: a made-up wake word is often the 2nd)
+    try { const G = window.SpeechGrammarList || window.webkitSpeechGrammarList; if (G && !srLocal && config.wake?.grammar) { const g = new G(); g.addFromString(config.wake.grammar, 1); rec.grammars = g; } } catch { /* a hint only */ }
     rec.onresult = (ev) => { lastRecEvent = Date.now(); onResult(ev); };
     rec.onaudiostart = rec.onsoundstart = () => { lastRecEvent = Date.now(); };
     rec.onerror = (e) => {
@@ -2654,9 +2666,13 @@
   let utter = null;            // { text, timer }
   const PAUSE_MS = 2000, TRAIL_MS = 3500;
   const trailing = (t) => /(,|\b(and|so|but|or|then|because|also|plus|like|um|uh|with|to|the|a|my|for))\s*$/i.test(t);
+  // an ending ("thanks", "that's all", "bye", "good night") means he's finished: sent now, not after the pause, and
+  // the server answers briefly and closes the window (lib/commands/closing.mjs has the full list)
+  const ENDING = /\b(thanks|thank you( so much| very much)?|that'?s all|that'?s it|that'?ll be all|nothing else|good ?bye|bye( bye)?|see you( later)?|good ?night|we'?re done|i'?m good|no that'?s fine|never ?mind)\W*$/i;
   function collect(piece) {
-    const clean = piece.replace(/\b(that'?s it|send it|go ahead and answer|that'?s all)\W*$/i, "").trim();
-    const done = clean !== piece.trim();
+    // (with everyday commands on, "that's it" / "that's all" stay in: the server hears the ending and closes the window)
+    const clean = piece.replace(cmdsOn() ? /\b(send it|go ahead and answer)\W*$/i : /\b(that'?s it|send it|go ahead and answer|that'?s all)\W*$/i, "").trim();
+    const done = clean !== piece.trim() || (cmdsOn() && ENDING.test(piece.trim()) && !/\b(to|say|said|for|a|an|the|my|called|named|text|tell)\s+\S+(\s+\S+)?\W*$/i.test(piece.trim()));
     if (!utter) utter = { text: "", timer: 0 };
     if (clean) utter.text = (utter.text + " " + clean).trim();
     clearTimeout(commandTimer);                        // he's talking: the listening window stays open
@@ -2678,13 +2694,16 @@
   function stillTalking() { if (utter) { clearTimeout(utter.timer); utter.timer = setTimeout(flushUtter, trailing(utter.text) ? TRAIL_MS : PAUSE_MS + 400); } }
   function onResult(ev) {
     if (!speaking) lastHeard = Date.now();
+    // "Train my wake word" (public/assistant-name.js): what it heard is a sample, never a request
+    if (window.dsWakeTrain?.active) { for (let i = ev.resultIndex; i < ev.results.length; i++) if (ev.results[i].isFinal) window.dsWakeTrain.take(ev.results[i]); return; }
     let interim = "";
     for (let i = ev.resultIndex; i < ev.results.length; i++) {
       const r = ev.results[i], text = r[0].transcript.trim();
       if (!r.isFinal) { interim += text + " "; continue; }
-      handleFinal(text);
+      handleFinal(bestOf(r));
     }
     interim = interim.trim();
+    if (interim && bargeIn(interim)) return;            // "stop" over Dayspring's own voice: cut off now
     if (interim && window.dsDictation?.active && mode !== "command" && !utter && !wakeRe.test(interim)) window.dsDictation.interim?.(interim);   // dictation (mail-compose.js)
     if (interim && wakeRe.test(interim) && mode === "idle") { duck(true); wake(); }
     if (interim && (mode === "command" || utter || wakeRe.test(interim))) {
@@ -2721,6 +2740,14 @@
       if (!dw || /^(?:(?:ok(?:ay)? )?(?:stop|end|finish|done)(?: dictating| dictation)?|that'?s all)\W*$/i.test(rest)) { if (window.dsDictation.take(dw ? "stop dictating" : text)) { dlog("dictated", { words: text.split(/\s+/).length }); return; } }
     }
     const m = wakeRe.exec(text);
+    // right after "stop" cut Dayspring off mid-sentence: the finished words ("stop the timer") are still a request
+    if (!m && mode === "idle" && !utter && Date.now() < stopGraceUntil) { stopGraceUntil = 0; if (!isStopPhrase(text)) { window.dsFloor?.owner("voice"); collect(text); } return; }
+    // "stop", "that's enough", "never mind"… on its own (or after "Dayspring"): this interaction stops here (not an alarm:
+    // that has its own "stop" below). Room talk with no Dayspring in it and nothing going on is still ignored.
+    { const said = m ? String(m[1] || "").trim() : text;
+      // (right after a request he's still saying, "that's all" / "got it, thanks" ends the request: it's sent, then closed)
+      const finishing = utter?.text && /^(?:(?:ok(?:ay)?|alright)[, ]+)?(?:that'?s (?:all|it|good|fine)|got it(?:[, ]+thanks| thank you)?|thanks?)[.!]*$/i.test(said);
+      if (said && !finishing && isStopPhrase(said) && !alarmOn && (m || speaking || mode !== "idle" || utter || window.dsReader?.state?.().playing)) { if (Date.now() - interruptedAt > 1500) interruptNow(said); else backToIdle(); return; } }
     if (m || mode === "command" || utter) window.dsFloor?.owner("voice");
     // privacy: speech that isn't for Dayspring (room conversation) is logged only as a word count, never the words;
     // "nearWake" flags things that sounded close to the wake word, to catch missed "Dayspring"s
@@ -2793,7 +2820,7 @@
   function repeatLast() { if (lastSaid) speak(lastSaid.text, null, "general", lastSaid.v); else speak("I haven't said anything yet."); }
   function chatDetail() {
     const msgs = [...$("#log").children].filter((m) => !m.classList.contains("interim") && !m.classList.contains("typing"));
-    openDetail("Conversation", `<div class="dchat">${msgs.map((m) => `<div class="${m.className}">${m.innerHTML}</div>`).join("") || '<p class="muted">Nothing yet today. Say “Dayspring” and ask me anything.</p>'}</div>
+    openDetail("Conversation", `<div class="dchat">${msgs.map((m) => `<div class="${m.className}">${m.innerHTML}</div>`).join("") || `<p class="muted">Nothing yet today. Say “${esc(wakeShown())}” and ask me anything.</p>`}</div>
       <div class="dnav"><a class="btn" href="${location.origin}/history.html">Older conversations ↗</a></div>`, { wide: true });
     setTimeout(() => { const b = $("#dBody"); b.scrollTop = b.scrollHeight; }, 60);
   }
@@ -2803,10 +2830,54 @@
   function backToIdle() {
     mode = "idle"; stateSince = Date.now(); clearTimeout(commandTimer);
     if (micMuted) setMic("", "Not listening · tap 🎤 to listen");
-    else if (listenState === "off") setMic("", "Dayspring is off: not listening");
+    else if (listenState === "off") setMic("", `${assistantName} is off: not listening`);
     else setMic("wait", idleText());
     if (!speaking) stage("off"); duck(false);
   }
+
+  // "Stop", "that's enough", "shh", "never mind", "okay that's good"… on their own: stop what's happening right now (the
+  // speech mid-sentence, the rest of the reply, a document being read aloud, a question or a guided flow) and close this
+  // listening window. Listening itself stays on: the next "Dayspring, …" works at once. (✋ Stop, the mic mute and "stop
+  // listening" / "go to sleep" are what stop listening altogether.) Music and videos keep playing, except for a plain
+  // "stop" said while nothing is being spoken. Heard even over Dayspring's own voice (barge-in), from the first words.
+  const STOP_RE = /^(?:(?:ok(?:ay)?|alright|all right|oh|no|dayspring)[, ]+)*(?:stop(?:[, ]+stop)*(?: it| talking| now| please)?|that'?s enough|that is enough|enough(?: already)?|be quiet|quiet(?: please)?|shh+|shush|hush|cancel(?: that| it)?|never ?mind|nevermind|that'?s all|that'?s good|that is good|that'?s fine|alright[, ]+alright|all right[, ]+all right|okay[, ]+okay|got it(?:[, ]+thanks| thank you)?)[.!]*$/i;
+  // (lib/features.mjs "conversation": stop and the endings, in production too; the everyday "commands" include it)
+  const cmdsOn = () => (window.dsFeatures?.on ? window.dsFeatures.on("conversation") !== false || window.dsFeatures.on("commands") === true : true);
+  const isStopPhrase = (t) => cmdsOn() && STOP_RE.test(String(t ?? "").trim().replace(/\s+/g, " "));
+  const mediaPlaying = () => Boolean(window.__dsTestMedia || nowPlaying || (typeof P !== "undefined" && P?.playing) || window.dsLocalPlayer?.playing);
+  let interruptedAt = 0;
+  function interruptNow(said, { how = "voice" } = {}) {
+    const wasSpeaking = speaking || Boolean(window.dsReader?.state?.().playing) || mode === "replying";
+    interruptedAt = Date.now();
+    cancelAsk();                                        // a reply still on its way is dropped
+    morningRun++;                                       // a morning song or greeting stops
+    stopSpeaking();                                     // mid-sentence, and whatever was queued after it
+    try { window.dsReader?.pause?.(); } catch { /* no reader */ }
+    try { window.dsExtras?.stop?.(); } catch { /* no extras */ }
+    if (utter) { clearTimeout(utter.timer); utter = null; }
+    clearInterim(); clearTimeout(commandTimer);
+    // a plain "stop" with nothing being said: the music or video stops too
+    if (!wasSpeaking && /^(?:(?:ok(?:ay)?|dayspring)[, ]+)?stop(?:[, ]+stop)*(?: it| please)?[.!]*$/i.test(String(said).trim()) && mediaPlaying()) { stopMedia(false); post("/media/stop").catch(() => {}); showNowPlaying(null); }
+    backToIdle();                                       // (never the stopped / muted state: wake-word listening stays on)
+    post("/commands/stop", { surface: "tv", said: String(said).slice(0, 60) }).catch(() => {});   // its question or flow ends there too
+    window.dsFloor?.release?.();
+    dlog("interrupted", { heard: said, how, wasSpeaking });
+  }
+  window.dsStopPhrase = { test: (t) => isStopPhrase(t), get at() { return interruptedAt; } };   // (the screen checks)
+  window.addEventListener("ds-test-interim", (e) => { bargeIn(String(e.detail ?? "")); });
+  // the words so far, while Dayspring may still be talking: a stop phrase cuts it off now (not after the pause)
+  function bargeIn(interim) {
+    const t = String(interim ?? "").trim();
+    if (!t || !isStopPhrase(t) || Date.now() - interruptedAt < 1500) return false;
+    // (only over Dayspring's own voice or a reply on its way: while he's talking to it, the finished words decide)
+    if (!(speaking || mode === "replying" || mode === "thinking" || window.dsReader?.state?.().playing) || utter) return false;
+    if (isOwnEcho(t) && !/^stop\b/i.test(t)) return false;
+    interruptNow(t, { how: "barge-in" });
+    // the first words were "stop", but "stop the timer" may still be coming: its finished words are heard for a moment
+    stopGraceUntil = Date.now() + 2500;
+    return true;
+  }
+  let stopGraceUntil = 0;
 
   // Instant, on the TV itself: stop, pause, skip, volume.
   function localCommand(text) {
@@ -2823,9 +2894,9 @@
       push("ai", "Stopped."); showNowPlaying(null);
       return true;
     }
-    if (/^(never ?mind|cancel|forget it|be quiet)$/.test(t)) { morningRun++; stopSpeaking(); return true; }
+    if (/^(never ?mind|cancel|forget it|be quiet)$/.test(t) || isStopPhrase(t)) { interruptNow(t, { how: "typed" }); return true; }
     if (alarmOn && /^(snooze|hit snooze|snooze it|snooze the alarm|(give me )?(five|ten|\d+|a few) more minutes|snooze (for )?(\d+|five|ten|fifteen|thirty) minutes)$/.test(t)) {
-      const n = /(\d+|five|ten|fifteen|thirty)/.exec(t); const m = n ? Number({ five: 5, ten: 10, fifteen: 15, thirty: 30 }[n[1]] ?? n[1]) : /a few/.test(t) ? 5 : 9;
+      const n = /(\d+|five|ten|fifteen|thirty)/.exec(t); const m = n ? Number({ five: 5, ten: 10, fifteen: 15, thirty: 30 }[n[1]] ?? n[1]) : /a few/.test(t) ? 5 : Number(alarmItem?.snooze) || Number(prefs.alarmSnooze) || 9;
       snoozeAlarm(m); return true;
     }
     if (/^(please )?(clear|dismiss|close|hide|get rid of|remove)( all)?( of)?( the| my| those| these)? ?(notifications?|pop ?ups?|alerts?|messages on (the )?screen)( please)?$/.test(t)) { clearToasts(); push("ai", "Cleared."); return true; }
@@ -2917,6 +2988,8 @@
       await speak(r.reply, ex?.chipFor?.(r) ?? null, "general", rv);   // a direct answer is always spoken, whatever the notification mode
       if (gen !== askGen) return;                  // stopped while speaking
       if (r.clientRun && !internal) { ask(r.clientRun, { typed, internal: true }); return; }
+      // "thanks, that's all" / "…, thanks": the conversation is over, so no listening window at all (lib/commands)
+      if (r.close) { dlog("closed", { heard: text, how: r.closing ?? "done" }); backToIdle(); return; }
       // In a between-blocks conversation he just keeps talking — no wake phrase — until it wraps up.
       if (r.conversation) openCommandWindow(30000);
       else if (r.listen || r.suggest) openCommandWindow(REPLY_MS);   // Dayspring asked something: 7 s to answer
@@ -2941,18 +3014,25 @@
     $("#alarmTime").textContent = hm12(item.hm || item.started?.start || new Date().toTimeString().slice(0, 5));
     $("#alarmText").textContent = item.text;
     const ov = $("#alarm"); ov.hidden = false; ov.style.animation = "none"; void ov.offsetWidth; ov.style.animation = "";
+    // its own way of ringing (lib/timers.mjs, "a gentle alarm with the bells, at 60%"): flashing screen, volume, sound
+    ov.classList.toggle("dsflash", Boolean(item.flash));
     wake(30 * 60_000);
-    // starts gentle and grows over the first minute and a half
+    // starts gentle and grows over the first minute and a half (three minutes, from softer, for a gentle wake)
     // his reply being said (floor.js): the alarm rings over it right away, and its words wait for the reply (at most 20 s)
     const replying = () => Boolean(window.dsFloor?.replyActive());
+    const level = Math.max(0.2, Math.min(1, (Number(item.volume) || 100) / 100)), ramp = item.gentle ? 180_000 : 90_000, floorK = item.gentle ? 0.25 : 1;
+    const SETS = { bells: [[523.3, 659.3, 784], [523.3, 659.3, 784, 1046.5], [523.3, 659.3, 784, 1046.5, 784, 659.3]], birds: [[2093, 2349, 2093], [2349, 2637, 2349, 2093], [2637, 2349, 2637, 2093, 2349, 2637]],
+      beeps: [[880, 880], [880, 880, 880], [988, 988, 988, 988]], soft: [[523.3, 659.3], [523.3, 659.3, 784], [440, 523.3, 659.3, 784]], fanfare: [[523.3, 523.3, 698.5], [523.3, 523.3, 698.5, 880], [523.3, 698.5, 880, 1046.5, 880, 1046.5]] };
+    const set = SETS[item.sound] ?? [[784, 988, 1175], [659, 784, 988, 1319], [659, 784, 988, 1319, 988, 784]];
     const ring = () => {
       if (speaking && !replying()) return;
       if (!isSpeaker) return;
-      const k = Math.min(1, (Date.now() - alarmStart) / 90_000);
-      const notes = k < 0.3 ? [784, 988, 1175] : k < 0.7 ? [659, 784, 988, 1319] : [659, 784, 988, 1319, 988, 784];
+      const k = Math.min(1, (Date.now() - alarmStart) / ramp);
+      const notes = k < 0.3 ? set[0] : k < 0.7 ? set[1] : set[2];
+      const v = (x) => x * level * (floorK + (1 - floorK) * k);
       onBus("notify", () => {
-        notes.forEach((f, i) => bell(f, i * 0.16, { dur: 1.2, vol: 0.1 + k * 0.2, p: i % 2 ? 0.35 : -0.35 }));
-        if (k > 0.3) pad([329.6, 415.3, 493.9], 0, { dur: 3, vol: 0.02 + k * 0.04 });
+        notes.forEach((f, i) => bell(f, i * (item.sound === "beeps" ? 0.22 : 0.16), { dur: item.sound === "beeps" ? 0.3 : 1.2, vol: v(0.1 + k * 0.2), p: i % 2 ? 0.35 : -0.35 }));
+        if (k > 0.3 && item.sound !== "beeps") pad([329.6, 415.3, 493.9], 0, { dur: 3, vol: v(0.02 + k * 0.04) });
       }, { alarm: true });
     };
     ring(); alarmLoop = setInterval(ring, 5200);
@@ -2992,7 +3072,9 @@
   $("#alarmSnooze").onpointerdown = () => { snzOpened = false; snzHold = setTimeout(() => { $("#snzOpts").hidden = false; snzOpened = true; }, 600); };
   $("#alarmSnooze").onpointerup = $("#alarmSnooze").onpointerleave = () => clearTimeout(snzHold);
   $("#alarmSnooze").oncontextmenu = (e) => { e.preventDefault(); $("#snzOpts").hidden = false; snzOpened = true; };
-  $("#alarmSnooze").onclick = () => { if (snzOpened) { snzOpened = false; return; } snoozeAlarm(9); };
+  $("#alarmSnooze").onclick = () => { if (snzOpened) { snzOpened = false; return; } snoozeAlarm(Number(alarmItem?.snooze) || Number(prefs.alarmSnooze) || 9); };
+  // a flashing alarm ("flash the screen", "vibrate"): the overlay pulses (stopped by reduced motion)
+  { const st = document.createElement("style"); st.textContent = "#alarm.dsflash{animation:dsAlarmFlash 1.1s ease-in-out infinite!important}@keyframes dsAlarmFlash{0%,100%{filter:none}50%{filter:brightness(1.8) saturate(1.3)}}@media (prefers-reduced-motion:reduce){#alarm.dsflash{animation:none!important}}"; document.head.appendChild(st); }
   // tests (headless, muted): show the alarm or a snoozable pop-up without a real one going off
   window.addEventListener("ds-test-alarm", (e) => startAlarm({ kind: "alarm", alarm: true, hm: "07:00", text: "Good morning. Time to get up.", ...(e.detail || {}) }));
   window.addEventListener("ds-test-say", (e) => speak(e.detail?.text ?? "Testing."));
@@ -3388,6 +3470,7 @@
   async function boot() {
     renderClock();
     try { config = await json("/tv/config"); } catch { /* defaults */ }
+    if (config.assistantName) assistantName = config.assistantName;   // (renamed in Settings → Your assistant: "Nova")
     if (config.setupDone === false) { location.href = "/setup"; return; }
     try { prefs = (await json("/settings")).settings; } catch { /* defaults */ }
     applyListenState(prefs.listenState ?? "active");
@@ -3414,7 +3497,8 @@
   }
   /* ---------------- Active / Quiet / Off, notifications, mini ⇄ full ---------------- */
   const STATE_LABEL = { active: "Active", quiet: "Quiet", off: "Off" };
-  const STATE_INFO = { active: "Listens for “Dayspring” and speaks", quiet: "Hears “Dayspring”, says nothing (alarms still ring)", off: "Not listening at all, says nothing" };
+  const wakeShown = () => cap(config.wakePhrases?.[0] ?? "Dayspring");   // (the owner's first wake word)
+  const STATE_INFO = { get active() { return `Listens for “${wakeShown()}” and speaks`; }, get quiet() { return `Hears “${wakeShown()}”, says nothing (alarms still ring)`; }, off: "Not listening at all, says nothing" };
   const STATE_DOT = { active: "#7ee3b0", quiet: "#ffd27a", off: "#ff8fa3" };
   function modeForKind(kind) {
     if (listenState !== "active") return "silent";
@@ -3433,13 +3517,13 @@
     window.dsListenState = listenState;
     document.documentElement.dataset.listen = listenState;
     const lbl = $("#stateLbl"); if (lbl) lbl.textContent = STATE_LABEL[listenState];
-    $("#stateBtn")?.setAttribute("aria-label", `Dayspring is ${STATE_LABEL[listenState].toLowerCase()}. Change listening and notifications`);
-    if (listenState === "off") { stopListeningNow(); pauseListening(); releaseMic(); setMic("", "Dayspring is off: not listening"); $("#talkStatusText").textContent = "Off"; }
+    $("#stateBtn")?.setAttribute("aria-label", `${assistantName} is ${STATE_LABEL[listenState].toLowerCase()}. Change listening and notifications`);
+    if (listenState === "off") { stopListeningNow(); pauseListening(); releaseMic(); setMic("", `${assistantName} is off: not listening`); $("#talkStatusText").textContent = "Off"; }
     else if (was === "off") { if (micMuted && listenState === "active") setStopped(false, { quiet: true }); resumeListening(); startMicMonitor(); }
     if (listenState !== "active" && speaking) stopSpeaking();
-    if (listenState === "quiet" && mode === "idle") setMic("wait", "Quiet: I hear “Dayspring”, and answer on screen");
+    if (listenState === "quiet" && mode === "idle") setMic("wait", `Quiet: I hear “${wakeShown()}”, and answer on screen`);
     if (listenState === "active" && was !== "active" && mode === "idle") setMic("wait", idleText());
-    if (announce && was !== listenState) { toast(`Dayspring is ${STATE_LABEL[listenState].toLowerCase()}`, text || STATE_INFO[listenState], "", "bell"); playSound("soft"); }
+    if (announce && was !== listenState) { toast(`${assistantName} is ${STATE_LABEL[listenState].toLowerCase()}`, text || STATE_INFO[listenState], "", "bell"); playSound("soft"); }
     paintStateMenu();
   }
   window.dsApplyListenState = applyListenState;

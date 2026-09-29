@@ -13,9 +13,10 @@ The same list is on the **Testing** page (Settings → This app → Testing, in 
 | Feature | Stage | Tests |
 |---|---|---|
 | Schedule and calendar | Stable | 3 |
-| Voice and talking | Stable | 3 |
+| Voice and talking | Stable | 8 |
+| Renaming the assistant and wake words | Beta (New) | 7 |
 | Alarms | Stable | 2 |
-| Reminders | Stable | 2 |
+| Reminders | Stable | 3 |
 | Timers | Stable | 2 |
 | Weather | Stable | 1 |
 | Music (Spotify and YouTube) | Stable | 2 |
@@ -39,6 +40,7 @@ The same list is on the **Testing** page (Settings → This app → Testing, in 
 | Picture descriptions | Beta (New) | 5 |
 | Faces and people | Beta (New) | 8 |
 | Your own music and videos | Beta (New) | 7 |
+| Finding files and the file viewer | Beta (New) | 12 |
 | Google Drive | Beta (New) | 6 |
 | Meeting notes | Beta (New) | 6 |
 | Google Meet invitations | Beta (New) | 5 |
@@ -49,6 +51,7 @@ The same list is on the **Testing** page (Settings → This app → Testing, in 
 | Developer preview | Beta (New) | 4 |
 | Email | In progress (dev) | 23 |
 | GIFs | In progress (dev) | 12 |
+| Maps and directions | In progress (dev) | 8 |
 | Smart devices, strips and lights | In progress (dev) | 26 |
 | 3D printers | In progress (dev) | 14 |
 | Cameras | In progress (dev) | 15 |
@@ -58,6 +61,8 @@ The same list is on the **Testing** page (Settings → This app → Testing, in 
 | The Music & Video browser | Beta (New) | 14 |
 | Colour themes | Beta (New) | 6 |
 | Avatars and expression mode | Beta (New) | 11 |
+| Stop and goodbye | Beta (New) | 5 |
+| Everyday commands without AI | In progress (dev) | 11 |
 
 ## Schedule and calendar (Stable)
 
@@ -119,6 +124,141 @@ The same list is on the **Testing** page (Settings → This app → Testing, in 
 
 - [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
 
+### voice-20: Local AI (Ollama): set up and test
+
+*You need: Ollama installed (ollama.com/download)*
+
+1. Open Settings → AI brain and choose Ollama.
+2. Read what it says: "isn't installed" (with an Install link), "installed but not running" (with Start Ollama), or "running, version …, models: …".
+3. If no model is listed, press Pull next to the recommended one (qwen2.5:3b on a computer without a graphics card) and watch the progress bar.
+4. Pick it as the model for commands and press Test tool use.
+
+**Expected:** The status matches reality, the pull finishes, and Test tool use shows three ✓ (the timer, the reminder at 23:00, tomorrow's schedule).
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### voice-21: Local AI: everyday commands
+
+*You need: Ollama with a tool model*
+
+1. With Ollama as the AI brain, say "remind me to drink water at 11pm".
+2. Say "what's on my schedule tomorrow?" and "when is my dentist appointment?".
+3. Say "play some Hillsong on Spotify", then "play a video about sharpening chisels".
+4. Say "who won the Royals game last night?" and "tell me a fun fact about owls".
+
+**Expected:** One reminder at 11 p.m. tonight (never hourly), the right schedule answers, music and a video start, and the answers are short and friendly, never mentioning tools, code or errors.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### voice-22: Local AI: speed and fallback
+
+*You need: Ollama*
+
+1. Ask two or three questions, then open Settings → AI brain → Ollama → Speed.
+2. Quit Ollama (right-click the llama icon → Quit) and ask a question.
+3. Open Settings → AI brain again.
+
+**Expected:** Speed shows the first word, first sentence and whole-answer times. With Ollama stopped, Dayspring answers with its built-in commands and says once that the local AI isn't running (or Claude answers, if that's the chosen fallback); Settings says "installed but not running" with a Start Ollama button.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### voice-23: Switch the AI brain and model
+
+1. On the screen, open ⋯ → 🧠 AI brain and choose No AI; ask something.
+2. Say "use Ollama", then "what model are you using?".
+3. If a Claude key is saved: say "use Opus", then "switch to Haiku", then "switch to Claude".
+4. Restart Dayspring and say "which AI are you using?".
+
+**Expected:** Each switch happens at once with a toast or a spoken yes; No AI answers from the built-in commands; the choice survives the restart; models that aren't available are named with what is.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### voice-24: A Claude key that works
+
+*You need: A Claude key*
+
+1. In Settings → AI brain → Claude, paste a key with a space or quotes around it and press Test.
+2. Paste a wrong key (change one letter) and press Test.
+3. Press Check my Claude connection.
+4. Say "check my AI key".
+
+**Expected:** The pasted key is cleaned and works; a wrong key says it isn't valid and how to make a new one (and isn't saved); the check lists key saved (last 4 only), reachable, credit, model and the time taken.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+
+## Renaming the assistant and wake words (Beta (New))
+
+### naming-01: Rename it by voice
+
+1. Say "Dayspring, your name is Nova".
+2. It reads it back ("Okay, call me Nova from now on? Say yes."). Say "yes".
+3. Say "Nova, what's your name?", then "Nova, what were you called before?".
+
+**Expected:** "Great, I'm Nova now!", then "I'm Nova." and "I started out as Dayspring." The panel's label says Nova and the window title is "Nova · Dayspring".
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### naming-02: A made-up name and how to say it
+
+1. Settings → Your assistant: name it "Computa", How to say it "compootah", press ▶ Hear it, then Save.
+2. Say "Computa, what time is it?" and "Computer, what time is it?".
+3. Say "my computer is slow" (a normal sentence).
+
+**Expected:** The voice says "compootah". Both wake it and it answers; "my computer is slow" does not wake it.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### naming-03: Your own wake words (up to 3)
+
+1. Say "Computa, add Jarvis as a wake word", then "yes".
+2. Say "Jarvis, what are your wake words?".
+3. In Settings → Your assistant, try adding a fourth one, and a wake word of just "Hey".
+
+**Expected:** It answers to both and lists them. A fourth wake word and "Hey" alone are refused with a reason.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### naming-04: Train my wake word
+
+*You need: a microphone*
+
+1. Say "Computa, train my wake word" (or Settings → Your assistant → Train on the Dayspring screen).
+2. When the card says "Now", say the wake word on its own, five times, with a short pause in between.
+
+**Expected:** The card shows how many times it understood you and which spellings it learned (and a tip if the word is short or an everyday word). Afterwards it wakes more reliably.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### naming-05: Lantern's name stays Lantern's
+
+1. Say "your name is Lantern".
+2. In Settings, try the wake word "Lanterns".
+
+**Expected:** Both are refused, and it explains that Lantern (the learning app) would answer too.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### naming-06: The new name everywhere
+
+*You need: Tune in, Discord or Meetings, as available*
+
+1. With Tune in on, have someone on the call say "Computa, what's the capital of France?".
+2. If the Discord bot is set up: check its nickname in your server.
+3. Open Meetings → Rehearse: read the hello in the meeting chat.
+
+**Expected:** Tune in answers; the bot's nickname is the new name (or Settings → Discord says it needs the Change Nickname permission); the meeting hello says "I'm Computa".
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### naming-07: Back to Dayspring
+
+1. Say "go back to Dayspring", then "yes".
+
+**Expected:** "Okay, I'm Dayspring again!" The label and window title say Dayspring.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
 
 ## Alarms (Stable)
 
@@ -160,6 +300,18 @@ The same list is on the **Testing** page (Settings → This app → Testing, in 
 3. Say "cancel the bank reminder".
 
 **Expected:** It lists it, then cancels it.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### reminders-03: Remind me to drink water at a clock time
+
+*You need: no AI*
+
+1. Say "Dayspring, remind me to drink water at 11pm".
+2. Say "what are my reminders?".
+3. Say "remind me to drink water every hour", then "stop the water reminders".
+
+**Expected:** The first is ONE reminder at 11 p.m. (tomorrow if 11 p.m. has passed), never an hourly one. The list shows it. The hourly one starts and stops when asked.
 
 - [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
 
@@ -789,6 +941,130 @@ The same list is on the **Testing** page (Settings → This app → Testing, in 
 2. Say "play … from my computer".
 
 **Expected:** It doesn't search your files (and the folder scan doesn't run). Back on, it works.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+
+## Finding files and the file viewer (Beta (New))
+
+### fileviewer-01: Find a file by name and open it
+
+1. In Settings → Permissions, make sure Documents (or a test folder) is allowed with "Can look".
+2. Say "find my resume" (or the name of a file you have).
+3. Say "open the PDF called" and the name of a PDF you have.
+
+**Expected:** One clear match opens straight away in the viewer on the screen, and Dayspring says "Opening … from Documents".
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### fileviewer-02: Several matches, a number, typos and spoken numbers
+
+1. Say "find the" and a word that's in the names of several files.
+2. Say "number 2".
+3. Say a picture's name with a typo or its number spoken ("show me the picture named IMG five seven eight two").
+
+**Expected:** A numbered list with small pictures, folders, sizes, dates and types; "number 2" opens the second; the misspelled or spoken name still finds the right file.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### fileviewer-03: Dates, folders and kinds
+
+1. Say "open last week's budget spreadsheet" (or a spreadsheet you changed in the last two weeks).
+2. Say "find photos from" and a year you have photos from.
+3. Say "find the" and a file name "in Downloads".
+
+**Expected:** Only files of that kind, from that time or in that folder are found.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### fileviewer-04: Nothing found, and what it says
+
+1. Say "find the pdf called quantum banana".
+2. Say the name of a file that's in a folder you haven't allowed.
+
+**Expected:** It says it couldn't find it, suggests close names if there are any, lists the folders it looked in, and says how to allow more in Settings → Permissions. Files in folders you didn't allow never appear.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### fileviewer-05: Pictures in the viewer
+
+1. Open a photo.
+2. Zoom with the mouse wheel, + and −, Fit and 100%; drag it around; rotate and flip it.
+3. Press ▶ to go to the next picture in the folder, then start the slideshow.
+4. Press ℹ.
+
+**Expected:** Every control works; the info panel shows the date taken, the camera and the size. HEIC photos show too (Windows needs the HEIF extension).
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### fileviewer-06: Video and audio in the viewer
+
+1. Open a video (one with a .srt file of the same name next to it, if you have one).
+2. Seek, skip 10 seconds, change the speed and volume, turn captions on, try picture-in-picture.
+3. Open a WMV or AVI if you have one.
+
+**Expected:** It plays on the screen with all the controls; captions show; a WMV/AVI is converted as it plays.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### fileviewer-07: PDFs: pages, search and read aloud
+
+1. Open a PDF with several pages.
+2. Use the page thumbnails, ◀ ▶, zoom, Fit width and Fit page, rotate.
+3. Type a word in the search box and press Enter.
+4. Say "read this page", then "stop reading".
+
+**Expected:** Pages draw sharply; search jumps to the matches and marks them; Dayspring reads the page aloud in its own voice and stops when asked.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### fileviewer-08: Text, code, Markdown, CSV, Word, Excel, PowerPoint and zip
+
+1. Open a .txt or code file, a Markdown file, a CSV, a Word document, an Excel workbook, a PowerPoint and a .zip.
+2. In the CSV, click a column heading twice.
+3. In the zip, click a small file inside.
+
+**Expected:** Code is coloured; Markdown is formatted; the CSV sorts both ways (numbers as numbers); Word shows its headings; Excel shows each sheet as a tab; PowerPoint shows each slide's text and pictures; a small file inside the zip opens in the viewer.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### fileviewer-09: Voice and the remote while viewing
+
+1. With a picture open, say "zoom in", "rotate", "next", "start slideshow", "close".
+2. With a PDF open, say "page 3" and "search for" a word in it.
+3. Use only the arrow keys, Enter, + −, F and Esc.
+
+**Expected:** Each command works at once, without the AI; the keyboard alone can do everything.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### fileviewer-10: Delete, copy and open in the default app follow the permissions
+
+> ⚠ Use a throwaway copy for the delete test. Deleted files go to the Recycle Bin and can be restored from there.
+
+1. Copy a throwaway file into an allowed folder and open it in the viewer.
+2. ⋯ → Delete… with "Can delete files" off, then on.
+3. ⋯ → Save a copy; ⋯ → Open in the default app with Programs off, then on.
+
+**Expected:** Delete is refused while it's off; when on, it asks "Are you sure?" and the file goes to the Recycle Bin. The copy appears next to it. Opening in the default app needs the Programs permission (and asks if it's set to ask). Everything is in the activity log.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### fileviewer-11: The AI finds and opens files
+
+1. With Claude or Ollama as the AI brain, say "can you find my lease and put it on the screen?" (or a file you have).
+2. Then ask "summarize it".
+
+**Expected:** The AI finds it with its file tools and opens it in the viewer; the file's words go to the AI only for the summary you asked for. With No AI, nothing goes anywhere.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### fileviewer-12: Off switch
+
+1. Switch off Finding files and the file viewer in Settings → Features and restart Dayspring.
+2. Say "open the PDF called" and a file's name.
+
+**Expected:** The viewer doesn't open and the name index isn't built. Back on, it works.
 
 - [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
 
@@ -1495,6 +1771,104 @@ The same list is on the **Testing** page (Settings → This app → Testing, in 
 1. On development, switch off GIFs in Settings → Features and reload.
 
 **Expected:** No button, no picker, no Settings → GIFs; "show me a GIF" isn't handled as a GIF.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+
+## Maps and directions (In progress (dev))
+
+### maps-01: Maps appears only where it should
+
+1. On production, look for 🗺 Maps by the clock and Settings → Maps; on development, look again.
+
+**Expected:** Production: neither. Development: both.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### maps-02: Search and near home with no key (free maps)
+
+*You need: the internet*
+
+1. Settings → Where you are: make sure home is set.
+2. Settings → Maps: Maps = Automatic, no Google key saved. The status says OpenStreetMap is in use.
+3. Open 🗺 Maps. Type the name of your town slowly: suggestions appear after you pause. Pick one.
+4. Say "find coffee near me". Then "where's the nearest gas station?".
+
+**Expected:** The town shows on the map. Coffee places near home are listed and numbered (nearest first) with their distance, and pins match the numbers. The nearest gas station is said with its distance. The © OpenStreetMap credit is on the map.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### maps-03: Directions, modes, alternatives and avoiding roads
+
+*You need: the internet, home set in Where you are*
+
+1. Say "directions to" a place you know about 10 minutes away.
+2. Click another grey route on the map, then Walk, then Drive again.
+3. Tick Avoid highways.
+4. Type another start in From and press Go.
+
+**Expected:** Distance, time and arrival time are said; the route is drawn with any alternatives in grey; the list shows the steps. Switching routes and modes redraws it. Avoid highways changes the route (or says it couldn't). The typed start is used.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### maps-04: Step-by-step spoken directions
+
+*You need: the internet*
+
+1. With a route showing, say "read the directions".
+2. Say "next step" three times, "previous step", then "repeat that".
+3. Say "how far is it?" and "what's my ETA?".
+4. Say "demo the directions" and start talking while it runs; then "stop the directions".
+
+**Expected:** Each step is said naturally ("In half a mile, turn left onto Main Street."), the highlighted step follows, previous and repeat work. Distance and ETA are answered. In the demo a step waits while you talk (the floor), and Stop ends it.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### maps-05: A Google Maps key: guide, Test, automatic switch
+
+*You need: a Google Cloud project with billing, the internet*
+
+> ⚠ Google charges past the free monthly amounts: set the daily quotas and a budget alert before testing.
+
+1. Follow Settings → Maps → How to make a Google Maps key safely: enable the three APIs, restrict the key to them, set daily quotas and a budget alert.
+2. Paste the key, Save key, then Test.
+3. Open 🗺 Maps and search for a restaurant; ask for transit directions somewhere.
+4. Set Maps to "Always the free OpenStreetMap maps" and search again.
+
+**Expected:** Test says search and directions work (or names the API to turn on). With the key, the window says Google Maps, the map is Google's, results have ratings/hours only if that extra is on, and Transit works. Forced to OpenStreetMap, the free maps are used again. The key is never shown back.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### maps-06: Send to phone and the QR code
+
+*You need: a phone with a camera*
+
+1. With a route showing, press 📱 Send to phone (or say "send the directions to my phone").
+2. Scan the QR code with your phone's camera and open the link.
+
+**Expected:** If Dayspring is signed in to your other devices, the link arrives there; otherwise it says so. The QR code opens the same trip in Google Maps on the phone.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### maps-07: Schedule: Directions and "leave by"
+
+*You need: the internet, home set in Where you are*
+
+1. Add a schedule item for later today with a line in its notes: Where: (a real address nearby).
+2. Open it in the Schedule app (📅).
+3. Press ⏰ Remind me, then 🗺 Directions.
+
+**Expected:** It says "You need to leave by … to make your …" with the trip time from home. The reminder is set for that time. Directions closes the schedule and shows the route in the Maps window.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### maps-08: The window fits the screen and closes
+
+1. With Settings → Screen margins set, open 🗺 Maps; drag it, resize it from the corner, double-click the title bar.
+2. Open Dayspring mini and the Maps window there.
+3. Press Esc; say "close the map".
+
+**Expected:** It always stays inside the margins with every button reachable; mini fills the window with the map on top; Esc and "close the map" close it.
 
 - [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
 
@@ -2700,5 +3074,203 @@ The same list is on the **Testing** page (Settings → This app → Testing, in 
 1. Press Back to the default look.
 
 **Expected:** The default theme, the orb, and expression mode off, straight away on every screen.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+
+## Stop and goodbye (Beta (New))
+
+### conversation-01: Ending the conversation closes the listening window
+
+*You need: no AI*
+
+1. Turn the AI off in Settings → AI brain (or unplug the internet) so Dayspring works without AI.
+2. Say "Dayspring, what time is it?", then, while it's still listening, say "thanks".
+3. Say "Dayspring, set a timer for 2 minutes, thanks".
+
+**Expected:** "Thanks" gets a short "You're welcome!" and the listening window closes right away (no waiting). The timer starts with no "What's it for?" question, and the window closes. Cancel the timer afterwards.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### conversation-02: Endings that aren't endings
+
+*You need: no AI*
+
+1. Say "Dayspring, thanks for the reminder, now set a timer for 1 minute".
+2. Say "Dayspring, never mind the timer, cancel it".
+3. Say "Dayspring, remind me to say thank you at 5 pm".
+
+**Expected:** The timer is set (not treated as a goodbye), then cancelled; the reminder is "say thank you" at 5 p.m.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### conversation-03: "Stop" cuts Dayspring off, and it keeps listening
+
+*You need: no AI*
+
+1. Ask something with a long answer, like "Dayspring, tell me a fun fact" or "what's on my schedule this week".
+2. While it's still talking, say "stop" (no wake word).
+3. Right away, say "Dayspring, what time is it?".
+4. Try "that's enough" and "shh" the same way.
+
+**Expected:** It stops mid-sentence within a moment, says nothing about stopping, and the very next "Dayspring, …" is answered normally. The listening light goes back to Ready, never to Stopped.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### conversation-04: "Stop" and the music
+
+*You need: no AI, music*
+
+1. Play some music.
+2. Ask a question and say "stop" while Dayspring answers.
+3. Then say "Dayspring, stop" while nothing is being said.
+
+**Expected:** The first "stop" only stops Dayspring's voice (the music keeps playing); the second stops the music.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### conversation-05: "No thanks" to a question, in the production version
+
+*You need: no AI*
+
+1. On a production install (Settings → This app shows Production), with no AI, say "Dayspring, add dentist tomorrow at 3pm".
+2. When it asks a follow-up question ("Want a reminder before it?"), say "no thanks, that's all".
+3. Say "Dayspring, what time is it?".
+
+**Expected:** The dentist appointment is added, the question is dropped (no reminder is made), the listening window closes at once, and the next "Dayspring, …" is answered normally.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+
+## Everyday commands without AI (In progress (dev))
+
+### commands-03: Any setting by voice, and "undo that"
+
+*You need: no AI*
+
+1. Say "set the volume to 40", "make the text bigger", "use 24-hour time", "hide the clock", "one column".
+2. Check the screen after each one.
+3. Say "undo that" after the last one, then "show the clock", "use 12-hour time", "reset the text size", "automatic layout", and put the volume back.
+
+**Expected:** Each change happens at once and Dayspring says what changed (and what it was). "Undo that" puts the last change back. The clock shows 24-hour time until you switch back.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### commands-04: Asking about a setting
+
+*You need: no AI*
+
+1. Say "what's my wake word set to?", "what's the volume?", "is night mode on?".
+
+**Expected:** Each gets a plain answer with the current value.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### commands-05: Security settings wait for a yes
+
+*You need: no AI*
+
+> ⚠ Answer no: this test should not change your permissions.
+
+1. Say "turn off web search", then "no".
+2. Say "allow deleting files", then "no".
+3. Say "give yourself access to all my files".
+
+**Expected:** Nothing changes without your yes: the first two ask "Say yes to change it" and "no" leaves them alone; the last one says it can only be changed in Settings.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### commands-06: The sky and the background by voice
+
+*You need: no AI*
+
+1. Say "make it rain for 1 minute", "make it night", "change the scenery to mountains", "turn off the stars", "pause the animation".
+2. Wait a minute, then say "show the real sky again" and "resume the animation".
+
+**Expected:** Each change shows on the screen right away; the rain stops by itself after a minute; the mountains become the closest scene (hills) and Dayspring says so; the real sky comes back at the end.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### commands-07: The screen by voice
+
+*You need: no AI*
+
+1. Say "compact mode", then "expand".
+2. Say "dayspring panel on the left", then "automatic layout".
+3. With two screens, say "move to the other screen", then "move to the main screen".
+
+**Expected:** The window shrinks and grows back; the panel moves left and back; the screen moves over and back.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### commands-08: Scheduling with repeats
+
+*You need: no AI*
+
+1. Say "add test gym every Monday Wednesday Friday at 6am for an hour".
+2. Open the Schedule on the week view.
+3. Say "cancel Friday's test gym", then "undo that".
+4. Say "cancel all test gym".
+
+**Expected:** Test gym shows on Monday, Wednesday and Friday at 6–7 a.m.; Friday's disappears and comes back with undo; "cancel all" ends the series after the next one.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### commands-09: Moving and repeating the last thing
+
+*You need: no AI*
+
+1. Say "schedule a test appointment tomorrow at 3pm", then "no thanks" to the reminder question.
+2. Say "move it to 4", then "make it recurring" and answer "every other week".
+3. Say "stop repeating", then remove it.
+
+**Expected:** It moves to 4 p.m.; Dayspring asks how often (one question) and then it repeats every two weeks; "stop repeating" keeps just the next one.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### commands-10: Timers to a clock time and every-few-minutes reminders
+
+*You need: no AI*
+
+1. Say "set a timer for" a time about 5 minutes from now (like "set a timer for 3:45").
+2. Say "every 30 minutes remind me to stand up", then "stop reminding me to stand up".
+3. Say "remind me to drink water at 11pm".
+
+**Expected:** The timer counts down to that time; the stand-up reminder is set and then stopped; the water reminder is once at 11 p.m. ("Just once"), never every hour.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### commands-11: Alarms with days, a label and a gentle wake
+
+*You need: no AI*
+
+1. Say "set an alarm for weekdays at 6:30 called test with the bells and a gentle wake".
+2. Say "what alarms do I have?".
+3. Say "skip tomorrow's alarm", then "turn off my weekday alarms", then "delete the 6:30 alarm".
+
+**Expected:** The alarm is listed as 6:30 a.m. on weekdays with its label, sound and gentle wake; skipping, switching off and deleting each say what they did.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### commands-12: Your name, where you live and what you like
+
+*You need: no AI, internet (for the town lookup)*
+
+1. Say "call me" and a nickname, then "what's my name?".
+2. Say "I live in" your town and state (for example "I live in Springfield, Illinois").
+3. Say "I like kayaking", then "what do you know about me?", then "forget that I like kayaking".
+
+**Expected:** The nickname is used; the town is found and read back ("…, got it. Weather and sunrise will use that."); the interest is saved, read back and then forgotten. Nothing leaves this computer except the town lookup.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### commands-13: Two requests at once
+
+*You need: no AI*
+
+1. Say "set the volume to 60 and make it snow".
+2. Say "show the real sky again" afterwards.
+
+**Expected:** Both happen, and both are answered.
 
 - [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____

@@ -7,6 +7,7 @@
 // pop-ups are open and checks they move to stay inside.
 //   node scripts/qa/overlay-fit.mjs [--keep]
 import "./guard-data.mjs";   // first: tests never write to the real data folder
+import { qaPort } from "./port.mjs";   // a free port (or QA_PORT), so parallel runs never collide
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -20,7 +21,7 @@ if (!PW) { console.log("FAIL  playwright-core not found"); process.exit(1); }
 const { chromium } = await import(pathToFileURL(PW).href);
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
 
-const PORT = 4771, BASE = `http://127.0.0.1:${PORT}`;
+const PORT = await qaPort(4771), BASE = `http://127.0.0.1:${PORT}`;
 const TMP = mkdtempSync(join(tmpdir(), "ds-overlayfit-")), APP = join(TMP, "app");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let fail = 0, pass = 0;
@@ -38,8 +39,11 @@ let isUp = false;
 for (let i = 0; i < 120 && !(isUp = await up()); i++) await sleep(500);
 check("the throwaway server is up", isUp, serverLog.slice(-300));
 
-const browser = await chromium.launch(existsSync(CHROME) ? { executablePath: CHROME, headless: true, args: ["--mute-audio", "--autoplay-policy=no-user-gesture-required"] }
-  : { channel: (await import(pathToFileURL(join(DESK, "lib", "browsers.mjs")).href)).playwrightChannel(), headless: true, args: ["--mute-audio"] });
+// one headless Chrome per screen size and margin set (a chunk), closed after it: a single page that runs every pass
+// ran out of memory late in the /mini pass on a busy computer (page crashes, then a cascade of failures)
+const launch = () => chromium.launch(existsSync(CHROME) ? { executablePath: CHROME, headless: true, args: ["--mute-audio", "--autoplay-policy=no-user-gesture-required"] }
+  : { channel: CHANNEL, headless: true, args: ["--mute-audio"] });
+const CHANNEL = existsSync(CHROME) ? null : (await import(pathToFileURL(join(DESK, "lib", "browsers.mjs")).href)).playwrightChannel();
 const mock = () => {
   window.__dsAllowAutomatedListen = true;
   const ss = window.speechSynthesis; if (ss) { ss.speak = (u) => setTimeout(() => u.onend?.(), 10); ss.cancel = () => {}; }
@@ -48,6 +52,7 @@ const mock = () => {
   window.SpeechRecognition = window.webkitSpeechRecognition = FakeSR;
 };
 // nothing reaches the devices, the window or the network from here
+const PNG1 = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==", "base64");
 const DEVICE_ROUTES = /\/api\/(sound|window|devices\/use|voicemeeter\/(install|setup)|keepawake|tunein|callbridge|open|app\/quit|update)/;
 
 // ---------------------------------------------------------------- in the page: is it inside, is it clickable?
@@ -78,6 +83,12 @@ function inspect([sel, ctlSel]) {
 const svg = (w, h) => "data:image/svg+xml," + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'><rect width='100%' height='100%' fill='#468'/></svg>`);
 const items = (n, f) => Array.from({ length: n }, (_, i) => f(i + 1));
 const LONG = "A longer note than usual, so the card has to wrap onto several lines and might have to scroll inside the screen's margins. ".repeat(3);
+const MAPS_STEPS = items(14, (n) => ({ n, text: n === 1 ? "Head north on Main Street" : `Turn ${n % 2 ? "left" : "right"} onto Street number ${n}, which has a longer name`, distance: 400, distanceText: "0.2 mi", at: [39.78 + n * 0.002, -89.65 + n * 0.002], kind: "turn" }));
+const MAPS_VIEW = { open: true, q: "library", provider: "osm", services: { active: "osm", map: "OpenStreetMap", search: "OpenStreetMap", route: "OSRM", transit: false }, units: "mi", home: { name: "Home", lat: 39.78, lon: -89.65 },
+  results: [{ n: 1, id: "osm:n1", name: "Public Library", address: "1 Main Street, Springfield", lat: 39.8, lon: -89.64, distanceText: "1.4 mi" }], selected: 0, mode: "driving", avoid: {}, alt: 0, step: 2, guided: true,
+  from: { id: "home", name: "Home", lat: 39.78, lon: -89.65 }, to: { name: "Public Library", address: "1 Main Street, Springfield", lat: 39.8, lon: -89.64 },
+  routes: [{ i: 0, distance: 2300, duration: 420, distanceText: "1.4 mi", durationText: "7 min", summary: "via Main Street", geometry: MAPS_STEPS.map((s) => s.at), steps: MAPS_STEPS }, { i: 1, distance: 2600, duration: 480, distanceText: "1.6 mi", durationText: "8 min", summary: "via Oak Avenue", geometry: [[39.78, -89.65], [39.8, -89.64]] }],
+  stepText: "In a quarter mile, turn right onto Street number 3, which has a longer name.", link: "https://www.google.com/maps/dir/?api=1&destination=39.8%2C-89.64", embed: null, error: "", busy: "", at: 1 };
 const ev = (p, name, data) => p.evaluate(([n, d]) => window.dsEvents?.dispatchEvent(new MessageEvent(n, { data: JSON.stringify(d) })), [name, data]);
 const POPUPS = [
   { name: "file-access check card", box: "#faCheck", wait: 6000, close: '#faCheck [data-k="later"]' },
@@ -101,6 +112,14 @@ const POPUPS = [
     ctl: "header button, li .ib", close: '#dsVQueue [data-qa="close"]' },
   // (his own files: nothing to reach on the network; the window itself, its tabs, search, sections and window buttons)
   { name: "Music & Video browser", live: true, box: "#dsMB", open: (p) => p.evaluate(() => window.dsMB.open({ source: "local" })), wait: 900, ctl: ".mb-bar button:not([hidden]), .mb-search button:not([hidden]), .mb-search input, .mb-nav button", close: "#dsMB .mb-x" },
+  // (the Maps window with a route and its steps: drawn from a made-up view; the map pictures are answered below, never fetched)
+  { name: "Maps window", live: true, box: "#dsMaps", open: (p) => p.evaluate((v) => window.dispatchEvent(new CustomEvent("ds-test-maps", { detail: v })), MAPS_VIEW), wait: 900,
+    ctl: ".mp-bar button, .mp-search button, .mp-search input, .mp-modes button, .mp-ctl button", close: "#dsMaps .mp-x" },
+  // (the file viewer with a made-up file's info card: no file is read; and the list of files it found)
+  { name: "file viewer", live: true, box: "#dsViewer", open: (p) => p.evaluate(() => window.dsViewer.open({ item: { id: "0123456789abcdef", name: "A file with a much longer name than most files have.xyz", kind: "other", type: "file", sizeText: "12 KB", when: "today", where: "Documents\\Projects" } })), wait: 900,
+    ctl: ".vw-bar button:not(:disabled), .vw-card .vb", close: "#dsViewer .vw-x" },
+  { name: "files found list", live: true, box: "#dsFinder", open: (p) => p.evaluate((its) => window.dsViewer.showList("Files like “lease agreement”", its), items(16, (n) => ({ n, id: "0123456789abcde" + (n % 10), name: `Lease Agreement copy number ${n} with a long name.pdf`, kind: "pdf", where: "Documents\\Leases", sizeText: "120 KB", when: "yesterday", type: "PDF" }))), wait: 700,
+    ctl: "header button, form button, form input, form select", close: '#dsFinder [data-f="close"]' },
   { name: "results card", live: true, box: ".rpanel", open: (p) => p.evaluate((its) => window.dispatchEvent(new CustomEvent("ds-test-results", { detail: { title: "Search results", summary: "Here's what I found.", items: its } })), items(14, (n) => ({ n, title: `Result number ${n}`, detail: "A detail line", url: "https://example.org/" + n }))), ctl: "header button", close: "#rsClose" },
   { name: "suggestion card", box: "#dsxSuggest", open: (p) => p.evaluate(() => window.dsExtras.before({ suggest: { prompt: "Which one did you mean?", options: Array.from({ length: 6 }, (_, i) => ({ n: i + 1, label: `Option number ${i + 1} with a longer label` })) } }, { typed: true })), after: (p) => p.evaluate(() => window.dsExtras.stop()) },
   // (✕ only closes a reader that has a document in it, so the empty one here is hidden again by hand)
@@ -163,21 +182,25 @@ const CONFIGS = [
 ];
 const pct = (m) => `${m.t}/${m.r}/${m.b}/${m.l}%`;
 
+// (a chunk only: CONFIG_ONLY="/mini" or "1920"; any free port, or QA_PORT)
 // (debugging: OVERLAY_ONLY=<regex on the pop-up name>, CONFIG_ONLY=<regex on "/display 1280×720 margins 8/8/8/8%">)
 const ONLY = process.env.OVERLAY_ONLY ? new RegExp(process.env.OVERLAY_ONLY, "i") : null, CONLY = process.env.CONFIG_ONLY ? new RegExp(process.env.CONFIG_ONLY, "i") : null;
 for (const [path, w, h, margins] of CONFIGS) {
   for (const m of margins) {
     if (CONLY && !CONLY.test(`${path} ${w}×${h} margins ${pct(m)}`)) continue;
     const tag = `${path} ${w}×${h} margins ${pct(m)}`;
+    const browser = await launch();
     const ctx = await browser.newContext({ viewport: { width: w, height: h } });
     await ctx.addInitScript(mock);
     await ctx.route("**/*", (rt) => {
       const u = rt.request().url();
       if (/\/api\/setup\/permissions$/.test(u) && rt.request().method() === "GET") return rt.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ confirmPending: true, summary: "Read your Documents; write with backups; no deleting. " + LONG }) });
       if (rt.request().method() === "POST" && DEVICE_ROUTES.test(u)) return rt.fulfill({ status: 200, contentType: "application/json", body: '{"ok":true}' });
+      if (/\/api\/maps\/tile\//.test(u)) return rt.fulfill({ status: 200, contentType: "image/png", body: PNG1 });   // (no map pictures from the internet)
       return rt.continue();
     });
     const p = await ctx.newPage(); const errs = []; p.on("pageerror", (e) => errs.push(String(e.stack || e.message).slice(0, 300)));
+    let crashed = false; p.on("crash", () => { crashed = true; });
     await saveMargins(m);   // saved before the screen opens (it reads them as it starts)
     await p.goto(BASE + path); await p.waitForTimeout(2200);
     if (await p.locator("#startBtn").isVisible().catch(() => false)) { await p.click("#startBtn"); await p.waitForTimeout(600); }
@@ -223,12 +246,13 @@ for (const [path, w, h, margins] of CONFIGS) {
       await close(p, pp);
     }
     check(`${tag}: no page errors`, errs.length === 0, errs.slice(0, 2).join(" | "));
+    check(`${tag}: the page never crashed`, !crashed);
     if (fail) await p.screenshot({ path: join(TMP, `last-${path.slice(1)}-${w}x${h}-${m.t}-${m.b}-${m.l}-${m.r}.png`) }).catch(() => {});
     await ctx.close();
+    await browser.close();
   }
 }
 
-await browser.close();
 server.kill();
 await sleep(500);
 if (!process.argv.includes("--keep")) { spawnSync("cmd.exe", ["/d", "/c", "rmdir", join(APP, "node_modules")], { windowsHide: true }); try { rmSync(TMP, { recursive: true, force: true }); } catch { /* fine */ } }

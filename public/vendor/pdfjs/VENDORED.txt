@@ -1,0 +1,2 @@
+pdfjs-dist 6.3.289 (legacy build), Apache-2.0, https://github.com/mozilla/pdf.js
+Copied by scripts/vendor-viewer.mjs. Do not edit these files by hand.

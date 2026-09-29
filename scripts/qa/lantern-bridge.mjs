@@ -4,6 +4,7 @@
 //   node scripts/qa/lantern-bridge.mjs [--keep] [--no-real]
 //   (the real-Lantern part needs ..\..\..\lantern\dist-out\Lantern.zip and ..\..\..\lantern\server\test\fake-hub.mjs)
 import "./guard-data.mjs";   // first: tests never write to the real data folder
+import { qaPort } from "./port.mjs";   // a free port (or QA_PORT), so parallel runs never collide
 import { spawn, spawnSync } from "node:child_process";
 import { createServer, request } from "node:http";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -14,7 +15,7 @@ import { randomBytes } from "node:crypto";
 
 const DESK = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const PROJECTS = join(DESK, "..", "..", "..");
-const PORT = 4793, BASE = `http://127.0.0.1:${PORT}`;
+const PORT = await qaPort(4793), BASE = `http://127.0.0.1:${PORT}`;
 const KEEP = process.argv.includes("--keep"), REAL = !process.argv.includes("--no-real");
 const TMP = mkdtempSync(join(tmpdir(), "ds-lantern-")), APP = join(TMP, "app"), ECO = join(TMP, "eco");
 const LDATA = join(TMP, "lantern-data"), LDIR = join(TMP, "Programs", "Lantern");

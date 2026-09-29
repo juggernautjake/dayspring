@@ -143,8 +143,12 @@ export function scan(target, { dataDir } = {}) {
     const rel = relative(target, f);
     for (const [, level, r] of rx) if (r.test(rel)) { hits.push({ level, file: rel, line: 0, what: "personal word in a file name", text: rel }); break; }
     if (!TEXT.has(extname(f).toLowerCase()) || statSync(f).size > 5_000_000) continue;
+    // third-party browser libraries shipped as they are (public/vendor: pdf.js, Prism, Leaflet, Quill…): their code is
+    // checked for keys and paths like everything else, but not for people's names (a font's name is not a person's)
+    const thirdParty = /^public[\\/]vendor[\\/]/i.test(rel);
     readFileSync(f, "utf8").split(/\r?\n/).forEach((l, i) => {
       for (const [what, r] of KEYS) if (r.test(l)) { hits.push({ level: "fail", file: rel, line: i + 1, what, text: l.trim().replace(r, (m) => m.slice(0, 6) + "…").slice(0, 160) }); return; }
+      if (thirdParty) return;
       for (const [, level, r] of rx) if (level === "fail" && r.test(l)) { hits.push({ level, file: rel, line: i + 1, what: "personal", text: l.trim().slice(0, 160) }); return; }
       for (const [t, level, r] of rx) if (level === "warn" && r.test(l)) { hits.push({ level, file: rel, line: i + 1, what: `first name "${t}"`, text: l.trim().slice(0, 160) }); return; }
     });

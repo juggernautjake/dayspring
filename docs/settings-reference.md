@@ -46,9 +46,16 @@ Most settings can also be changed by voice, for example "make everything bigger"
 
 | Setting | What it does |
 |---|---|
-| **Assistant's name** | Keep "Dayspring" or choose any name. |
-| **Wake words** | What you say to get its attention, separated by commas. "Hey …" works automatically. |
+| **Assistant's name** | Keep "Dayspring" or choose any name: 1–19 letters, numbers, spaces, apostrophes and hyphens (never "Lantern"). The app is still called Dayspring. |
+| **How to say it** | How the name is said, if not the way it's spelled ("Ee-fa" for Aoife). The voice says it that way, and it helps hearing the name. ▶ Hear it plays it. |
+| **Wake up to its name** | On: the wake word is the name, and changes with it. Off: choose your own wake words. |
+| **Wake words** | Up to 3, each up to 19 characters ("Hey Nova", "Computer", "Jarvis"). "Hey …" in front always works. Each has **Sounds like** and **Also accept** (what the recognizer writes instead). |
+| **How easily it wakes** | Strict, Normal or Relaxed. |
+| **Try it** | Type what the recognizer might write: it says whether that would wake it, and what the request is. |
+| **Train my wake word** | Say the wake word five times on the Dayspring screen; what it heard is kept as accepted spellings. |
 | **Sense of humor** | Just the facts, Light and friendly, Dry and witty, Goofy and playful, or describe your own. |
+
+More in [Renaming your assistant and wake words](renaming-your-assistant.md).
 
 ## AI brain
 

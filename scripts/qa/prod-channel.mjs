@@ -5,11 +5,11 @@
 //   node scripts/qa/prod-channel.mjs [--keep]
 import "./guard-data.mjs";   // first: tests never write to the real data folder
 import { spawn, spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const DESK = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const TMP = mkdtempSync(join(tmpdir(), "ds-prodchan-")), APP = join(TMP, "app");
@@ -27,8 +27,9 @@ mkdirSync(join(APP, "data"), { recursive: true });
 writeFileSync(join(APP, "data", "owner.json"), JSON.stringify({ name: "Tester", setupDone: true, display: "primary" }));
 
 const PORT = await freePort(), BASE = `http://127.0.0.1:${PORT}`;
+const OLPORT = await freePort();   // a pretend Ollama (scripts/qa/ollama-mock.mjs), started part-way: live detection
 const env = { ...process.env, PORT: String(PORT), DAYSPRING_DISPLAY: "", DAYSPRING_TV: "", DAYSPRING_NO_BROWSER: "1", DAYSPRING_DEVICES_DRYRUN: "1", DAYSPRING_NO_OVERLAY: "1", DAYSPRING_NO_ECO: "1",
-  ANTHROPIC_API_KEY: "", OPENAI_API_KEY: "", XAI_API_KEY: "", ELEVENLABS_API_KEY: "", AI_PROVIDER: "", DAYSPRING_REMINDER_CHANNEL: "off", LOCALAPPDATA: join(TMP, "local"), APPDATA: join(TMP, "roaming") };
+  ANTHROPIC_API_KEY: "", OPENAI_API_KEY: "", XAI_API_KEY: "", ELEVENLABS_API_KEY: "", AI_PROVIDER: "", OLLAMA_URL: `http://127.0.0.1:${OLPORT}`, DAYSPRING_OLLAMA_EXE: join(TMP, "no-ollama.exe"), DAYSPRING_REMINDER_CHANNEL: "off", LOCALAPPDATA: join(TMP, "local"), APPDATA: join(TMP, "roaming") };
 delete env.DAYSPRING_CHANNEL;   // the build's own channel decides, as it does for a real install
 mkdirSync(env.LOCALAPPDATA, { recursive: true }); mkdirSync(env.APPDATA, { recursive: true });
 let log = "";
@@ -36,6 +37,7 @@ const server = spawn(process.execPath, ["server.mjs"], { cwd: APP, env, stdio: [
 server.stdout.on("data", (d) => { log += d; }); server.stderr.on("data", (d) => { log += d; });
 const get = async (p) => { try { const r = await fetch(BASE + p, { signal: AbortSignal.timeout(15000) }); return { status: r.status, text: await r.text() }; } catch (e) { return { status: 0, text: e.message }; } };
 const json = async (p) => { const r = await get(p); try { return JSON.parse(r.text); } catch { return null; } };
+const chatJ = async (text) => { try { const r = await fetch(BASE + "/api/chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text, message: text, typed: true, surface: "desk" }), signal: AbortSignal.timeout(30000) }); return await r.json(); } catch (e) { return { error: e.message }; } };
 const chat = async (text) => { try { const r = await fetch(BASE + "/api/chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text, message: text, typed: true, surface: "desk" }), signal: AbortSignal.timeout(30000) }); const j = await r.json(); return String(j.reply ?? j.error ?? ""); } catch (e) { return "ERR " + e.message; } };
 
 try {
@@ -44,7 +46,7 @@ try {
   check("a production build starts", up, log.slice(-400));
   const st = await json("/api/features");
   check("it knows it's production (build-info.json: channel stable)", st?.channel === "stable" && st?.build?.from === "build-info" && st?.build?.version === version, JSON.stringify(st?.build));
-  const DEV = ["email", "gifs", "devices", "printers", "cameras", "remote", "social"];
+  const DEV = ["email", "gifs", "devices", "printers", "cameras", "remote", "social", "commands", "maps"];
   const f = (id) => st?.features?.find((x) => x.id === id);
   check("every development feature is off", DEV.every((id) => f(id) && f(id).on === false && f(id).stage === "dev"), DEV.filter((id) => f(id)?.on !== false).join(", "));
   check("…and can't be switched on here (no developer token)", DEV.every((id) => f(id)?.switchable === false));
@@ -74,7 +76,7 @@ try {
   const gif = await chat("show me a gif of a cat");
   check("\"show me a gif of a cat\" doesn't open the GIF feature (at most a picture search)", !/GIF picker|GIPHY|KLIPY|Imgur|favourite/i.test(gif), gif);
   // beta features: on, marked New, and their routes answer
-  const BETA = ["money", "images", "vision", "faces", "medialib", "drive", "meetnotes", "meetinvite", "screenmove", "popfit", "floor", "spotifyresolver", "devpreview"];
+  const BETA = ["money", "images", "vision", "faces", "medialib", "drive", "meetnotes", "meetinvite", "screenmove", "popfit", "floor", "spotifyresolver", "devpreview", "fileviewer", "conversation", "naming"];
   check("every beta feature is on and marked New", BETA.every((id) => f(id)?.on === true && f(id)?.isNew === true), BETA.filter((id) => !(f(id)?.on && f(id)?.isNew)).join(", "));
   const betaRoutes = ["/api/money/state", "/api/media/local/status"];
   const bad = []; for (const p of betaRoutes) { const r = await get(p); if (r.status === 404 || r.status >= 500 || r.status === 0) bad.push(`${p} ${r.status}`); }
@@ -90,6 +92,64 @@ try {
   check("stable: \"what's on right now?\" answers from the schedule", /Today|scheduled|Right now it's|Next is|nothing/i.test(now) && !/Devices on/i.test(now), now);
   const timer = await chat("set a timer for 5 minutes");
   check("stable: a timer can be set", /timer|5 minutes|five minutes/i.test(timer), timer);
+  // ---- 1.7.3: the fixes a production user asked for, even though the rest of "commands" is development-only ----
+  const water = await chat("remind me to drink water at 11pm");
+  const tm = (await json("/api/timers")) ?? {};
+  check("1.7.3: \"remind me to drink water at 11pm\" is one reminder at 11 p.m., never an hourly one", /\b11\b/.test(water) && /p\.?\s?m/i.test(water) && !/every hour|every 1 hour|hourly/i.test(water)
+    && !(tm.timers ?? []).some((x) => /water/i.test(x.label ?? "") && x.every), `${water} · timers ${JSON.stringify((tm.timers ?? []).map((x) => [x.label, x.every]))}`);
+  const water2 = await chat("remind me to drink water every day at 7am");
+  check("…and \"every day at 7am\" is a daily one at 7 (not hourly)", /\b7\b/.test(water2) && !/every hour|hourly/i.test(water2), water2);
+  const bye = await chatJ("thanks, that's all");
+  check("1.7.3: \"thanks, that's all\" ends the conversation at once (close, in production)", bye?.close === true && String(bye.reply ?? "").length < 60, JSON.stringify(bye));
+  const q1 = await chatJ("add dentist tomorrow at 3pm");
+  const nt = await chatJ("no thanks, that's all");
+  check("1.7.3: \"no thanks, that's all\" to a follow-up question drops it and closes", nt?.close === true && !/\?$/.test(String(nt.reply ?? "")), `${q1?.reply} → ${JSON.stringify(nt)}`);
+  const stopR = await fetch(BASE + "/api/commands/stop", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ surface: "tv", said: "stop" }) }).then((r) => r.status).catch(() => 0);
+  check("1.7.3: \"stop\" reaches the server in production (/api/commands/stop), the rest of /api/commands doesn't", stopR === 200 && (await get("/api/commands/state")).status === 404, `stop ${stopR}`);
+  const key = await chat("check my Claude connection");
+  check("1.7.3: \"check my Claude connection\" with no key: a plain answer that says where to add one", /no Claude key saved/i.test(key) && /Settings/.test(key), key);
+  const keyBtn = await fetch(BASE + "/api/setup/ai/check", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }).then((r) => r.json()).catch(() => null);
+  check("…and the Settings button (Check) answers the same way", keyBtn?.ok === false && keyBtn?.present === false && /no Claude key saved/i.test(keyBtn?.text ?? ""), JSON.stringify(keyBtn));
+  const olBefore = (await json("/api/setup/ollama/status?fresh=1"))?.status;
+  const { startMock } = await import(new URL("./ollama-mock.mjs", import.meta.url).href);
+  const ol = await startMock({ port: OLPORT });
+  const olAfter = (await json("/api/setup/ollama/status?fresh=1"))?.status;
+  check("1.7.3: Ollama is detected live (not running → started → running, no restart)", olBefore && olBefore.running === false && olAfter?.running === true, `${JSON.stringify(olBefore?.state)} → ${JSON.stringify(olAfter?.state)}`);
+  const sw = await json("/api/ai/switch?fresh=1");
+  check("…and the quick switch offers Claude · Ollama · No AI, with Ollama available", ["anthropic", "ollama", "none"].every((id) => sw?.options?.some((o) => o.id === id)) && sw.options.find((o) => o.id === "ollama")?.available === true, JSON.stringify(sw?.options?.map((o) => [o.id, o.available])));
+  const useOl = await chat("use ollama");
+  const offAi = await chat("turn off the AI");
+  const cur = (await json("/api/ai/switch"))?.current;
+  check("1.7.3: \"use Ollama\" then \"turn off the AI\" (the No AI switch) work by voice", /ollama|local/i.test(useOl) && /no AI/i.test(offAi) && cur === "none", `${useOl} / ${offAi} / ${cur}`);
+  await ol.close();
+  // the stop phrase on the screen itself: production's gate lets it through (headless Chrome, muted, nothing heard)
+  const PW = [join(DESK, "node_modules", "playwright-core", "index.mjs"), join(DESK, "..", "..", "..", "dayspring-app", "node_modules", "playwright-core", "index.mjs")].find((p) => existsSync(p));
+  const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
+  if (PW && existsSync(CHROME)) {
+    const { chromium } = await import(pathToFileURL(PW).href);
+    const browser = await chromium.launch({ executablePath: CHROME, headless: true, args: ["--mute-audio"] });
+    try {
+      const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
+      await ctx.addInitScript(() => { window.__dsAllowAutomatedListen = true; const ss = window.speechSynthesis; if (ss) { ss.speak = (u) => setTimeout(() => u.onend?.(), 10); ss.cancel = () => {}; } class FakeSR { start() {} abort() { setTimeout(() => this.onend?.(), 5); } stop() { this.abort(); } } window.SpeechRecognition = window.webkitSpeechRecognition = FakeSR; });
+      await ctx.route("**/api/{sound,window,open,keepawake,tunein,callbridge}**", (rt) => rt.fulfill({ status: 200, contentType: "application/json", body: "{}" }));
+      const pg = await ctx.newPage();
+      await pg.goto(BASE + "/display"); await pg.waitForTimeout(2500);
+      const sp = await pg.evaluate(() => ({ conv: window.dsFeatures?.on("conversation"), cmds: window.dsFeatures?.on("commands"), stop: window.dsStopPhrase?.test("stop"), enough: window.dsStopPhrase?.test("that's enough"), shh: window.dsStopPhrase?.test("okay shh"), notStop: window.dsStopPhrase?.test("stop the timer") }));
+      check("1.7.3: on the production screen, \"stop\", \"that's enough\" and \"okay shh\" are stop phrases (\"stop the timer\" isn't)", sp.conv === true && sp.cmds === false && sp.stop && sp.enough && sp.shh && !sp.notStop, JSON.stringify(sp));
+      // barge-in while it's talking: cut off, and the listening stays on (never the stopped state)
+      const cut = await pg.evaluate(async () => {
+        const at0 = window.dsStopPhrase.at;
+        window.speechSynthesis.speak = () => {};          // a reply that "keeps talking"
+        window.dispatchEvent(new CustomEvent("ds-test-say", { detail: { text: "Here is a very long answer that goes on and on for quite a while." } }));
+        await new Promise((r) => setTimeout(r, 400));
+        window.dispatchEvent(new CustomEvent("ds-test-interim", { detail: "that's enough" }));
+        await new Promise((r) => setTimeout(r, 400));
+        let stopped = null; try { stopped = sessionStorage.getItem("ds-stopped-listening"); } catch { /* none */ }
+        return { cut: window.dsStopPhrase.at > at0, mode: window.__dsTest?.mode?.(), stopped, listen: window.dsListenState };
+      });
+      check("…said over its voice, it cuts the speech off and doesn't stop listening", cut.cut && cut.stopped !== "1" && cut.listen !== "off" && cut.mode === "idle", JSON.stringify(cut));
+    } finally { await browser.close(); }
+  } else console.log("(skipped the screen's stop-phrase check: no Chrome or playwright-core)");
   check("stable: Settings and the screen load", (await get("/setup.html")).status === 200 && (await get("/tv.html")).status === 200 && (await get("/api/settings")).status === 200);
   check("stable: the compatibility list is there (production too)", (await get("/api/compat")).status === 200);
   check("no server errors", !/TypeError|ReferenceError|Unhandled|uncaught/i.test(log), log.match(/.*(TypeError|ReferenceError|Unhandled|uncaught).*/i)?.[0]);

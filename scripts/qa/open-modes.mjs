@@ -3,6 +3,7 @@
 // nothing opens on screen (browser launches are written to a log instead), and no device is touched.
 //   node scripts/qa/open-modes.mjs [--keep] [--no-overlay]
 import "./guard-data.mjs";   // first: tests never write to the real data folder
+import { qaPort } from "./port.mjs";   // a free port (or QA_PORT), so parallel runs never collide
 import { spawn, spawnSync, execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -13,7 +14,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const DESK = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const require = createRequire(import.meta.url);
 const { chromium } = require("playwright-core");
-const PORT = 4797, BASE = `http://127.0.0.1:${PORT}`;
+const PORT = await qaPort(4797), BASE = `http://127.0.0.1:${PORT}`;
 const TMP = mkdtempSync(join(tmpdir(), "ds-openmodes-")), APP = join(TMP, "app"), LOG = join(TMP, "launch.log");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let fail = 0, pass = 0;
@@ -296,7 +297,7 @@ await browser.close();
 
 // ---------------- E. closed stays closed (a second throwaway server, as the Dayspring screen, with a fast watchdog) ----------------
 {
-  const P2 = 4793, LOG2 = join(TMP, "launch2.log");
+  const P2 = await qaPort(4793, { env: null }), LOG2 = join(TMP, "launch2.log");
   writeFileSync(join(APP, "data", "owner.json"), JSON.stringify({ name: "Tester", setupDone: true, display: "1", keepScreenOpen: false }));
   try { rmSync(join(APP, "data", "display-window.json"), { force: true }); } catch { /* none */ }
   const s2 = spawn(process.execPath, ["server.mjs"], { cwd: APP, env: { ...env, PORT: String(P2), DAYSPRING_DISPLAY: "1", DS_LAUNCH_LOG: LOG2, DAYSPRING_WATCHDOG_MS: "400", DAYSPRING_NO_KEEPAWAKE: "1" }, stdio: "ignore", windowsHide: true });

@@ -99,7 +99,7 @@ const QUESTIONS = [
   ["how do I snooze the alarm", "schedule#snooze"], ["how do I connect spotify", "music"], ["how do I install dayspring", "install"],
   ["how do I update dayspring", "updating"], ["how do I change your voice", "voices"], ["how do I make something repeat every week", "schedule#repeating-items"],
   ["how do I fix the screen being cut off on my tv", "display-setup#the-picture-is-cut-off-at-the-edges-overscan"], ["how do I connect claude", "ai-providers#claude-anthropic"],
-  ["how do I get my texts read to me", "phone"], ["how do I connect google calendar", "connections#google-calendar--gmail"], ["how do I let you read my files", "permissions|files-and-browser"],
+  ["how do I get my texts read to me", "phone"], ["how do I connect google calendar", "connections#google-calendar--gmail"], ["how do I let you read my files", "permissions#files-and-folders"], ["how do I open a file on the screen", "files-and-viewer"],
   ["how do I keep the computer awake", "display-setup#keeping-the-screen-awake"], ["how do I change the background", "display-setup#the-living-sky"],
   ["how do I hide the screen", "display-setup#the-window-bar-minimize-maximize-hide-close"], ["how do I set up the discord bot", "discord-bot"],
   ["how do I use ollama", "ai-providers#ollama-free-on-your-computer"], ["how do I pick which speakers you use", "audio-devices#choose-where-daysprings-voice-plays"],

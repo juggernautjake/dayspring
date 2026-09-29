@@ -4,6 +4,7 @@
 // the reveal on the display, reduced motion, and no page errors.
 //   node scripts/qa/badges-ui.mjs [--keep]
 import "./guard-data.mjs";   // first: tests never write to the real data folder
+import { qaPort } from "./port.mjs";   // a free port (or QA_PORT), so parallel runs never collide
 import { spawn, spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -15,7 +16,7 @@ import { thresholds } from "../../lib/xp/badges.mjs";
 const DESK = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const require = createRequire(import.meta.url);
 const { chromium } = require("playwright-core");
-const PORT = 4795, BASE = `http://127.0.0.1:${PORT}`;
+const PORT = await qaPort(4795), BASE = `http://127.0.0.1:${PORT}`;
 const TMP = mkdtempSync(join(tmpdir(), "ds-badges-")), APP = join(TMP, "app");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let fail = 0, pass = 0;

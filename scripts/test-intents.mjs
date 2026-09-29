@@ -292,6 +292,76 @@ const say = async (t, o = {}) => (await I.early(t, { surface: "t", ...o })) ?? (
   I.setDeps({ now: () => new Date() });
 }
 
+// ---------------- 1.8.0: the everyday commands without AI (lib/commands): the golden set ----------------
+{
+  process.env.DAYSPRING_CHANNEL = process.env.DAYSPRING_CHANNEL ?? "dev";
+  const C = await imp("lib/commands/index.mjs");
+  const { COMMANDS_GOLDEN, NOW: CNOW, LAST } = await imp("scripts/qa/commands-golden.mjs");
+  const like = (want, got) => {
+    if (want === null) return got === null || got === undefined;
+    if (Array.isArray(want)) return JSON.stringify(want) === JSON.stringify(got);
+    if (want && typeof want === "object") return Boolean(got) && typeof got === "object" && Object.entries(want).every(([k, v]) => like(v, got[k]));
+    return want === got;
+  };
+  const rows = [];
+  for (const line of COMMANDS_GOLDEN.split("\n").map((l) => l.trim()).filter(Boolean)) {
+    const [intent, json, phrases] = line.split(" ~ ");
+    if (!phrases) throw new Error("bad commands golden line: " + line);
+    const want = JSON.parse(json);
+    for (const p of phrases.split("|").map((x) => x.trim()).filter(Boolean)) rows.push({ intent, want, text: p });
+  }
+  let ok = 0, n = 0, varOk = 0, varN = 0; const bad = [], byArea = new Map();
+  const judge = (row, text) => {
+    const got = C.parse(text, { now: CNOW, last: LAST });
+    const good = row.intent === "none" ? got === null : Boolean(got) && got.intent === row.intent && like(row.want, got);
+    return { good, got };
+  };
+  for (const row of rows) {
+    const { good, got } = judge(row, row.text);
+    n++; if (good) ok++; else bad.push(`${row.intent.padEnd(16)} "${row.text}" → ${JSON.stringify(got)}`);
+    const area = row.intent.split(".")[0]; const a = byArea.get(area) ?? { n: 0, ok: 0 }; a.n++; if (good) a.ok++; byArea.set(area, a);
+    // everyday variations: a wake word in front, "please" after (not on endings: "thanks please" isn't a thing)
+    if (!["close", "pass", "none", "undo"].includes(row.intent) && !row.want.closing) for (const v of [`hey dayspring, ${row.text}`, `${row.text} please`]) { const r = judge(row, v); varN++; if (r.good) varOk++; else bad.push(`${row.intent.padEnd(16)} (variation) "${v}" → ${JSON.stringify(r.got)}`); }
+  }
+  console.log(`\nEveryday commands (lib/commands): ${n} hand-written phrasings (+ ${varN} variations), ${new Set(rows.map((r) => r.intent)).size} kinds`);
+  for (const [a, s] of [...byArea].sort()) console.log(`  ${a.padEnd(10)} ${String(s.n).padStart(4)}   ${(100 * s.ok / s.n).toFixed(1).padStart(5)}%`);
+  if (VERBOSE || bad.length <= 60) for (const b of bad) console.log("   miss " + b);
+  check("commands golden set has at least 600 hand-written phrasings", n >= 600, n);
+  check("commands golden set: every phrasing understood exactly (intent and details)", ok === n, `${ok}/${n}`);
+  check("commands golden set: the variations too (a wake word, \"please\")", varOk === varN, `${varOk}/${varN}`);
+  // every setting in the schema: its own examples (the "Things you can say" page) are understood as that setting
+  {
+    const SV = await imp("lib/commands/settings-voice.mjs");
+    const wrong = [];
+    for (const e of SV.SCHEMA) {
+      if (e.delegate || e.security === "settings") continue;
+      const ex = SV.EXAMPLES[e.id] ?? [];
+      if (!ex.length) { wrong.push(`${e.id}: no examples`); continue; }
+      for (const t of ex) { const p = C.parse(t, { now: CNOW }); if (!p || !/^setting\./.test(p.intent) || p.args?.id !== e.id) wrong.push(`${e.id}: "${t}" → ${JSON.stringify(p)}`); }
+    }
+    for (const w of wrong.slice(0, 10)) console.log("   setting example: " + w);
+    check(`every setting (${SV.SCHEMA.length}) can be said: its examples are understood as that setting`, wrong.length === 0, `${wrong.length} wrong`);
+  }
+  // speed: the command grammar stays quick
+  const t0 = performance.now(); for (const r of rows.slice(0, 300)) C.parse(r.text, { now: CNOW, last: LAST }); const avg = (performance.now() - t0) / Math.min(300, rows.length);
+  check("commands: under 5 ms a request on average", avg < 5, avg.toFixed(2) + " ms");
+  // endings
+  const cl = await imp("lib/commands/closing.mjs");
+  check("ending: \"okay\" alone ends it when nothing is asked, and is an answer when something is", cl.closing("okay")?.only && cl.closing("okay", { pending: true }) === null);
+  check("ending: \"remind me to say thank you\" is content, not an ending", cl.closing("remind me to say thank you") === null);
+  check("ending: \"set a timer for 5 minutes thanks\" → the request, and the ending", cl.closing("set a timer for 5 minutes thanks")?.rest === "set a timer for 5 minutes");
+  check("ending: \"thanks for the reminder, now set a timer\" → the request (not an ending)", cl.closing("thanks for the reminder, now set a timer for 10 minutes") === null && cl.lead("thanks for the reminder, now set a timer for 10 minutes")?.text === "set a timer for 10 minutes");
+  check("ending: \"never mind the timer, cancel it\" → \"cancel the timer\"", cl.lead("never mind the timer, cancel it")?.text === "cancel the timer");
+  // recurrence rules and the dates they land on
+  const recur = await imp("lib/recur.mjs");
+  const occ = (rule, from, days) => { const out = []; for (let i = 0; i < days; i++) { const d = new Date(from); d.setDate(d.getDate() + i); const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; if (recur.occursOn({ repeat: rule }, iso)) out.push(iso); } return out; };
+  check("recur: except holidays skips Thanksgiving (a Thursday)", !occ({ freq: "weekly", days: ["thu"], exceptHolidays: true, start: "2026-11-01" }, new Date(2026, 10, 1), 30).includes("2026-11-26") && occ({ freq: "weekly", days: ["thu"], start: "2026-11-01" }, new Date(2026, 10, 1), 30).includes("2026-11-26"));
+  check("recur: US holidays 2026 (Memorial Day May 25, Labor Day Sep 7, Thanksgiving Nov 26)", ["2026-05-25", "2026-09-07", "2026-11-26", "2026-07-04", "2026-12-25"].every((d) => recur.isHoliday(d)) && !recur.isHoliday("2026-09-28"));
+  check("recur: \"every other friday\" lands two weeks apart", (() => { const r = C.parse("add date night every other friday at 7pm", { now: CNOW }); const o = occ({ ...r.args.repeat, start: "2026-09-28" }, new Date(2026, 8, 28), 35); return o.length === 3 && o[0] === "2026-10-02" && o[1] === "2026-10-16"; })());
+  check("recur: \"the first Monday of every month\" → Oct 5, Nov 2", (() => { const r = C.parse("team sync the first monday of every month at 10", { now: CNOW }); const o = occ({ ...r.args.repeat, start: "2026-09-28" }, new Date(2026, 8, 28), 45); return JSON.stringify(o) === JSON.stringify(["2026-10-05", "2026-11-02"]); })());
+  check("recur: \"every day until December\" stops on Nov 30", (() => { const r = C.parse("add walk every day until december at 7am", { now: CNOW }); const o = occ({ ...r.args.repeat, start: "2026-09-28" }, new Date(2026, 8, 28), 90); return o.at(-1) === "2026-11-30"; })());
+}
+
 rmSync(TMP, { recursive: true, force: true });
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

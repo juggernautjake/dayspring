@@ -2,6 +2,53 @@
 
 All notable changes to Dayspring. Versions follow [semantic versioning](https://semver.org).
 
+## 1.7.3 (2026-09-29)
+
+### In this version
+
+**"Remind me to drink water at 11pm" is one reminder at 11 p.m.** Before, it started a reminder every hour. Now a clock time is one reminder at that time (tomorrow, if that time has already passed today), "every day at 7am" is a daily one, "in 2 hours" is a one-time timer, and only "every hour" or "every 30 minutes" repeats all day. The same goes for any "remind me to … at …": a time with no a.m. or p.m. means whichever one comes next.
+
+**"Stop" stops Dayspring talking, and it keeps listening.** Say "stop", "that's enough", "shh", "be quiet" or "never mind" while Dayspring is talking, and it stops mid-sentence. The microphone stays on, so the next "Dayspring, …" works straight away. (✋ Stop and "stop listening" are still how you turn listening off.) A plain "stop" while Dayspring is silent also stops the music or video.
+
+**Saying goodbye ends the conversation.** "Thanks, that's all", "that's it", "bye", "good night" and "no thanks" close the listening window at once, with a short reply. If Dayspring had just asked you something ("Want a reminder before it?"), "no thanks" drops the question. You can turn this and "stop" off in Settings → This app → Features (**Stop and goodbye**).
+
+**Help when your Claude key doesn't work.** If the key is wrong, out of credit, or can't reach Claude, Dayspring now says so in plain words and tells you what to do, instead of showing an error message. Settings → AI brain has a **Check my Claude connection** button, and you can also say "check my Claude connection".
+
+**A quick switch between Claude, Ollama and No AI.** Settings → AI brain now starts with **Claude · Ollama · No AI**, plus the model. The same switch is in the Dayspring screen's ⋯ More → 🧠 AI brain. You can also say "turn off the AI", "switch to Claude", "use Ollama", "use Haiku" or "which AI are you using?", and these work without an AI.
+
+**Ollama is found as soon as it's there.** If you install or start Ollama (the free AI that runs on your own computer) while Dayspring is open, Settings notices within a few seconds, with no restart. The local AI is also faster and better at using Dayspring's tools. It's given only the tools a request needs, it's loaded ahead of time so the first answer doesn't wait, and it doesn't read out code or error messages.
+
+**Find your files and open them on the screen (New).** Say "find my resume", "open the PDF called lease agreement" or "show me the picture named IMG_5782". Dayspring finds your files by name, even with typos, dates, folders or file types, and opens them in one viewer on the screen. The viewer handles pictures (zoom, rotate, slideshow), video and audio, PDFs (pages, search, read aloud), text and code, Word, Excel, CSV, PowerPoint and zip files. It only looks in the folders you've allowed in Settings → Permissions. See [Finding files and the file viewer](docs/files-and-viewer.md).
+
+**Give your assistant its own name and wake words (New).** In Settings → Your assistant, or by voice ("your name is Nova"), you can rename it and say how the name is pronounced. You can also choose up to three wake words ("Hey Nova", "Computer"), add other words it should accept, set how sensitive it is, and use **Train my wake word**. It answers to the new name on the screen, in Discord and in Google Meet. "Dayspring, …" still works in meetings, and Lantern is always Lantern. See [Renaming your assistant](docs/renaming-your-assistant.md).
+
+**Smaller fixes.**
+- Updates: an update installed while Dayspring was idle now shows as successful in the update history. Before, it could stay "not confirmed".
+- The guide's "how do I …" answers now choose the right page more often. For example, "how do I let you read my files" goes to Permissions.
+- A few text-matching rules had lost characters, and are now fixed:
+  - the guide was reading every page title as part of its first section
+  - a personality's "Done." or "Okay." at the start of an answer wasn't being removed
+  - Settings → About's copy-a-command line wasn't putting quotes around words with spaces
+
+### In the development version only
+
+- **Everyday commands without AI:**
+  - every setting by voice, with "undo that"
+  - the sky and the screen ("make it rain for 10 minutes")
+  - the schedule with repeats ("gym every Monday, Wednesday and Friday at 6am")
+  - alarms with days, labels, sounds, snooze and a gentle wake
+  - timers to a clock time, and "every 30 minutes remind me to stand up"
+  - telling it your name, where you live and what you like
+  - two requests at once
+
+  See [Things you can say](docs/things-you-can-say.md).
+- **Maps and directions:**
+  - a map window with search ("find coffee near me")
+  - directions for driving, walking, cycling and transit, with spoken steps
+  - "leave by" times for your schedule
+  - sending a trip to your phone
+- And, as in 1.7.2: email, GIFs, smart devices, 3D printers, cameras and more than one computer.
+
 ## 1.7.2 (2026-09-28)
 
 ### In this version

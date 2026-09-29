@@ -14,6 +14,7 @@
 //     --module  only part 1
 //     --live    also one real search: 5 "cowboy excited" GIFs through the keyless web search, with their loop lengths
 import "./guard-data.mjs";   // first: tests never write to the real data folder
+import { qaPort } from "./port.mjs";   // a free port (or QA_PORT), so parallel runs never collide
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -326,7 +327,7 @@ const PW = process.env.QA_PLAYWRIGHT ?? pathToFileURL([join(DESK, "..", "..", ".
 if (!PW || PW === "file:///") { check("playwright-core is there", false); process.exit(1); }
 const { chromium } = await import(PW);
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
-const PORT = 4773, BASE = `http://127.0.0.1:${PORT}`, APP = join(TMP, "app");
+const PORT = await qaPort(4773), BASE = `http://127.0.0.1:${PORT}`, APP = join(TMP, "app");
 const SHOTS = join(DESK, "qa-out", "themes"); mkdirSync(SHOTS, { recursive: true });
 spawnSync(process.execPath, [join(DESK, "scripts", "export.mjs"), APP], { encoding: "utf8" });
 spawnSync("cmd.exe", ["/d", "/c", "mklink", "/J", join(APP, "node_modules"), join(DESK, "node_modules")], { windowsHide: true });

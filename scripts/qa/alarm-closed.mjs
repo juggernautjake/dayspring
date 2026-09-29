@@ -3,6 +3,7 @@
 // window launches are written to a log instead of opening. Its cards do appear briefly at the top-right of the screen.
 //   node scripts/qa/alarm-closed.mjs [--keep]
 import "./guard-data.mjs";   // first: tests never write to the real data folder
+import { qaPort } from "./port.mjs";   // a free port (or QA_PORT), so parallel runs never collide
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import http from "node:http";
@@ -11,7 +12,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const DESK = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const PORT = 4795, BASE = `http://127.0.0.1:${PORT}`;
+const PORT = await qaPort(4795), BASE = `http://127.0.0.1:${PORT}`;
 const TMP = mkdtempSync(join(tmpdir(), "ds-alarm-")), APP = join(TMP, "app"), LOG = join(TMP, "launch.log");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let fail = 0, pass = 0;

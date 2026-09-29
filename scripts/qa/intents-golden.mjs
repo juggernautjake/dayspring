@@ -240,6 +240,10 @@ export const NEGATIVES = [
   ["that's wrong", "meta.wrong", "calc", {}],
   ["be quiet", "ds.quiet", "persona.be", {}],
   ["be a pirate", "persona.be", "joke", {}],
+  ["remind me to drink water at 11pm", "reminder.set", "health.water", {}],
+  ["remind me to drink water tomorrow at 6am", "reminder.set", "health.water", {}],
+  ["remind me to drink water in 2 hours", "timer.start", "health.water", {}],
+  ["remind me to drink water every day at 11pm", "reminder.repeat", "health.water", {}],
 ];
 
 // Action and details, checked exactly (dry run: nothing is done)
@@ -282,4 +286,15 @@ export const ACTIONS = [
   ["remind me in a bit to check the oven", { do: "timer.start", ms: 900000, label: "check the oven" }],
   ["add dentist first thing tomorrow", { do: "sched.add", time: "08:00" }],
   ["what's on the end of the month", { do: "sched.day" }],
+  // a clock time or "in 2 hours" is ONE reminder, never the hourly water reminder (1.7.2 made "at 11pm" hourly)
+  ["remind me to drink water at 11pm", { do: "reminder.set", text: "drink water", time: "23:00" }],
+  ["remind me to drink water at 11 tonight", { do: "reminder.set", text: "drink water", time: "23:00" }],
+  ["remind me to drink water at 7:30", { do: "reminder.set", text: "drink water", time: "07:30" }],
+  ["remind me to drink water tomorrow at 6am", { do: "reminder.set", text: "drink water", time: "06:00" }],
+  ["remind me to drink water in 2 hours", { do: "timer.start", ms: 7200000, label: "drink water" }],
+  ["remind me to drink water every hour", { do: "health.water", every: 3600000 }],
+  ["remind me to drink water every 30 minutes", { do: "health.water", every: 1800000 }],
+  ["remind me to drink water hourly", { do: "health.water", every: 3600000 }],
+  ["remind me to drink water every day at 11pm", { do: "reminder.repeat", text: "drink water", days: [0, 1, 2, 3, 4, 5, 6], time: "23:00" }],
+  ["help me stay hydrated", { do: "health.water", every: 3600000 }],
 ];

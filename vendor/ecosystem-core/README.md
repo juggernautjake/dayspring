@@ -12,6 +12,7 @@ has them installed.
 | Server (`lib/`) | What it does |
 |---|---|
 | `llm.mjs` | The AI "brain": Claude, ChatGPT, Grok or a local Ollama model, in one conversation format. The app passes its config in; nothing reads `.env` here. |
+| `llm-local.mjs` | Local models through Ollama, done well: native tool calling (streamed), a parser for tool calls written as text, picking the few tools that matter per request (BM25, plus embeddings when there are any), argument repair, warm-up and keep-alive, and model recommendations for the computer it runs on. `createLLM` uses it for `provider: "ollama"` (`llm.chatWithTools`, `llm.warm`, `llm.ollama`). |
 | `voice.mjs` | Text to speech: ElevenLabs, OpenAI, or the free voices built into the browser. Each app has its own default voice. |
 | `web.mjs` | Web search (DuckDuckGo, then Bing, then Bing in a browser if the app provides one) and readable page text. Takes an optional allow-list, e.g. for learners. The injected browser page must be HEADLESS: nothing in the background may open a window. |
 | `ytsearch.mjs` | YouTube search with no browser and no API key: reads youtube.com's own results page. Filters: recent, popular, newest, playlists, Shorts. An optional API key uses the Data API first. |

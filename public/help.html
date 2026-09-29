@@ -127,7 +127,8 @@
 </head>
 <body>
   <header class="bar">
-    <div class="brand"><span class="dot"></span>Dayspring <small>Guide</small></div>
+    <div class="brand"><span class="dot"></span>Dayspring <small>Guide<span id="asstName"></span></small></div>
+    <script>fetch("/api/assistant").then((r) => r.json()).then((v) => { if (v?.renamed && v.name) document.getElementById("asstName").textContent = ` · your assistant, ${v.name}`; }).catch(() => {});</script>
     <label class="search"><input id="q" type="search" placeholder="Search the guide…  (press /)" autocomplete="off" aria-label="Search the guide"></label>
     <button class="tool" id="menuBtn" aria-label="Contents">☰ Contents</button>
     <a class="tool" href="/setup">⚙ Settings</a>

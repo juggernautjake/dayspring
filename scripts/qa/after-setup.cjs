@@ -46,7 +46,9 @@ const launch = async () => { for (const channel of [process.env.QA_BROWSER || "c
     if (!(await link.count())) continue;
     await link.click().catch(() => {}); await s.waitForTimeout(700);
     const t = await s.evaluate(() => document.querySelector("main")?.innerText ?? document.body.innerText);
-    if (t.trim().length < 40) bad.push(`${sec} (empty)`); else if (JARGON.test(t)) bad.push(`${sec} (says "${t.match(JARGON)[0]}")`);
+    // (the Compatibility list names file types the viewer opens, "Text and code (TXT, LOG, JSON, …)": a file type, not jargon)
+    const t2 = /Compatibility/.test(sec) ? t.replace(/\bJSON\b(?=[^()]*\))|JSON pretty-print/g, "") : t;
+    if (t.trim().length < 40) bad.push(`${sec} (empty)`); else if (JARGON.test(t2)) bad.push(`${sec} (says "${t2.match(JARGON)[0]}")`);
   }
   rec("Settings sections render in plain words", secs.length > 5 && !bad.length, `${secs.length} sections${bad.length ? " · " + bad.join("; ") : ""}`);
   await s.screenshot({ path: OUT + "settings.png" });

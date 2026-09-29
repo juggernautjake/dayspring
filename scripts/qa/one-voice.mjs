@@ -5,6 +5,7 @@
 //   • stress: 50 /chat requests at once → every one answered, the server stays responsive (no freeze), no crash
 //   node scripts/qa/one-voice.mjs [--keep]
 import "./guard-data.mjs";   // first: tests never write to the real data folder
+import { qaPort } from "./port.mjs";   // a free port (or QA_PORT), so parallel runs never collide
 import { spawn, spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -16,7 +17,7 @@ const DESK = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const require = createRequire(import.meta.url);
 const { chromium } = require("playwright-core");
 const { playwrightChannel } = await import("../../lib/browsers.mjs");
-const PORT = 4797, BASE = `http://127.0.0.1:${PORT}`;
+const PORT = await qaPort(4797), BASE = `http://127.0.0.1:${PORT}`;
 const TMP = mkdtempSync(join(tmpdir(), "ds-onevoice-")), APP = join(TMP, "app");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let fail = 0;

@@ -5,7 +5,13 @@
 //   parseAddress("Hey Lantern, what does cfqueryparam do?") → { assistant: "lantern", question: "what does cfqueryparam do?", wake: "Hey Lantern," }
 //   parseAddress("nothing for anyone here") → null
 //
-// Extra names (an assistant renamed by its owner) come in through { names: { dayspring: ["Aurora"] } }.
+// The host app passes its assistant's own name and wake words: an assistant renamed by its owner still answers to
+// them, and to its built-in name too ("Dayspring, …" keeps working after it becomes "Nova"):
+//   createAddressParser({ names: { dayspring: ["Nova", "Hey Nova", "Computa"] } })
+//   createAddressParser({ names: () => ({ dayspring: currentWakeWords() }) })   read on every parse: a rename or a new
+//                                                                                wake word counts mid-meeting
+//   parser.setNames({ dayspring: ["Aurora"] })                                  or replace them by hand
+// "Hey"/"OK"/"Hi" at the front of a wake word is dropped (the parser already allows one before any name).
 
 export const WAKE_NAMES = {
   dayspring: ["dayspring", "day spring", "day-spring", "days spring", "dace spring", "date spring", "dave spring", "daisy spring",
@@ -26,17 +32,29 @@ function patternFor(list) {
   return `(?:${alt})`;
 }
 
+// "Hey Nova" → "nova"; "@Computa," → "computa"; nothing usable → ""
+const cleanName = (n) => norm(n).replace(/^@/, "").replace(/^(?:hey|hi|ok(?:ay)?)[\s,]+/, "").replace(/[,.!?:;"“”]+/g, " ").replace(/\s+/g, " ").trim();
+
 export function createAddressParser({ names = {} } = {}) {
-  const all = {};
-  for (const [a, list] of Object.entries(WAKE_NAMES)) all[a] = [...list, ...(names[a] ?? [])];
-  for (const [a, list] of Object.entries(names)) if (!all[a]) all[a] = [...list];
-  const rx = Object.fromEntries(Object.entries(all).map(([a, list]) =>
-    [a, new RegExp(`(?:^|[\\s,.!?;:"“(])(@?(?:(?:hey|hi|ok(?:ay)?|so|and|um|uh)[\\s,]+)?@?${patternFor(list)})(?=$|[\\s,.!?;:"”)])[,.!?:;]*`, "i")]));
+  let source = names, key = null, all = {}, rx = {};
+  function build(extra) {
+    const k = JSON.stringify(extra ?? {});
+    if (k === key) return;
+    key = k; all = {};
+    const add = (a, list) => { all[a] = [...new Set([...(all[a] ?? []), ...list.map(cleanName).filter((n) => n.length >= 2)])]; };
+    for (const [a, list] of Object.entries(WAKE_NAMES)) add(a, list);
+    for (const [a, list] of Object.entries(extra ?? {})) add(a, Array.isArray(list) ? list : [list]);
+    rx = Object.fromEntries(Object.entries(all).map(([a, list]) =>
+      [a, new RegExp(`(?:^|[\\s,.!?;:"“(])(@?(?:(?:hey|hi|ok(?:ay)?|so|and|um|uh)[\\s,]+)?@?${patternFor(list)})(?=$|[\\s,.!?;:"”)])[,.!?:;]*`, "i")]));
+  }
+  const current = () => { let n = {}; try { n = typeof source === "function" ? source() ?? {} : source ?? {}; } catch { n = {}; } build(n); };
+  current();
 
   // → { assistant, question, wake, index } | null
   function parse(text) {
     const t = String(text ?? "").replace(/\s+/g, " ").trim();
     if (!t) return null;
+    current();
     let best = null;
     for (const [a, r] of Object.entries(rx)) {
       const m = r.exec(t);
@@ -75,7 +93,11 @@ export function createAddressParser({ names = {} } = {}) {
     return words(tail) >= 3 && asks(t, tail) ? tail.trim() : "";
   };
 
-  return { parse, parseLast, names: all };
+  return {
+    parse, parseLast,
+    get names() { current(); return all; },
+    setNames(n) { source = n ?? {}; current(); },
+  };
 }
 
 const shared = createAddressParser();

@@ -4,6 +4,7 @@
 //   badges-vs-orb    a badge beside the idle Dayspring orb (a throwaway copy of the display), to compare the feel
 //   node scripts/qa/badge-previews.mjs [--out docs/dev/badge-previews] [--only loop|entrance|orb]
 import "./guard-data.mjs";   // first: tests never write to the real data folder
+import { qaPort } from "./port.mjs";   // a free port (or QA_PORT), so parallel runs never collide
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -64,7 +65,7 @@ if (["all", "entrance"].includes(ONLY)) await record("badges-entrance", { width:
 
 if (["all", "orb"].includes(ONLY)) {
   // a throwaway copy of the display, only to show the idle orb (nothing heard, nothing opened on screen)
-  const APP = join(TMP, "app"), PORT = 4796, BASE = `http://127.0.0.1:${PORT}`;
+  const APP = join(TMP, "app"), PORT = await qaPort(4796), BASE = `http://127.0.0.1:${PORT}`;
   spawnSync(process.execPath, [join(DESK, "scripts", "export.mjs"), APP], { encoding: "utf8" });
   spawnSync("cmd.exe", ["/d", "/c", "mklink", "/J", join(APP, "node_modules"), join(DESK, "node_modules")], { windowsHide: true });
   mkdirSync(join(APP, "data"), { recursive: true });

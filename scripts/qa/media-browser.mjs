@@ -21,6 +21,7 @@
 //      inside the screen's margins and every button clickable
 //   node scripts/qa/media-browser.mjs [--verbose] [--no-screen]
 import "./guard-data.mjs";   // first: tests never write to the real data folder
+import { qaPort } from "./port.mjs";   // a free port (or QA_PORT), so parallel runs never collide
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -443,7 +444,7 @@ async function screen() {
   section("9. on the screen (headless Chrome): the window, live search, scroll, grid, select, cards, voice numbers, fit");
   if (!PW || !existsSync(CHROME)) { rec("headless Chrome and playwright-core are here", false, PW ?? "no playwright-core"); return; }
   const { chromium } = await import(pathToFileURL(PW).href);
-  const APP = join(TMP, "app"), PORT = 4768, BASE = `http://127.0.0.1:${PORT}`;
+  const APP = join(TMP, "app"), PORT = await qaPort(4768), BASE = `http://127.0.0.1:${PORT}`;
   const ex = spawnSync(process.execPath, [join(DESK, "scripts", "export.mjs"), APP], { encoding: "utf8" });
   // (the export's privacy scan is the release's gate, not this test's: a copy that was written is enough here)
   if (!existsSync(join(APP, "server.mjs")) || !existsSync(join(APP, "public", "mediabrowser.js"))) { rec("the throwaway copy exported", false, (ex.stdout + ex.stderr).slice(-400)); return; }

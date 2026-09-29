@@ -12,6 +12,7 @@
 //   · the invitation editor opens with its fields and agenda
 //   node scripts/qa/email-ui.mjs [--keep]
 import "./guard-data.mjs";   // first: tests never write to the real data folder
+import { qaPort } from "./port.mjs";   // a free port (or QA_PORT), so parallel runs never collide
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -26,7 +27,7 @@ const PW = [join(DESK, "node_modules", "playwright-core", "index.mjs"), join(DES
 if (!PW) { console.log("FAIL  playwright-core not found"); process.exit(1); }
 const { chromium } = await import(pathToFileURL(PW).href);
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
-const PORT = 4773, BASE = `http://127.0.0.1:${PORT}`;
+const PORT = await qaPort(4773), BASE = `http://127.0.0.1:${PORT}`;
 const TMP = mkdtempSync(join(tmpdir(), "ds-emailui-")), APP = join(TMP, "app");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let fail = 0, pass = 0;

@@ -25,9 +25,11 @@ The devices, services, browsers and systems Dayspring works with, and how sure w
 | Smart-home hubs and bridges | 17 | 0 | 3 | 10 | 1 | 3 |
 | Email providers | 11 | 0 | 3 | 7 | 1 | 0 |
 | GIF providers | 5 | 0 | 4 | 0 | 0 | 1 |
+| Maps and directions | 8 | 0 | 6 | 0 | 0 | 2 |
 | Voice and AI providers | 12 | 3 | 0 | 8 | 0 | 1 |
 | Browsers for the Dayspring screen | 7 | 1 | 1 | 2 | 2 | 1 |
 | Operating systems | 7 | 1 | 1 | 0 | 2 | 3 |
+| What the viewer shows | 19 | 0 | 15 | 2 | 0 | 2 |
 
 ## Power strips and plugs
 
@@ -257,6 +259,21 @@ Where Dayspring's GIF picker finds GIFs and stickers. The web search works with 
 | **Web Web image search (keyless)** | 🧪 tested-sim | Internet service | no | search, trending, stickers, safe-search | Animated pictures from the web image search (DuckDuckGo, then Bing) with their animated-GIF filter. No account and no key, so GIFs always work, and it steps in when every other source is busy. The web isn't rated, so SafeSearch does the filtering. The GIF test script checks it with no keys at all against a stand-in search. |
 | **Google Tenor API** | ⛔ not-supported | Internet service | no |  | Not supported: Google shut down the Tenor API for good on June 30, 2026, and took no new keys from January 2026. |
 
+## Maps and directions
+
+Where the Maps window gets its map, its search and its turn-by-turn directions. With no key at all it uses free OpenStreetMap services (kept to their usage rules: one request a second, Dayspring's own name on every request, answers cached). A Google Maps key switches to Google automatically. Every one of them needs the internet; the voice commands themselves are understood offline.
+
+| Device | Status | Connection | Works offline | Can do | Notes |
+|---|---|---|---|---|---|
+| **Google Maps Platform (Maps Embed, Places API (New), Routes API)** | 🧪 tested-sim | Internet service | no | map, search, ratings, opening hours, driving, walking, cycling, transit, alternatives, avoid highways/tolls/ferries, live traffic (optional) | Needs a Google Cloud project with billing turned on and an API key. The map (Maps Embed API) is free with no limit. Search (Places Text Search) has 5,000 free requests a month, or 1,000 when ratings and opening hours are turned on; directions (Routes, traffic-unaware) have 10,000 free a month, 5,000 with live traffic. Set daily quotas so a mistake can't cost money. |
+| **OpenStreetMap Nominatim search** | 🧪 tested-sim | Internet service | no | search, addresses, towns, kinds of places near home, opening hours (when mapped) | Free, no key. Used for searches you finish (Enter, or by voice), never for suggestions while typing, as its usage policy asks. At most one request a second. Checked live once against a real town search. |
+| **Komoot Photon (suggestions as you type)** | 🧪 tested-sim | Internet service | no | type-ahead suggestions, near-home bias | Free, no key, OpenStreetMap data. Asked at most once a second, after you stop typing for a moment. |
+| **FOSSGIS OSRM routing servers (car, bike, foot)** | 🧪 tested-sim | Internet service | no | driving, walking, cycling, turn-by-turn steps, alternatives | Free, no key: the routing servers openstreetmap.org itself uses. One request a second, fair use only. No transit. Avoiding highways or tolls is tried and said plainly when it isn't possible. Checked live once with a short drive between two addresses. |
+| **HeiGIT OpenRouteService (free key)** | 🧪 tested-sim | Internet service | no | driving, walking, cycling, turn-by-turn steps, alternatives, avoid highways/tolls/ferries | A free key gives 2,000 routes a day. When it's saved it's used before the FOSSGIS servers; if it fails, those take over. |
+| **OpenStreetMap Standard map pictures (tiles)** | 🧪 tested-sim | Internet service | no | map, attribution, kept for a week | For light personal use, as the tile policy allows. Dayspring fetches the pictures itself with its own name, keeps them for a week, asks for at most two at a time, and always shows the © OpenStreetMap credit. |
+| **Apple Apple Maps** | ⛔ not-supported | Internet service | no |  | Not supported: Apple Maps' web service needs a paid Apple Developer account and signed tokens, and has no way to hand turn-by-turn steps to another app on Windows. |
+| **Google Waze** | ⛔ not-supported | Internet service | no |  | Not supported: Waze has no public routing or search service for other apps. |
+
 ## Voice and AI providers
 
 The AI brain Dayspring thinks with, the voices it speaks with, and how it hears you. Dayspring still works with no AI at all (built-in skills), and has free voices and private on-computer speech recognition.
@@ -303,3 +320,29 @@ Dayspring runs on Windows: its helpers (the window, the overlay, sounds, keep-aw
 | **Microsoft Windows Server 2019 / 2022 / 2025** | ❔ untested | On this computer | yes |  | Shares most parts with Windows 10 and 11, but servers often lack desktop audio, a microphone and some desktop features, and are locked down more. Not tried. |
 | **Apple macOS** | ⛔ not-supported | On this computer | yes |  | Not supported: Dayspring's helpers are Windows-only: PowerShell scripts, C# helpers for the window and overlay, Windows audio, Windows DPAPI for encrypted passwords, and Windows OCR. |
 | **Linux Linux distributions** | ⛔ not-supported | On this computer | yes |  | Not supported: Dayspring's helpers are Windows-only (PowerShell, C# helpers, Windows audio, DPAPI encryption, Windows OCR). |
+
+## What the viewer shows
+
+Which kinds of files Dayspring's file viewer shows on the screen, and how. Everything is read on this computer (nothing is uploaded); files are only opened from folders allowed in Settings → Permissions. "Passes simulator tests" means the automated tests open a made-up file of that kind in headless Chrome and use its controls (scripts/qa/file-viewer.mjs).
+
+| Device | Status | Connection | Works offline | Can do | Notes |
+|---|---|---|---|---|---|
+| **Pictures JPEG (.jpg, .jpeg, .jfif)** | 🧪 tested-sim | On this computer | yes | zoom (wheel, pinch, buttons), pan, rotate, flip, slideshow, EXIF date and camera, describe and read text, copy, save a copy, set as avatar, delete (Recycle Bin) | The EXIF date taken, camera and size are read from the file itself; the GPS location is never shown or sent anywhere. |
+| **Pictures PNG, GIF, WebP, BMP, AVIF** | 🧪 tested-sim | On this computer | yes | zoom, pan, rotate, flip, slideshow, size in pixels | Shown by the screen's browser itself. AVIF works in current Chrome and Edge. |
+| **Pictures SVG drawings (.svg)** | 🧪 tested-sim | On this computer | yes | zoom, rotate, flip | Shown as a picture only, in a sandbox: any script inside it never runs. |
+| **Pictures HEIC / HEIF photos (.heic, .heif)** | 🧪 tested-sim | On this computer | yes | shown as a JPEG decoded by Windows, zoom, rotate, EXIF date | Decoded by Windows' own HEIF decoder through Dayspring's picture helper. The tests use a HEIF file with an AV1 picture (ffmpeg can't write HEVC ones); iPhone photos (HEVC) also need Microsoft's HEVC Video Extensions. Without the decoder, "Open in the default app" still works. |
+| **Pictures TIFF (.tif, .tiff)** | 👍 expected | On this computer | yes | shown as a JPEG decoded by Windows, zoom, rotate | Decoded by Windows (the same path as HEIC); the first page only. |
+| **Video MP4, M4V, WebM, MOV** | 🧪 tested-sim | On this computer | yes | play/pause, seek, ±10 s, speed 0.5–2×, volume, captions (.srt/.vtt next to it), loop, picture-in-picture, full screen | Streamed with HTTP Range, so seeking is instant. MP4 with H.264 is tested; WebM and MOV play when the screen's browser has the codec. |
+| **Video WMV, AVI, MKV, MPEG (converted)** | 🧪 tested-sim | On this computer | yes | converted to MP4 as it plays, seek (restarts the conversion there), speed, volume | Converted on the fly by Dayspring's ffmpeg (ffmpeg-static), like the media library. WMV is tested. |
+| **Audio MP3, M4A, AAC, FLAC, WAV, OGG, Opus (WMA converted)** | 🧪 tested-sim | On this computer | yes | play/pause, seek, ±10 s, speed, volume, loop | MP3 is tested; the others play in Chrome and Edge. WMA is converted by ffmpeg. |
+| **Documents PDF (.pdf)** | 🧪 tested-sim | On this computer | yes | page thumbnails, pages, zoom, fit width / page, rotate, search, read aloud, print, download | Drawn by pdf.js (Mozilla, Apache-2.0), shipped with Dayspring in public/vendor/pdfjs. PDFs with a password open only in the default app. Scanned PDFs (no text) show fine, but search and read aloud need text. |
+| **Documents Text and code (TXT, LOG, JSON, JS, TS, PY, CS, CSS, HTML, XML, YAML, SQL, PS1, BAT and more)** | 🧪 tested-sim | On this computer | yes | colour highlighting, word wrap, search, text size, copy, JSON pretty-print | Highlighting by Prism (MIT), shipped in public/vendor/prism. The first 2 MB is shown. HTML and XML are shown as text, never run. |
+| **Documents Markdown (.md)** | 🧪 tested-sim | On this computer | yes | formatted (headings, lists, tables, code), source view, search | Formatted by the viewer itself: everything is escaped first, so HTML or scripts inside never run, and pictures from the internet aren't loaded. |
+| **Spreadsheets CSV, TSV, Excel (.xlsx, .xls, .xlsm), OpenDocument (.ods)** | 🧪 tested-sim | On this computer | yes | sheets as tabs, sort by a column (numbers as numbers), filter rows, source view (CSV) | Read by SheetJS Community Edition 0.20.3 (Apache-2.0), installed from cdn.sheetjs.com: the "xlsx" package on the npm registry is an older 0.18.5 with known problems, so Dayspring doesn't use it. The first 2,000 rows and 60 columns are shown; formulas show their values. |
+| **Documents Word (.docx, .docm)** | 🧪 tested-sim | On this computer | yes | headings, lists, tables, bold and italic, pictures inside, text size, search, read aloud | Turned into a clean page by mammoth (BSD-2-Clause) and cleaned again (sanitize-html): no scripts, no pictures from the internet. Page layout (columns, headers, exact fonts) isn't reproduced. |
+| **Documents Older Word (.doc), RTF, OpenDocument text (.odt)** | 👍 expected | On this computer | yes | the text, in paragraphs and headings | Shown as text through Dayspring's document reader (lib/documents.mjs); .doc files may need Word installed. |
+| **Documents PowerPoint (.pptx)** | 🧪 tested-sim | On this computer | yes | each slide's title and text, pictures on the slide, speaker notes, slide by slide, read aloud | The slides' words and pictures, not their design or animations. For the real look, open it in PowerPoint ("Open in the default app"). |
+| **Documents Older PowerPoint (.ppt), Keynote, Pages, Numbers** | ⛔ not-supported | On this computer | yes | info card, open in the default app | Not supported: There's no pure-JavaScript reader for these formats that could be shipped with Dayspring. The viewer shows the file's details and opens it in its usual app. |
+| **Archives Zip (.zip)** | 🧪 tested-sim | On this computer | yes | the list of files inside, sizes and dates, open a small file inside (up to 25 MB) | Read by JSZip. Files inside that look secret or private are never opened; a file that grows past the limit while unpacking is stopped. |
+| **Archives RAR, 7-Zip, TAR, GZ** | ⛔ not-supported | On this computer | yes | info card, open in the default app | Not supported: No pure-JavaScript reader for them is shipped (they'd need a native program). The viewer shows the file's details and opens it in its usual app. |
+| **Anything else Any other file** | 🧪 tested-sim | On this computer | yes | info card (name, type, size, dates, folder), open in the default app (Programs permission), show in folder, download | Opening another program needs the Programs permission and asks first when it's set to ask; a file that runs when opened always asks. |

@@ -25,7 +25,7 @@ Your request always comes first. If Dayspring was about to say something on its 
 
 You can also say **"stop"**, **"never mind"**, **"repeat that"** or **"text only"**.
 
-> **Tip:** Your wake words are set in Settings → Your assistant. The default is "Dayspring".
+> **Tip:** Your wake words are set in Settings → Your assistant. The default is "Dayspring". You can rename it too ("your name is Nova"): see [Renaming your assistant and wake words](renaming-your-assistant.md).
 
 ## Things you can say
 

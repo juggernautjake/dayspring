@@ -1,0 +1,93 @@
+{
+  "_about": "Saved answers in each map service's own format (made-up places around a made-up home at 39.7817,-89.6501), for scripts/qa/maps.mjs. No real service is ever asked by the tests.",
+  "nominatimCoffee": [
+    { "place_id": 101, "osm_type": "node", "osm_id": 5001, "lat": "39.7902", "lon": "-89.6440", "category": "amenity", "type": "cafe", "name": "Bean There Cafe", "display_name": "Bean There Cafe, 210, East Adams Street, Springfield, Illinois, 62701, United States",
+      "address": { "amenity": "Bean There Cafe", "house_number": "210", "road": "East Adams Street", "city": "Springfield", "state": "Illinois", "postcode": "62701", "country": "United States" }, "extratags": { "opening_hours": "Mo-Fr 06:30-18:00; Sa 08:00-14:00" } },
+    { "place_id": 102, "osm_type": "node", "osm_id": 5002, "lat": "39.7830", "lon": "-89.6490", "category": "amenity", "type": "cafe", "name": "Corner Coffee", "display_name": "Corner Coffee, 12, South 2nd Street, Springfield, Illinois, 62701, United States",
+      "address": { "amenity": "Corner Coffee", "house_number": "12", "road": "South 2nd Street", "city": "Springfield", "state": "Illinois" }, "extratags": {} }
+  ],
+  "nominatimTown": [
+    { "place_id": 200, "osm_type": "relation", "osm_id": 126, "lat": "39.7990", "lon": "-89.6440", "category": "boundary", "type": "administrative", "name": "Springfield", "display_name": "Springfield, Sangamon County, Illinois, United States",
+      "address": { "city": "Springfield", "county": "Sangamon County", "state": "Illinois", "country": "United States" } }
+  ],
+  "nominatimLibrary": [
+    { "place_id": 300, "osm_type": "way", "osm_id": 7003, "lat": "39.8010", "lon": "-89.6400", "category": "amenity", "type": "library", "name": "Public Library", "display_name": "Public Library, 326, South 7th Street, Springfield, Illinois",
+      "address": { "amenity": "Public Library", "house_number": "326", "road": "South 7th Street", "city": "Springfield", "state": "Illinois" } }
+  ],
+  "photon": {
+    "type": "FeatureCollection",
+    "features": [
+      { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-89.644, 39.799] }, "properties": { "osm_type": "R", "osm_id": 126, "osm_key": "place", "osm_value": "city", "name": "Springfield", "state": "Illinois", "country": "United States", "type": "city" } },
+      { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-89.64, 39.801] }, "properties": { "osm_type": "W", "osm_id": 7003, "osm_key": "amenity", "osm_value": "library", "name": "Public Library", "housenumber": "326", "street": "South 7th Street", "city": "Springfield", "state": "Illinois", "type": "house" } }
+    ]
+  },
+  "googlePlaces": {
+    "places": [
+      { "id": "ChIJplaceA", "displayName": { "text": "Harbor Bistro", "languageCode": "en" }, "formattedAddress": "400 Lake Road, Springfield, IL 62701, USA", "location": { "latitude": 39.795, "longitude": -89.65 }, "primaryTypeDisplayName": { "text": "Restaurant" },
+        "rating": 4.6, "userRatingCount": 812, "currentOpeningHours": { "openNow": true, "weekdayDescriptions": ["Monday: 11:00 AM – 9:00 PM", "Tuesday: 11:00 AM – 9:00 PM"] } },
+      { "id": "ChIJplaceB", "displayName": { "text": "Grain Kitchen" }, "formattedAddress": "18 Mill Street, Springfield, IL 62702, USA", "location": { "latitude": 39.81, "longitude": -89.66 }, "rating": 4.2, "userRatingCount": 95, "currentOpeningHours": { "openNow": false } }
+    ]
+  },
+  "googleAutocomplete": {
+    "suggestions": [
+      { "placePrediction": { "placeId": "ChIJplaceA", "text": { "text": "Harbor Bistro, Lake Road, Springfield, IL, USA" }, "structuredFormat": { "mainText": { "text": "Harbor Bistro" }, "secondaryText": { "text": "Lake Road, Springfield, IL, USA" } } } },
+      { "queryPrediction": { "text": { "text": "harbor restaurants" } } }
+    ]
+  },
+  "googleDetails": { "id": "ChIJplaceA", "displayName": { "text": "Harbor Bistro" }, "formattedAddress": "400 Lake Road, Springfield, IL 62701, USA", "location": { "latitude": 39.795, "longitude": -89.65 } },
+  "osrm": {
+    "code": "Ok",
+    "routes": [
+      { "distance": 4250.5, "duration": 486.3, "weight": 486.3, "geometry": { "type": "LineString", "coordinates": [[-89.6501, 39.7817], [-89.6501, 39.785], [-89.646, 39.785], [-89.646, 39.7902], [-89.644, 39.7902]] },
+        "legs": [{ "summary": "North Main Street, East Adams Street", "distance": 4250.5, "duration": 486.3, "steps": [
+          { "distance": 370, "duration": 40, "name": "North Main Street", "ref": "", "mode": "driving", "maneuver": { "type": "depart", "modifier": "right", "bearing_before": 0, "bearing_after": 2, "location": [-89.6501, 39.7817] } },
+          { "distance": 3218.7, "duration": 300, "name": "Oak Avenue", "ref": "IL 29", "mode": "driving", "maneuver": { "type": "turn", "modifier": "left", "location": [-89.6501, 39.785] } },
+          { "distance": 400, "duration": 60, "name": "Lincoln Parkway", "mode": "driving", "maneuver": { "type": "roundabout", "modifier": "right", "exit": 2, "location": [-89.646, 39.785] } },
+          { "distance": 261.8, "duration": 86.3, "name": "East Adams Street", "mode": "driving", "maneuver": { "type": "end of road", "modifier": "right", "location": [-89.646, 39.7902] } },
+          { "distance": 0, "duration": 0, "name": "East Adams Street", "mode": "driving", "maneuver": { "type": "arrive", "modifier": "left", "location": [-89.644, 39.7902] } }
+        ] }] },
+      { "distance": 5100, "duration": 560, "weight": 560, "geometry": { "type": "LineString", "coordinates": [[-89.6501, 39.7817], [-89.655, 39.79], [-89.644, 39.7902]] },
+        "legs": [{ "summary": "West Loop", "distance": 5100, "duration": 560, "steps": [
+          { "distance": 5100, "duration": 560, "name": "West Loop", "mode": "driving", "maneuver": { "type": "depart", "bearing_after": 270, "location": [-89.6501, 39.7817] } },
+          { "distance": 0, "duration": 0, "name": "", "mode": "driving", "maneuver": { "type": "arrive", "location": [-89.644, 39.7902] } }
+        ] }] }
+    ],
+    "waypoints": []
+  },
+  "ors": {
+    "type": "FeatureCollection",
+    "features": [
+      { "type": "Feature", "geometry": { "type": "LineString", "coordinates": [[-89.6501, 39.7817], [-89.6501, 39.785], [-89.646, 39.785], [-89.644, 39.7902]] },
+        "properties": { "summary": { "distance": 3900.2, "duration": 2808.1 }, "way_points": [0, 3],
+          "segments": [{ "distance": 3900.2, "duration": 2808.1, "steps": [
+            { "distance": 367.4, "duration": 264.5, "type": 11, "instruction": "Head north on North Main Street", "name": "North Main Street", "way_points": [0, 1] },
+            { "distance": 1609.3, "duration": 1158.7, "type": 0, "instruction": "Turn left onto Oak Avenue", "name": "Oak Avenue", "way_points": [1, 2] },
+            { "distance": 1923.5, "duration": 1384.9, "type": 13, "instruction": "Keep right onto Park Trail", "name": "Park Trail", "way_points": [2, 3] },
+            { "distance": 0, "duration": 0, "type": 10, "instruction": "Arrive at Park Trail, on the left", "name": "-", "way_points": [3, 3] }
+          ] }] } }
+    ]
+  },
+  "googleRoutes": {
+    "routes": [
+      { "distanceMeters": 12875, "duration": "1080s", "description": "US-36 E", "polyline": { "encodedPolyline": "_p~iF~ps|U_ulLnnqC_mqNvxq`@" },
+        "legs": [{ "endLocation": { "latLng": { "latitude": 43.252, "longitude": -126.453 } }, "steps": [
+          { "distanceMeters": 150, "staticDuration": "30s", "startLocation": { "latLng": { "latitude": 38.5, "longitude": -120.2 } }, "navigationInstruction": { "maneuver": "DEPART", "instructions": "Head north on N Grand Ave" } },
+          { "distanceMeters": 12000, "staticDuration": "960s", "startLocation": { "latLng": { "latitude": 40.7, "longitude": -120.95 } }, "navigationInstruction": { "maneuver": "TURN_RIGHT", "instructions": "Turn right onto US-36 E\nPass by the gas station (on the left in 5 mi)" } },
+          { "distanceMeters": 725, "staticDuration": "90s", "startLocation": { "latLng": { "latitude": 43.2, "longitude": -126.4 } }, "navigationInstruction": { "maneuver": "TURN_LEFT", "instructions": "Turn left onto St Clair St" } }
+        ] }] },
+      { "distanceMeters": 14000, "duration": "1200s", "description": "Old Route 4", "polyline": { "encodedPolyline": "_p~iF~ps|U_ulLnnqC" }, "legs": [{ "steps": [
+          { "distanceMeters": 14000, "staticDuration": "1200s", "startLocation": { "latLng": { "latitude": 38.5, "longitude": -120.2 } }, "navigationInstruction": { "maneuver": "DEPART", "instructions": "Head east on Old Route 4" } } ] }] }
+    ]
+  },
+  "googleTransit": {
+    "routes": [
+      { "distanceMeters": 6000, "duration": "1500s", "polyline": { "encodedPolyline": "_p~iF~ps|U_ulLnnqC" }, "legs": [{ "steps": [
+        { "distanceMeters": 300, "staticDuration": "240s", "travelMode": "WALK", "navigationInstruction": { "maneuver": "DEPART", "instructions": "Walk to Central Station" }, "startLocation": { "latLng": { "latitude": 38.5, "longitude": -120.2 } } },
+        { "distanceMeters": 5700, "staticDuration": "1260s", "travelMode": "TRANSIT", "startLocation": { "latLng": { "latitude": 38.6, "longitude": -120.3 } },
+          "transitDetails": { "stopDetails": { "departureStop": { "name": "Central Station" }, "arrivalStop": { "name": "Market Square" } }, "headsign": "Northgate", "stopCount": 6, "transitLine": { "nameShort": "12", "vehicle": { "type": "BUS", "name": { "text": "Bus" } } } } }
+      ] }] }
+    ]
+  },
+  "googleBadKey": { "error": { "code": 400, "message": "API key not valid. Please pass a valid API key.", "status": "INVALID_ARGUMENT", "details": [{ "@type": "type.googleapis.com/google.rpc.ErrorInfo", "reason": "API_KEY_INVALID", "domain": "googleapis.com" }] } },
+  "googleDisabled": { "error": { "code": 403, "message": "Routes API has not been used in project 123456 before or it is disabled. Enable it by visiting the console then retry.", "status": "PERMISSION_DENIED", "details": [{ "@type": "type.googleapis.com/google.rpc.ErrorInfo", "reason": "SERVICE_DISABLED" }] } }
+}

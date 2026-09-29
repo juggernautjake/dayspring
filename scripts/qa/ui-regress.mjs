@@ -8,6 +8,7 @@
 //   • Esc closes only what's on top
 //   node scripts/qa/ui-regress.mjs [--keep]
 import "./guard-data.mjs";   // first: tests never write to the real data folder
+import { qaPort } from "./port.mjs";   // a free port (or QA_PORT), so parallel runs never collide
 import { spawn, spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -19,7 +20,7 @@ const DESK = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const require = createRequire(import.meta.url);
 const { chromium } = require("playwright-core");
 const { playwrightChannel } = await import("../../lib/browsers.mjs");
-const PORT = 4796, BASE = `http://127.0.0.1:${PORT}`;
+const PORT = await qaPort(4796), BASE = `http://127.0.0.1:${PORT}`;
 const TMP = mkdtempSync(join(tmpdir(), "ds-uiregress-")), APP = join(TMP, "app");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let fail = 0;

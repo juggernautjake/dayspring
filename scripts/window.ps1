@@ -1,11 +1,13 @@
 # Minimize / maximize / restore / hide / show / close Dayspring's own display window, or report its state.
-# It only ever touches a browser window (Chromium-family or Firefox) titled "Dayspring" (or "Welcome to Dayspring", or
-# "Dayspring - Mozilla Firefox") AND whose browser was started with a Dayspring display profile (...\DayspringDisplay,
+# It only ever touches a browser window (Chromium-family or Firefox) titled "Dayspring" (or "Nova · Dayspring" once the
+# assistant is renamed, "Welcome to Dayspring", or "Dayspring - Mozilla Firefox") AND whose browser was started with a Dayspring display profile (...\DayspringDisplay,
 # ...\DayspringTV, a per-browser one like ...\DayspringDisplay-brave, or DS_PROFILE); never the owner's own browser
 # windows, the media window or the study window. Prints JSON: { found, action, windows: [...] }.
 # topmost / notopmost: keep it in front of other windows ("Dayspring mini" → Keep on top), never taking the focus.
 # move: restore the window and put it at -X -Y with size -W x -H (compact mode), in front of other windows, never behind.
-param([ValidateSet("state", "minimize", "maximize", "restore", "hide", "show", "close", "topmost", "notopmost", "move")][string]$Action = "state", [string]$Title = '^(Welcome to )?Dayspring( [-—] .*)?$', [Alias("X")][int]$Left = 0, [Alias("Y")][int]$Top = 0, [Alias("W")][int]$Width = 380, [Alias("H")][int]$Height = 560)   # not $W/$H: PowerShell names ignore case, and $w/$h are used below
+# A renamed assistant's screen is titled "<name> · Dayspring" ("Nova · Dayspring"): the product name stays at the end as a
+# stable marker, so the window is still found (· and — are written as escapes: this file is read as ANSI).
+param([ValidateSet("state", "minimize", "maximize", "restore", "hide", "show", "close", "topmost", "notopmost", "move")][string]$Action = "state", [string]$Title = '^(Welcome to )?([^·]{1,40} · )?Dayspring( [-—] .*)?$', [Alias("X")][int]$Left = 0, [Alias("Y")][int]$Top = 0, [Alias("W")][int]$Width = 380, [Alias("H")][int]$Height = 560)   # not $W/$H: PowerShell names ignore case, and $w/$h are used below
 $ErrorActionPreference = "Stop"
 Add-Type -TypeDefinition @"
 using System; using System.Text; using System.Runtime.InteropServices; using System.Collections.Generic;
