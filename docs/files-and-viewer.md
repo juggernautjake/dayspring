@@ -58,6 +58,10 @@ One window for every kind of file. Drag its title bar to move it, drag the corne
 | **Zip** | The list of files inside, with sizes and dates. A small file inside (up to 25 MB) opens right in the viewer. |
 | **Anything else** | A card with its name, type, size and date, and **Open in the default app**, **Show in folder** and **Download**. |
 
+### Where a picture is saved
+
+Under every picture from your computer the viewer shows **📂** and its folder as clickable parts (**Documents › Trip Photos**), with **📂 Open file location** (File Explorer opens with the picture selected) and **🖼 View in gallery** (the [photo gallery](photos-and-people.md#the-photo-gallery), on this picture, with the rest of its folder). Clicking a folder name opens the gallery on that folder. A **filmstrip** along the bottom shows the other pictures in the folder (or the other matches): scroll it sideways with the wheel or by dragging, and click one to open it. The list of files found has 📂 and 🖼 on each picture too.
+
 ### Keyboard and remote
 
 ← → previous and next (a page in a PDF, 10 seconds in a video) · + − zoom · 0 fit · 1 actual size · R rotate (Shift+R the other way) · H flip · F full screen · I information · S slideshow · Space play/pause · / search · Delete ask to delete · Esc close. Every button can be reached with Tab and pressed with Enter.

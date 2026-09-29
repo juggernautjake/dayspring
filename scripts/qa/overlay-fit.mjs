@@ -52,6 +52,9 @@ const mock = () => {
   window.SpeechRecognition = window.webkitSpeechRecognition = FakeSR;
 };
 // nothing reaches the devices, the window or the network from here
+const GAL = Array.from({ length: 40 }, (_, i) => ({ id: "0123456789abcd" + String(i).padStart(2, "0"), name: `Photo ${i + 1}.jpg`, kind: "image", t: Date.UTC(2026, 6, 1) - i * 86400000, size: 1000, m: 1 }));
+const GAL_ITEM = { id: "0123456789abcd01", name: "A photo with a rather long name from the family trip.jpg", path: "D:\\Photos\\Pictures\\Family\\Summer trip to the lake 2026\\A photo with a rather long name from the family trip.jpg",
+  where: "Pictures › Family › Summer trip to the lake 2026", crumbs: [{ label: "Pictures", fid: "f00000000000001" }, { label: "Family", fid: "f00000000000002" }, { label: "Summer trip to the lake 2026", fid: "f00000000000003", last: true }], sizeText: "2.1 MB", date: "2026-07-04T12:00:00Z" };
 const PNG1 = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==", "base64");
 const DEVICE_ROUTES = /\/api\/(sound|window|devices\/use|voicemeeter\/(install|setup)|keepawake|tunein|callbridge|open|app\/quit|update)/;
 
@@ -120,6 +123,12 @@ const POPUPS = [
     ctl: ".vw-bar button:not(:disabled), .vw-card .vb", close: "#dsViewer .vw-x" },
   { name: "files found list", live: true, box: "#dsFinder", open: (p) => p.evaluate((its) => window.dsViewer.showList("Files like “lease agreement”", its), items(16, (n) => ({ n, id: "0123456789abcde" + (n % 10), name: `Lease Agreement copy number ${n} with a long name.pdf`, kind: "pdf", where: "Documents\\Leases", sizeText: "120 KB", when: "yesterday", type: "PDF" }))), wait: 700,
     ctl: "header button, form button, form input, form select", close: '#dsFinder [data-f="close"]' },
+  // the photo gallery (public/gallery.js): its grid with the group / sort / filter bar, and one photo with Back / Next, where
+  // it's saved (📂 the breadcrumbs, the path, Open in File Explorer) and the filmstrip
+  { name: "photo gallery", live: true, box: "#dsGallery", open: (p) => p.evaluate(() => window.dsGallery.open({ view: "all" })), wait: 900,
+    ctl: ".g-bar button, .g-tools button:not([hidden]), .g-tools select:not([hidden]), .g-tools input", close: "#dsGallery .g-x" },
+  { name: "photo gallery: one photo", live: true, box: "#dsGallery", open: (p) => p.evaluate(() => window.dsGallery.open({ view: "all", focus: "0123456789abcd01", single: true })), wait: 1200,
+    ctl: ".gs-top button, .gs-edge, .gs-loc button", close: "#dsGallery .g-single [data-g=close]" },
   { name: "results card", live: true, box: ".rpanel", open: (p) => p.evaluate((its) => window.dispatchEvent(new CustomEvent("ds-test-results", { detail: { title: "Search results", summary: "Here's what I found.", items: its } })), items(14, (n) => ({ n, title: `Result number ${n}`, detail: "A detail line", url: "https://example.org/" + n }))), ctl: "header button", close: "#rsClose" },
   { name: "suggestion card", box: "#dsxSuggest", open: (p) => p.evaluate(() => window.dsExtras.before({ suggest: { prompt: "Which one did you mean?", options: Array.from({ length: 6 }, (_, i) => ({ n: i + 1, label: `Option number ${i + 1} with a longer label` })) } }, { typed: true })), after: (p) => p.evaluate(() => window.dsExtras.stop()) },
   // (✕ only closes a reader that has a document in it, so the empty one here is hidden again by hand)
@@ -197,6 +206,10 @@ for (const [path, w, h, margins] of CONFIGS) {
       if (/\/api\/setup\/permissions$/.test(u) && rt.request().method() === "GET") return rt.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ confirmPending: true, summary: "Read your Documents; write with backups; no deleting. " + LONG }) });
       if (rt.request().method() === "POST" && DEVICE_ROUTES.test(u)) return rt.fulfill({ status: 200, contentType: "application/json", body: '{"ok":true}' });
       if (/\/api\/maps\/tile\//.test(u)) return rt.fulfill({ status: 200, contentType: "image/png", body: PNG1 });   // (no map pictures from the internet)
+      // (the photo gallery: made-up photos, so its grid and its one-photo view have something to show; no file is read)
+      if (/\/api\/gallery\/list\?/.test(u)) { const q = new URL(u).searchParams, off = Number(q.get("offset")) || 0, lim = Number(q.get("limit")) || 120; return rt.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ total: GAL.length, offset: off, items: GAL.slice(off, off + lim), groups: q.get("group") === "date" ? [{ label: "July 2026", count: 20 }, { label: "June 2026", count: 20 }] : [], focusIndex: GAL.findIndex((x) => x.id === q.get("focus")), title: "All photos" }) }); }
+      if (/\/api\/gallery\/item\?/.test(u)) return rt.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(GAL_ITEM) });
+      if (/\/api\/gallery\/(thumb|file)\?/.test(u)) return rt.fulfill({ status: 200, contentType: "image/png", body: PNG1 });
       return rt.continue();
     });
     const p = await ctx.newPage(); const errs = []; p.on("pageerror", (e) => errs.push(String(e.stack || e.message).slice(0, 300)));

@@ -90,7 +90,7 @@ These work for YouTube videos, your own music and videos, and Spotify where it m
 | "Volume up" · "Volume down" · "Mute" · "Volume 40" | ↑ ↓ · M · the volume slider |
 | "Captions on" · "Captions off" · "Captions in Spanish" | C · **CC** |
 | "Highest quality" · "720p" · "Auto quality" | the quality menu |
-| "Full screen" · "Exit full screen" · "Minimize the player" · "Bring the video back" | F · I · ⛶ · ▭ |
+| "Full screen" · "Exit full screen" · "Make it big" · "Picture in picture" · "Audio only" | F · B · I · A · ⛶ · ▭ · ♪ (see **Big, in the corner, or just the sound** below) |
 | "Next" · "Previous" · "Repeat this one" · "Repeat all" · "Shuffle" | N and P (with Shift) · R · S · the repeat and shuffle buttons |
 | "What's playing?" · "How long is left?" | |
 | "Show the queue" | Q · ☰ |
@@ -98,11 +98,38 @@ These work for YouTube videos, your own music and videos, and Spotify where it m
 - The volume here is the **video's or the music's own volume**, not the computer's. "Turn up your voice" is still Dayspring's own voice.
 - **Quality:** Dayspring asks YouTube for the quality you want, but YouTube has the last word. Your own files and Spotify play at their own quality.
 - **Captions:** YouTube captions follow the video's own caption tracks. Once you turn them on, they stay on for the next video. Your own videos show captions when the file has them.
-- A **minimized** video sits small in the corner, inside the screen's margins, and stays small for the next video in the queue until you bring it back.
+- The next video in the queue is shown the same way as the one before (big, in the corner, or just the sound).
+
+## Big, in the corner, or just the sound
+
+Any video (YouTube, your own videos, Google Drive's) can be shown three ways, and you can switch whenever you like. The video never starts over or reloads when you switch: it keeps its place, speed, captions and volume, and keeps playing on the same speaker.
+
+- **Big:** the large player. Full screen is one more step up (F, ⛶, "full screen").
+- **In the corner** (picture in picture): a small window, about a quarter of the screen wide.
+  - **Move it:** drag it anywhere, by the picture or the bar along its top (mouse, touch or pen). A click without dragging still plays and pauses.
+  - **Snap:** let go within 24 pixels of an edge or a corner and it snaps there; anywhere else, it stays exactly where you put it.
+  - **Resize:** drag the dotted handle on its inner corner. It keeps its shape (16:9), no smaller than 200 pixels and no bigger than the screen.
+  - It always stays inside the screen's margins (Settings → Screen), even when you change them, and it sits above the dashboard but under dialogs, settings pages and notifications.
+  - It remembers where you put it and how big it was, for each screen size.
+  - With the corner window selected (Tab to it, or click its edge), the arrow keys move it and Shift+arrows make it bigger or smaller.
+- **Audio only:** the picture goes away and just the sound keeps playing. The **player card** at the bottom right shows the thumbnail, title and channel, a progress bar you can drag, ⏮ ⏯ ⏭, a mute button, and buttons to switch back to the corner or big.
+
+| Say | Keys | Buttons |
+|---|---|---|
+| "Minimize the video" · "Hide the video" · "Audio only" · "Just play the audio" | A | ♪ on the video · the ♪ switch on the player card |
+| "Picture in picture" · "Put it in the corner" · "Make it small" | I | ▭ on the video · the corner switch on the card |
+| "Make it big" · "Show the video" · "Bring the video back" | B | the big switch on the card |
+| "Full screen" · "Exit full screen" | F | ⛶ |
+| "Move it to the top left" · "…the bottom right" · "…the center" · "Move the video to the left side" | arrows (corner window selected) | drag it |
+| "Make the video bigger" · "Make the video smaller" | Shift+arrows | the resize handle |
+
+**How a video starts** is up to you: Settings → Screen → **Videos and the player** → "When a video starts": **Big**, **Small, in the corner**, **Audio only**, or **Remember last** (the default). "Remember last" remembers separately for music videos (songs, lyric videos, music you asked for), other YouTube videos, and your own videos, so if you last listened to a music video with just the sound, the next music video starts that way too.
+
+**If YouTube pauses a hidden video.** YouTube's player normally keeps playing when it can't be seen (we checked: it kept playing whether it was see-through, 1 pixel, or off the screen). If it ever pauses by itself while it's hidden, Dayspring starts it again. If that happens more than twice in a minute, the video comes back small in the corner, where YouTube can see it, and Dayspring tells you why.
 
 ## Study time
 
-During a study block, videos aren't played (music still is), the same as before. You can still browse and queue them for later.
+During a study block, videos aren't played (music still is), the same as before. You can still browse and queue them for later. A video you're only listening to (audio only) keeps playing when a study block starts.
 
 ## Privacy
 

@@ -19,7 +19,7 @@ The same list is on the **Testing** page (Settings → This app → Testing, in 
 | Reminders | Stable | 3 |
 | Timers | Stable | 2 |
 | Weather | Stable | 1 |
-| Music (Spotify and YouTube) | Stable | 2 |
+| Music (Spotify and YouTube) | Stable | 7 |
 | Recipes and cooking | Stable | 1 |
 | Jokes and fun | Stable | 1 |
 | Personalities | Stable | 1 |
@@ -41,6 +41,7 @@ The same list is on the **Testing** page (Settings → This app → Testing, in 
 | Faces and people | Beta (New) | 8 |
 | Your own music and videos | Beta (New) | 7 |
 | Finding files and the file viewer | Beta (New) | 12 |
+| The photo gallery | Beta (New) | 6 |
 | Google Drive | Beta (New) | 6 |
 | Meeting notes | Beta (New) | 6 |
 | Google Meet invitations | Beta (New) | 5 |
@@ -367,6 +368,56 @@ The same list is on the **Testing** page (Settings → This app → Testing, in 
 2. Say "play Here Comes the Sun on Spotify".
 
 **Expected:** That song plays.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### music-03: A video big, in the corner, and audio only
+
+1. Say "play a video about woodworking".
+2. Say "put it in the corner", then "minimize the video", then "make it big".
+3. Try the keys I, A and B, and the three-way switch on the player card.
+
+**Expected:** The video goes small in the corner, then disappears while its sound keeps playing (the player card at the bottom right shows its picture, title and controls), then comes back big. It never starts over.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### music-04: Move and resize the corner window
+
+1. With a video in the corner, drag it to the middle of the screen, then drag it close to the left edge and let go.
+2. Drag its dotted corner handle to make it bigger.
+3. Say "move it to the top left" and "make the video smaller".
+4. Reload the screen and put a video in the corner again.
+
+**Expected:** It stays where you drop it, snaps to the edge when let go near it, keeps its shape when resized, never leaves the screen's margins, and comes back where you left it.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### music-05: One player card for whatever plays
+
+1. Play a YouTube video, then one of your own songs, then a Spotify song.
+2. Use the card's play/pause, next and seek bar on each.
+
+**Expected:** Starting each one stops the one before (never two at once), and the card switches to it: its icon, picture, title and controls, which work on it.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### music-06: Remember how videos start
+
+1. In Settings → Screen → Videos and the player, leave "When a video starts" on Remember last.
+2. Play a music video and say "audio only". Stop it.
+3. Play another music video.
+
+**Expected:** The second music video starts with just the sound. An ordinary video still starts the way you last watched one.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### music-07: Minimise windows to the dock
+
+1. Open Settings on the screen and the Music & Video browser.
+2. Press – on one, say "minimize the settings", then "hide everything".
+3. Click a chip in the dock, then say "show everything again".
+
+**Expected:** Each window tucks into a chip in the dock along the bottom (left of the player card), comes back the way it was, and a playing video keeps its sound while hidden.
 
 - [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
 
@@ -1065,6 +1116,72 @@ The same list is on the **Testing** page (Settings → This app → Testing, in 
 2. Say "open the PDF called" and a file's name.
 
 **Expected:** The viewer doesn't open and the name index isn't built. Back on, it works.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+
+## The photo gallery (Beta (New))
+
+### gallery-01: Open the photo gallery and scroll through it
+
+1. Say "open the photo gallery" (or "show my photos").
+2. Scroll down through the grid, all the way to the bottom.
+3. Change Group to Folder, then Album, then Month; change Sort to Name, then Size; press ↓ to flip the order.
+
+**Expected:** A grid of your photos opens inside the screen's margins, grouped by month with headers. Scrolling stays smooth even with thousands of photos, and the small pictures fill in as you go. Grouping and sorting change the grid straight away.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### gallery-02: One photo at a time: Back, Next and the filmstrip
+
+1. Click any photo in the gallery.
+2. Press Next ▶ a few times, then ◀ Back; use the ← → keys; spin the mouse wheel over the photo; swipe or drag across it.
+3. Scroll the filmstrip along the bottom to the right (wheel or drag), then click a photo there.
+4. Press End, then Next ▶ twice.
+
+**Expected:** The photo opens big with "N of TOTAL". Back and Next go through the whole collection, not just the first page; the filmstrip keeps showing more as you scroll and marks the photo that's open. At the last photo it says so, and one more Next starts over at the first.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### gallery-03: Where a photo is saved, and Open in File Explorer
+
+1. With a photo open in the gallery, look at the bar under it: 📂 Pictures › … and the full path.
+2. Click one of the folder names in the breadcrumbs.
+3. Open a photo again and click 📂 Open in File Explorer; then click the full path.
+
+**Expected:** Every photo shows its folder as clickable parts and its full path. A folder name shows just that folder's photos (with "This folder only" to leave out its subfolders). Open in File Explorer and the path both open File Explorer on the laptop with that exact photo selected, and it's in the activity log (Settings → Activity).
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### gallery-04: 📂 Open file location and 🖼 View in gallery everywhere
+
+1. When a photo shows on the rotating card, press 📂 Open file location, then 🖼 View in gallery.
+2. Click the photo card to open its detail card and try both buttons there.
+3. Open a picture in the file viewer ("show me the picture named …") and use the 📂 bar at the bottom and 🖼.
+4. Find pictures by name ("find photos from …") and use 📂 / 🖼 on a line of the list; on the People page, use them on a person's photos.
+
+**Expected:** 📂 always opens File Explorer with that photo selected (never the photo itself). 🖼 opens the gallery on that photo, with the other photos from its folder (or that person's photos) and Back / Next through them.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### gallery-05: 🎲 Random, favourites and filters
+
+1. In the gallery, press 🎲 Random, scroll down and press More, then Shuffle again.
+2. Open a random photo and press Next a few times.
+3. Open a photo and press ☆; then press ★ Favourites. Try "Has text" and "🎬 Videos too", and the search box.
+
+**Expected:** Random shows a shuffled mix from all your photo folders; More never repeats one; Shuffle again starts with photos you haven't seen yet. Hidden photos and screenshots never appear. Favourites keeps the ones you starred.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### gallery-06: The gallery by voice
+
+1. Say "show my photos from last summer", then "show photos in the" + a folder name + "folder".
+2. Say "surprise me with a photo", then "shuffle again".
+3. Open a photo and say "next", "previous", "scroll right", "start a slideshow", "stop the slideshow".
+4. Say "show me where this is saved", then "view this in the gallery" while a photo is on the rotating card, then "close the gallery".
+
+**Expected:** Each works without an AI: the right photos open, next/previous move one photo, the slideshow runs, "show me where this is saved" opens File Explorer on that photo, and "view this in the gallery" opens it in its folder.
 
 - [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
 

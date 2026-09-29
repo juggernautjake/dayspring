@@ -12,7 +12,7 @@
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   // Esc closes only what's on top. Every open overlay is found here and the top one (highest layer, then the one
   // added last) is marked on the key event (e.dsTop); each overlay's own Esc handler only acts when it's the one.
-  const ESC_ROOTS = ".wconfirm, .fitcal, #dsUpdate, .stpop, .tunepop, .morebox, #soundPanel, .fyl, #lib, .rpanel, #reader, #detail, #media.video, #calwrap, #pagewrap, #dsImages, #dsGifs, #dsMB, #dsMaps";
+  const ESC_ROOTS = ".wconfirm, .fitcal, #dsUpdate, .stpop, .tunepop, .morebox, #soundPanel, .fyl, #lib, .rpanel, #reader, #detail, #media.video, #calwrap, #pagewrap, #dsImages, #dsGifs, #dsMB, #dsMaps, #dsGallery";
   const shown = (el) => el.isConnected && !el.hidden && !el.closest("[hidden]") && getComputedStyle(el).display !== "none" && getComputedStyle(el).visibility !== "hidden";
   const layerOf = (el) => { for (let x = el; x && x !== document.body; x = x.parentElement) { const z = parseInt(getComputedStyle(x).zIndex, 10); if (!Number.isNaN(z)) return z; } return 0; };
   window.dsTopOverlay = () => {
@@ -363,7 +363,7 @@
   function renderPhoto(p) {
     const when = new Date(p.taken + "T12:00:00").toLocaleDateString("en-US", { month: "long", year: "numeric" });
     show.photo = p;
-    $("#vPhoto").innerHTML = `<div class="photo"><img src="/api/photos/img/${p.id}" alt=""><div class="pcap">${p.description ? `<b>${esc(p.category ?? "")}</b>${esc(p.description)}` : `<span>${esc(p.folder)} · ${esc(when)}</span>`}</div></div>`;
+    $("#vPhoto").innerHTML = `<div class="photo"><img src="/api/photos/img/${p.id}" alt=""><div class="pcap">${p.description ? `<b>${esc(p.category ?? "")}</b>${esc(p.description)}` : `<span>${esc(p.folder)} · ${esc(when)}</span>`}${window.dsGallery?.actionsHtml?.(p.id, { cls: "pacts" }) ?? ""}</div></div>`;   // 📂 Open file location · 🖼 View in gallery (public/gallery.js)
   }
   // Step through the trail: -1 back, +1 forward (past the newest it moves the rotation on).
   function stepShow(delta) {
@@ -712,7 +712,7 @@
     if (!p) return;
     openDetail(p.description ? (p.category ?? "Photo") : `${p.folder} · ${new Date(p.taken + "T12:00:00").toLocaleDateString("en-US", { month: "long", year: "numeric" })}`,
       `<div class="dphoto"><img src="/api/photos/img/${p.id}" alt=""></div>${p.description ? `<p class="dcap">“${esc(p.description)}”</p>` : `<p class="dcap muted">Not catalogued yet. Tell me about it: say “Dayspring, what's this photo?”</p>`}
-      <div class="dnav"><button data-photo-open="${p.id}">Open the original on the laptop ↗</button><button data-photo-next="1">Show another ›</button></div>`, { wide: true });
+      <div class="dnav"><button data-photo-open="${p.id}">Open the original on the laptop ↗</button>${window.dsGallery?.actionsHtml?.(p.id) ?? ""}<button data-photo-next="1">Show another ›</button></div>`, { wide: true });
   }
   // ---- a video: play it big right here, or open it on YouTube ----
   function videoDetail() {
@@ -1085,7 +1085,7 @@
   // The older hidden-window Spotify reports what it's playing here (the server polls it). It never overrides YouTube or
   // Spotify playing inside Dayspring.
   function showNowPlaying(n) {
-    if (P.source === "youtube" || P.source === "spotify") return;
+    if (P.source === "youtube" || P.source === "spotify" || P.source === "file") return;
     if (!n || (!n.title && !n.playing)) { if (P.source === "spotify-window") clearPlayer(); return; }
     Object.assign(P, { source: "spotify-window", title: n.title || "Spotify", artist: n.artist || "", art: n.art || "", playing: Boolean(n.playing), pos: 0, dur: 0, at: Date.now(), shuffle: false, repeat: "off", rate: 1, video: false, playlist: false, videoId: null });
     renderPlayer(); reportState();
@@ -1528,6 +1528,7 @@
   /* ================================================================ speaking (fetched ahead, played through the chain) */
   let speaking = false, speakQueue = Promise.resolve(), current = null, voiceNode = null;
   const PAGE_ID = (crypto.randomUUID?.() ?? String(Math.random()).slice(2)) + "";
+  window.dsPageId = PAGE_ID;                     // (public/winman.js reports this page's windows under it)
   window.dsPageId = PAGE_ID;             // xp.js reports "stop listening" per page with it
   let isSpeaker = true; window.dsIsSpeaker = true;
   // everything that talks on this page (replies, announcements, call answers) goes through this one queue
@@ -1794,8 +1795,10 @@
   //   "spotify"        — Spotify inside Dayspring: this page is a Spotify device called "Dayspring" (Web Playback SDK)
   //   "spotify-window" — the older fallback: Spotify's web player in the hidden media window (fewer controls)
   // The music card, the video's own controls, the keyboard, voice/typing and the AI all go through ctl().
-  const P = { source: null, title: "", artist: "", art: "", playing: false, pos: 0, dur: 0, at: 0, shuffle: false, repeat: "off", rate: 1, rates: [1], video: false, playlist: false, videoId: null, lastVol: 60 };
-  const volKey = () => (P.source === "youtube" && P.video ? "videoVolume" : "musicVolume");
+  const P = { source: null, title: "", artist: "", art: "", playing: false, pos: 0, dur: 0, at: 0, shuffle: false, repeat: "off", rate: 1, rates: [1], video: false, playlist: false, videoId: null, lastVol: 60, mode: null, hasVideo: false };
+  // (a YouTube video keeps the video level in every view mode, so hiding the picture never changes how loud it is;
+  // YouTube started as music, "play … on YouTube" for a song, uses the music level)
+  const volKey = () => (P.source === "youtube" && !P.musicStart ? "videoVolume" : "musicVolume");
   const levelOf = (k) => Math.max(0, Math.min(100, Number(prefs[k] ?? (k === "videoVolume" ? prefs.musicVolume : undefined) ?? 100)));
   const musicVol = () => levelOf(volKey());
   const ytFull = () => Math.round(85 * musicVol() / 100);
@@ -1821,24 +1824,95 @@
     stop: '<svg viewBox="0 0 24 24"><path d="M6.4 5 12 10.6 17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19 5 17.6l5.6-5.6L5 6.4z"/></svg>',
     library: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="3" height="16" rx="1"/><rect x="8" y="4" width="3" height="16" rx="1"/><path d="M13.6 5.1l2.9-.8 4.2 15.4-2.9.8z"/></svg>',
   };
+  // the three ways to show a video (the card's switch and the video's own buttons)
+  IC.big = '<svg viewBox="0 0 24 24"><rect x="2.5" y="4.5" width="19" height="15" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.9"/><rect x="5.5" y="7.5" width="13" height="9" rx="1"/></svg>';
+  IC.corner = '<svg viewBox="0 0 24 24"><rect x="2.5" y="4.5" width="19" height="15" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.9"/><rect x="12" y="11.5" width="7" height="5.5" rx="1"/></svg>';
+  IC.heart = '<svg viewBox="0 0 24 24"><path d="M12 20.3 10.6 19C5.4 14.3 2 11.3 2 7.6 2 4.6 4.4 2.3 7.3 2.3c1.7 0 3.4.8 4.7 2.1 1.3-1.3 3-2.1 4.7-2.1 2.9 0 5.3 2.3 5.3 5.3 0 3.7-3.4 6.7-8.6 11.4z" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+  IC.heartOn = '<svg viewBox="0 0 24 24"><path d="M12 20.3 10.6 19C5.4 14.3 2 11.3 2 7.6 2 4.6 4.4 2.3 7.3 2.3c1.7 0 3.4.8 4.7 2.1 1.3-1.3 3-2.1 4.7-2.1 2.9 0 5.3 2.3 5.3 5.3 0 3.7-3.4 6.7-8.6 11.4z"/></svg>';
   window.dsIcons = IC;
   const BTN_ICON = { previous: "prev", next: "next", shuffle: "shuffle", back10: "back10", fwd10: "fwd10", stop: "stop", library: "library" };
   document.querySelectorAll("#npCtl [data-p], #vCtl [data-p]").forEach((b) => { const k = BTN_ICON[b.dataset.p]; if (k) b.innerHTML = IC[k]; });
+  document.querySelectorAll("#npModes [data-v]").forEach((b) => { b.innerHTML = { big: IC.big, corner: IC.corner, audio: IC.audio }[b.dataset.v] ?? ""; });
+
+  // ---- the one "now playing" (lib/nowplaying.mjs): what's playing anywhere, for this card when THIS page isn't the one
+  // playing it (another Dayspring screen, the media window, Lantern's study music). Its buttons go through the server.
+  let NPS = null;                                  // { current, others, receivedAt }
+  function remoteNow() {
+    const c = NPS?.current;
+    if (!c || P.source) return null;
+    if (c.key === "screen" && window.dsIsSpeaker !== false) return null;     // that's this page's own player (a moment behind)
+    if (c.key === "window-spotify") return null;                               // shown as this page's own "spotify-window" card
+    return c;
+  }
+  const remotePos = (c) => { const p = c.position + (c.playing ? ((Date.now() - (NPS?.receivedAt ?? Date.now())) / 1000) * (c.rate || 1) : 0); return c.duration ? Math.min(c.duration, p) : p; };
+  const SRC_NAME = { youtube: "YouTube", spotify: "Spotify", "spotify-window": "Spotify", file: "On this computer", drive: "Google Drive", lantern: "Lantern", radio: "Radio", other: "Playing" };
+  window.dsNowPlaying = () => {
+    if (P.source) return P;
+    const c = remoteNow(); if (!c) return null;
+    return { source: c.provider, title: c.title, artist: c.artist, art: c.art, playing: c.playing, pos: remotePos(c), at: Date.now(), dur: c.duration, rate: c.rate, uri: c.uri, videoId: c.videoId, remote: true, controllable: c.controllable };
+  };
+  // how many are lined up after this one, for the card's queue button
+  function queueCount() {
+    if (P.source === "youtube") return vsOn() && (P.fromQueue || SQ.upcoming?.length) ? SQ.upcoming?.length ?? 0 : VQ.length;
+    if (P.source === "spotify") return P.upNext?.length ?? 0;
+    if (P.source === "file") return window.dsLocalPlayer?.remaining?.() ?? 0;
+    return 0;
+  }
+  function srcIcon(kind) { const k = kind === "spotify-window" ? "spotify" : kind; const el = $("#npIcon"); if (el && el.dataset.k !== k) { el.dataset.k = k; el.className = "npico " + k; el.textContent = { youtube: "▶", spotify: "♫", file: "🗀", drive: "△", lantern: "✦", radio: "📻" }[k] ?? "♪"; } }
+  function paintArt(url) {
+    const card = $("#np"), img = $("#npArt");
+    img.onerror = () => { img.removeAttribute("src"); img.classList.add("none"); card.style.setProperty("--npbg", "none"); };
+    if (url) { if (img.getAttribute("src") !== url) { img.classList.remove("none"); img.src = url; card.style.setProperty("--npbg", `url("${url}")`); } }
+    else { img.removeAttribute("src"); img.classList.add("none"); card.style.setProperty("--npbg", "none"); }
+  }
+  // this page isn't playing: the card shows what's playing elsewhere, or "Nothing playing", or hides (Settings → Screen)
+  function renderElsewhere(card) {
+    const c = remoteNow(), idleShow = (prefs.nowPlayingIdle ?? "hide") === "show";
+    card.classList.toggle("remote", Boolean(c)); card.classList.toggle("idle", !c);
+    card.hidden = !c && !idleShow;
+    $("#npModes").hidden = true; $("#npLike").hidden = true; $("#npQueue").hidden = true; $("#npNext").hidden = true;
+    for (const id of ["#npShuf", "#npRep"]) $(id).hidden = true;
+    if (!c) {
+      srcIcon("idle"); $("#npSource").textContent = "Music & Video"; $("#npTitle").textContent = "Nothing playing"; $("#npArtist").textContent = "Say “play …”, or open the browser";
+      card.classList.remove("playing"); paintArt(""); $("#npSeek").closest(".pbar").hidden = true;
+      return;
+    }
+    srcIcon(c.icon ?? c.provider);
+    $("#npSource").textContent = c.sourceLabel || SRC_NAME[c.icon] || SRC_NAME[c.provider] || "Playing";
+    $("#npTitle").textContent = c.title || SRC_NAME[c.provider] || "Playing";
+    $("#npArtist").textContent = c.artist || (c.playing ? "Playing" : "Paused");
+    card.classList.toggle("playing", Boolean(c.playing));
+    paintArt(c.art || (c.videoId ? `https://i.ytimg.com/vi/${c.videoId}/mqdefault.jpg` : ""));
+    $("#npSeek").closest(".pbar").hidden = !c.duration;
+    const b = $("#npPlay"); b.innerHTML = c.playing ? IC.pause : IC.play; b.setAttribute("aria-label", c.playing ? "Pause" : "Play");
+    for (const x of card.querySelectorAll(".pctl .pb")) x.disabled = !c.controllable && x.dataset.p !== "library";
+    if (c.can?.modes && c.mode) { $("#npModes").hidden = false; for (const m of $("#npModes").children) { const on = m.dataset.v === c.mode; m.classList.toggle("on", on); m.setAttribute("aria-pressed", String(on)); } }
+    if (c.queueCount) { $("#npQueue").hidden = false; $("#npQueue").textContent = `☰ ${c.queueCount}`; }
+    renderTimes();
+  }
 
   function renderPlayer() {
     const card = $("#np"), on = Boolean(P.source);
-    card.hidden = !on;
-    if (!on) return;
+    if (!on) { renderElsewhere(card); return; }
+    card.hidden = false;
+    card.classList.remove("remote", "idle");
+    for (const x of card.querySelectorAll(".pctl .pb")) x.disabled = false;
+    srcIcon(P.source === "file" && /drive/i.test(P.sourceLabel ?? "") ? "drive" : P.source);
     const title = P.title || (P.source === "youtube" ? "YouTube" : "Spotify");
     if ($("#npTitle").textContent !== title) { card.classList.remove("swap"); void card.offsetWidth; card.classList.add("swap"); }
     $("#npTitle").textContent = title;
     $("#npArtist").textContent = P.artist || (P.playing ? "Playing" : "Paused");
-    $("#npSource").textContent = P.source === "youtube" ? (P.video ? "YouTube" : "YouTube · music") : P.source === "spotify" ? "Spotify · in Dayspring" : P.source === "file" ? P.sourceLabel || "On this computer" : "Spotify";
+    const modeWord = hasVideo() ? { big: "", corner: " · in the corner", audio: " · audio only" }[VIEW.mode] ?? "" : "";
+    $("#npSource").textContent = (P.source === "youtube" ? (hasVideo() && !P.musicStart ? "YouTube" : "YouTube · music") : P.source === "spotify" ? "Spotify · in Dayspring" : P.source === "file" ? P.sourceLabel || "On this computer" : "Spotify") + modeWord;
     card.classList.toggle("playing", P.playing);
-    const img = $("#npArt");
-    img.onerror = () => { img.removeAttribute("src"); img.classList.add("none"); card.style.setProperty("--npbg", "none"); };
-    if (P.art) { if (img.getAttribute("src") !== P.art) { img.classList.remove("none"); img.src = P.art; card.style.setProperty("--npbg", `url("${P.art}")`); } }
-    else { img.removeAttribute("src"); img.classList.add("none"); card.style.setProperty("--npbg", "none"); }
+    paintArt(P.art);
+    // the view switch (videos only): big, the corner, audio only; like or save; the queue
+    const vm = $("#npModes"); vm.hidden = !hasVideo();
+    for (const m of vm.children) { const on = m.dataset.v === VIEW.mode; m.classList.toggle("on", on); m.setAttribute("aria-pressed", String(on)); }
+    const lk = $("#npLike"), canLike = (P.source === "spotify" && P.uri) || (P.source === "youtube" && P.videoId);
+    lk.hidden = !canLike; lk.innerHTML = P.liked ? IC.heartOn : IC.heart; lk.classList.toggle("on", Boolean(P.liked)); lk.setAttribute("aria-pressed", String(Boolean(P.liked)));
+    lk.title = P.source === "spotify" ? (P.liked ? "Liked" : "Like this song") : P.liked ? "Saved" : "Save to your Saved videos list";
+    const qn = queueCount(), qb = $("#npQueue"); qb.hidden = !qn; qb.textContent = `☰ ${qn}`; qb.title = `The queue: ${qn} up next`;
     const win = P.source === "spotify-window";
     $("#npSeek").closest(".pbar").hidden = win;
     for (const id of ["#npPlay", "#vPlay"]) { const b = $(id); b.innerHTML = P.playing ? IC.pause : IC.play; b.title = P.playing ? "Pause (Space)" : "Play (Space)"; b.setAttribute("aria-label", P.playing ? "Pause" : "Play"); }
@@ -1847,8 +1921,7 @@
     $("#npRep").hidden = win; $("#npRep").innerHTML = P.repeat === "track" ? IC.repeat1 : IC.repeat; $("#npRep").classList.toggle("on", P.repeat !== "off"); $("#npRep").setAttribute("aria-pressed", String(P.repeat !== "off"));
     $("#npRep").title = { off: "Repeat: off", context: "Repeat: all", track: "Repeat: this one" }[P.repeat] ?? "Repeat";
     const yt1 = P.source === "youtube";
-    $("#npVid").hidden = !yt1; $("#npVid").innerHTML = P.video ? IC.audio : IC.video; $("#npVid").title = P.video ? "Music only: hide the picture" : "Show the video";
-    $("#vAudio").innerHTML = P.video ? IC.audio : IC.video; $("#vAudio").title = P.video ? "Music only: hide the picture" : "Show the picture";
+    $("#vAudio").innerHTML = IC.audio; $("#vAudio").title = "Audio only: hide the picture, keep the sound (A)";
     const nx = yt1 ? videoNextInfo() : null;
     // "Next: …" — always visible on the card when something is lined up; click for the whole queue
     const upn = P.source === "spotify" ? P.upNext?.[0] : nx;
@@ -1860,13 +1933,14 @@
     const vsh = $("#vShuf"); if (vsh) { vsh.hidden = !(yt1 && (P.playlist || (P.fromQueue && (SQ.total ?? 0) > 1))); vsh.innerHTML = IC.shuffle; vsh.classList.toggle("on", Boolean(P.shuffle)); vsh.setAttribute("aria-pressed", String(Boolean(P.shuffle))); vsh.title = P.shuffle ? "Shuffle: on (S)" : "Shuffle: off (S)"; }
     const vqb = $("#vQueueBtn"); if (vqb) { vqb.hidden = !vsOn(); const left = SQ.upcoming?.length ?? 0; vqb.textContent = left ? `☰ ${left}` : "☰"; vqb.title = left ? `The queue: ${left} up next (Q)` : "The queue (Q)"; }
     const vql = $("#vQual"); if (vql) { vql.closest(".vqual").hidden = !yt1; if (document.activeElement !== vql) vql.value = ({ hd2160: "2160p", hd1440: "1440p", hd1080: "1080p", hd720: "720p", large: "480p", medium: "360p" })[P.quality] ?? "auto"; }
-    const vmn = $("#vMin"); if (vmn) { vmn.classList.toggle("on", Boolean(P.mini)); vmn.title = P.mini ? "Make the video big again (I)" : "Minimize to the corner (I)"; }
+    const vmn = $("#vMin"); if (vmn) { vmn.innerHTML = P.mini ? IC.big : IC.corner; vmn.title = P.mini ? "Make the video big again (I)" : "Small, in the corner (I)"; vmn.setAttribute("aria-label", P.mini ? "Make the video big" : "Put the video in the corner"); }
+    const gt = $("#vGripTitle"); if (gt) gt.textContent = P.title || "";
     const v = musicVol();
     for (const id of ["#npVol", "#vVol"]) { const r = $(id); if (document.activeElement !== r) r.value = v; r.style.setProperty("--pct", v + "%"); }
     document.querySelectorAll(".pvol .vi").forEach((i) => (i.innerHTML = v === 0 ? IC.mute : IC.vol));
     const box = $("#media");
     $("#vFull").innerHTML = box.classList.contains("full") ? IC.unfull : IC.full;
-    box.classList.toggle("paused", yt1 && !P.playing);
+    box.classList.toggle("paused", hasVideo() && !P.playing);
     $("#vTitle").textContent = yt1 ? P.title : "";
     if (yt1 && $("#vRate").dataset.for !== P.rates.join()) { $("#vRate").dataset.for = P.rates.join(); $("#vRate").innerHTML = P.rates.map((r) => `<option value="${r}">${r === 1 ? "Normal" : r + "×"}</option>`).join(""); }
     if (yt1) $("#vRate").value = String(nearest(P.rates, P.rate));
@@ -1874,23 +1948,26 @@
     window.dsLibrary?.onPlayer?.();
   }
   function renderTimes() {
-    if (!P.source) return;
-    const pos = posNow(), dur = P.dur || 0, pct = dur ? Math.min(100, (pos / dur) * 100) : 0;
-    for (const [sk, a, b] of [["#npSeek", "#npPos", "#npDur"], ["#vSeek", "#vPos", "#vDur"]]) {
+    const rc = P.source ? null : remoteNow();
+    if (!P.source && !rc) return;
+    const pos = rc ? remotePos(rc) : posNow(), dur = (rc ? rc.duration : P.dur) || 0, pct = dur ? Math.min(100, (pos / dur) * 100) : 0;
+    for (const [sk, a, b] of rc ? [["#npSeek", "#npPos", "#npDur"]] : [["#npSeek", "#npPos", "#npDur"], ["#vSeek", "#vPos", "#vDur"]]) {
       const r = $(sk);
       if (!r.dataset.drag) { r.value = Math.round(pct * 10); r.style.setProperty("--pct", pct + "%"); }
       $(a).textContent = mmss(r.dataset.drag ? (r.value / 1000) * dur : pos);
       $(b).textContent = dur ? mmss(dur) : "–:––";
     }
   }
-  setInterval(() => { if (P.source) { if (P.source === "youtube") ytTick(); renderTimes(); } }, 500);
+  setInterval(() => { if (P.source) { if (P.source === "youtube") ytTick(); renderTimes(); if (hasVideo() && !$("#media").hidden) VIEW.shownAt = Date.now(); } else if (NPS?.current) renderTimes(); }, 500);
   function clearPlayer() { P.source = null; P.playing = false; renderPlayer(); reportState(); }
   let lastReport = 0, reportTimer = 0, musicOn = false;
   function reportState() {
     clearTimeout(reportTimer);
     const on = Boolean(P.source && P.playing);
     if (on !== musicOn) { musicOn = on; tuneIn(on, 0, "music"); }       // Tune in's echo guard: our own music is playing (or stopped)
-    const send = () => { lastReport = Date.now(); post("/player/state", P.source ? { source: P.source, title: P.title, artist: P.artist, playing: P.playing, position: Math.round(posNow()), duration: Math.round(P.dur), volume: musicVol(), shuffle: P.shuffle, repeat: P.repeat, rate: P.rate, video: P.video, videoId: P.videoId, fromQueue: Boolean(P.fromQueue), captions: Boolean(P.captions) } : {}).catch(() => {}); };
+    // (it's also the one "now playing" every screen's card shows: lib/nowplaying.mjs)
+    const send = () => { lastReport = Date.now(); post("/player/state", P.source ? { source: P.source, title: P.title, artist: P.artist, playing: P.playing, position: Math.round(posNow()), duration: Math.round(P.dur), volume: musicVol(), shuffle: P.shuffle, repeat: P.repeat, rate: P.rate, video: P.video, videoId: P.videoId, fromQueue: Boolean(P.fromQueue), captions: Boolean(P.captions),
+      hasVideo: hasVideo(), mode: hasVideo() ? VIEW.mode : null, art: P.art || "", uri: P.uri ?? null, sourceLabel: P.sourceLabel ?? "", queueCount: queueCount() } : {}).catch(() => {}); };
     if (Date.now() - lastReport > 1500) send(); else reportTimer = setTimeout(send, 1500);
   }
 
@@ -1932,7 +2009,7 @@
   function playHistory(i) {
     if (i < 0 || i >= VH.list.length) return false;
     VH.i = i; const it = VH.list[i];
-    playMedia({ action: "play", provider: "youtube", ...it, audioOnly: P.source === "youtube" ? !P.video : it.audioOnly }, { fromHistory: true });
+    playMedia({ action: "play", provider: "youtube", ...it, audioOnly: P.source === "youtube" ? Boolean(P.musicStart) : it.audioOnly }, { fromHistory: true });
     return true;
   }
   function queueVideo(x, { next = false } = {}) {
@@ -1958,7 +2035,7 @@
     const q = VQ.shift() ?? vOthers.shift();
     saveVideos(true);
     if (!q) return false;
-    playMedia({ action: "play", provider: "youtube", ...q, audioOnly: P.source === "youtube" ? !P.video : q.audioOnly });
+    playMedia({ action: "play", provider: "youtube", ...q, audioOnly: P.source === "youtube" ? Boolean(P.musicStart) : q.audioOnly });
     return true;
   }
   window.dsVideos = {
@@ -1986,6 +2063,7 @@
   const capPref = () => { try { return JSON.parse(localStorage.getItem("ds-captions") ?? "{}") ?? {}; } catch { return {}; } };
   const setCapPref = (x) => { try { localStorage.setItem("ds-captions", JSON.stringify({ ...capPref(), ...x })); } catch { /* storage off */ } };
   if (vsOn()) setTimeout(() => json("/video/queue").then((r) => sqApply(r.queue)).catch(() => {}), 400);
+  setTimeout(() => json("/player/nowplaying").then((r) => { NPS = { ...r, receivedAt: Date.now() }; if (!P.source) renderPlayer(); }).catch(() => {}), 600);
   // ---- YouTube on the Dayspring screen --------------------------------------------------------------------------------
   let yt = null, ytReady = false, nowPlaying = null, pendingPlay = null, lastRecorded = null;
   window.onYouTubeIframeAPIReady = () => { ytReady = true; if (pendingPlay) { const p = pendingPlay; pendingPlay = null; playMedia(p); } };
@@ -2007,10 +2085,17 @@
     if (Array.isArray(cmd.others)) vOthers = cmd.others.map(vItem).filter((x) => x.videoId || x.playlistId);
     else if (!fromHistory) vOthers = [];
     const box = $("#media");
-    box.hidden = false; box.className = "media " + (cmd.audioOnly ? "audio" : "video") + (P.mini && !cmd.audioOnly ? " minip" : "");
+    // big, the corner or audio only: the way the last video was (while one follows another), the setting, or "audio
+    // only" when it was asked for as music (Settings → Screen → Videos)
+    const kind = videoKind({ title: cmd.title, audioOnly: cmd.audioOnly, source: "youtube" });
+    const mode = startMode(kind, { audioOnly: Boolean(cmd.audioOnly) });
+    box.hidden = false; box.className = "media";
     $("#np2").textContent = cmd.title ? `♪ ${cmd.title}` : "";
     Object.assign(P, { source: "youtube", title: cmd.title ?? "", artist: cmd.channel || "YouTube", art: cmd.videoId ? `https://i.ytimg.com/vi/${cmd.videoId}/mqdefault.jpg` : "", playing: false, pos: 0, dur: 0, at: Date.now(),
-      shuffle: Boolean(cmd.shuffle), repeat: "off", rate: 1, rates: [1], video: !cmd.audioOnly, playlist: Boolean(cmd.playlistId), videoId: cmd.videoId ?? null, fromQueue: Boolean(cmd.fromQueue), quality: "", captions: false, mini: Boolean(P.mini && !cmd.audioOnly) });
+      shuffle: Boolean(cmd.shuffle), repeat: "off", rate: 1, rates: [1], video: mode !== "audio", playlist: Boolean(cmd.playlistId), videoId: cmd.videoId ?? null, fromQueue: Boolean(cmd.fromQueue), quality: "", captions: false, mini: mode === "corner",
+      hasVideo: true, musicStart: Boolean(cmd.audioOnly), liked: false, uri: null, sourceLabel: "" });
+    applyView(mode, { forced: Boolean(cmd.audioOnly), kind });
+    wantPlay = true;
     if (cmd.queue) sqApply({ ...SQ, repeat: cmd.queue.repeat, shuffle: cmd.queue.shuffle });
     if (P.fromQueue) { P.repeat = { one: "track", all: "context" }[SQ.repeat] ?? "off"; P.shuffle = Boolean(SQ.shuffle); }
     renderPlayer(); showCtl(); mediaFollowNote();
@@ -2031,7 +2116,10 @@
         },
         onPlaybackRateChange: () => ytTick(true),
         onStateChange: (e) => {
+          if (e.data === YT.PlayerState.PAUSED) hiddenPaused();
+          if (e.data === YT.PlayerState.ENDED) wantPlay = false;
           if (e.data === YT.PlayerState.PLAYING) {
+            wantPlay = true;
             const d = e.target.getVideoData();
             if (d?.video_id && d.video_id !== lastRecorded) { lastRecorded = d.video_id; $("#np2").textContent = `♪ ${d.title}`; post("/media/played", { id: d.video_id, title: d.title }).catch(() => {}); }
           }
@@ -2065,6 +2153,7 @@
   }
   // YouTube only (keeps what the card shows): used when Spotify starts playing here
   function stopYT() {
+    wantPlay = false;
     if (P.source === "youtube" && P.videoId) { VPOS[P.videoId] = posNow(); saveVideos(true); }
     if (yt) { try { yt.stopVideo(); yt.destroy(); } catch { /* gone */ } yt = null; }
     if (!$("#yt")) $("#media").insertAdjacentHTML("afterbegin", '<div id="yt"></div>');
@@ -2077,6 +2166,112 @@
     if (P.source === "spotify") sp?.pause().catch(() => {});
     clearPlayer();
     if (tell) post("/media/stop").catch(() => {});
+  }
+
+  // ---- how a video is shown: big, in the corner, or audio only ----------------------------------------------------------
+  // One #media box holds the YouTube frame (or his own video, public/medialib.js) in every mode. Switching only changes its
+  // classes and inline position: the frame is never moved in the page or reloaded, so the position, speed, captions,
+  // volume and the sound's output device all stay as they are (lib/sinkfollow.mjs's helper lives inside the frame).
+  //   big     the large player (.media.video); full screen (.full) on top of it
+  //   corner  a small window (.media.video.minip) placed by public/winman.js: drag it anywhere (a click still plays and
+  //           pauses), it snaps to an edge or corner when let go near one, resizes from its handle, stays inside the
+  //           screen's margins, and is remembered per screen size
+  //   audio   the picture is hidden (.media.audio: opacity 0 and out of the way, NOT display:none, so the frame keeps
+  //           playing) and only the sound goes on; the mini player card at the bottom right has every control
+  // In the window manager the video is "normal" (big), "max" (full screen), "small" (the corner) and "min" (audio only:
+  // the player card is its chip). How a new one starts: startMode (Settings → Screen → Videos).
+  const VIEW = { mode: "big", kind: null, forced: false, shownAt: 0, lastVisual: "big" };     // shownAt: a video was last on (the 500 ms tick)
+  let wantPlay = false, userPauseAt = 0;
+  const hiddenPauses = [];                        // when YouTube paused the hidden player by itself (hiddenPaused below)
+  const hasVideo = () => P.source === "youtube" || (P.source === "file" && Boolean(P.hasVideo));
+  // (music on YouTube: music videos, lyric videos, songs; its own "last time" in "Remember last")
+  const MUSICY = /\b(?:official (?:music )?video|music video|lyrics?|lyric video|official audio|audio only|ft\.|feat\.|remix|acoustic|live session|karaoke|worship|hymns?|album|full album|playlist)\b/i;
+  function videoKind({ title = "", audioOnly = false, source = "youtube" } = {}) { if (source === "file") return "file-video"; return audioOnly || MUSICY.test(title) ? "youtube-music" : "youtube"; }
+  function startMode(kind, { audioOnly = false } = {}) {
+    if (audioOnly) return "audio";
+    // one video after another (the queue, next, previous): the way the last one was shown
+    if (VIEW.kind === kind && !VIEW.forced && Date.now() - VIEW.shownAt < 4000) return VIEW.mode;
+    const pref = prefs.videoStartMode ?? "remember";
+    const m = pref === "remember" ? prefs.videoModeLast?.[kind] : pref;
+    return ["big", "corner", "audio"].includes(m) ? m : "big";
+  }
+  const WM_OF = { big: "normal", corner: "small", audio: "min" };
+  function viewClasses(wm) {
+    const box = $("#media"), mode = wm === "small" ? "corner" : wm === "min" ? "audio" : "big";
+    VIEW.mode = mode; if (mode !== "audio") VIEW.lastVisual = mode;
+    P.mode = mode; P.video = mode !== "audio"; P.mini = mode === "corner";
+    box.classList.toggle("video", mode !== "audio"); box.classList.toggle("audio", mode === "audio"); box.classList.toggle("minip", mode === "corner"); box.classList.toggle("full", wm === "max");
+    box.setAttribute("aria-hidden", String(mode === "audio")); box.inert = mode === "audio";
+    if (mode === "audio") hiddenPauses.length = 0;
+  }
+  // the corner's first place: bottom right, a bit over a quarter of the width, just above the player card when it's there
+  function cornerDefault(S) {
+    const G = window.winman?.GAP ?? 12, w = Math.max(220, Math.min(S.width * 0.28, S.width - 2 * G)), h = w * 9 / 16;
+    let y = S.bottom - G - h;
+    const c = $("#np");
+    if (c && !c.hidden && c.offsetWidth) { const cr = c.getBoundingClientRect(); if (cr.right > S.right - w - G && cr.bottom > y && cr.top - G - h >= S.top + G) y = cr.top - G - h; }
+    return { x: S.right - G - w, y, w, h };
+  }
+  let viewQuiet = false;
+  const wmVideo = window.winman?.register("video", $("#media"), {
+    title: () => P.title || "Video", icon: "▶", aliases: ["video", "player", "youtube", "movie", "clip"], custom: true, dragBody: true, aspect: 16 / 9, minW: 200,
+    buttons: false, chip: false, remember: false, isOpen: () => !$("#media").hidden && hasVideo(), defaultSmall: cornerDefault,
+    apply: (m) => { viewClasses(m); if (!viewQuiet) { renderPlayer(); reportState(); } },
+    onClose: () => stopMedia(true),
+  }) ?? null;
+  // show it this way (full: big and full screen). remember: he chose it (Settings: "Remember last")
+  function applyView(mode, { full = false, forced = false, kind = null, remember = false } = {}) {
+    if (!["big", "corner", "audio"].includes(mode)) mode = "big";
+    // (the kind is decided when the video starts, from the title it was asked for by: it doesn't change mid-video)
+    VIEW.kind = kind ?? VIEW.kind ?? videoKind({ title: P.title, audioOnly: P.musicStart, source: P.source === "file" ? "file" : "youtube" }); VIEW.forced = forced;
+    const wm = mode === "big" && full ? "max" : WM_OF[mode];
+    viewQuiet = true;
+    try { if (wmVideo) wmVideo.setMode(wm, { user: false }); else viewClasses(wm); } finally { viewQuiet = false; }
+    if (remember && hasVideo()) rememberMode(VIEW.kind, mode);
+  }
+  let remT = 0, remPatch = {};
+  function rememberMode(kind, mode) {
+    prefs.videoModeLast = { ...(prefs.videoModeLast ?? {}), [kind]: mode };
+    remPatch[kind] = mode; clearTimeout(remT);
+    remT = setTimeout(() => { const p = remPatch; remPatch = {}; post("/settings", { videoModeLast: p }).catch(() => {}); }, 400);
+  }
+  // the view controls: from the buttons, the keys, the card, voice (public/view-words.js) and the server
+  function viewCtl(a, v) {
+    const box = $("#media"), m = VIEW.mode, full = box.classList.contains("full");
+    let mode = m, fullOn = m === "big" && full;
+    if (a === "view") {
+      if (v === "full") { mode = "big"; fullOn = true; }
+      else if (v === "exitFull") { if (!(m === "big" && full)) return ""; fullOn = false; }
+      else if (["big", "corner", "audio"].includes(v)) { mode = v; if (v !== "big") fullOn = false; }
+      else return "";
+    } else if (a === "video") { const show = v === undefined || v === null ? m === "audio" : Boolean(v); mode = show ? (m === "audio" ? VIEW.lastVisual : m) : "audio"; if (mode !== "big") fullOn = false; }
+    else if (a === "audio") { mode = m === "audio" ? VIEW.lastVisual : "audio"; if (mode !== "big") fullOn = false; }
+    else if (a === "full") { const on = v === undefined || v === null ? !(m === "big" && full) : Boolean(v); if (on) { mode = "big"; fullOn = true; } else { if (!(m === "big" && full)) return ""; fullOn = false; } }
+    else if (a === "minimize") { const on = v === undefined || v === null ? m !== "corner" : Boolean(v); mode = on ? "corner" : "big"; fullOn = false; }   // (the I key and ▭ button: the corner, and back)
+    else if (a === "place") { if (m !== "corner") applyView("corner", { remember: true }); wmVideo?.place(String(v || "br")); renderPlayer(); reportState(); showCtl(); return ""; }
+    else if (a === "resize") {
+      const bigger = v !== "smaller";
+      if (m === "corner") { wmVideo?.resizeBy(bigger ? 1.25 : 0.8); showCtl(); return ""; }
+      if (m === "big") { if (bigger) { if (full) return ""; fullOn = true; } else if (full) fullOn = false; else mode = "corner"; }
+      if (m === "audio") { if (!bigger) return ""; mode = "corner"; }
+    }
+    if (mode === m && fullOn === (m === "big" && full)) return "";
+    applyView(mode, { full: fullOn, remember: true });
+    renderPlayer(); reportState(); if (mode !== "audio") showCtl();
+    return "";
+  }
+  // YouTube may pause a player it can't see. In audio only, a pause nobody asked for is undone (twice a minute at most);
+  // if it keeps happening the video comes back small in the corner, where it can be seen, and he's told why.
+  function hiddenPaused() {
+    if (VIEW.mode !== "audio" || !wantPlay || Date.now() - userPauseAt < 1500) return;
+    const now = Date.now(); while (hiddenPauses.length && now - hiddenPauses[0] > 60_000) hiddenPauses.shift();
+    hiddenPauses.push(now);
+    dlog("video", { what: "hidden-pause", n: hiddenPauses.length });
+    if (hiddenPauses.length <= 2) { setTimeout(() => { if (wantPlay && VIEW.mode === "audio") try { yt?.playVideo(); } catch { /* gone */ } }, 400); return; }
+    hiddenPauses.length = 0;
+    applyView("corner"); renderPlayer(); reportState();
+    try { yt?.playVideo(); } catch { /* gone */ }
+    toast("Video", "YouTube kept pausing the hidden video, so it's playing small in the corner instead.", "", "bell");
   }
 
   // ---- Spotify inside Dayspring (Web Playback SDK) ----------------------------------------------------------------------
@@ -2133,13 +2328,25 @@
 
   // his own music and videos, and Google Drive's (public/medialib.js): it plays them itself and shares this card and ctl()
   window.dsPlayerHost = { P, render: () => { renderPlayer(); reportState(); }, musicVol: () => musicVol(), ducked: () => ducked, clear: () => clearPlayer(), push: (k, t) => push(k, t), toast: (...a) => toast(...a),
-    stopOthers: () => { stopYT(); if (P.source === "spotify") sp?.pause().catch(() => {}); if (P.source === "spotify-window") post("/player/window", { action: "pause" }).catch(() => {}); } };
+    stopOthers: () => { stopYT(); if (P.source === "spotify") sp?.pause().catch(() => {}); if (P.source === "spotify-window") post("/player/window", { action: "pause" }).catch(() => {}); },
+    // his own video starts: shown big (full screen, as it always was), in the corner or audio only, like any video
+    videoStarted: () => { const kind = "file-video", m = startMode(kind); applyView(m, { full: m === "big", kind }); renderPlayer(); },
+    wantPlay: (on) => { wantPlay = Boolean(on); if (!on) userPauseAt = Date.now(); } };
   // ---- controls ---------------------------------------------------------------------------------------------------------
   // Every control goes through here. Returns a short line to show (or "" when there's nothing to say).
+  const VIEW_ACTIONS = ["view", "video", "audio", "full", "minimize", "place", "resize"];
   async function ctl(a, v) {
     const src = P.source;
+    // nothing plays on this page: the card is showing what plays somewhere else, and its buttons go there (the server)
+    if (!src) { const rc = remoteNow(); if (rc?.controllable && a !== "stop") { const r = await post("/player/control", { action: a, value: v ?? null }).catch((e) => ({ say: e.message })); return r?.say ?? ""; } }
+    // how the video is shown (every kind of video, YouTube or his own), and like / save
+    if (VIEW_ACTIONS.includes(a) && src) { if (!hasVideo()) return src === "spotify" || src === "spotify-window" || src === "file" ? "There's no video with this one." : ""; return viewCtl(a, v); }
+    if (a === "like") return likeIt();
+    if (src === "file" && ["pause", "stop"].includes(a)) { wantPlay = false; userPauseAt = Date.now(); }
     if (src === "file" && window.dsLocalPlayer && !["volume", "volumeBy", "mute", "unmute"].includes(a)) return window.dsLocalPlayer.ctl(a, v);
     if (!src) return a === "stop" ? "" : "Nothing's playing right now.";
+    if (a === "pause" || a === "stop" || (a === "toggle" && P.playing)) { wantPlay = false; userPauseAt = Date.now(); }
+    if (a === "resume" || a === "play" || (a === "toggle" && !P.playing)) wantPlay = true;
     const yt1 = src === "youtube" && yt, spot = src === "spotify" && sp, win = src === "spotify-window";
     const winCtl = (action, value) => post("/player/window", { action, value });
     switch (a) {
@@ -2198,20 +2405,7 @@
         const r = a === "speed" ? nearest(rates, Number(v)) : rates[Math.max(0, Math.min(rates.length - 1, rates.indexOf(nearest(rates, P.rate)) + Math.sign(Number(v) || 1)))];
         yt.setPlaybackRate(r); P.rate = r; P.pos = posNow(); P.at = Date.now(); break;
       }
-      case "video": case "audio": {
-        if (!yt1) return "There's no video with this one.";
-        const show = a === "audio" ? !P.video : v === undefined || v === null ? !P.video : Boolean(v);
-        P.video = show; const box = $("#media");
-        box.classList.toggle("video", show); box.classList.toggle("audio", !show); if (!show) box.classList.remove("full");
-        if (!ducked) try { yt.setVolume(ytFull()); } catch { /* gone */ }
-        break;
-      }
-      case "full": {
-        if (!yt1) return "";
-        const box = $("#media"), on = v === undefined || v === null ? !box.classList.contains("full") : Boolean(v);
-        if (on) { P.video = true; box.classList.add("video"); box.classList.remove("audio", "minip"); P.mini = false; }
-        box.classList.toggle("full", on); break;
-      }
+      // (how the video is shown: viewCtl, above)
       // the queue's repeat and shuffle changed on the server
       case "queueMode": if (v) { if (src === "youtube" && P.fromQueue) { P.repeat = { one: "track", all: "context" }[v.repeat] ?? "off"; P.shuffle = Boolean(v.shuffle); } } break;
       case "seekPct": {
@@ -2252,14 +2446,6 @@
         yt.setPlaybackQuality?.(want); P.quality = want === "default" ? "" : want;
         break;
       }
-      case "minimize": {
-        if (!yt1 && !(src === "file" && P.video)) return src === "youtube" ? "" : "There's no video to minimize.";
-        const box = $("#media"), on = v === undefined || v === null ? !box.classList.contains("minip") : Boolean(v);
-        if (on) { P.video = true; box.classList.add("video"); box.classList.remove("audio", "full"); }
-        box.classList.toggle("minip", on); P.mini = on;
-        if (yt1 && !ducked) try { yt.setVolume(ytFull()); } catch { /* gone */ }
-        break;
-      }
       case "popout": {
         if (!yt1 && !(src === "youtube" && P.videoId)) return "Only YouTube videos pop out into your browser.";
         const t = Math.max(0, Math.floor(posNow()));
@@ -2274,6 +2460,14 @@
     }
     renderPlayer(); reportState();
     return "";
+  }
+  // ♡ on the card: like the song on Spotify, or save the video to Dayspring's "Saved videos" list
+  async function likeIt() {
+    try {
+      if (P.source === "spotify" && P.uri) { const on = !P.liked; await post("/player/spotify/api", { action: "like", uri: P.uri, value: on }); P.liked = on; renderPlayer(); return on ? "Liked." : "Removed from your Liked Songs."; }
+      if (P.source === "youtube" && P.videoId) { await post("/player/videolists", { action: "add", list: "Saved videos", create: true, item: { videoId: P.videoId, title: P.title, channel: P.artist } }); P.liked = true; renderPlayer(); return "Saved to your “Saved videos” list."; }
+    } catch (e) { return e.message; }
+    return "This one can't be liked or saved here.";
   }
   let volTimer = 0;
   async function setMusicVolume(n) {
@@ -2301,7 +2495,7 @@
     if (a === "library") { window.dsLibrary?.open(b.closest("#media") || P.source === "youtube" ? "videos" : "music"); return; }
     if (a === "queue") { if (vsOn() && window.dsVQueue) window.dsVQueue.toggle(); else window.dsLibrary?.open("queue"); return; }
     const act = a === "previous" && P.source === "youtube" && !P.playlist ? "previous" : a;
-    ctl(act).then((msg) => { if (msg) toast("Player", msg, "", "bell"); });
+    ctl(act, b.dataset.v).then((msg) => { if (msg) toast("Player", msg, "", "bell"); });
     showCtl();
   });
   $("#np").addEventListener("click", (e) => e.stopPropagation());       // the card isn't a showcase panel
@@ -2320,15 +2514,22 @@
   $("#media").addEventListener("pointermove", showCtl);
   $("#media").addEventListener("pointerdown", showCtl);
   // keys while a video is showing: Space/K play-pause, ←/→ 5 s, J/L 10 s, ↑/↓ volume, < > speed, 0–9 jump to 0–90%, Home the
-  // beginning, C captions, F full screen, I minimise, M mute, N/P next/previous, Q the queue, R repeat, S shuffle, Esc close
+  // beginning, C captions, F full screen, I the corner (and back), A audio only (and back), B big, M mute, N/P next/previous,
+  // Q the queue, R repeat, S shuffle, Esc close. In audio only just A, B, I and F (the rest of the screen keeps its keys).
+  // With the corner window itself focused, the arrows move it and Shift+arrows resize it (public/winman.js).
   document.addEventListener("keydown", (e) => {
     const box = $("#media");
-    if (box.hidden || !(P.source === "youtube" || (P.source === "file" && P.video)) || !P.video) return;
-    if (!$("#calwrap").hidden || !$("#pagewrap").hidden || detailOpen() || window.dsLibrary?.isOpen?.() || window.dsVideoPanels?.isOpen?.() || window.dsMB?.isOpen?.() || window.dsMaps?.isOpen?.()) return;
+    if (box.hidden || !hasVideo()) return;
+    const up = (el) => Boolean(el && !el.hidden && !el.classList.contains("wm-min"));
+    const mbMin = document.getElementById("dsMB")?.classList.contains("wm-min"), mapsMin = document.getElementById("dsMaps")?.classList.contains("wm-min");
+    if (up($("#calwrap")) || up($("#pagewrap")) || detailOpen() || (window.dsLibrary?.isOpen?.() && !mbMin) || window.dsVideoPanels?.isOpen?.() || (window.dsMB?.isOpen?.() && !mbMin) || (window.dsMaps?.isOpen?.() && !mapsMin)) return;
     if (e.ctrlKey || e.altKey || e.metaKey) return;
     if (/INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName ?? "") && e.key !== "Escape") return;
     const k = e.key; let done = true;
-    if (k === " " || k === "k" || k === "K") ctl("toggle");
+    if (VIEW.mode === "audio" && !/^[aAbBiIfF]$/.test(k)) return;
+    if (k === "a" || k === "A") ctl("audio");
+    else if (k === "b" || k === "B") ctl("view", "big");
+    else if (k === " " || k === "k" || k === "K") ctl("toggle");
     else if (k === "ArrowLeft") ctl("seekBy", -5);
     else if (k === "ArrowRight") ctl("seekBy", 5);
     else if (k === "ArrowUp") ctl("volumeBy", 5);
@@ -2420,10 +2621,9 @@
     }
     // close / stop the video; hide or show the picture; full screen
     if (isVid && /^(close|exit|stop|end|quit|turn off)( the| this)? (video|youtube)$|^(close|exit) (it|that|this)$/.test(t)) return run("stop", undefined, "Closed.");
-    if (isVid && /^(hide the (video|picture)|music only|audio only|just (the )?(audio|sound|music)|minimi[sz]e( the video| it)?)$/.test(t)) return run("video", false, "Music only.");
-    if (isVid && /^(exit|leave|get out of) full ?screen$|^(make it )?smaller$/.test(t)) return run("full", false, "");
-    if (isVid && /^(make (it|the video) )?(bigger|full ?screen)$|^(go |put it |make it )?full ?screen$|^full ?screen (the )?video$/.test(t)) return run("full", true, "");
-    if (isVid && /^(show|bring back|open)( me)? the (video|picture)$/.test(t)) return run("video", true, "");
+    // how the video is shown: big, the corner, audio only, full screen; where the corner window goes; bigger, smaller
+    // (public/view-words.js: the same words the server understands)
+    if (hasVideo()) { const w = window.dsViewWords?.(t); if (w) return run(w.action, w.value, w.say ?? ""); }
     // back and forth between videos
     if (isVid && /^(previous video|go back to the (last|previous) video|(play )?the (last|previous) video|the one before (that|this)|play the one before (that|this)|back a video)$/.test(t)) return run(VH.i > 0 ? "historyBack" : "previous", undefined, "");
     if (isVid && /^(next video|play the next video|the next one|skip (this|the) video|skip to the next video)$/.test(t)) return run("next", undefined, "");
@@ -2484,8 +2684,6 @@
       const q = /\b(highest|best|max|maximum|top)\b/.test(t) ? "highest" : /\b(lowest|worst|min|minimum|data saver)\b/.test(t) ? "lowest" : /\bauto/.test(t) ? "auto" : /\b4k\b|2160/.test(t) ? "2160p" : (m = /\b(144|240|360|480|720|1080|1440) ?p?\b/.exec(t)) ? m[1] + "p" : /full hd/.test(t) ? "1080p" : /\bhd\b/.test(t) ? "720p" : null;
       if (q) return run("quality", q, q === "auto" ? "Quality on automatic." : `Asking for ${q === "highest" ? "the highest" : q === "lowest" ? "the lowest" : q} quality.`);
     }
-    if ((isVid || (P.source === "file" && P.video)) && /^(minimi[sz]e|shrink|tuck away|mini player|picture in picture)( (the |this )?(video|player|it))?( to the corner)?$|^(put|move) (the )?(video|player|it) (in|to) the corner$/.test(t)) return run("minimize", true, "");
-    if ((isVid || (P.source === "file" && P.video)) && /^(restore|bring back|expand|unminimi[sz]e)( the)? (video|player)( back)?$|^(bring|put) (the )?(video|player|it) back$|^make the video big( again)?$/.test(t)) return run("minimize", false, "");
     if (/^(shuffle( on| it)?|turn on shuffle|shuffle (this|the playlist)|put it on shuffle)$/.test(t)) return run("shuffle", true, "Shuffle on.");
     if (/^(shuffle off|turn off shuffle|stop shuffling|no shuffle)$/.test(t)) return run("shuffle", false, "Shuffle off.");
     if (/^(repeat (this|this song|it|the song|this one|this video)|loop (this|it|the song|the video|this video))$/.test(t)) return run("repeat", "track", "Repeating this one.");
@@ -3114,7 +3312,7 @@
       push("ann", item.text);
       energy = 1; wake();
       loadDay(); loadLearning();
-      if (item.started?.category === "study" && nowPlaying && !nowPlaying.audioOnly) stopMedia(true);   // study time: videos give way
+      if (item.started?.category === "study" && nowPlaying && P.video) stopMedia(true);   // study time: videos give way
       // Off with "Alarms still ring when Off" turned off: the alarm only shows
       const alarmMuted = listenState === "off" && prefs.alarmsWhenOff === false;
       if (window.dsExtras?.announce && await window.dsExtras.announce(item)) return;     // timers, joke offers
@@ -3195,10 +3393,13 @@
       } catch { /* bad event */ }
     });
     es.addEventListener("nowplaying", (e) => showNowPlaying(JSON.parse(e.data)));
+    // the one "now playing" (lib/nowplaying.mjs): what the card shows when this page isn't the one playing
+    es.addEventListener("nowplaying-state", (e) => { try { NPS = { ...JSON.parse(e.data), receivedAt: Date.now() }; if (!P.source) renderPlayer(); } catch { /* bad event */ } });
     es.addEventListener("vqueue", (e) => { try { sqApply(JSON.parse(e.data).queue); } catch { /* bad event */ } });
     es.addEventListener("player", (e) => {
       const c = JSON.parse(e.data);
       if (c.only) { if (c.only === P.source) { if (c.only === "spotify") sp?.pause().catch(() => {}); clearPlayer(); } return; }
+      if (!P.source) return;                   // (a screen that isn't playing: its card would only send it back to the server)
       ctl(c.action, c.value).then((msg) => { if (msg) push("sys", msg); }).catch(() => {});
     });
     // the AI asked for the Library: open a tab (with a search), play one of Dayspring's video playlists, or queue a video
@@ -3226,7 +3427,7 @@
     es.addEventListener("listenstate", (e) => { try { const d = JSON.parse(e.data); applyListenState(d.state, { announce: true, text: d.text }); } catch { /* bad event */ } });
     es.addEventListener("settings", (e) => {
       const before = JSON.stringify(prefs.audioOutputs);
-      prefs = JSON.parse(e.data); renderBell(); nightCheck();
+      prefs = JSON.parse(e.data); renderBell(); nightCheck(); if (!P.source) renderPlayer();   // ("Nothing playing" on or off)
       if ((prefs.listenState ?? "active") !== listenState) applyListenState(prefs.listenState);
       chooseSR();
       paintStateMenu();

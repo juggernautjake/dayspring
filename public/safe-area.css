@@ -31,7 +31,9 @@ html body .media.video.minip{inset:auto;left:auto;top:auto;right:calc(1.2em + va
 html body #dsVideos{top:calc(var(--safe-top) + var(--safe-gap));bottom:calc(var(--safe-bottom) + var(--safe-gap));left:calc(var(--safe-left) + var(--safe-gap));right:calc(var(--safe-right) + var(--safe-gap))}
 html body #dsVQueue{top:calc(var(--safe-top) + var(--safe-gap));bottom:calc(var(--safe-bottom) + var(--safe-gap));right:calc(var(--safe-right) + var(--safe-gap));width:min(32em, calc(var(--safe-w) - 2 * var(--safe-gap)))}
 html.mini body #dsVideos,html.mini body #dsVQueue{inset:0;width:auto}
-html body .media.audio{left:calc(1.2em + var(--safe-left));bottom:calc(1.2em + var(--safe-bottom));max-width:calc(var(--safe-w) - 2.4em)}
+/* audio only: the video's frame keeps playing out of sight (opacity 0, tucked in the bottom-right corner, no clicks) */
+html body .media.audio{left:auto;top:auto;right:calc(2px + var(--safe-right));bottom:calc(2px + var(--safe-bottom));max-width:none}
+/* the corner window and every small window (public/winman.js): placed from script, always inside these margins */
 html body .reader{inset:calc(.8em + var(--safe-top)) calc(.8em + var(--safe-right)) calc(.8em + var(--safe-bottom)) calc(.8em + var(--safe-left))}
 html body .fyl{left:calc(var(--safe-left) + 1em);right:calc(var(--safe-right) + 1em);top:calc(var(--safe-top) + 1em);bottom:calc(var(--safe-bottom) + 1em)}
 html body .rpanel{top:calc(1em + var(--safe-top));bottom:calc(1em + var(--safe-bottom));left:var(--safe-cx);width:min(44em, calc(var(--safe-w) - 2em))}
@@ -39,6 +41,10 @@ html body .lib{left:calc(1.2em + var(--safe-left));top:calc(1em + var(--safe-top
   width:calc((var(--safe-w) - 2.4em - 1.3em) * .6078);max-width:calc(var(--safe-w) - 2.4em)}
 html body #dsImages{inset:max(4vh, calc(var(--safe-top) + var(--safe-gap))) max(3vw, calc(var(--safe-right) + var(--safe-gap))) max(4vh, calc(var(--safe-bottom) + var(--safe-gap))) max(3vw, calc(var(--safe-left) + var(--safe-gap)))}
 html.mini body #dsImages{inset:0}
+/* the photo gallery (public/gallery.js): fills the safe area, one gap in from each side, and below the window bar (its
+   ✕ and the gallery's own buttons never share a spot); mini: the whole window below its bar */
+html body #dsGallery{top:calc(var(--safe-top) + 2.9em);left:calc(var(--safe-left) + var(--safe-gap));width:calc(var(--safe-w) - 2 * var(--safe-gap));height:calc(var(--safe-h) - 2.9em - var(--safe-gap))}
+html.mini body #dsGallery{top:2.5em;left:0;width:100vw;height:calc(100vh - 2.5em)}
 html body .meetnotes{inset:max(4vh, calc(var(--safe-top) + var(--safe-gap))) max(4vw, calc(var(--safe-right) + var(--safe-gap))) max(4vh, calc(var(--safe-bottom) + var(--safe-gap))) max(4vw, calc(var(--safe-left) + var(--safe-gap)))}
 html body #dsxCook{top:max(4vh, calc(var(--safe-top) + var(--safe-gap)), var(--pop-top, 0px));bottom:max(4vh, calc(var(--safe-bottom) + var(--safe-gap)), var(--pop-bottom-inset, 0px));
   left:max(4vw, calc(var(--safe-left) + var(--safe-gap)));right:max(4vw, calc(var(--safe-right) + var(--safe-gap)))}

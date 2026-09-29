@@ -113,11 +113,12 @@ body{font-size:clamp(11px, min(calc((100vw - 2 * var(--sx)) * .0132), calc((100v
   .np .pctl .pb.sm[data-p="shuffle"], .np .pctl .pb.sm[data-p="repeat"]{display:none}
 }
 @container card (max-width: 19em){
-  .np .pvol{display:none}
-  .np .pctl .pb.sm[data-p="video"]{display:none}
+  .np .pvol{flex:0 0 auto;min-width:0;margin-left:0}
+  .np .pvol input{display:none}                 /* (the mute button stays: a volume shortcut in every size) */
+  .np .pctl .pb.sm[data-p="like"]{display:none}
 }
 @container card (max-width: 15em){
-  .np .pctl .pb.sm[data-p="library"]{display:none}
+  .np .pctl .pb.sm[data-p="library"], .np .pctl .pb.npq{display:none}
   .np .pbar span{display:none}
 }
 

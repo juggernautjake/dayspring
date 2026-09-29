@@ -43,9 +43,14 @@
       + sel("density", "Spacing", [["comfortable", "Comfortable"], ["compact", "Compact"]]) + sel("fit", "Shape", [["fill", "Fill the screen"], ["keep", "Keep proportions (16:9, centered)"]]) },
     { id: "show", title: "What to show", keys: [...SHOW.map((x) => x[0]), "listRows"], html: SHOW.map(([k, t]) => `<label class="scshow"><input type="checkbox" data-k="${k}" id="sc-${k}"> ${t}</label>`).join("") + rng("listRows", "Rows in the day list", 0, 20, 1, "0 = as many as fit.") },
     { id: "motion", title: "Motion", keys: ["carouselSeconds", "uiMotion"], html: rng("carouselSeconds", "Seconds per slide in the rotating panel", 0, 300, 5, "0 = it stays put.") + `<label class="scshow"><input type="checkbox" id="sc-uiMotion" data-k="uiMotion"> Calmer motion (fewer animations)</label>` },
+    // videos: how one starts (big, small in the corner, audio only, or the way you had it last time for that kind of
+    // video), and the player card when nothing is playing
+    { id: "videos", title: "Videos and the player", keys: ["videoStartMode", "nowPlayingIdle"], html: sel("videoStartMode", "When a video starts", [["remember", "Remember last (per kind: music videos, other videos, your own)"], ["big", "Big"], ["corner", "Small, in the corner"], ["audio", "Audio only (just the sound)"]])
+      + `<div class="hint">Switch any time: the buttons on the video and on the player card, the keys B, I and A, or say “make it big”, “put it in the corner”, “audio only”.</div>`
+      + sel("nowPlayingIdle", "When nothing is playing, the player card", [["hide", "Hides"], ["show", "Shows “Nothing playing”"]]) },
   ];
   const SC_FMT = { uiScale: (v) => v + "%", textScale: (v) => v + "%", clockScale: (v) => v + "%", talkWidth: (v) => v + "% of the width", listRows: (v) => (v ? v + " rows" : "as many as fit"), carouselSeconds: (v) => (v ? v + " s" : "stays put"), overscan: (v) => (v ? v + "%" : "none") };
-  const SC_DEF = { uiScale: 100, textScale: 100, clockScale: 100, carouselSeconds: 40, listRows: 0, layoutMode: "auto", density: "comfortable", fit: "fill" };
+  const SC_DEF = { uiScale: 100, textScale: 100, clockScale: 100, carouselSeconds: 40, listRows: 0, layoutMode: "auto", density: "comfortable", fit: "fill", videoStartMode: "remember", nowPlayingIdle: "hide" };
   async function screenMount() {
     let s = {};
     try { s = (await api("/settings")).settings ?? {}; } catch { /* defaults */ }

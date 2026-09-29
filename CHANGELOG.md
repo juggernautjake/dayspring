@@ -2,6 +2,35 @@
 
 All notable changes to Dayspring. Versions follow [semantic versioning](https://semver.org).
 
+## 1.7.4 (2026-09-29)
+
+### In this version
+
+**Watch a video big, small in the corner, or just listen.** Any video (YouTube, your own, Google Drive's) can switch between three views whenever you like, and it never starts over when you switch: it keeps its place, speed, captions and volume.
+- **Big:** the large player, with full screen one step further.
+- **In the corner:** a small window, about a quarter of the screen wide. Drag it anywhere (by the picture or its top bar, with a mouse, touch or a pen). A click without dragging still plays and pauses. Let go near an edge or a corner and it snaps there; anywhere else, it stays where you put it. Drag the dotted handle to resize it (it keeps its shape). It never goes past the screen's margins, even when you change them, and it remembers where you put it.
+- **Audio only:** the picture goes away and the sound keeps playing. The player card at the bottom right shows the picture, title and channel, the progress bar, ⏮ ⏯ ⏭, mute, and buttons to bring the video back to the corner or big.
+- Say "minimize the video", "hide the video", "audio only" or "just play the audio"; "picture in picture", "put it in the corner" or "make it small"; "make it big", "show the video" or "full screen"; "move it to the top left" (or the bottom right, the center); "make the video bigger" or "smaller". Or use the buttons on the video, the switch on the player card, or the keys B (big), I (corner) and A (audio only). With the corner window selected, the arrow keys move it and Shift+arrows resize it.
+- **How videos start:** Settings → Screen → Videos and the player → "When a video starts": Big, Small in the corner, Audio only, or Remember last (the default). Remember last keeps music videos, other videos and your own videos separate, so if you last listened to a music video, the next one starts as just the sound.
+- If YouTube ever pauses a hidden video by itself, Dayspring starts it again, and if it keeps happening the video comes back small in the corner and Dayspring tells you why.
+
+**One player card for whatever is playing.** The card at the bottom right now always shows what's playing, wherever it is: Spotify, YouTube, your own music and videos, Google Drive, the media window, and Lantern's study music when Lantern reports it. It shows where it's from, the picture, title and artist, the progress bar, play/pause/previous/next, ♡ (like the song on Spotify, or save the video to "Saved videos"), how many are lined up next, and a button to open it in the Music & Video browser. Only one thing plays at a time: starting something pauses whatever was playing. Voice controls ("pause", "next", "skip ahead 30 seconds") go to whatever the card shows. When nothing is playing the card hides; to keep it saying "Nothing playing", choose that in the same Settings group. A second Dayspring screen shows the same card and can control it.
+
+**Minimise any window, or make it big or small.** The Music & Video browser, the file viewer, Maps, Mail, GIFs, the picture grid, the Schedule, and pages like Settings, Cameras, Printers and Devices each have **–** (minimise), **❐** (small window) and **▢** (big) on their title bar. A small window drags anywhere, snaps to the edges and resizes; a minimised one tucks into a dock along the bottom (left of the player card) as a chip you click to bring it back. Say "minimize the map", "shrink the email", "put the viewer in the corner", "maximize the browser", "move the map to the right side", "close the viewer", "hide everything" or "show everything again". Keys: Alt+↑ big, Alt+↓ minimise, Alt+S small, Alt+Shift+↓ everything away, Alt+Shift+↑ everything back. Each window remembers its place and size.
+
+**A photo gallery (New).** Say "open the photo gallery" or "show my photos": every photo Dayspring may show, in one place (your photo folders and the folders you've allowed in Settings → Permissions).
+- A grid you can group by month, folder or album, sort by date, name or size, and filter by person, favourites, text in the picture, or a search.
+- **🎲 Random:** a shuffled mix from all your photo folders, never the same photo twice; **Shuffle again** starts with the ones you haven't seen.
+- **One photo at a time:** ◀ Back and Next ▶ (or the arrow keys, the mouse wheel, a swipe) go through the whole collection you're looking at, with "124 of 3,208" at the top. A **filmstrip** along the bottom shows the photos around it; scroll it sideways as far as you like and click one to see it big.
+- Where each photo is saved is always shown (📂 Pictures › Family › 2026). Click a folder to see its photos.
+- **📂 Open file location** and **🖼 View in gallery** are on every photo, wherever you see one: the rotating photo card, the file viewer, the People page and the file finder.
+- It's a beta feature, so you can switch it off in Settings → This app → Features. It's a window like the others, too: "minimize the gallery", "make the gallery small".
+
+**Smaller fixes.**
+- The video's volume no longer changes when you hide or show its picture.
+- A video you're only listening to keeps playing when a study block starts (videos you're watching still stop).
+- A local song playing no longer gets its card taken over by the media window's Spotify.
+
 ## 1.7.3 (2026-09-29)
 
 ### In this version

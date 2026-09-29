@@ -335,7 +335,8 @@ try {
     const st = await signin.start("youtube");
     rec("Sign in to YouTube: the media window opens on the sign-in page", st.shown && (await browser.page("youtube")).url().startsWith(`${mock.yt}/yt-signin`) && /never sees your password/.test(st.text), st.text);
     await (await browser.page("youtube")).click("#signin");   // (the owner signing in himself)
-    const done = await until(() => signin.status("youtube").signedIn === true, 10000);
+    // (it's saved a moment before the window is tucked away and the message goes out: wait for both)
+    const done = await until(() => signin.status("youtube").signedIn === true && Boolean(lastEv("mediasignin", (d) => d.signedIn)), 10000);
     rec("…it notices when he's done, and says who's signed in", done && signin.status("youtube").account === "QA Owner · qa-owner@example.test" && /✓ Signed in to YouTube as QA Owner/.test(lastEv("mediasignin", (d) => d.signedIn)?.text ?? ""), j(signin.status("youtube")));
     const kept = JSON.parse(readFileSync(process.env.DAYSPRING_MEDIA_SIGNIN_FILE, "utf8"));
     rec("…what's kept: signed in and the name, never a cookie", kept.youtube.signedIn === true && !/qa-sapisid|SAPISID|qa-sid/.test(j(kept)), j(kept));

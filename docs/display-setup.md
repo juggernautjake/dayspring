@@ -186,6 +186,26 @@ After you close it with ✕, Dayspring doesn't reopen it by itself; it waits unt
 
 These controls only ever touch Dayspring's own window, never your other browser windows or apps.
 
+## Windows on the screen: big, small, minimised
+
+The windows that open **on** the Dayspring screen (the Music & Video browser, the file viewer, Maps, Mail, GIFs, the picture grid, the Schedule, and pages like Settings, Cameras, Printers and Devices) can each be:
+
+- **Big:** fills the screen, inside its margins.
+- **Normal:** its usual size.
+- **Small:** a window you drag anywhere by its title bar. It snaps to an edge or corner when you let go within 24 pixels of it, resizes from the dotted handle on its inner corner, and always stays inside the screen's margins. Dragging a normal or big window by its title bar makes it small.
+- **Minimised:** it tucks into the **dock**, a row of chips along the bottom of the screen (left of the player card, never over it). Click a chip to bring the window back the way it was; its ✕ closes it.
+- **Closed.**
+
+Each window has the same three buttons on its title bar: **–** minimise, **❐** small window (again: normal), **▢** big (again: normal). Double-click a title bar to switch between big and normal. Where you put a small window, and how big it was, is remembered for each window and each screen size, and a window opens the way you last had it.
+
+A video works the same way, with **audio only** as its "minimised": see [Videos](videos.md#big-in-the-corner-or-just-the-sound).
+
+**Keys:** with a window selected, **Alt+↑** big (again: normal), **Alt+↓** minimise, **Alt+S** small (again: normal). With a small window itself selected, the arrow keys move it and **Shift**+arrows resize it. **Alt+Shift+↓** minimises everything; **Alt+Shift+↑** brings it all back.
+
+**By voice** (no AI needed): "minimize the map", "shrink the email", "put the viewer in the corner", "maximize the browser", "make the map bigger", "restore the map", "move the map to the right side", "close the viewer", "hide everything" (or "minimize all"), "show everything again". A window is found by its name: the map, the email, the viewer (or the file), the browser (or the music browser), the GIFs, the pictures, the schedule, the settings, the cameras, the printers, the devices.
+
+Add-ons can use the same window manager: `winman.register("gallery", element, { title: "Photos", icon: "🖼", aliases: ["gallery", "photos"], bar: ".header", onClose, isOpen })`.
+
 ## Night mode
 
 After your last scheduled item, Dayspring's screen goes nearly black, with a faint drifting clock so nothing burns in. It wakes up for reminders or when you talk to it.

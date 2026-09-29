@@ -105,6 +105,56 @@ When Dayspring isn't sure who a text is from, it asks instead of guessing: "Is '
 
 The AI only reads your saved messages if you turn on **Let the AI read saved messages when I ask about someone**, and then only when you ask something that needs them.
 
+## The photo gallery
+
+Every photo Dayspring may show, in one place: the photos in your photo folders (the same ones the rotating photo card uses, with screenshots, private-looking folders and names, and the photos you hid left out) and the pictures in the folders you've allowed in **Settings → Permissions**.
+
+> **New:** this is a beta feature. You can switch it off in **Settings → This app → Features** ("The photo gallery").
+
+Say **"open the photo gallery"** (or "show my photos"), or press **🖼 View in gallery** on any photo.
+
+- **The grid.** Scroll through all of it, however many thousands of photos you have: only what's on the screen is drawn, and the small pictures are made on this computer and kept in Dayspring's `data\thumbs` folder (it never grows past its limit; the oldest go first). HEIC and TIFF photos from a phone are decoded by Windows.
+- **Group** by month, folder or album (the category from what you've told Dayspring about a photo), or not at all. **Sort** by date (the date the photo was taken when the camera saved it, else when the file changed), name or size, and **↓/↑** flips the order.
+- **Filters:** a person (when face recognition is on), **★ only** your favourites, **Has text** (pictures the viewer has read text in), **🎬 Videos too**, and the search box (a file or folder name, or your own words about a photo).
+- **🎲 Random:** a shuffled mix from all your photo folders. Scroll or press **More** for more, never the same photo twice; **Shuffle again** starts with the ones you haven't seen yet. Hidden photos never come up.
+- **★ Favourites:** press **☆** on a photo to keep it there.
+- **▶ Slideshow:** from the gallery or from any photo.
+
+### One photo at a time
+
+Click a photo (or press Enter on it) to see it big.
+
+- **◀ Back** and **Next ▶** on its edges, the ← → keys, the mouse wheel over the photo, or a swipe or drag go through the **whole** collection you're looking at (all your photos, a folder, a month, a search, a person, the random mix), loading more as you go, with "124 of 3,208" at the top. At the last photo it says so; press Next once more to start over from the first.
+- **The filmstrip** along the bottom shows the photos around it. Scroll it sideways (the wheel, dragging, or your finger) to see more; it keeps loading as far as you go. Click one to show it big. The filmstrip and the big photo always stay in step.
+- **Where it's saved** is always shown under the photo: **📂 Pictures › Family › 2026** and the full path. Click a folder name to see that folder's photos in the gallery (tick **This folder only** to leave out its subfolders). Click the full path, or **📂 Open in File Explorer**, and File Explorer opens on this computer with that photo selected.
+- **ℹ Info:** the date, the camera, the size, the dimensions, the people in it, the album, your words about it, its description and the text in it, and its folder.
+- **🔍** (or double-click) opens it in the [file viewer](files-and-viewer.md) to zoom, rotate or flip it.
+
+Keys: ← → Back/Next · Home/End the first/last · S slideshow · I info · F favourite · Esc back to the grid (again: close).
+
+### 📂 Open file location and 🖼 View in gallery
+
+Wherever one of your photos shows up, it has these two buttons:
+
+- the rotating photo card on the Dayspring screen, and the photo's own card (where "What's this one?" is asked)
+- the [file viewer](files-and-viewer.md) (the 📂 bar under a picture), and the list of files it found
+- your own pictures in the media list, and the People page (each person's photos)
+- a picture from the web, once you've pressed **Save to my photos** (before that it isn't on your computer, so there's no location to open)
+
+**📂 Open file location** opens File Explorer with that exact photo selected. **🖼 View in gallery** opens the gallery on that photo, with the other photos from its folder (or that person's photos, or the files that were found), and Back / Next through them. A picture in Google Drive has neither: it isn't saved on this computer.
+
+Opening File Explorer never opens or runs the photo, only shows where it is, so it doesn't ask first and doesn't need the "open programs" permission. It only works for photos in your photo folders or the places file access allows (never a place you've kept out), and each one is written to the activity log.
+
+### Things you can say (no AI needed)
+
+- "Open the photo gallery", "show my photos", "show my favourite photos"
+- "Show my photos from last summer", "… from June 2024", "… from last year", "… from 2023", "show my photos of Sarah" (face recognition on)
+- "Show photos in the Family folder"
+- "Show me random photos", "shuffle my photos", "surprise me with a photo"
+- "View this in the gallery" (the photo on the screen), "open this photo's folder", "show me where this is saved", "open file location"
+- While it's open: "next", "previous", "scroll right", "scroll left", "start a slideshow", "stop the slideshow", "shuffle again", "more", "back to the grid", "close the gallery"
+- The window: "minimize the gallery", "make the gallery small", "maximize the gallery" (like every other window)
+
 ## Privacy
 
 - Nothing about faces leaves your computer. Pictures from the web are described, but Dayspring never tries to identify anyone in them, even with an AI.

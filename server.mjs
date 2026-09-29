@@ -56,6 +56,7 @@ import * as ambient from "./lib/ambient.mjs";
 import * as keepawake from "./lib/keepawake.mjs";
 import * as snooze from "./lib/snooze.mjs";
 import * as windowRoutes from "./lib/window-routes.mjs";
+import * as winman from "./lib/winman.mjs";   // the windows on the Dayspring screens by voice: "minimize the map", "hide everything"
 import * as display from "./lib/display.mjs";
 import * as quiet from "./lib/quiet.mjs";
 import { release as osRelease } from "node:os";
@@ -105,6 +106,7 @@ import * as mbrowser from "./lib/mediabrowser/index.mjs";
 import * as mediasignin from "./lib/mediasignin.mjs";
 import * as medialibRoutes from "./lib/medialib/routes.mjs";   // the owner's own music and videos, and Google Drive streaming (lib/medialib)
 import * as viewerRoutes from "./lib/finder/routes.mjs";   // finding files by name, and the file viewer (lib/finder, public/viewer.js)
+import * as galleryRoutes from "./lib/gallery/routes.mjs";   // the photo gallery (lib/gallery, public/gallery.js)
 import * as peopleComms from "./lib/people/comms.mjs";
 import * as mailRoutes from "./lib/mail/routes.mjs";   // email: every mailbox, the Mail window, the editor, Settings → Email (lib/mail)
 import * as features from "./lib/features.mjs";   // release channels and feature stages: features.on(id) gates routes, pages, jobs
@@ -125,7 +127,7 @@ addHello("micOwner", () => lantern.micOwner());
 addHello("listenState", () => settings.get().listenState ?? "active");
 addHello("notices", () => firstrun.notices());
 // The Settings/setup wizard, updates and the in-app guide each answer their own /api routes.
-const ROUTES = [featureRoutes, ollamaRoutes, setupRoutes, updateRoutes, helpRoutes, discordRoutes, callRoutes, callsRoutes, meetRoutes, studyRoutes, playerRoutes, ambientRoutes, windowRoutes, documentRoutes, connectorRoutes, fsRoutes, toolingRoutes, welcomeRoutes, discoverRoutes, calendarRoutes, lanternRoutes, aboutRoutes, intentRoutes, personaRoutes, xpRoutes, imageRoutes, activityRoutes, moneyRoutes, visionRoutes, socialRoutes, floorRoutes, devRoutes, mbRoutes, videoRoutes, medialibRoutes, viewerRoutes, gifRoutes, mailRoutes, cameraRoutes, remoteRoutes, smarthomeRoutes, printerRoutes, looksRoutes, mapsRoutes, namingRoutes];
+const ROUTES = [featureRoutes, ollamaRoutes, setupRoutes, updateRoutes, helpRoutes, discordRoutes, callRoutes, callsRoutes, meetRoutes, studyRoutes, playerRoutes, ambientRoutes, windowRoutes, winman, documentRoutes, connectorRoutes, fsRoutes, toolingRoutes, welcomeRoutes, discoverRoutes, calendarRoutes, lanternRoutes, aboutRoutes, intentRoutes, personaRoutes, xpRoutes, imageRoutes, activityRoutes, moneyRoutes, visionRoutes, socialRoutes, floorRoutes, devRoutes, mbRoutes, videoRoutes, medialibRoutes, viewerRoutes, galleryRoutes, gifRoutes, mailRoutes, cameraRoutes, remoteRoutes, smarthomeRoutes, printerRoutes, looksRoutes, mapsRoutes, namingRoutes];
 // Maps: the panel's "maps" event, spoken steps through the floor, home from Settings → Where you are (no GPS here), his phone
 maps.start({ broadcast: (t, d) => announcer.broadcast(t, d), announce: (x) => announcer.announce(x), home: () => owner.get().location, notify: (msg) => remote.notify("all", msg) });
 imageRoutes.setDeps({ openUrl: async (u) => (await import("./lib/browsers.mjs")).openUrl(u, owner.displayBrowser()) });
@@ -733,6 +735,9 @@ async function api(req, res, url) {
     // while a video is showing, "full screen" and "exit full screen" are the video's (lib/video/controls.mjs)
     { const vw = video.pictureWord(message.trim()) ? await video.command(message.trim(), { surface: key }).catch(() => null) : null;
       if (vw) { floor.owner("message", key); floor.replied(key, vw); transcripts.log({ role: "dayspring", text: vw.reply, surface: key }); return send(res, 200, { reply: vw.reply, changes: [], usage: null, intent: "video" }); } }
+    // the windows ON the screen by name: "minimize the map", "put the viewer in the corner", "hide everything" (lib/winman.mjs)
+    { const wm = winman.command(message.trim());
+      if (wm) { floor.owner("message", key); floor.replied(key, wm); transcripts.log({ role: "dayspring", text: wm.reply, surface: key }); return send(res, 200, { reply: wm.reply, changes: [], usage: null, intent: "winman" }); } }
     // "minimize", "hide yourself", "show yourself", "close the screen": the display window, right away
     const wc = await windowRoutes.command(message.trim()).catch(() => null);
     if (wc) { transcripts.log({ role: "dayspring", text: wc, surface: key }); return send(res, 200, { reply: wc, changes: [], usage: null }); }
@@ -749,6 +754,10 @@ async function api(req, res, url) {
     if (uc) { transcripts.log({ role: "dayspring", text: uc, surface: key }); return send(res, 200, { reply: uc, changes: [], usage: null }); }
     const tc = await callRoutes.command(message.trim()).catch(() => null);
     if (tc) { transcripts.log({ role: "dayspring", text: tc, surface: key }); return send(res, 200, { reply: tc, changes: [], usage: null }); }
+    // the photo gallery: "open the photo gallery", "show my photos from last summer", "shuffle my photos", "view this in
+    // the gallery", "open this photo's folder" (lib/gallery/skills.mjs), before pictures from the web and the finder
+    { const gc = !features.on("gallery") ? null : await (await import("./lib/gallery/skills.mjs")).command(message.trim(), { photo: photoOnScreen }).catch((e) => { console.log(`gallery: ${e.message}`); return null; });
+      if (gc) { transcripts.log({ role: "dayspring", text: gc.reply, surface: key }); return send(res, 200, { reply: gc.reply, changes: [], usage: null, intent: gc.intent ?? "gallery" }); } }
     // videos, before the Bible, music, pictures and GIFs: "find bible reading in psalms on youtube", "play a video by
     // mike winger", "pull up videos about biking", "queue 3 videos about dovetails", "play my Worship playlist", "show the
     // queue", "number 3", "not that", and playback controls for whatever is playing ("skip ahead 2 minutes", "captions
@@ -946,8 +955,8 @@ createServer(async (req, res) => {
   if (DISPLAY_MODE) features.startJob("faces", "vision.start", () => vision.start({ announce: (x) => announcer.announce(x) }));   // faces in the photos (only if turned on), people questions
   // While the media browser is open, keep the screen's "now playing" card in step with Spotify.
   setInterval(async () => {
-    if (!browser.isOpen() || announcer.clientCount() === 0) return;
-    const now = await browser.spotifyNow().catch(() => null);
+    if (!browser.isOpen() || announcer.clientCount() === 0) { if (!browser.isOpen()) media.pollWindow().catch(() => {}); return; }
+    const now = await media.pollWindow().catch(() => null);   // (it also feeds the one "now playing": lib/nowplaying.mjs)
     const key = now ? JSON.stringify([now.title, now.artist, now.playing]) : "";
     if (key !== lastNow) { lastNow = key; announcer.broadcast("nowplaying", { source: "spotify", ...(now ?? { playing: false }) }); }
   }, 3000);

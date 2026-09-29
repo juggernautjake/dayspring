@@ -54,18 +54,27 @@ Dayspring stays signed in. You won't need to do this again unless you disconnect
 
 ## The music card
 
-When something plays, a card on the right of the screen shows it:
+One player card, at the bottom right of the screen, always shows **whatever is playing**: Spotify (inside Dayspring or in the media window), YouTube (on the screen or in the media window), your own music and videos, Google Drive's, and Lantern's study music when Lantern reports it. When one thing stops and another starts, the card switches to it. It shows:
 
-- the cover (or video thumbnail), title and artist
+- where it's from (a small coloured icon: YouTube, Spotify, your files, Drive, Lantern) and whether a video is big, in the corner, or audio only
+- the cover (or video thumbnail), title and artist or channel
 - **NEXT**: the next song or video in line. Click it to see the whole queue.
 - a progress bar you can drag to jump anywhere
 - 🔀 shuffle · ⏮ previous · ⏯ play/pause · ⏭ next · 🔁 repeat (click again for "repeat this one")
-- a volume slider (the music volume; Dayspring's own voice has its own volume)
-- 📺 / ♪: show the video or just play the sound (YouTube)
-- 📚: the **Library** (below)
+- a volume slider and a mute button (the music's or the video's own volume; Dayspring's own voice has its own volume). On a narrow card only the mute button shows.
+- for videos, a three-way switch: **big**, **in the corner**, **audio only** (see [Videos](videos.md#big-in-the-corner-or-just-the-sound))
+- ♡: like the song on Spotify, or save the video to your "Saved videos" list
+- ☰ *n*: how many are lined up next; click for the queue
+- 📚: open it in the **Music & Video browser** (below)
 - ✕: stop
 
-Dayspring's music automatically dips while it talks and comes back up after.
+**Only one thing plays at a time.** Starting something pauses whatever was playing, wherever it was: Spotify, a video, your own music, the media window, or Lantern's music. Your voice commands ("pause", "next", "skip ahead 30 seconds") go to whatever the card is showing.
+
+**When nothing is playing** the card hides. To keep it on screen saying "Nothing playing", choose that in Settings → Screen → **Videos and the player**.
+
+On a second Dayspring screen (one that isn't the one playing), the card still shows what's playing, and its buttons control it. Something another app plays (Lantern's music) is shown, but controlled in that app. (For app makers: an app on this computer reports what it plays with `POST /api/player/nowplaying/report` `{ "source": "lantern", "title", "artist", "art", "playing", "position", "duration" }`, and `{ "source": "lantern", "ended": true }` when it stops. `GET /api/player/nowplaying` says what's showing; an app should pause when something else becomes the current one.)
+
+Dayspring's music automatically dips while it talks and comes back up after, in every view (a video in audio only, too).
 
 ## Watching videos
 
@@ -76,9 +85,9 @@ Videos play big on the Dayspring screen. Move the mouse or tap on the video to s
 - ⏮ ⏯ ⏭: previous video, play/pause, next video
 - **⟲10 / 10⟳**: back or forward 10 seconds
 - the progress bar with the time and length: click or drag to jump
-- volume, **speed** (0.25× to 2×), **♪** music only (hides the picture), **⛶** full screen
+- volume, **speed** (0.25× to 2×), **▭** small in the corner, **♪** audio only (hides the picture, the sound goes on), **⛶** full screen
 
-Click the video to play or pause it; double-click for full screen.
+Click the video to play or pause it; double-click for full screen. A video can also be small in the corner (drag it anywhere, it snaps to the edges, resize it from its corner) or just the sound: see [Big, in the corner, or just the sound](videos.md#big-in-the-corner-or-just-the-sound).
 
 **Keyboard** (while a video is showing):
 
@@ -89,6 +98,7 @@ Click the video to play or pause it; double-click for full screen.
 | ↑ / ↓ | Volume up / down |
 | < / > | Slower / faster |
 | F | Full screen |
+| B · I · A | Big · small in the corner · audio only (A again: back) |
 | M | Mute |
 | Shift+N / Shift+P | Next / previous video |
 | Esc | Leave full screen, or close the video |
@@ -216,7 +226,9 @@ Ask for music the way you'd ask a friend. Dayspring works out what kind of thing
 - "What's playing?" · "What song is this?" · "What's next?" · "What's in the queue?"
 
 **Videos** ⚡:
-- "Close the video" · "Hide the video" (music only) · "Show the video" · "Full screen" / "Exit full screen"
+- "Close the video" · "Minimize the video" / "Hide the video" / "Audio only" / "Just play the audio" · "Picture in picture" / "Put it in the corner" / "Make it small" · "Show the video" / "Make it big" · "Full screen" / "Exit full screen"
+- "Move it to the top left" · "Move the video to the center" · "Make the video bigger" / "smaller"
+- "Minimize the map" · "Put the viewer in the corner" · "Hide everything" · "Show everything again"
 - "Play at 1.5 speed" · "Double speed" · "Speed it up" / "Slow it down" · "Normal speed"
 - "Previous video" · "Go back to the last video" · "The one before that" · "Next video" · "Go back to the *bunny* video"
 - "Browse videos about gardening" · "Show me videos of Iceland" · "Show my recent videos" · "Show the queue"

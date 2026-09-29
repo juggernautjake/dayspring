@@ -344,7 +344,7 @@ try {
     ["volume up", "volumeBy", 15], ["turn it down", "volumeBy", -15], ["mute", "mute"], ["unmute", "unmute"], ["volume 40", "volume", 40], ["set the video volume to 25 percent", "volume", 25],
     ["captions on", "captions", true], ["turn on subtitles", "captions", true], ["captions off", "captions", false], ["captions in spanish", "captionLang", "es"], ["turn on french subtitles", "captionLang", "fr"],
     ["highest quality", "quality", "highest"], ["720p", "quality", "720p"], ["set the quality to 1080p", "quality", "1080p"], ["auto quality", "quality", "auto"],
-    ["fullscreen", "full", true], ["exit fullscreen", "full", false], ["minimize the player", "minimize", true], ["bring the video back", "minimize", false],
+    ["fullscreen", "view", "full"], ["exit fullscreen", "view", "exitFull"], ["minimize the player", "view", "audio"], ["bring the video back", "view", "big"], ["picture in picture", "view", "corner"],
     ["next", "next"], ["next video", "next"], ["previous", "previous"], ["previous video", "previous"], ["repeat this one", "repeat", "track"], ["repeat all", "repeat", "context"], ["repeat off", "repeat", "off"], ["shuffle", "shuffle", true], ["shuffle off", "shuffle", false],
   ];
   for (const [w, a, v] of CT) { const r = controls.parse(w, { playing: true }); rec(`control “${w}” → ${a}${v !== undefined ? " " + v : ""}`, r?.action === a && (v === undefined || r.value === v), j(r)); }
@@ -354,7 +354,7 @@ try {
   rec("“volume 40” with nothing playing isn't taken", controls.parse("volume 40", { playing: false }) === null);
   // through the no-AI entry point: the screen gets the command (a pretend screen is connected)
   reset(); media.setState({ source: "youtube", title: "Hope for Hard Times", artist: "Grace to You", playing: true, position: 100, duration: 2460, rate: 1, videoId: "x".repeat(11) });
-  for (const [w, a, v] of [["skip ahead 2 minutes", "seekBy", 120], ["captions in spanish", "captionLang", "es"], ["1.5x", "speed", 1.5], ["volume 40", "volume", 40], ["go to the middle", "seekPct", 50], ["minimize the player", "minimize", true], ["720p", "quality", "720p"]]) {
+  for (const [w, a, v] of [["skip ahead 2 minutes", "seekBy", 120], ["captions in spanish", "captionLang", "es"], ["1.5x", "speed", 1.5], ["volume 40", "volume", 40], ["go to the middle", "seekPct", 50], ["minimize the player", "view", "audio"], ["720p", "quality", "720p"]]) {
     events.length = 0; const r = await cmd(w); const p = last("player");
     rec(`“${w}” reaches the screen's player as ${a}`, p?.action === a && (v === undefined || p.value === v) && Boolean(r?.reply), `${j(p)} ${r?.reply}`);
   }
@@ -477,8 +477,10 @@ async function screenTests() {
       ["highest quality", async () => (await ytm()).quality === "hd1080"],
       ["fullscreen", async () => (await P()).full],
       ["exit fullscreen", async () => !(await P()).full],
-      ["minimize the player", async () => (await P()).mini],
-      ["bring the video back", async () => !(await P()).mini],
+      ["minimize the player", async () => (await P()).video === false],          // (minimise: audio only, the owner's word for it)
+      ["bring the video back", async () => (await P()).video && !(await P()).mini],
+      ["picture in picture", async () => (await P()).mini],
+      ["make it big", async () => !(await P()).mini && (await P()).video],
       ["repeat this one", async () => (await P()).repeat === "track"],
       ["repeat off", async () => (await P()).repeat === "off"],
     ];
@@ -550,7 +552,7 @@ async function screenTests() {
     // --- his own video (a local HTML5 video, public/medialib.js) ---------------------------------------------------------
     // (the file comes from the mock, which answers Range requests the way Dayspring's own stream route does, so it can seek)
     await page.evaluate((src) => { window.dsLocalPlayer.play({ queue: [{ id: "qa1", src, title: "QA clip", kind: "video", duration: 20 }, { id: "qa2", src, title: "QA clip 2", kind: "video", duration: 20 }], index: 0 }); }, `${mock.url}/clip.webm`);
-    const lv = () => page.evaluate(() => { const e = document.getElementById("lv"); if (!e) return null; const box = document.getElementById("media"); return { t: Math.round(e.currentTime * 10) / 10, paused: e.paused, rate: e.playbackRate, cap: [...e.textTracks].filter((x) => x.mode === "showing").map((x) => x.language), full: box.classList.contains("full"), mini: box.classList.contains("minip"), title: window.dayspring.player.title, dur: window.dayspring.player.dur }; });
+    const lv = () => page.evaluate(() => { const e = document.getElementById("lv"); if (!e) return null; const box = document.getElementById("media"); return { t: Math.round(e.currentTime * 10) / 10, paused: e.paused, rate: e.playbackRate, cap: [...e.textTracks].filter((x) => x.mode === "showing").map((x) => x.language), full: box.classList.contains("full"), mini: box.classList.contains("minip"), audio: box.classList.contains("audio"), title: window.dayspring.player.title, dur: window.dayspring.player.dur }; });
     rec("his own video plays on the screen", Boolean(await until(async () => { const v = await lv(); return v && v.dur > 5 && v; }, 8000)), j(await lv()));
     await page.evaluate(() => { const e = document.getElementById("lv"); for (const [l, s] of [["en", "/qa/clip.vtt"], ["es", "/qa/clip.vtt"]]) { const t = document.createElement("track"); t.kind = "subtitles"; t.srclang = l; t.src = s; e.appendChild(t); } });
     await until(async () => (await P()).source === "file", 3000);
@@ -560,7 +562,7 @@ async function screenTests() {
       ["go back to the beginning", async () => (await lv()).t < 1.5], ["skip ahead 5 seconds", async () => (await lv()).t >= 4],
       ["double speed", async () => (await lv()).rate === 2], ["normal speed", async () => (await lv()).rate === 1], ["slow down", async () => (await lv()).rate === 0.75], ["normal speed", async () => (await lv()).rate === 1],
       ["captions on", async () => (await lv()).cap.length === 1], ["captions in spanish", async () => (await lv()).cap[0] === "es"], ["captions off", async () => (await lv()).cap.length === 0],
-      ["minimize the player", async () => (await lv()).mini], ["bring the video back", async () => !(await lv()).mini], ["exit fullscreen", async () => !(await lv()).full], ["fullscreen", async () => (await lv()).full],
+      ["minimize the player", async () => (await lv()).audio], ["bring the video back", async () => !(await lv()).audio && !(await lv()).mini], ["picture in picture", async () => (await lv()).mini], ["make it big", async () => !(await lv()).mini], ["exit fullscreen", async () => !(await lv()).full], ["fullscreen", async () => (await lv()).full],
       ["next", async () => (await lv())?.title === "QA clip 2"], ["previous", async () => (await lv())?.t < 2],
     ];
     for (const [w, ok] of LOC) { const rr = await chat(w); rec(`his own video: “${w}”`, Boolean(await until(ok, 3000)), `${rr.reply} ${j(await lv())}`); }

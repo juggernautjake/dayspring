@@ -96,10 +96,18 @@
     else if (b.sourceDomain) info.appendChild(el("span", "sub", b.sourceDomain));
     if (b.width && b.height) info.appendChild(el("span", "sub", `${b.width}×${b.height}`));
     const back = el("button", "ib", "◀ All pictures"); back.type = "button"; back.onclick = () => act("grid");
-    const save = el("button", "ib main", "Save"); save.type = "button";
-    save.onclick = () => post("/images/act", { action: "save", n: b.n }).then((r) => core()?.toast?.("Saved", r.saved?.where === "pictures" ? "In Pictures › Dayspring" : "In Dayspring's images folder", "", "bell")).catch((e) => core()?.toast?.("Couldn't save", e.message, "", "bell"));
+    // a picture from the web has no place on this computer until it's saved: "Save to my photos" first, then (when it
+    // landed where the photo gallery may show it) 📂 Open file location and 🖼 View in gallery (public/gallery.js)
+    const save = el("button", "ib main", "⤓ Save to my photos"); save.type = "button"; save.dataset.save = "1";
+    const after = el("span", "saved-acts");
+    save.onclick = () => post("/images/act", { action: "save", n: b.n }).then((r) => {
+      core()?.toast?.("Saved", r.saved?.where === "pictures" ? "In Pictures › Dayspring" : "In Dayspring's images folder", "", "bell");
+      save.textContent = "✓ Saved";
+      const html = r.saved?.id ? window.dsGallery?.actionsHtml?.(r.saved.id) ?? "" : "";
+      if (html) after.innerHTML = html; else after.textContent = r.saved?.where === "pictures" ? "" : "Saved in Dayspring's own images folder (not one of your folders, so there's no file location to open).";
+    }).catch((e) => core()?.toast?.("Couldn't save", e.message, "", "bell"));
     const like = el("button", "ib", "More like this"); like.type = "button"; like.onclick = () => core()?.ask?.(`more like number ${b.n}`, { typed: true, internal: true });
-    info.append(back, save, like);
+    info.append(back, save, after, like);
     wrap.append(frame, info);
     return wrap;
   }

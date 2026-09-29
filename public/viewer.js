@@ -141,6 +141,14 @@
   #dsFinder li span.meta{display:block;color:var(--muted,#a4abcc);font-size:.8em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   #dsFinder .drive{color:#ffd27a}
   #dsFinder .empty{padding:1em;color:var(--muted,#a4abcc)}
+  #dsViewer .vw-foot{flex-wrap:wrap}
+  #dsViewer .vw-loc{display:flex;gap:.3em;align-items:center;flex-wrap:wrap;min-width:0;max-width:100%;color:var(--ink,#eef0ff)}
+  #dsViewer .vw-loc .crumb{background:none;border:0;color:#9fb0ff;cursor:pointer;text-decoration:underline;padding:.1em .2em;min-height:1.8em;font:inherit}
+  #dsViewer .vw-strip{flex:0 0 76px;overflow-x:auto;overflow-y:hidden;position:relative;border-top:1px solid var(--edge,rgba(160,170,255,.14));scrollbar-width:thin;cursor:grab;touch-action:pan-x}
+  #dsViewer .vw-strip .sp{position:relative;height:100%}
+  #dsViewer .vw-strip button{position:absolute;top:5px;width:76px;height:62px;padding:0;border:2px solid transparent;border-radius:.4em;overflow:hidden;background:rgba(255,255,255,.06);cursor:pointer}
+  #dsViewer .vw-strip button img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+  #dsViewer .vw-strip button.on{border-color:#ffd84a}
   html.mini #dsViewer .vw-side{flex-basis:90px}html.mini #dsViewer .vw-info{position:absolute;right:0;top:0;bottom:0;background:#12153a;z-index:3;width:min(260px,80%)}`;
   document.head.appendChild(css);
 
@@ -240,7 +248,7 @@
     V.kind = it.kind ?? kindOfName(it.name);
     paintMenu();
     // ◀ ▶: the results it came from, else the files next to it in its folder
-    if (!V.list && it.source !== "drive") api(`/viewer/siblings?id=${encodeURIComponent(it.id)}`).then((s) => { if (seq === V.seq && s.ids?.length > 1) { V.list = s.ids; V.index = Math.max(0, s.index); navButtons(); } }).catch(() => {});
+    if (!V.list && it.source !== "drive") api(`/viewer/siblings?id=${encodeURIComponent(it.id)}`).then((s) => { if (seq === V.seq && s.ids?.length > 1) { V.list = s.ids; V.index = Math.max(0, s.index); navButtons(); if (V.kind === "image") filmstrip(); } }).catch(() => {});
     navButtons();
     try { await show(it, V.kind, null, seq); }
     catch (e) { if (seq === V.seq) { stage.innerHTML = `<div class="vw-msg">${esc(e.message)}</div>`; card(it); } }
@@ -316,8 +324,46 @@
     onTools({ out: () => zoomAt(1 / 1.25), in: () => zoomAt(1.25), fit, one: () => { T.z = 1; T.x = T.y = 0; T.auto = false; apply(); }, rotl: () => rotate(-1), rotr: () => rotate(1), fliph: () => { T.fx *= -1; apply(); }, flipv: () => { T.fy *= -1; apply(); }, show: () => slideshow() });
     const ro = new ResizeObserver(() => { if (T.auto) fit(); }); ro.observe(wrap); V.cleanup.push(() => ro.disconnect());
     V.cleanup.push(() => clearInterval(slide));
+    if (!entry && it.source !== "drive") { showWhere(it); filmstrip(); }
     V.ctl = { zoomIn: () => zoomAt(1.25), zoomOut: () => zoomAt(1 / 1.25), fit, refit: () => { if (T.auto) fit(); }, actual: () => { T.z = 1; T.x = T.y = 0; apply(); }, rotate: (d = 1) => rotate(d), flip: () => { T.fx *= -1; apply(); }, flipV: () => { T.fy *= -1; apply(); }, slideshow: (on) => slideshow(on ?? !slide),
       state: () => ({ zoom: T.z, fit: T.fit, rot: T.rot, fx: T.fx, fy: T.fy, x: T.x, y: T.y, slideshow: Boolean(slide), every, natural: [img.naturalWidth, img.naturalHeight] }) };
+  }
+
+  // where a picture is saved, always in view: Pictures › Family › 2026 (each part opens the photo gallery there),
+  // 📂 Open file location (File Explorer with it selected) and 🖼 View in gallery (public/gallery.js, lib/gallery)
+  function showWhere(it) {
+    const acts = window.dsGallery?.actionsHtml?.(it.id) ?? "";
+    if (!acts) return;
+    const el = document.createElement("span"); el.className = "vw-loc"; el.setAttribute("aria-label", "Where it's saved");
+    el.innerHTML = `<span class="crumbs" aria-hidden="false"></span>${acts}`;
+    foot.appendChild(el);
+    const seq = V.seq;
+    api(`/gallery/item?id=${encodeURIComponent(it.id)}`).then((r) => {
+      if (seq !== V.seq || !r.crumbs) return;
+      $(".crumbs", el).innerHTML = "📂 " + r.crumbs.map((c, k) => `${k ? " › " : ""}<button type="button" class="crumb" data-fid="${esc(c.fid)}" data-last="${c.last ? 1 : 0}" title="Show the photos in ${esc(c.label)}">${esc(c.label)}</button>`).join("");
+      $(".crumbs", el).title = r.path ?? "";
+    }).catch(() => {});
+    el.addEventListener("click", (e) => { const c = e.target.closest("[data-fid]"); if (!c) return; e.stopPropagation(); close(); window.dsGallery?.open?.({ view: "folder", fid: c.dataset.fid, deep: c.dataset.last !== "1", group: "none" }); });
+  }
+  // a filmstrip of the pictures around it (the folder, or the results it came from): scroll sideways, click one
+  function filmstrip() {
+    $(".vw-strip", root)?.remove();
+    if (V.kind !== "image" || !V.list || V.list.length < 2) return;
+    const W = 82, s = document.createElement("div"); s.className = "vw-strip"; s.setAttribute("aria-label", "More pictures: scroll sideways");
+    s.innerHTML = `<div class="sp" style="width:${V.list.length * W + 8}px"></div>`;
+    root.insertBefore(s, foot);
+    const sp = s.firstChild;
+    const paint = () => { const L = s.scrollLeft, w = s.clientWidth || 800, a = Math.max(0, Math.floor((L - w) / W)), b = Math.min(V.list.length - 1, Math.ceil((L + 2 * w) / W)); let h = ""; for (let k = a; k <= b; k++) h += `<button type="button" data-k="${k}" class="${k === V.index ? "on" : ""}" style="left:${k * W + 4}px" aria-label="Picture ${k + 1} of ${V.list.length}"><img alt="" decoding="async" src="/api/viewer/thumb?id=${encodeURIComponent(V.list[k])}" onerror="this.remove()"></button>`; sp.innerHTML = h; };
+    s.scrollLeft = Math.max(0, V.index * W + W / 2 - (s.clientWidth || 800) / 2); paint();
+    s.addEventListener("scroll", () => requestAnimationFrame(paint));
+    s.addEventListener("wheel", (e) => { e.preventDefault(); s.scrollLeft += Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY; }, { passive: false });
+    let drag = null, dragged = 0;
+    s.addEventListener("pointerdown", (e) => { if (e.button === 0 && e.pointerType !== "touch") drag = { x: e.clientX, l: s.scrollLeft, moved: false }; });
+    const mv = (e) => { if (!drag) return; const dx = e.clientX - drag.x; if (Math.abs(dx) > 5) drag.moved = true; if (drag.moved) s.scrollLeft = drag.l - dx; };
+    const up = () => { if (drag?.moved) dragged = Date.now(); drag = null; };
+    addEventListener("pointermove", mv); addEventListener("pointerup", up);
+    s.addEventListener("click", (e) => { if (Date.now() - dragged < 250) return; const b = e.target.closest("[data-k]"); if (!b) return; V.index = Number(b.dataset.k); step(0); });
+    V.cleanup.push(() => { removeEventListener("pointermove", mv); removeEventListener("pointerup", up); s.remove(); });
   }
 
   // ---------------------------------------------------------------------------------------------------- video and audio
@@ -784,7 +830,7 @@
     finItems = items ?? [];
     $("h2", fin).textContent = title ? `🔎 ${title}` : "🔎 Find a file";
     $("ol", fin).innerHTML = finItems.length ? finItems.map((x) => `<li data-n="${x.n}" tabindex="0" title="${esc(x.name)}"><span class="n">${x.n}</span><span class="th">${x.thumb ? `<img alt="" loading="lazy" src="${esc(x.thumb)}" onerror="this.replaceWith(document.createTextNode('${ICON[x.kind] ?? "📄"}'))">` : ICON[x.kind] ?? "📄"}</span>
-      <div><b>${esc(x.name)}</b><span class="meta">${x.source === "drive" ? `<span class="drive">☁ Google Drive</span> · ` : ""}${esc([x.where, x.sizeText, x.when, x.type].filter(Boolean).join(" · "))}</span></div></li>`).join("") : `<li class="empty" aria-disabled="true">${esc(note || "Nothing found.")}</li>`;
+      <div><b>${esc(x.name)}</b>${x.kind === "image" && x.source !== "drive" ? (window.dsGallery?.actionsHtml?.(x.id, { compact: true }) ?? "") : ""}<span class="meta">${x.source === "drive" ? `<span class="drive">☁ Google Drive</span> · ` : ""}${esc([x.where, x.sizeText, x.when, x.type].filter(Boolean).join(" · "))}</span></div></li>`).join("") : `<li class="empty" aria-disabled="true">${esc(note || "Nothing found.")}</li>`;
     fin.hidden = false;
     window.dsKeepInSafe?.(fin);
   }

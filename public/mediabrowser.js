@@ -656,7 +656,8 @@
   function startNp() { stopNp(); paintNp(); npTimer = setInterval(paintNp, 1000); }
   function stopNp() { clearInterval(npTimer); npTimer = null; }
   function paintNp() {
-    const P = window.dayspring?.player;
+    // (what plays anywhere: this screen's player, or another screen's, the media window's, Lantern's: tv.js dsNowPlaying)
+    const P = window.dsNowPlaying?.() ?? window.dayspring?.player;
     if (!P?.source) { np.hidden = true; npKey = ""; return; }
     np.hidden = false;
     const pos = Math.min(P.dur || Infinity, (P.pos || 0) + (P.playing ? ((Date.now() - (P.at || Date.now())) / 1000) * (P.rate || 1) : 0));
@@ -671,7 +672,7 @@
           ${P.source === "spotify" && P.uri ? `<button type="button" class="mb-ib${liked ? " on" : ""}" data-c="like" title="${liked ? "Liked" : "Like this song"}" aria-label="Like this song" aria-pressed="${Boolean(liked)}">${liked ? "♥" : "♡"}</button>` : ""}</div>
         <div class="mb-seek"><span class="mb-pos">0:00</span><input type="range" min="0" max="1000" value="0" aria-label="Position"><span class="mb-dur">${esc(mmss(P.dur))}</span></div>`;
       const r = $("input[type=range]", np);
-      r.onchange = () => { const P2 = window.dayspring?.player; if (P2?.dur) window.dayspring.playerCtl("seek", (Number(r.value) / 1000) * P2.dur); };
+      r.onchange = () => { const P2 = window.dsNowPlaying?.() ?? window.dayspring?.player; if (P2?.dur) window.dayspring.playerCtl("seek", (Number(r.value) / 1000) * P2.dur); };
     }
     const r = $("input[type=range]", np);
     if (r && document.activeElement !== r) r.value = P.dur ? String(Math.round((pos / P.dur) * 1000)) : "0";
@@ -680,7 +681,7 @@
   async function onNp(e) {
     if (e.target.closest("[data-lyrics]")) { e.preventDefault(); const P = window.dayspring?.player; openLink(`https://www.google.com/search?q=${encodeURIComponent(`${P.title} ${P.artist} lyrics`)}`); return; }
     const b = e.target.closest("[data-c]"); if (!b) return;
-    const c = b.dataset.c, P = window.dayspring?.player;
+    const c = b.dataset.c, P = window.dsNowPlaying?.() ?? window.dayspring?.player;
     if (c === "like") { const on = !st.likedNow[P.uri]; const r = await api("/mb/act", { action: on ? "like" : "unlike", items: [{ source: "spotify", kind: "track", uri: P.uri, title: P.title }] }); if (r.error) toast("Spotify", r.error); else { st.likedNow[P.uri] = on; paintNp(); } return; }
     try { const msg = await window.dayspring?.playerCtl?.(c); if (msg) toast("Player", msg); } catch { /* fine */ }
     setTimeout(paintNp, 400);

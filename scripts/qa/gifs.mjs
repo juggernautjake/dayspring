@@ -514,13 +514,14 @@ try {
   const fit = await page.evaluate(() => { const r = document.getElementById("dsGifs").getBoundingClientRect(), S2 = window.dsSafeRect(); return { inside: r.left >= S2.left - 1 && r.top >= S2.top - 1 && r.right <= S2.right + 1 && r.bottom <= S2.bottom + 1, r: [r.left, r.top, r.right, r.bottom].map(Math.round) }; });
   check("the picker fits the safe area", fit.inside, fit.r);
   await page.click("#dsGifs .g-min"); await sleep(200);
-  const mini = await page.evaluate(() => ({ hidden: document.getElementById("dsGifs").hidden, pill: !document.getElementById("dsGifsPill").hidden }));
-  await page.click("#dsGifsPill"); await sleep(200);
-  check("minimise to a 🎞 GIFs button and back", mini.hidden && mini.pill && !(await page.evaluate(() => document.getElementById("dsGifs").hidden)));
+  // (– minimises into the dock along the bottom, like every window: public/winman.js)
+  const mini = await page.evaluate(() => ({ hidden: document.getElementById("dsGifs").hidden, pill: Boolean(document.querySelector('#wmDock .wm-chip[data-id="gifs"]')) }));
+  await page.click('#wmDock .wm-chip[data-id="gifs"]'); await sleep(200);
+  check("minimise to a 🎞 GIFs chip in the dock and back", mini.hidden && mini.pill && !(await page.evaluate(() => document.getElementById("dsGifs").hidden)), mini);
   const grip = await page.evaluate(() => { const r = document.querySelector("#dsGifs .g-resize").getBoundingClientRect(); return { x: r.left + 8, y: r.top + 8 }; });
   await page.mouse.move(grip.x, grip.y); await page.mouse.down(); await page.mouse.move(grip.x - 300, grip.y - 200, { steps: 5 }); await page.mouse.up();
-  const rz = await page.evaluate(() => { const e = document.getElementById("dsGifs"), r = e.getBoundingClientRect(), S2 = window.dsSafeRect(); return { float: e.classList.contains("float"), w: Math.round(r.width), inside: r.left >= S2.left - 1 && r.top >= S2.top - 1 && r.right <= S2.right + 1 && r.bottom <= S2.bottom + 1 }; });
-  check("resizable (floats, smaller, still inside)", rz.float && rz.w < 1100 && rz.inside, rz);
+  const rz = await page.evaluate(() => { const e = document.getElementById("dsGifs"), r = e.getBoundingClientRect(), S2 = window.dsSafeRect(); return { float: e.classList.contains("wm-small"), w: Math.round(r.width), inside: r.left >= S2.left - 1 && r.top >= S2.top - 1 && r.right <= S2.right + 1 && r.bottom <= S2.bottom + 1 }; });
+  check("resizable (a small window, smaller, still inside)", rz.float && rz.w < 1100 && rz.inside, rz);
   await page.click("#dsGifs .g-max"); await page.click("#dsGifs .g-x"); await sleep(200);
   check("✕ closes it", !(await gst()).open);
   check("favourites tab and recents work (GIFs picked are in Recent)", (await api("/gifs/library")).recents.length >= 2);

@@ -27,7 +27,7 @@ Which of Dayspring's features are finished, new, or still being built, and which
 | Reminders | `reminders` | Your day | Stable | 1.0.0 | 3 |  |
 | Timers | `timers` | Your day | Stable | 1.3.0 | 2 |  |
 | Weather | `weather` | Your day | Stable | 1.0.0 | 1 |  |
-| Music (Spotify and YouTube) | `music` | Music and media | Stable | 1.0.0 | 2 |  |
+| Music (Spotify and YouTube) | `music` | Music and media | Stable | 1.0.0 | 7 |  |
 | Recipes and cooking | `recipes` | Home | Stable | 1.3.0 | 1 |  |
 | Jokes and fun | `jokes` | Talking to Dayspring | Stable | 1.3.0 | 1 |  |
 | Personalities | `personality` | Talking to Dayspring | Stable | 1.4.0 | 1 |  |
@@ -60,6 +60,7 @@ Which of Dayspring's features are finished, new, or still being built, and which
 | Colour themes | `themes` | Screen | Beta (New) | 1.7.2 | 6 |  |
 | Avatars and expression mode | `avatar` | Screen | Beta (New) | 1.7.2 | 11 |  |
 | Finding files and the file viewer | `fileviewer` | Your files | Beta (New) | 1.7.3 | 12 |  |
+| The photo gallery | `gallery` | Your files | Beta (New) | 1.8.0 | 6 |  |
 | Stop and goodbye | `conversation` | Talking to Dayspring | Beta (New) | 1.7.3 | 5 |  |
 | Renaming the assistant and wake words | `naming` | Talking to Dayspring | Beta (New) | 1.7.3 | 7 |  |
 | Developer preview | `devpreview` | This app | Beta (New) | 1.6.0 | 4 |  |
@@ -92,6 +93,7 @@ Which of Dayspring's features are finished, new, or still being built, and which
 - **Colour themes** (`themes`, since 1.7.2): Settings → Look & feel: 15 colour themes (Rose, Sage, Ocean, Candy, Light, High Contrast…), your own from 2–3 colours, Surprise me, a live preview, and "switch to the pink theme". Hidden when off: routes `/api/looks/theme`, `/api/looks/surprise`; Settings `looks`.
 - **Avatars and expression mode** (`avatar`, since 1.7.2): Five animated avatars, your own picture (one per state if you like), a look per personality, and expression mode: GIFs and memes that fit the feeling and the personality (off until you turn it on). Hidden when off: routes `/api/looks/avatar`, `/api/looks/persona`, `/api/looks/template`, `/api/expressions`; Settings `looks`; 2 screen elements.
 - **Finding files and the file viewer** (`fileviewer`, since 1.7.3): "Find my resume", "open the PDF called lease agreement", "show me the picture named IMG_5782": finds your files and pictures by name (typos, dates, folders, file types), and opens them in one viewer on the screen: pictures (zoom, rotate, slideshow), video and audio, PDFs (pages, search, read aloud), text and code, Word, Excel and CSV, PowerPoint and zip files. Hidden when off: routes `/api/viewer`; 3 AI tool patterns; 2 screen elements; jobs `fileviewer.scan`.
+- **The photo gallery** (`gallery`, since 1.8.0): Every photo on this computer Dayspring may show, in one gallery: grouped by folder, month or album, sorted by date, name or size, filtered by people, favourites and text; 🎲 Random with Shuffle again; one photo at a time with ◀ ▶ and a filmstrip you scroll through; where each photo is saved (Pictures › Family › 2026) with 📂 Open in File Explorer; and 📂 / 🖼 on every photo elsewhere (the rotating photo card, the file viewer, the People page, the finder). Hidden when off: routes `/api/gallery`; 2 screen elements.
 - **Stop and goodbye** (`conversation`, since 1.7.3): "Stop", "that's enough", "shh" or "never mind" cut Dayspring off mid-sentence (even while it's talking) and keep listening for its name; "thanks, that's all", "bye" or "no thanks" end the conversation at once, and a question it asked is dropped. Hidden when off: routes `/api/commands/stop`.
 - **Renaming the assistant and wake words** (`naming`, since 1.7.3): Give the assistant its own name by voice or in Settings → Your assistant ("your name is Nova", "go back to being Dayspring"), how it's said, up to three wake words ("Hey Nova", "Computer"), "also accept" words, a sensitivity, and "Train my wake word". Meetings, Discord and the screen all answer to it. Hidden when off: routes `/api/wake/train`, `/api/wake/trained`; 1 screen element.
 - **Developer preview** (`devpreview`, since 1.6.0): On the developer's own computer only (signed, computer-bound token): every badge's art and every character. Hidden when off: routes `/api/dev`.
@@ -116,7 +118,7 @@ Which of Dayspring's features are finished, new, or still being built, and which
 - **Reminders** (`reminders`, since 1.0.0): "Remind me to…" at a time or in a while, announced on time, snoozable.
 - **Timers** (`timers`, since 1.3.0): Up to seven named timers at once, with cards on the screen.
 - **Weather** (`weather`, since 1.0.0): The forecast on the screen and in the morning briefing, weather alerts.
-- **Music (Spotify and YouTube)** (`music`, since 1.0.0): Spotify and YouTube by voice, the in-app player, the Pop out button.
+- **Music (Spotify and YouTube)** (`music`, since 1.0.0): Spotify and YouTube by voice, the in-app player, the Pop out button. Videos big, small in the corner (drag, snap, resize) or audio only; one mini player card for whatever is playing; every window can be big, small or minimised to the dock.
 - **Recipes and cooking** (`recipes`, since 1.3.0): Saving recipes, cooking mode with steps, scaling and step timers.
 - **Jokes and fun** (`jokes`, since 1.3.0): Jokes, knock-knock, trivia and games.
 - **Personalities** (`personality`, since 1.4.0): Characters, sliders, custom personas and the secret characters.

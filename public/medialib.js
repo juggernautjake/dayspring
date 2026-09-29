@@ -1,7 +1,7 @@
 // The owner's own music and videos (and Google Drive's) on the Dayspring screen: the player, the numbered list, pictures.
 //   Player: the server sends { action: "play", provider: "local", queue: [{ id, src, title, artist, kind, … }], index,
 //   shuffle, repeat } on "media". Audio plays with the normal music card (tv.js's controls come here through ctl()), a
-//   queue, shuffle and repeat; video plays full screen in the media box. Every file is same-origin (/api/media/local/stream
+//   queue, shuffle and repeat; video plays in the media box, big (full screen), in the corner or audio only like any video (tv.js). Every file is same-origin (/api/media/local/stream
 //   or /api/drive/stream), so this page steers it to Dayspring's chosen output itself (setSinkId, the same choice as
 //   lib/sinkpick.mjs: /api/media/local/sink), follows a change within a few seconds, and ducks under Dayspring's voice.
 //   List: "medialib" { list: { title, items } } shows a numbered list (click, or say "number 2" / "play them all");
@@ -84,7 +84,9 @@
       if (Q.length > 1 && pos < order.length - 1) next(true); else stop(true);
     });
     Object.assign(P, { source: "file", title: it.title || "Untitled", artist: it.artist || (it.where ?? ""), art: "", playing: false, pos: 0, dur: it.duration || 0, at: Date.now(), shuffle: shuffleOn,
-      repeat: repeat === "all" ? "context" : repeat === "one" ? "track" : "off", rate: 1, rates: [1], video: it.kind === "video", playlist: Q.length > 1, videoId: null, sourceLabel: it.source === "drive" ? it.where : "On this computer" });
+      repeat: repeat === "all" ? "context" : repeat === "one" ? "track" : "off", rate: 1, rates: [1], video: it.kind === "video", hasVideo: it.kind === "video", playlist: Q.length > 1, videoId: null, sourceLabel: it.source === "drive" ? it.where : "On this computer", uri: null, liked: false, musicStart: false });
+    // a video: big, in the corner or audio only, the way videos are shown (tv.js; Settings → Screen → Videos)
+    if (it.kind === "video") H().videoStarted?.();
     H().render();
     applySink(true).finally(() => { if (e === el) e.play().catch(() => {}); });
     clearInterval(sinkTimer); sinkTimer = setInterval(() => applySink(false), 4000);
@@ -172,7 +174,8 @@
     step();
   }
   function volume() { if (el) el.volume = vol(); }
-  window.dsLocalPlayer = { play, enqueue, ctl, stop, duck, volume, next, current: () => (el ? { ...cur(), position: el.currentTime, sink: el.sinkId ?? null, paused: el.paused } : null), _el: () => el };
+  const remaining = () => (el ? Math.max(0, order.length - pos - 1) : 0);      // (the card's queue count)
+  window.dsLocalPlayer = { play, enqueue, ctl, stop, duck, volume, next, remaining, current: () => (el ? { ...cur(), position: el.currentTime, sink: el.sinkId ?? null, paused: el.paused } : null), _el: () => el };
 
   // ---- the numbered list, and pictures -------------------------------------------------------------------------------------
   const css = document.createElement("style");
@@ -202,7 +205,7 @@
     closeList();
     panel = document.createElement("section"); panel.className = "mlpanel"; panel.setAttribute("role", "dialog"); panel.setAttribute("aria-label", l.title);
     panel.innerHTML = `<header><h2>${esc(l.title)}</h2>${l.items.some((x) => x.kind === "audio" || x.kind === "video") && l.items.length > 1 ? `<button class="mb" data-all="1">▶ All</button><button class="mb" data-all="1" data-shuffle="1">⤮ Shuffle</button>` : ""}<button class="mb" data-close="1" aria-label="Close">✕</button></header>
-      <ol>${l.items.map((x) => `<li data-n="${x.n}" class="${x.playable === false ? "no" : ""}" title="${esc(x.title)}"><span class="n">${x.n}</span><div><b>${kindIcon(x)} ${esc(x.title)}</b><span>${esc([x.detail, x.where, x.time].filter(Boolean).join(" · "))}</span></div>
+      <ol>${l.items.map((x) => `<li data-n="${x.n}" class="${x.playable === false ? "no" : ""}" title="${esc(x.title)}"><span class="n">${x.n}</span><div><b>${kindIcon(x)} ${esc(x.title)}</b><span>${esc([x.detail, x.where, x.time].filter(Boolean).join(" · "))}</span>${x.kind === "image" && x.source !== "drive" ? (window.dsGallery?.actionsHtml?.(x.id, { compact: true }) ?? "") : ""}</div>
         ${x.source !== "drive" ? `<button class="mb" data-open="${x.n}" title="Open it in this PC's default app">PC</button>` : "<span></span>"}</li>`).join("")}</ol>`;
     document.body.appendChild(panel);
     panel.addEventListener("click", async (e) => {
@@ -220,7 +223,9 @@
   function showImage(im) {
     imgEl?.remove();
     imgEl = document.createElement("div"); imgEl.className = "mlimg"; imgEl.setAttribute("role", "dialog"); imgEl.setAttribute("aria-label", im.title ?? "Picture");
-    imgEl.innerHTML = `<img alt="${esc(im.title ?? "")}" src="${esc(im.src)}"><p>${esc(im.title ?? "")}</p>`;
+    // (a picture from Google Drive has no folder on this computer: it says so instead of 📂 / 🖼; one of his own has them)
+    const acts = im.id && !/^\/api\/drive\//.test(im.src ?? "") ? window.dsGallery?.actionsHtml?.(im.id) ?? "" : "";
+    imgEl.innerHTML = `<img alt="${esc(im.title ?? "")}" src="${esc(im.src)}"><p>${esc(im.title ?? "")}${acts ? " " + acts : /^\/api\/drive\//.test(im.src ?? "") ? " · ☁ in Google Drive (not saved on this computer)" : ""}</p>`;
     imgEl.addEventListener("click", () => { imgEl?.remove(); imgEl = null; });
     document.body.appendChild(imgEl);
   }

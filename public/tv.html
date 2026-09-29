@@ -439,6 +439,18 @@
   .pvol input::-webkit-slider-thumb{-webkit-appearance:none;width:.8em;height:.8em;margin-top:-.27em;border-radius:50%;background:#fff}
   .pvol input:focus-visible{outline:none}
   .np .pctl{font-size:.95em}
+  .np .label{display:flex;align-items:center;gap:.4em;min-width:0}
+  .np .label span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .npico{flex:0 0 auto;display:inline-grid;place-items:center;width:1.45em;height:1.45em;border-radius:.4em;font-style:normal;font-size:.95em;line-height:1;color:#fff;background:rgba(255,255,255,.14)}
+  .npico.youtube{background:#e0333a}.npico.spotify{background:#1db954;color:#0b1a10}.npico.file{background:#6d7bff}.npico.drive{background:#f4b400;color:#1c1500}.npico.lantern{background:#f0a24a;color:#241200}.npico.radio{background:#9b6bff}.npico.idle{background:rgba(255,255,255,.1);color:var(--muted)}
+  .np .npmodes{display:inline-flex;gap:.1em;padding:.1em;border-radius:1em;background:rgba(255,255,255,.07)}
+  .np .npmodes[hidden]{display:none}
+  .np .npmodes .pb.on{background:rgba(124,140,255,.4);color:#fff}
+  .np .npmodes .pb.on::after{display:none}
+  .np .pb.npq{width:auto;min-width:1.8em;padding:0 .45em;border-radius:1em;font-size:.8em}
+  .np.idle .pctl .pb:not([data-p="library"]),.np.idle .pvol,.np.idle .eq,.np.idle .pbar{display:none}
+  .np.idle{opacity:.8}
+  .np.remote .pctl .pb.sm[data-p="shuffle"],.np.remote .pctl .pb.sm[data-p="repeat"],.np.remote .pvol{display:none}
   .np .npnext{display:block;max-width:100%;margin-top:.25em;padding:0;border:0;background:none;font:inherit;font-size:.74em;color:var(--muted);text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .np .npnext b{display:inline;font-weight:500;color:var(--violet);font-size:1em;letter-spacing:.06em;text-transform:uppercase;margin-right:.35em}
   .np .npnext:hover,.np .npnext:focus-visible{color:var(--ink);outline:none}
@@ -566,7 +578,9 @@
   .media{position:fixed;z-index:12;background:#000;border-radius:1.1em;overflow:hidden;box-shadow:0 0 0 1px var(--edge2),0 30px 80px rgba(0,0,0,.7),0 0 70px rgba(124,140,255,.28);transition:all .6s var(--ease);animation:mediain .7s var(--ease)}
   @keyframes mediain{from{opacity:0;transform:scale(.96)}}
   .media.video{inset:calc(1em + var(--sy)) calc(1em + var(--sx))}
-  .media.audio{left:calc(1.2em + var(--sx));bottom:calc(1.2em + var(--sy));width:22em;height:12.4em}
+  /* audio only: the frame keeps playing, unseen (opacity 0, no clicks, tucked behind everything; never display:none, which
+     can make a frame reload or stall). The mini player card has the controls. */
+  .media.audio{left:auto;top:auto;right:calc(2px + var(--sx));bottom:calc(2px + var(--sy));width:320px;height:180px;opacity:0;pointer-events:none;z-index:0;box-shadow:none;animation:none;transition:none;border-radius:0}
   .media iframe{width:100%;height:100%;border:0;display:block}
   .media.full{inset:0!important;border-radius:0;z-index:30}
   .media.video{z-index:14}          /* a video you're watching stays above the night veil (13); music-only stays under it */
@@ -605,6 +619,16 @@
   .media.minip{inset:auto;right:calc(1.2em + var(--sx));bottom:calc(1.2em + var(--sy));width:26em;height:14.6em;border-radius:.9em}
   .media.minip .vtitle,.media.minip .vrate,.media.minip .vqual,.media.minip .pvol,.media.minip .vlib,.media.minip #vPop{display:none}
   .media.minip .vctl{padding:1em .4em .3em;font-size:.8em}
+  /* the corner window: drag it by the picture or this bar (public/winman.js); the bar shows with the controls */
+  .media .vgrip{display:none}
+  .media.minip .vgrip{display:flex;position:absolute;left:0;right:0;top:0;z-index:2;align-items:center;gap:.45em;padding:.35em 3em .35em .6em;font-size:.78em;color:#e6e8ff;
+    background:linear-gradient(rgba(4,5,14,.85),transparent);cursor:grab;opacity:0;transition:opacity .3s;pointer-events:none}
+  .media.minip.showctl .vgrip,.media.minip.paused .vgrip,.media.minip:focus .vgrip,.media.minip:focus-within .vgrip{opacity:1;pointer-events:auto}
+  .media.minip .vgrip b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .media.minip .vgrip .dots{opacity:.7;letter-spacing:-.1em}
+  .media.minip.wm-dragging{cursor:grabbing}
+  .media.minip:focus .vctl{opacity:1;transform:none;pointer-events:auto}
+  .media.minip #vAudio,.media.minip #vMin,.media.minip #vFull{display:grid}
   .media.audio .vclose{width:2em;height:2em;font-size:.85em;top:.4em;right:.4em}
   .media .np2{position:absolute;left:0;right:0;bottom:0;padding:.6em 1em;background:linear-gradient(transparent,rgba(0,0,0,.85));font-size:.85em;color:#ddd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
 
@@ -758,7 +782,7 @@
     <div class="card np" id="np" hidden>
       <div class="nptop">
         <img id="npArt" alt="">
-        <div class="meta"><div class="label" id="npSource">Spotify</div><b id="npTitle"></b><span id="npArtist"></span><button class="npnext" id="npNext" title="Up next: open the queue" hidden></button></div>
+        <div class="meta"><div class="label"><i class="npico" id="npIcon" aria-hidden="true"></i><span id="npSource">Spotify</span></div><b id="npTitle"></b><span id="npArtist"></span><button class="npnext" id="npNext" title="Up next: open the queue" hidden></button></div>
         <div class="eq"><i></i><i></i><i></i><i></i><i></i></div>
       </div>
       <div class="pbar"><span id="npPos">0:00</span><input type="range" class="seek" id="npSeek" min="0" max="1000" value="0" step="1" aria-label="Position in the song"><span id="npDur">0:00</span></div>
@@ -769,8 +793,10 @@
         <button class="pb" data-p="next" title="Next" aria-label="Next"></button>
         <button class="pb sm" data-p="repeat" id="npRep" title="Repeat" aria-pressed="false"></button>
         <span class="pvol"><i class="vi" data-p="mute" title="Mute"></i><input type="range" id="npVol" min="0" max="100" step="1" aria-label="Music volume"></span>
-        <button class="pb sm" data-p="video" id="npVid" title="Show the video" hidden></button>
-        <button class="pb sm" data-p="library" title="Library: playlists, search, videos, queue" aria-label="Open the library"></button>
+        <span class="npmodes" id="npModes" role="group" aria-label="How the video is shown" hidden><button class="pb sm" data-p="view" data-v="big" title="Big (B)" aria-label="Show the video big"></button><button class="pb sm" data-p="view" data-v="corner" title="Small, in the corner (I)" aria-label="Show the video small in the corner"></button><button class="pb sm" data-p="view" data-v="audio" title="Audio only (A)" aria-label="Audio only: hide the video"></button></span>
+        <button class="pb sm" data-p="like" id="npLike" title="Like" aria-label="Like or save this" aria-pressed="false" hidden></button>
+        <button class="pb sm npq" data-p="queue" id="npQueue" title="The queue" aria-label="Open the queue" hidden>☰</button>
+        <button class="pb sm" data-p="library" title="Open in the Music &amp; Video browser" aria-label="Open in the Music and Video browser"></button>
         <button class="pb sm" data-p="stop" title="Stop" aria-label="Stop"></button>
       </div>
     </div>
@@ -804,6 +830,7 @@
   <div id="yt"></div>
   <div class="vlayer" id="vLayer" title="Click to play or pause · double-click for full screen"></div>
   <div class="np2" id="np2"></div>
+  <div class="vgrip" id="vGrip" aria-hidden="true"><span class="dots">⠿</span><b id="vGripTitle"></b></div>
   <button class="vclose" id="vClose" title="Close the video (Esc)" aria-label="Close the video">✕</button>
   <button class="vlib" data-p="library" title="Browse videos, recent videos and the queue" aria-label="Browse videos">☰</button>
   <div class="vctl" id="vCtl">
@@ -822,8 +849,8 @@
       <button class="pb" data-p="repeat" id="vRep" title="Repeat (R)" aria-label="Repeat" hidden></button>
       <button class="pb" data-p="shuffle" id="vShuf" title="Shuffle (S)" aria-label="Shuffle" hidden></button>
       <button class="pb vqbtn" data-p="queue" id="vQueueBtn" title="The queue (Q)" aria-label="The queue" hidden>☰</button>
-      <button class="pb" data-p="minimize" id="vMin" title="Minimize to the corner (I)" aria-label="Minimize the video"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="12" y="12" width="7" height="5" rx="1"/></svg></button>
-      <button class="pb" data-p="audio" id="vAudio" title="Music only: hide the picture" aria-label="Music only"></button>
+      <button class="pb" data-p="minimize" id="vMin" title="Small, in the corner (I)" aria-label="Put the video in the corner"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="12" y="12" width="7" height="5" rx="1"/></svg></button>
+      <button class="pb" data-p="audio" id="vAudio" title="Audio only: hide the picture, keep the sound (A)" aria-label="Audio only"></button>
       <button class="pb" data-p="full" id="vFull" title="Full screen (F)" aria-label="Full screen"></button>
       <button class="pb popout" data-p="popout" id="vPop" title="Pop out into your browser" aria-label="Pop out into your browser">↗</button>
       <button class="pb" data-p="stop" title="Close the video (Esc)" aria-label="Close the video"></button>
@@ -839,6 +866,8 @@
 <script src="/voices.js"></script>
 <script src="/floor.js"></script>
 <script src="/wakeword.js"></script>
+<script src="/view-words.js"></script>
+<script src="/winman.js"></script>
 <script src="/tv.js"></script>
 <script src="/assistant-name.js"></script>
 <script src="/avatar-core.js"></script>
@@ -855,6 +884,7 @@
 <script src="/results.js"></script>
 <script src="/medialib.js"></script>
 <script src="/viewer.js"></script>
+<script src="/gallery.js"></script>
 <script src="/videos.js"></script>
 <script src="/mediabrowser.js"></script>
 <script src="/images.js"></script>
@@ -870,6 +900,7 @@
 <script src="/mail.js"></script>
 <script src="/mail-compose.js"></script>
 <script src="/updates.js"></script>
+<script src="/winman-panels.js"></script>
 <script src="/file-access-check.js"></script>
 <script src="/lantern.js"></script>
 <script src="/secrets-fx.js"></script>
