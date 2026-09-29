@@ -41,11 +41,29 @@
   const OAUTH = ["google", "microsoft"];
   const REQUIRED = { notion: ["token"], todoist: ["token"], homeassistant: ["url", "token"], google: ["clientId", "clientSecret"], microsoft: ["clientId"], mail: ["email", "password"] };
 
+  // Signing in to YouTube and Spotify in Dayspring's media window (lib/mediasignin.mjs): "sign in once, stay signed in".
+  // He signs in himself on the service's own page; Dayspring only notices when he's done (never a password or a cookie).
+  const webSignin = async (svc) => { try { return (await api("/media/signin"))[svc] ?? null; } catch { return null; } };
+  const SVC = { youtube: "YouTube", spotify: "Spotify" };
+  const startSignin = async (svc) => { const r = await post("/media/signin", { service: svc }); return r.text ?? `The ${SVC[svc]} sign-in is open in Dayspring's media window.`; };
+  const signout = async (svc) => { await post("/media/signout", { service: svc }); return `Signed out of ${SVC[svc]} in Dayspring's media window. Nothing else changed.`; };
+  const checkSignin = async (svc) => { const r = await post("/media/signin", { service: svc, check: true }); return r.signedIn ? `✓ Signed in${r.account ? " as " + r.account : ""}` : `Not signed in to ${SVC[svc]}.`; };
+  function signinLines(svc, s, drawer = false) {
+    const w = s?.web ?? {};
+    const web = w.signedIn ? `✓ Signed in${w.account ? " as " + esc(w.account) : ""}` : w.expired ? "The sign-in ended" : w.signingIn ? "Waiting for you to finish signing in…" : "Not signed in";
+    const label = svc === "spotify" ? "Spotify web player" : "YouTube (media window)";
+    const api2 = svc === "spotify" ? `<div class="hint">Spotify connected (library and history): ${s?.signedIn ? "✓ yes" : "not yet"}</div>` : "";
+    const btns = w.signedIn ? `<button type="button" class="btn small ghost" data-cact="webSignout" data-action="webSignout">Sign out</button>${drawer ? ` <button type="button" class="btn small ghost" data-action="webCheck">Check now</button>` : ""}`
+      : `<button type="button" class="btn small${drawer ? " primary" : ""}" data-cact="webSignin" data-action="webSignin">Sign in to ${SVC[svc]}</button>`;
+    return `<div class="signin-line" data-svc="${svc}">${api2}<div class="hint">${label}: ${web}</div><div class="app-acts">${btns}</div>${drawer ? `<p class="hint">Signing out here clears only ${SVC[svc]}'s cookies and storage in Dayspring's media window. Signing out of your ${svc === "youtube" ? "Google" : "Spotify"} account from its security page (all devices) also ends Dayspring's session.</p>` : ""}</div>`;
+  }
   // Spotify, YouTube, Phone Link, Discord, Tune in, Claude Code, Codex: { load() → status, pill(s), drawer parts, connect, disconnect }
   const CUSTOM = {
     spotify: { name: "Spotify", icon: "🎵", what: "Play your music, playlists and podcasts by voice.", guide: "/help#music",
-      load: async () => (await api("/player/status")).spotify,
-      pill: (s) => (s.signedIn ? ["on", `Connected${s.name ? " as " + s.name : ""}`] : s.configured ? ["warn", "Sign-in not finished"] : ["off", "Not connected"]),
+      load: async () => ({ ...(await api("/player/status")).spotify, web: await webSignin("spotify") }),
+      pill: (s) => (s.signedIn ? ["on", `Connected${s.name ? " as " + s.name : ""}`] : s.configured ? ["warn", "Sign-in not finished"] : s.web?.signedIn ? ["on", "Web player signed in"] : ["off", "Not connected"]),
+      cardExtra: (s) => signinLines("spotify", s),
+      extra: (s) => signinLines("spotify", s, true),
       steps: (s) => [
         { text: "Open Spotify's developer dashboard and sign in with your Spotify account.", link: "https://developer.spotify.com/dashboard", linkLabel: "Open the Spotify dashboard" },
         { text: "Click Create app. Any name works (e.g. Dayspring). Tick Web API and Web Playback SDK." },
@@ -56,19 +74,22 @@
       notes: ["Playing full songs needs Spotify Premium. Free accounts can still browse and control Spotify on another device."],
       connect: async (v, s) => { if (v.clientId) await post("/setup/key", { name: "SPOTIFY", value: v.clientId.trim() }); else if (!s.configured) throw new Error("Paste the Client ID from your Spotify app first."); await post("/player/spotify/login", {}); return { wait: "The Spotify sign-in opened in your browser. Approve it there and this card updates by itself." }; },
       disconnect: () => post("/player/spotify/logout", {}),
+      actions: { webSignin: () => startSignin("spotify"), webSignout: () => signout("spotify"), webCheck: () => checkSignin("spotify") },
     },
     youtube: { name: "YouTube", icon: "▶️", what: "Play videos and music videos on the screen; optional search key for better results.", guide: "/help#music",
-      load: async (ctx) => ({ key: Boolean(ctx.keys?.YOUTUBE_API_KEY?.set) }),
-      pill: (s) => (s.key ? ["on", "Connected (search key)"] : ["off", "Not connected"]),
+      load: async (ctx) => ({ key: Boolean(ctx.keys?.YOUTUBE_API_KEY?.set), web: await webSignin("youtube") }),
+      pill: (s) => (s.web?.signedIn ? ["on", `Signed in${s.web.account ? " as " + s.web.account : ""}`] : s.web?.expired ? ["warn", "Sign-in ended"] : s.key ? ["on", "Connected (search key)"] : ["off", "Not connected"]),
+      cardExtra: (s) => signinLines("youtube", s),
+      extra: (s) => signinLines("youtube", s, true),
       steps: () => [
-        { text: "Optional: sign in to YouTube in the display's browser, so Premium (no ads) and your playlists work.", action: "ytLogin", actionLabel: "Open the YouTube sign-in" },
+        { text: "Optional: sign in to YouTube in Dayspring's media window, so your watch history, playlists, subscriptions and Premium (no ads) work. You sign in yourself; Dayspring never sees your password and stays signed in until you sign out.", action: "ytLogin", actionLabel: "Sign in to YouTube" },
         { text: "Optional: for better search, make a free YouTube Data API key in Google Cloud and paste it below.", link: "https://console.cloud.google.com/apis/library/youtube.googleapis.com", linkLabel: "Open Google Cloud" },
       ],
       fields: [{ key: "key", label: "YouTube Data API key (optional)", secret: true, placeholder: "AIza…" }],
       notes: ["YouTube plays without either step. They just make it better."],
       connect: async (v, s, ctx) => { if (!v.key) throw new Error("Paste the API key first, or use the sign-in button above."); ctx.keys = (await post("/setup/key", { name: "YOUTUBE", value: v.key.trim() })).keys; },
       disconnect: async (ctx) => { ctx.keys = (await post("/setup/key", { name: "YOUTUBE", value: "" })).keys; },
-      actions: { ytLogin: () => post("/media/login", { service: "youtube" }) },
+      actions: { ytLogin: () => startSignin("youtube"), webSignin: () => startSignin("youtube"), webSignout: () => signout("youtube"), webCheck: () => checkSignin("youtube") },
     },
     phone: { name: "Phone Link", icon: "📱", what: "Hear who's texting and calling, from your phone through Windows Phone Link.", guide: "/help#phone",
       load: async (ctx) => ({ on: Boolean(ctx.owner?.features?.phone) }),
@@ -188,6 +209,7 @@
       <div class="app-hd"><span class="app-ic" aria-hidden="true">${a.icon ?? "🔌"}</span><h3 id="ac-${id}">${esc(c ? c.name : a.name)}</h3></div>
       <p class="app-what">${esc(what)}</p>
       <span class="pill ${kind}" role="status"><i aria-hidden="true"></i>${esc(text)}</span>
+      ${c?.cardExtra ? c.cardExtra(a.status ?? {}) : ""}
       <div class="app-acts">
         ${on ? `<button type="button" class="btn small" data-act="manage">Manage</button>` : `<button type="button" class="btn small primary" data-act="setup">${kind === "warn" ? "Fix" : c?.cli && !a.status?.installed ? "Set up" : c?.connectLabel === "Turn on" ? "Turn on…" : "Connect"}</button>`}
         ${canOff && !c?.cli ? `<button type="button" class="btn small ghost danger" data-act="off">${esc(offLabel)}</button>` : ""}
@@ -215,6 +237,12 @@
     for (const cardEl of only ? [only] : $$(".app-card", scope)) {
       const id = cardEl.dataset.id;
       for (const b of $$("[data-act]", cardEl)) b.onclick = () => (b.dataset.act === "off" ? confirmOff(b, id) : openDrawer(id, b));
+      for (const b of $$("[data-cact]", cardEl)) b.onclick = async () => {
+        const fn = CUSTOM[id]?.actions?.[b.dataset.cact]; if (!fn) return;
+        b.disabled = true;
+        try { const r = await fn(apps[id]?.status ?? {}); ctx.toast?.(typeof r === "string" ? r : "Done ✓"); } catch (e) { ctx.toast?.(friendly(e)); }
+        await refresh(id);
+      };
     }
   }
   // Disconnect asks once, in place (no pop-up): "Disconnect?" → "Yes, disconnect" for a few seconds
@@ -435,7 +463,8 @@
     const want = new URLSearchParams(location.search).get("app");
     if (want && apps[want]) openDrawer(want, $(`.app-card[data-id="${want}"] button`, root));
     // live: the server says when a connection changes (a browser sign-in finishing, a voice command)
-    try { es?.close(); es = new EventSource("/api/events"); es.addEventListener("connections", async () => { if (!root?.isConnected) { es.close(); return; } for (const id of Object.keys(apps)) if (!CUSTOM[id]) await refresh(id); }); } catch { /* fine without */ }
+    try { es?.close(); es = new EventSource("/api/events"); es.addEventListener("connections", async () => { if (!root?.isConnected) { es.close(); return; } for (const id of Object.keys(apps)) if (!CUSTOM[id]) await refresh(id); });
+      es.addEventListener("mediasignin", async (e) => { if (!root?.isConnected) { es.close(); return; } let v = {}; try { v = JSON.parse(e.data); } catch { /* fine */ } if (v.service && apps[v.service]) { await refresh(v.service); if (v.signedIn && v.text) ctx.toast?.(v.text); } }); } catch { /* fine without */ }
   }
   document.addEventListener("keydown", (e) => {
     if (!openId) return;

@@ -639,6 +639,12 @@
         <div class="msg" id="m"></div>`,
       mount: () => skyPanel() },
 
+    // ------------------------------------------------------------------------------------------------ look & feel
+    // colour themes, the avatar, a look per personality, expression mode (public/looks-settings.js; features "themes", "avatar")
+    { id: "looks", icon: "🌈", title: "Look & feel", settingsOnly: true, enabled: () => window.DayspringLooks?.enabled !== false,
+      render: () => window.DayspringLooks ? window.DayspringLooks.html() : `<h1>Look &amp; feel</h1><p class="lead">This page didn't load. Reload to try again.</p>`,
+      mount: () => { window.DayspringLooks?.mount($("#card"), { toast }); onLeave(() => window.DayspringLooks?.leave()); } },
+
     // ------------------------------------------------------------------------------------------------ notifications
     { id: "notifications", icon: "🔔", title: "Notifications", settingsOnly: true,
       render: () => `

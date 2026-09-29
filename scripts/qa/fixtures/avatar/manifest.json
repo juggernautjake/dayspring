@@ -1,0 +1,53 @@
+{
+  "three-frames.gif": {
+    "frames": 3,
+    "loopMs": 500,
+    "loops": 0,
+    "animated": true
+  },
+  "zero-delay.gif": {
+    "frames": 4,
+    "loopMs": 400,
+    "loops": 0,
+    "animated": true
+  },
+  "still.gif": {
+    "frames": 1,
+    "loopMs": 0,
+    "loops": 1,
+    "animated": false
+  },
+  "loop-once.gif": {
+    "frames": 2,
+    "loopMs": 100,
+    "loops": 1,
+    "animated": true
+  },
+  "local-tables.gif": {
+    "frames": 2,
+    "loopMs": 1000,
+    "loops": 0,
+    "animated": true
+  },
+  "long-loop.gif": {
+    "frames": 4,
+    "loopMs": 6000,
+    "loops": 0,
+    "animated": true
+  },
+  "anim.webp": {
+    "frames": 3,
+    "loopMs": 600,
+    "animated": true
+  },
+  "clip.mp4": {
+    "loopMs": 2500,
+    "animated": true
+  },
+  "avatar-idle.png": {
+    "type": "image/png"
+  },
+  "avatar-listen.png": {
+    "type": "image/png"
+  }
+}

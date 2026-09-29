@@ -135,6 +135,19 @@ Each group has its own **Reset**, and **Reset the whole screen layout** puts eve
 | **Schedule-aware vibe** | Changes the vibe during kinds of blocks, for example Focus while studying. |
 | **Preview** | Shows a look for 20 seconds without saving it. |
 
+## Look & feel
+
+`?s=looks` · Settings only. Full walkthrough: [Look and feel: themes and avatars](look-and-feel.md)
+
+| Group | Settings |
+|---|---|
+| **Colour theme** | 16 themes (Default, Rose, Sage, Forest, Ocean, Sunset Coral, Lavender, Mint, Harvest Gold, Crimson, Slate, Cherry Blossom, Emerald Night, Candy, High Contrast, Light), **Surprise me**, **Preview on the Dayspring screen**, **Back to the default look**. |
+| **Make your own theme** | A main colour, a second colour and an optional background colour; Dark, Light or Automatic; a name. A sample and a readability check show as you pick. |
+| **Avatar** | The orb (default), Aurora flame, Sun ring, Blob buddy, Waveform halo, Pixel pal, or your picture, each with a live preview; **Test talking** and **Test listening** on the screen. |
+| **Your picture** | A main picture, and optionally one each for Listening, Thinking, Talking, Off, Stopped listening, Error and Sleeping; *Fit* and *Shape*. |
+| **Per personality** | An avatar and a theme for any personality; a saved personality can remember the look in use. |
+| **Expression mode** | Off until you turn it on. The highest rating (G, PG, PG-13), how often, how much space to keep, checking each picture, finding new ones on the web, your own pictures, events; **Build my expression library**; see and remove what's kept; add your own. |
+
 ## Notifications
 
 `?s=notifications` · Settings only. Full walkthrough: [Compact mode, quiet mode and notifications](quiet-and-notifications.md)

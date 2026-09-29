@@ -12,7 +12,7 @@
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   // Esc closes only what's on top. Every open overlay is found here and the top one (highest layer, then the one
   // added last) is marked on the key event (e.dsTop); each overlay's own Esc handler only acts when it's the one.
-  const ESC_ROOTS = ".wconfirm, .fitcal, #dsUpdate, .stpop, .tunepop, .morebox, #soundPanel, .fyl, #lib, .rpanel, #reader, #detail, #media.video, #calwrap, #pagewrap, #dsImages, #dsGifs";
+  const ESC_ROOTS = ".wconfirm, .fitcal, #dsUpdate, .stpop, .tunepop, .morebox, #soundPanel, .fyl, #lib, .rpanel, #reader, #detail, #media.video, #calwrap, #pagewrap, #dsImages, #dsGifs, #dsMB";
   const shown = (el) => el.isConnected && !el.hidden && !el.closest("[hidden]") && getComputedStyle(el).display !== "none" && getComputedStyle(el).visibility !== "hidden";
   const layerOf = (el) => { for (let x = el; x && x !== document.body; x = x.parentElement) { const z = parseInt(getComputedStyle(x).zIndex, 10); if (!Number.isNaN(z)) return z; } return 0; };
   window.dsTopOverlay = () => {
@@ -1341,6 +1341,7 @@
   const SPARKS = Array.from({ length: 70 }, (_, i) => ({ a: (i / 70) * Math.PI * 2, r: 0.25 + Math.random() * 0.5, s: 0.2 + Math.random() * 0.8, z: Math.random(), on: Math.random() }));
   function stage(mode, caption, chip) {
     stageMode = mode;
+    window.dispatchEvent(new CustomEvent("ds-stage", { detail: { mode, text: caption } }));   // (avatar.js: expression mode)
     const pr = $("#presence");
     pr.className = "presence " + (mode === "off" ? "idle" : mode);
     if (caption !== undefined) { clearTimeout(capFade); $("#cap").classList.add("show"); $("#cap").innerHTML = caption.split(/\s+/).map((w) => `<span>${esc(w)}</span>`).join(" "); }
@@ -1382,6 +1383,7 @@
     return Math.max(0, Math.min(1, (l.db - floorDb() - 4) / 30));
   }
   const freq = new Uint8Array(256), wave = new Uint8Array(512);
+  window.dsVoiceFreq = freq; window.dsVoiceWave = wave;   // the voice as it's heard (avatar.js reads them for the other avatars)
   function blob(cx, cy, R, t, phase, amp, voice) {
     vx.beginPath();
     const n = 180, sp = M.speed;
@@ -1417,9 +1419,13 @@
     let avg = 0; for (let i = 2; i < 60; i++) avg += freq[i]; avg /= 58 * 255;
     level += (avg - level) * 0.22;
     energy = Math.max(energy, level * 0.6);
+    window.dsVoice = { mode: stageMode, level, live: Boolean(live), mood: moodName };
+    // another avatar is showing in the orb's place (Settings → Look & feel, avatar.js): the orb rests, its level still counts
+    if (window.dsAvatarActive) { vizRaf = requestAnimationFrame(drawViz); return; }
     const breathe = 1 + Math.sin(t / (1800 / Math.max(0.3, M.speed))) * 0.025;
     const R = W * 0.19 * breathe * (1 + level * 0.18);
-    const A = M.a, B = M.b, S = M.sat, G = M.glow;
+    // a colour theme moves the orb's indigo and violet to its own accents (the default theme leaves them exactly as they are)
+    const A = window.dsThemeHue ? window.dsThemeHue(M.a) : M.a, B = window.dsThemeHue ? window.dsThemeHue(M.b) : M.b, S = M.sat, G = M.glow;
 
     // soft halo
     const halo = vx.createRadialGradient(cx, cy, R * 0.5, cx, cy, R * 2.5);
@@ -2314,7 +2320,7 @@
   document.addEventListener("keydown", (e) => {
     const box = $("#media");
     if (box.hidden || !(P.source === "youtube" || (P.source === "file" && P.video)) || !P.video) return;
-    if (!$("#calwrap").hidden || !$("#pagewrap").hidden || detailOpen() || window.dsLibrary?.isOpen?.() || window.dsVideoPanels?.isOpen?.()) return;
+    if (!$("#calwrap").hidden || !$("#pagewrap").hidden || detailOpen() || window.dsLibrary?.isOpen?.() || window.dsVideoPanels?.isOpen?.() || window.dsMB?.isOpen?.()) return;
     if (e.ctrlKey || e.altKey || e.metaKey) return;
     if (/INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName ?? "") && e.key !== "Escape") return;
     const k = e.key; let done = true;

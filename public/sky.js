@@ -178,6 +178,15 @@
     if (st) { pal.hor = mix(pal.hor, hex(st.hor), st.k * (1 - greyAmt)); for (const k of ["top", "mid", "hor"]) pal[k] = sat(pal[k], st.s); if (st.a1) pal.a1 = mix(pal.a1, hex(st.a1), 0.22); if (st.a2) pal.a2 = mix(pal.a2, hex(st.a2), 0.3); }
     const warm = p.colors.warmth;
     if (warm) for (const k of ["top", "mid", "hor", "light", "a1", "a2"]) pal[k] = mix(pal[k], warm > 0 ? [255, 176, 112] : [127, 176, 255], Math.abs(warm) * 0.18);
+    // a colour theme (Settings → Look & feel) leans the sky and the scenery toward its own colour, most at night; the
+    // default theme has no tint, so the sky is exactly as it always was
+    const TH = window.dsTheme?.tokens;
+    if (TH?.skyMix && /^#[0-9a-f]{6}$/i.test(TH.sky)) {
+      const tc = hex(TH.sky), k = TH.skyMix * (1 - dayL * 0.55);
+      for (const kk of ["top", "mid", "hor"]) pal[kk] = mix(pal[kk], tc, k * (kk === "hor" ? 0.6 : 1));
+      if (/^#[0-9a-f]{6}$/i.test(TH.accent)) pal.a1 = mix(pal.a1, hex(TH.accent), 0.6);
+      if (/^#[0-9a-f]{6}$/i.test(TH.secondary)) pal.a2 = mix(pal.a2, hex(TH.secondary), 0.6);
+    }
     const bright = clamp01(Math.max(lum(pal.mid), lum(pal.hor) * 0.85) * 1.9) * p.colors.brightness ** 2;
     // wind: which way it blows on screen (east → right), how hard, gusting
     const toward = ((w.windDir ?? 225) + 180) * RAD;
@@ -212,6 +221,8 @@
       "--skyb": p.colors.brightness.toFixed(3), "--skys": p.colors.saturation.toFixed(3), "--skydim": p.colors.dim.toFixed(3),
     };
     if (p.colors.accentFollows) Object.assign(vars, { "--indigo": toHex(mix(hex("#7c8cff"), pal.a1, 0.75)), "--violet": toHex(mix(hex("#a78bfa"), pal.a2, 0.7)), "--blue": toHex(mix(hex("#6ea8fe"), pal.a1, 0.5)) });
+    // a colour theme: every colour the sky sets goes through the theme's mapper too (same contrast, the theme's hues)
+    if (window.dsThemeMap) for (const [k, v] of Object.entries(vars)) { if (!/^--(skyb|skys|skydim|vig|scrim|glint)$/.test(k)) vars[k] = themed(v); }
     const key = JSON.stringify(vars) + p.colors.accentFollows;
     if (key === uiKey) return;
     uiKey = key;
@@ -221,6 +232,15 @@
     try { const cd = document.getElementById("calframe")?.contentDocument?.documentElement; if (cd) for (const k of ["--indigo", "--violet"]) vars[k] ? cd.style.setProperty(k, vars[k]) : cd.style.removeProperty(k); } catch { /* not open */ }
   }
   document.getElementById("calframe")?.addEventListener("load", () => { uiKey = ""; if (W) applyUI(); });
+  // a colour passed through the theme's mapper ("#rrggbb" or "rgba(r,g,b,a)")
+  function themed(v) {
+    const m = /^#([0-9a-f]{6})$/i.exec(v) ? [...hex(v), 1] : (/^rgba?\(([^)]*)\)$/.exec(v)?.[1].split(",").map(Number) ?? null);
+    if (!m || m.length < 3 || m.some((n) => !Number.isFinite(n))) return v;
+    const c = window.dsThemeMap([m[0], m[1], m[2], m[3] ?? 1]).slice(0, 3);
+    return (m[3] ?? 1) >= 0.999 ? toHex(c) : rgba(c, m[3]);
+  }
+  // a new theme: the sky, the scenery and the screen's colours are worked out again
+  addEventListener("ds-theme", () => { uiKey = ""; landKey = ""; cloudKey = ""; try { if (W) resolve(); } catch { /* next tick */ } });
 
   // ---------------------------------------------------------------------------------------------------- stars, moon, sun
   let stars = null;

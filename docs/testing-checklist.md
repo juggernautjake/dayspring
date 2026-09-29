@@ -55,6 +55,9 @@ The same list is on the **Testing** page (Settings → This app → Testing, in 
 | Multi-device remote control | In progress (dev) | 11 |
 | Sharing with friends | In progress (dev) | 3 |
 | Finding videos, YouTube playlists and the video queue | Beta (New) | 7 |
+| The Music & Video browser | Beta (New) | 14 |
+| Colour themes | Beta (New) | 6 |
+| Avatars and expression mode | Beta (New) | 11 |
 
 ## Schedule and calendar (Stable)
 
@@ -2368,5 +2371,334 @@ The same list is on the **Testing** page (Settings → This app → Testing, in 
 2. Try the keys J, L, C, I, Q, 0–9 and the CC, quality, repeat and ☰ buttons.
 
 **Expected:** Each does what it says (YouTube may keep its own choice of quality); the volume changes are the video's own, not the computer's.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+
+## The Music & Video browser (Beta (New))
+
+### mediabrowser-01: Open the Music & Video browser
+
+1. Click 🎵 Music by the clock (or in ⋯ More).
+2. Say "open my music".
+3. Drag the title bar, resize from the bottom-right corner, then double-click the title bar.
+
+**Expected:** A window with Spotify · YouTube · My files (and Drive when it's connected) opens inside the screen's margins. It moves, resizes and docks back; nothing goes past the edges.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### mediabrowser-02: Sign in to YouTube in the media window
+
+*You need: a YouTube account*
+
+> ⚠ Sign in only on Google's own page.
+
+1. Settings → Apps & connections → YouTube → Sign in to YouTube.
+2. Sign in yourself in the window that opens (2-step code too).
+3. Wait a few seconds.
+
+**Expected:** The card changes to "✓ Signed in as …" by itself and the media window tucks away. Dayspring never asked for the password.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### mediabrowser-03: Watch history, grouped by day
+
+*You need: a YouTube account, the internet*
+
+1. Say "show my YouTube history".
+2. Scroll to the bottom a few times.
+3. Type a word in "Search your history".
+
+**Expected:** Your history shows with thumbnails under Today, Yesterday and earlier days; more loads as you scroll; the search narrows it to matching videos.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### mediabrowser-04: Remove a video from watch history
+
+*You need: a YouTube account, the internet*
+
+> ⚠ Pick a video you don't mind removing.
+
+1. In Watch history, press 🗑 on one video.
+2. Open youtube.com/feed/history in your own browser.
+
+**Expected:** It disappears from the list and from YouTube's own history.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### mediabrowser-05: Grant access to your library and history (Spotify)
+
+*You need: Spotify connected*
+
+1. Open the browser → Spotify → Followed artists.
+2. If it shows "Grant access to your library and history", press it and approve in the browser page.
+3. Come back to Followed artists.
+
+**Expected:** After approving once, Followed artists, Top artists & songs and Recently played all load.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### mediabrowser-06: Spotify sections
+
+*You need: Spotify connected*
+
+1. Look at Playlists (Yours / Followed / Collaborative), Liked Songs (scroll to the end), Saved albums, Top artists & songs (4 weeks / 6 months / All time) and Recently played.
+
+**Expected:** Each list loads and keeps loading as you scroll; the top lists change with the time range; Recently played is grouped by day.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### mediabrowser-07: Live search and results
+
+*You need: the internet*
+
+1. Choose Spotify, type "hillsong" slowly.
+2. Switch to YouTube and type "dovetail joint".
+3. Press Load more on a group.
+
+**Expected:** Results appear as you type (after a short pause), grouped into Songs · Artists · Albums · Playlists · Genres and moods, or Videos · Channels · Playlists; Load more adds more.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### mediabrowser-08: Play, play next, queue, like, add to playlist
+
+*You need: Spotify connected, the internet*
+
+1. On a song: ▶, then ⤴ on another, then ＋ on a third.
+2. Press ♡ on a song, then ☰＋ and pick one of your playlists.
+3. On a YouTube video: ⤴ Play next.
+
+**Expected:** Each does what it says; the Queue section shows them; the song is in Liked Songs and in that playlist; the video is next in the video queue.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### mediabrowser-09: Voice numbers on whatever is showing
+
+*You need: the internet*
+
+1. With search results showing, say "play number 3".
+2. Say "queue number 2", then "like number 4", then "open number 1".
+
+**Expected:** Each acts on that numbered item in the browser.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### mediabrowser-10: History questions
+
+*You need: Spotify connected, a YouTube account*
+
+1. Say "what did I listen to yesterday".
+2. Say "what did I watch last night".
+3. Say "my top songs this month".
+
+**Expected:** Each opens the right list and says a short summary.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### mediabrowser-11: Multi-select
+
+*You need: Spotify connected*
+
+1. Press ☑ Select, pick three songs.
+2. Press Add to queue in the bar at the bottom.
+
+**Expected:** All three are queued and picking ends.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### mediabrowser-12: Sign out of one service only
+
+*You need: a YouTube account, a Spotify account*
+
+1. Settings → Apps & connections → YouTube → Sign out.
+2. Look at the Spotify card, then open the browser's Spotify tab.
+
+**Expected:** YouTube shows signed out; Spotify's web player is still signed in and plays. Your own Chrome is unchanged.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### mediabrowser-13: Study time and speakers
+
+*You need: a study block on the schedule*
+
+1. During a study block, try to play a YouTube video from the browser.
+2. Play a Spotify song from it.
+
+**Expected:** The video is refused with the reason; the song plays on the speaker Dayspring uses.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### mediabrowser-14: Keyboard and remote
+
+1. Open the browser, press ↓ to reach the list, ↑↓ to move, Enter to play, Space to pick, N/Q/L, Backspace, Esc.
+
+**Expected:** Everything works without a mouse; Esc closes a menu, then the open page, then the window.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+
+## Colour themes (Beta (New))
+
+### themes-01: The default look is unchanged
+
+1. Update Dayspring and open the Dayspring screen without changing anything in Settings → Look & feel.
+
+**Expected:** Everything looks exactly as before: the dawn indigo and violet colours and the orb.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### themes-02: Pick a theme in Settings
+
+1. Open Settings → Look & feel.
+2. Click Rose, then Sage, then Candy, then Light (Day), then High Contrast.
+
+**Expected:** Each theme shows at once in Settings and on the Dayspring screen (cards, text, buttons, the sky's tint and the orb's colours). All text stays easy to read, including small labels and times.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### themes-03: Themes everywhere
+
+1. With a theme on (say Ocean), open Dayspring mini, the guide (?), a pop-up (the Sound panel), the Schedule, and the GIF, mail and video windows if you have them.
+
+**Expected:** They all use the theme's colours.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### themes-04: Make your own theme
+
+1. In Settings → Look & feel, open Make your own theme.
+2. Pick a bright pink and a teal, leave the background off, and press Use this theme.
+3. Try a light background colour too.
+
+**Expected:** The sample and the readability check update as you pick (✓ Easy to read), and the theme shows everywhere. A light background colour makes a light theme.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### themes-05: Surprise me and preview
+
+1. Press Surprise me a few times.
+2. Press Preview on the Dayspring screen.
+
+**Expected:** A different theme each time (sometimes a brand-new mix). The preview shows on the Dayspring screen for about 15 seconds, then it goes back.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### themes-06: Themes by voice
+
+1. Say "switch to the pink theme", "green theme", "surprise me with a theme", then "default theme".
+
+**Expected:** Rose, Sage, a surprise, then the default look again. "Make it rain" still changes the sky, not the theme.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+
+## Avatars and expression mode (Beta (New))
+
+### avatar-01: The five avatars
+
+1. In Settings → Look & feel → Avatar, watch the live previews (▶ All of them), then pick each state chip.
+2. Pick the Blob buddy, then press Test talking on the screen.
+
+**Expected:** Every avatar animates in every state (idle, listening, thinking, talking, off, stopped, error, sleeping). The Dayspring screen's avatar talks for 5 seconds with no sound.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### avatar-02: Avatars follow the voice
+
+*You need: a microphone and speakers*
+
+1. Pick the Aurora flame, the Sun ring, the Waveform halo and the Pixel pal in turn, and ask Dayspring something each time.
+
+**Expected:** Each one moves with the voice while it talks, leans in while it listens, circles while it thinks, and goes back to breathing after.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### avatar-03: Your picture
+
+*You need: a picture of your own*
+
+1. Upload a JPEG or PNG as the Main picture.
+2. Ask Dayspring something.
+
+**Expected:** The picture becomes Dayspring's face. It grows and shrinks gently with the voice while talking, and gets a little bigger while listening.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### avatar-04: A picture per state
+
+*You need: two or three pictures of your own*
+
+1. Upload a different picture for Listening and for Off.
+2. Say "Dayspring", then turn Dayspring Off with the badge.
+
+**Expected:** The listening picture shows while it listens, the Off picture when it's off, and the main picture otherwise, each crossfading smoothly.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### avatar-05: A look for a personality
+
+1. Under Per personality, give the Cowboy Harvest Gold and the Pixel pal.
+2. Switch to the Cowboy, then back to Default.
+
+**Expected:** The Cowboy brings its theme and avatar; Default goes back to your usual look.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### avatar-06: Avatars by voice
+
+1. Say "use the blob avatar", "change your avatar", then "go back to the orb".
+
+**Expected:** The blob, then the next avatar, then the orb.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### avatar-07: Expression mode is off until you turn it on
+
+1. Talk to Dayspring for a while without changing anything.
+
+**Expected:** No GIFs or memes ever appear.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### avatar-08: Expression mode with GIFs
+
+*You need: the internet*
+
+1. Turn on Express feelings with GIFs and memes (PG, How often: Whenever it clearly feels something).
+2. Press Build my expression library and wait for a few feelings to fill.
+3. Say "tell me a joke" and "I finished my study session!".
+
+**Expected:** Now and then a GIF that fits (laughing, proud, excited) shows in the avatar's place for a loop or two, then the avatar comes back. Pointing at it shows where it's from. It never covers anything else, and nothing unsuitable appears.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### avatar-09: GIFs that fit the personality
+
+*You need: the internet*
+
+1. Switch to the Cowboy and build the library for it.
+2. Then switch to the Robot and build it again.
+3. Open See and remove what's kept.
+
+**Expected:** The Cowboy's GIFs are western (cowboys, horses, yeehaw), the Robot's are robots and tech. Removing one keeps it from coming back.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### avatar-10: Your own GIFs
+
+*You need: a GIF of your own*
+
+1. Under Add your own, upload a GIF, say it shows Excited, for every personality.
+2. Say something exciting ("we did it!").
+
+**Expected:** Your GIF is used, for as long as its loop, and isn't repeated back to back.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### avatar-11: Back to the default look
+
+1. Press Back to the default look.
+
+**Expected:** The default theme, the orb, and expression mode off, straight away on every screen.
 
 - [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____

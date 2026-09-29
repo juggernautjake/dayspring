@@ -99,6 +99,8 @@ const POPUPS = [
     ctl: "header button, .dsv-chips button, .dsv-card .acts button", close: '#dsVideos [data-close]' },
   { name: "video queue", live: true, box: "#dsVQueue", open: (p) => p.evaluate((its) => window.dispatchEvent(new CustomEvent("ds-test-vqueue", { detail: { items: its, index: 2, total: its.length, repeat: "off", shuffle: false, source: { name: "Worship Songs" } } })), items(16, (n) => ({ n, id: "q" + n, videoId: null, title: `Queued video number ${n} with a longer title`, channel: "A channel", length: "5:02", current: n === 3 }))),
     ctl: "header button, li .ib", close: '#dsVQueue [data-qa="close"]' },
+  // (his own files: nothing to reach on the network; the window itself, its tabs, search, sections and window buttons)
+  { name: "Music & Video browser", live: true, box: "#dsMB", open: (p) => p.evaluate(() => window.dsMB.open({ source: "local" })), wait: 900, ctl: ".mb-bar button:not([hidden]), .mb-search button:not([hidden]), .mb-search input, .mb-nav button", close: "#dsMB .mb-x" },
   { name: "results card", live: true, box: ".rpanel", open: (p) => p.evaluate((its) => window.dispatchEvent(new CustomEvent("ds-test-results", { detail: { title: "Search results", summary: "Here's what I found.", items: its } })), items(14, (n) => ({ n, title: `Result number ${n}`, detail: "A detail line", url: "https://example.org/" + n }))), ctl: "header button", close: "#rsClose" },
   { name: "suggestion card", box: "#dsxSuggest", open: (p) => p.evaluate(() => window.dsExtras.before({ suggest: { prompt: "Which one did you mean?", options: Array.from({ length: 6 }, (_, i) => ({ n: i + 1, label: `Option number ${i + 1} with a longer label` })) } }, { typed: true })), after: (p) => p.evaluate(() => window.dsExtras.stop()) },
   // (✕ only closes a reader that has a document in it, so the empty one here is hidden again by hand)
@@ -108,6 +110,9 @@ const POPUPS = [
   { name: "the alarm", box: "#alarm .box", open: (p) => p.evaluate((L) => window.dispatchEvent(new CustomEvent("ds-test-alarm", { detail: { text: "Good morning. " + L } })), LONG), wait: 900, close: "#alarmOff" },
   { name: "“1 thing to tell you” sign", box: "#dsFloorPill", open: (p) => ev(p, "floor", { held: 1, items: ["the weather"] }), wait: 400, after: (p) => ev(p, "floor", { held: 0, items: [] }) },
   { name: "📐 Fit to screen", box: ".fitcal .fcbox", open: (p) => p.evaluate(() => window.dsScreen.open()), wait: 500, close: '.fitcal [data-a="cancel"]' },
+  // expression mode's GIF, shown in the avatar's place (public/avatar.js): inside the Dayspring panel, so inside the margins.
+  // (Dayspring mini without an AI hides the whole panel, and the GIF with it.)
+  { name: "expression GIF on the avatar", box: "#dsExpr.on", skip: (path) => path === "/mini", open: (p, w) => p.evaluate((s) => window.dsAvatar.express({ url: s, title: "A test GIF", plan: { ms: 12000 }, attribution: { text: "Dayspring QA" } }), svg(w, w)), wait: 700, ctl: "none", after: (p) => p.evaluate(() => window.dsAvatar.hideExpr()) },
 ];
 
 // until its entrance animation is over (slow in headless Chrome at 1920×1080: blurred glass is drawn in software)
@@ -181,6 +186,7 @@ for (const [path, w, h, margins] of CONFIGS) {
 
     for (const pp of POPUPS) {
       if (ONLY && !ONLY.test(pp.name)) continue;
+      if (pp.skip?.(path)) continue;
       const shown = await open(p, pp, w);
       if (!shown) { check(`${tag}: ${pp.name} opens`, false, "didn't appear"); await close(p, pp).catch(() => {}); continue; }
       if (process.env.OVERLAY_TRACE) console.log("TRACE", pp.name, JSON.stringify(await p.evaluate(async (s) => { const out = []; for (let i = 0; i < 12; i++) { const e = document.querySelector(s); out.push(e ? `${e.isConnected ? "" : "detached "}${e.closest("[hidden]") ? "hidden " : ""}op${getComputedStyle(e).opacity} w${Math.round(e.getBoundingClientRect().width)}` : "none"); await new Promise((r) => setTimeout(r, 150)); } return out; }, pp.box)));
@@ -193,7 +199,7 @@ for (const [path, w, h, margins] of CONFIGS) {
     }
 
     // live: a pop-up that's open while the margins change (and then the window is resized) moves to stay inside
-    const LIVE = POPUPS.filter((x) => (!ONLY || ONLY.test(x.name)) && x.live);
+    const LIVE = POPUPS.filter((x) => (!ONLY || ONLY.test(x.name)) && x.live && !x.skip?.(path));
     const m2 = m === UNEVEN ? { t: 12, b: 2, l: 3, r: 11 } : m === ZERO ? UNEVEN : { t: 2, b: 14, l: 12, r: 4 };
     const w2 = Math.round(w * 0.8), h2 = Math.round(h * 0.85);
     const detail = (r) => `box ${r.box}, safe ${r.safe}${[...r.outside, ...r.blocked].length ? " · " + [...r.outside, ...r.blocked].slice(0, 2).join(" | ") : ""}`;

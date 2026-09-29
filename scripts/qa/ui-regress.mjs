@@ -148,8 +148,11 @@ try {
     check("…and Esc closes it without saving anything", !(await p.evaluate(() => Boolean(document.querySelector(".fitcal")))) && after.marginTop === before.marginTop && after.overscan === before.overscan, `marginTop ${before.marginTop} → ${after.marginTop}`);
 
     // ---- Esc closes only what's on top ----------------------------------------------------------------------------------
+    // (with the Music & Video browser on, the Library's doors open the browser: it replaces the Library)
     await p.evaluate(() => window.dsLibrary.open());
     await p.waitForTimeout(600);
+    const mbOn = await p.evaluate(() => Boolean(window.dsMB));
+    if (mbOn) check("the Library's door opens the Music & Video browser (it replaces the Library)", await p.evaluate(() => window.dsMB.isOpen() && document.getElementById("lib")?.hidden !== false));
     await p.evaluate(() => document.querySelector("#mixBtn").click());
     await p.waitForTimeout(400);
     await p.evaluate(() => document.activeElement?.blur?.());

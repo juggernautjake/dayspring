@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<defs>
+<radialGradient id="g" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="#fff6e0"/><stop offset=".35" stop-color="#ffe08a"/><stop offset="1" stop-color="#ff9f5a"/></radialGradient>
+<radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset=".55" stop-color="#ffe08a" stop-opacity=".45"/><stop offset="1" stop-color="#ff9f5a" stop-opacity="0"/></radialGradient>
+</defs>
+<circle cx="100" cy="104" r="96" fill="url(#glow)"/>
+<g><animateTransform attributeName="transform" type="translate" values="0 0;0 -12;0 0" dur="0.5s" repeatCount="indefinite" calcMode="spline" keySplines=".4 0 .6 1;.4 0 .6 1"/>
+<circle cx="100" cy="106" r="62" fill="url(#g)"/>
+<ellipse cx="78" cy="78" rx="14" ry="8" fill="#fff" opacity=".45" transform="rotate(-30 78 78)"/>
+<ellipse cx="66" cy="120" rx="10" ry="6" fill="#ff8fa3" opacity=".55"/><ellipse cx="134" cy="120" rx="10" ry="6" fill="#ff8fa3" opacity=".55"/>
+<g><circle cx="78" cy="98" r="10" fill="#1b1733"/><circle cx="122" cy="98" r="10" fill="#1b1733"/><circle cx="75" cy="95" r="3" fill="#fff"/><circle cx="119" cy="95" r="3" fill="#fff"/></g>
+<path d="M78 120 q22 30 44 0 z" fill="#5a1d33"/><path d="M88 132 q12 8 24 0" fill="#ff8fa3"/>
+</g>
+<path d="M30 31 L33 37 L39 40 L33 43 L30 49 L27 43 L21 40 L27 37 Z" fill="#fff4c2"><animate attributeName="opacity" values="0;1;0" dur="2s" begin="0.00s" repeatCount="indefinite"/></path><path d="M168 43 L171 49 L177 52 L171 55 L168 61 L165 55 L159 52 L165 49 Z" fill="#fff4c2"><animate attributeName="opacity" values="0;1;0" dur="2s" begin="0.40s" repeatCount="indefinite"/></path><path d="M40 151 L43 157 L49 160 L43 163 L40 169 L37 163 L31 160 L37 157 Z" fill="#fff4c2"><animate attributeName="opacity" values="0;1;0" dur="2s" begin="0.80s" repeatCount="indefinite"/></path><path d="M165 149 L168 155 L174 158 L168 161 L165 167 L162 161 L156 158 L162 155 Z" fill="#fff4c2"><animate attributeName="opacity" values="0;1;0" dur="2s" begin="1.20s" repeatCount="indefinite"/></path><path d="M100 9 L103 15 L109 18 L103 21 L100 27 L97 21 L91 18 L97 15 Z" fill="#fff4c2"><animate attributeName="opacity" values="0;1;0" dur="2s" begin="1.60s" repeatCount="indefinite"/></path>
+</svg>

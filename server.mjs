@@ -96,6 +96,9 @@ import * as floor from "./lib/floor.mjs";
 import * as vision from "./lib/vision/index.mjs";
 import * as videoRoutes from "./lib/video/routes.mjs";   // finding videos, creators' channels, his YouTube playlists, the video queue (lib/video)
 import * as video from "./lib/video/index.mjs";
+import * as mbRoutes from "./lib/mediabrowser/routes.mjs";   // the Music & Video browser, and signing in to YouTube / Spotify in the media window
+import * as mbrowser from "./lib/mediabrowser/index.mjs";
+import * as mediasignin from "./lib/mediasignin.mjs";
 import * as medialibRoutes from "./lib/medialib/routes.mjs";   // the owner's own music and videos, and Google Drive streaming (lib/medialib)
 import * as peopleComms from "./lib/people/comms.mjs";
 import * as mailRoutes from "./lib/mail/routes.mjs";   // email: every mailbox, the Mail window, the editor, Settings → Email (lib/mail)
@@ -106,6 +109,7 @@ import * as remoteRoutes from "./lib/remote/routes.mjs";   // Settings → Devic
 import * as remote from "./lib/remote/index.mjs";
 import * as smarthomeRoutes from "./lib/devices/routes.mjs";   // smart plugs, strips, lights, scenes and schedules: /api/smarthome (lib/devices; feature "devices")
 import * as printerRoutes from "./lib/printers/routes.mjs";   // 3D printers (Bambu LAN, Ender over USB, OctoPrint, Klipper): /api/printers (lib/printers; feature "printers")
+import * as looksRoutes from "./lib/looks/routes.mjs";   // Settings → Look & feel: colour themes, avatars, expression mode (lib/looks; features "themes", "avatar")
 // A fresh install: create the data folder and any missing data files (empty, nothing personal) before anything runs.
 firstrun.ensure();
 // What each newly connected page is told first: who has the microphone and the listening state (so a page opened while
@@ -114,7 +118,7 @@ addHello("micOwner", () => lantern.micOwner());
 addHello("listenState", () => settings.get().listenState ?? "active");
 addHello("notices", () => firstrun.notices());
 // The Settings/setup wizard, updates and the in-app guide each answer their own /api routes.
-const ROUTES = [featureRoutes, setupRoutes, updateRoutes, helpRoutes, discordRoutes, callRoutes, callsRoutes, meetRoutes, studyRoutes, playerRoutes, ambientRoutes, windowRoutes, documentRoutes, connectorRoutes, fsRoutes, toolingRoutes, welcomeRoutes, discoverRoutes, calendarRoutes, lanternRoutes, aboutRoutes, intentRoutes, personaRoutes, xpRoutes, imageRoutes, activityRoutes, moneyRoutes, visionRoutes, socialRoutes, floorRoutes, devRoutes, videoRoutes, medialibRoutes, gifRoutes, mailRoutes, cameraRoutes, remoteRoutes, smarthomeRoutes, printerRoutes];
+const ROUTES = [featureRoutes, setupRoutes, updateRoutes, helpRoutes, discordRoutes, callRoutes, callsRoutes, meetRoutes, studyRoutes, playerRoutes, ambientRoutes, windowRoutes, documentRoutes, connectorRoutes, fsRoutes, toolingRoutes, welcomeRoutes, discoverRoutes, calendarRoutes, lanternRoutes, aboutRoutes, intentRoutes, personaRoutes, xpRoutes, imageRoutes, activityRoutes, moneyRoutes, visionRoutes, socialRoutes, floorRoutes, devRoutes, mbRoutes, videoRoutes, medialibRoutes, gifRoutes, mailRoutes, cameraRoutes, remoteRoutes, smarthomeRoutes, printerRoutes, looksRoutes];
 imageRoutes.setDeps({ openUrl: async (u) => (await import("./lib/browsers.mjs")).openUrl(u, owner.displayBrowser()) });
 gifRoutes.setDeps({ openUrl: async (u) => (await import("./lib/browsers.mjs")).openUrl(u, owner.displayBrowser()) });
 // 🎧 Tune in: what it hears addressed to Dayspring goes through the same assistant
@@ -732,6 +736,18 @@ async function api(req, res, url) {
     // mike winger", "pull up videos about biking", "queue 3 videos about dovetails", "play my Worship playlist", "show the
     // queue", "number 3", "not that", and playback controls for whatever is playing ("skip ahead 2 minutes", "captions
     // on", "1.5x", "how long is left"). His request comes first (lib/floor.mjs), as with everything he says.
+    // signing in to YouTube / Spotify in the media window, signing out, "am I signed in to YouTube?" (lib/mediasignin.mjs)
+    { const si = await mediasignin.command(message.trim()).catch((e) => ({ reply: e.message }));
+      const sr = typeof si === "string" ? si : si?.reply;
+      if (sr) { floor.owner("message", key); transcripts.log({ role: "dayspring", text: sr, surface: key }); return send(res, 200, { reply: sr, changes: [], usage: null, intent: "media.signin" }); } }
+    // the Music & Video browser: "open my music", "show my liked songs", "what did I listen to yesterday", "search YouTube
+    // for …", and "play number 3" / "queue number 2" / "like number 4" on whatever list it's showing (lib/mediabrowser)
+    { const mc = await mbrowser.command(message.trim()).catch((e) => { console.log(`media browser: ${e.message}`); return null; });
+      if (mc) {
+        floor.owner("message", key); floor.replied(key, mc);
+        transcripts.log({ role: "dayspring", text: mc.reply, surface: key });
+        return send(res, 200, { reply: mc.reply, changes: [], usage: null, intent: mc.intent ?? "mediabrowser", ...(mc.listen ? { listen: true } : {}) });
+      } }
     { const vc = await video.command(message.trim(), { surface: key }).catch((e) => { console.log(`video: ${e.message}`); return null; });
       if (vc) {
         floor.owner("message", key); floor.replied(key, vc);
@@ -993,6 +1009,8 @@ createServer(async (req, res) => {
   ambient.keepFresh();           // the living sky: sunrise/sunset, weather and wind for the owner's location
   discordRoutes.init();          // the Discord bot logs in only when a bot token is set; otherwise it stays off
   // his own music and videos: joins the music sources now, looks through the allowed folders a little later, slowly
+  // are YouTube and Spotify still signed in in the media window? (only while it's open; at most every few hours)
+  mediasignin.startHealth();
   features.startJob("medialib", "medialib.sources", () => import("./lib/medialib/skills.mjs").then((m) => m.registerSources()));
   setTimeout(() => features.startJob("medialib", "medialib.scan", () => import("./lib/medialib/library.mjs").then((l) => l.scanSoon())), 90_000).unref?.();
   if (TUNNEL) startTunnel();

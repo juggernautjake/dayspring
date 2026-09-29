@@ -103,6 +103,8 @@ Dayspring remembers the last 50 videos you played (on this computer only) and **
 
 ## The Library
 
+> **New:** the [Music & Video browser](music-and-video-browser.md) brings Spotify, YouTube (including your watch history), your own files and Drive together in one window, with search as you type. When it's on (Settings → This app → Features), the Library's buttons open it instead. The Library below is what you get when it's switched off.
+
 Open it with the 📚 button on the music card, the ☰ on a video, or by saying **"open my library"** ⚡. It sits over the left side of the screen, so the talk panel stays reachable. Close it with ✕, Esc, or **"close the library"** ⚡.
 
 **Music** (Spotify):

@@ -14,7 +14,7 @@ const target = resolve(process.argv[2] ?? DEFAULT_TARGET);
 if (target === resolve(DESK) || target.startsWith(resolve(DESK) + "\\")) { console.error("The export can't go inside the app itself."); process.exit(2); }
 
 // top-level entries never exported (personal, generated, or local tools)
-const SKIP_TOP = new Set(["data", ".env", "node_modules", "backups", "dist", "dist-out", "bin", "updates", "logs", "README.md", ".gitignore", ".env.example", ".git"]);
+const SKIP_TOP = new Set(["data", ".env", "node_modules", "backups", "dist", "dist-out", "bin", "updates", "logs", "qa-out", "README.md", ".gitignore", ".env.example", ".git"]);
 // anywhere: temp files, the audit (it tests against the owner's own data), Twilio-only docs
 const SKIP_ANY = [/^DayspringFinance$/i, /\.tmp\./i,/^vmswap/i, /twilio.*\.(md|html)$/i,/\.damaged-/i, /\.log$/i, /\.onnx$/i, /^(faces|comms)\.bin$/i, /^vision-cache$/i,   // (these three: face data, saved messages, face models)
   /^dev-(token|key)(\.|$)/i,   // the developer's token and key (they live in %LOCALAPPDATA%; never shipped even if one strays in)

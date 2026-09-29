@@ -2,6 +2,49 @@
 
 All notable changes to Dayspring. Versions follow [semantic versioning](https://semver.org).
 
+## 1.7.2 (2026-09-28)
+
+### In this version
+
+**The Music & Video browser.** One window for everything you listen to and watch: Spotify, YouTube, your own music and videos, and Google Drive. Open it with 🎵 Music by the clock, or say "open my music". See [The Music & Video browser](docs/music-and-video-browser.md).
+- **Search as you type.** Results appear while you type, grouped into Songs, Artists, Albums, Playlists and Genres and moods on Spotify, and Videos, Channels and Playlists on YouTube. Every result can be played, played next, queued, opened (an artist, album, playlist or channel opens right inside the browser), saved with ♥, or added to one of your playlists. "Load more" gets more, and your recent searches are kept.
+- **All of your Spotify.** Your playlists (your own, the ones you follow and collaborative ones), every one of your Liked Songs, saved albums, followed artists, your top artists and songs for the last 4 weeks, 6 months or all time, what you've played lately (grouped by day), the queue, and what's playing now with Like and a lyrics link.
+- **Your YouTube watch history.** A scrolling list grouped by day, with pictures, a search box for your history, and a button to remove a video from it. Also your playlists, Liked videos, Watch later, and your subscriptions (their latest videos, or the list of channels).
+- **Your own files and Drive** in the same window: recently added, songs, albums, artists and videos.
+- List or grid, sorting, YouTube filters (length, upload date, no Shorts), picking several at once, and a small now-playing bar with the controls.
+- **By voice:** "show my Spotify playlists", "show my liked songs", "my followed artists", "my top songs this month", "what did I listen to yesterday", "show my YouTube history", "what did I watch last night", "search Spotify for …", "search YouTube for …". Everything in the browser is numbered, so "play number 3", "queue number 2", "like number 4" and "open number 1" work on whatever is showing. These work without an AI brain too.
+- Works with a keyboard or a remote, stays inside the screen's margins, and follows the study-time rule and your chosen speakers.
+
+**Sign in to YouTube and Spotify once, and stay signed in.** Settings → Apps & connections now has **Sign in to YouTube** and **Sign in to Spotify**. Dayspring opens its own media window on the service's sign-in page, you sign in yourself (2-step codes too), and Dayspring notices when you're done and shows who's signed in. It never sees or keeps your password. If a sign-in ends, you're told once, with a **Sign in again** button. Each service has its own **Sign out**, which clears only that site. Settings shows the Spotify connection (your library and history) and the Spotify web player sign-in separately.
+
+**One more Spotify permission.** If you connected Spotify before this version, the browser shows **Grant access to your library and history** where it needs a permission you haven't given yet (such as your followed artists and top songs). Press it once and approve.
+
+**Good to know:** Spotify gives apps in Development Mode at most 10 search results at a time (Dayspring pages through them for you), and it keeps some things from them, like the songs in Spotify's own editorial playlists. When that happens, the browser says so and offers to open it in the Spotify web player instead. Your YouTube history and subscriptions are read from YouTube's own pages, so if YouTube changes those pages, a section may come up empty until Dayspring is updated.
+
+**Colour themes.** A new **Settings → Look & feel** (under *Sound & screen*) has 15 colour themes besides the usual dawn indigo and violet: Rose, Sage, Forest, Ocean, Sunset Coral, Lavender, Mint, Harvest Gold, Crimson, Slate, Cherry Blossom, Emerald Night, Candy, High Contrast and Light (Day). A theme colours everything: the Dayspring screen, Dayspring mini, Settings, the guide, pop-ups, the Schedule, and the mail, GIF and video windows. It also tints the living sky and the orb. Every theme is easy to read, because each colour keeps the brightness of the one it replaces. See [Look and feel](docs/look-and-feel.md).
+- **Make your own theme** from 2 or 3 colours. Dayspring works out the rest, and a readability check shows as you pick.
+- **Surprise me**, and **Preview on the Dayspring screen** (15 seconds, nothing kept).
+- **By voice:** "switch to the pink theme", "green theme", "surprise me with a theme", "light mode", "default theme".
+- Nothing changes until you pick something: the default look is exactly as it was.
+
+**Avatars.** The orb stays Dayspring's face unless you pick another. There are five new animated ones, each drawn for Dayspring: an **Aurora flame**, a **Sun ring**, a **Blob buddy** whose mouth moves with the words, a **Waveform halo** and a **Pixel pal**. Each one talks with the voice, leans in to listen, circles while thinking, and shows when it's off, stopped, reconnecting or asleep. The Settings page has live previews and a **Test talking** button.
+- **Your own picture:** upload a JPEG, PNG, WebP or GIF. It gently grows and shrinks while Dayspring talks, and gets a little bigger while it listens. You can also add a different picture for listening, thinking, talking, off, stopped, error and sleeping. It crossfades between them, and any state without its own picture uses the main one.
+- **A look for each personality:** give any personality its own avatar and theme. A saved personality (template) can remember them too.
+- **By voice:** "use the blob avatar", "change your avatar", "go back to the orb".
+
+**Expression mode (optional, off until you turn it on).** Dayspring can show how it feels with a GIF or meme in the avatar's place: excited, proud, laughing, puzzled, sympathetic, sleepy, "you've got this" and more. The feeling comes from what it's saying, the AI's hint when there is one, and events such as a badge, an alarm or an error that fixed itself.
+- Each personality has its own kind. The Cowboy's are western, the Robot's are tech and sci-fi, the Fair Maiden's are fairy tale, the Broski's are gym and bro, the Star Sage's are wise masters and starry skies, and the Default's are warm and wholesome. Every other personality and secret character has its own kind too.
+- Each GIF shows for a loop or two (Dayspring reads the loop's length from the GIF itself), or about as long as it's talking. It never covers anything else, and it doesn't repeat one it showed recently.
+- Every GIF is checked before it's kept. Its title, tags and page must fit the personality and the feeling and be clean. Any text in it must agree with the feeling. With **Describe images with AI** on, the AI also looks at the picture. GIFs are PG unless you choose G or PG-13.
+- **Build my expression library** fills it slowly, within the GIF services' limits, with a progress bar. You can also add your own GIFs and pictures.
+- Nothing like this comes in the download. GIFs are found while you use Dayspring, through your GIF sources (GIPHY, KLIPY, Imgur or the web) under their terms, and kept only on this computer. Point at one to see where it's from. The only pictures included are Dayspring's own 18 animated stickers.
+
+**Marked New:** the Music & Video browser, colour themes, and avatars with expression mode. You can switch each off in Settings → Features; the older Library comes back when the browser is off.
+
+### In the development version only
+
+The same as 1.7.1: email, GIFs, smart devices, 3D printers, cameras and more than one computer are in the Development version (Dayspring-dev.zip) and not yet in Production.
+
 ## 1.7.1 (2026-09-28)
 
 ### In this version

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<defs>
+<radialGradient id="g" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="#fff6e0"/><stop offset=".35" stop-color="#ffd27a"/><stop offset="1" stop-color="#f08fbb"/></radialGradient>
+<radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset=".55" stop-color="#ffd27a" stop-opacity=".45"/><stop offset="1" stop-color="#f08fbb" stop-opacity="0"/></radialGradient>
+</defs>
+<circle cx="100" cy="104" r="96" fill="url(#glow)"/>
+<g><animateTransform attributeName="transform" type="rotate" values="0 100 170;8 100 170;0 100 170" dur="2s" repeatCount="indefinite"/>
+<circle cx="100" cy="106" r="62" fill="url(#g)"/>
+<ellipse cx="78" cy="78" rx="14" ry="8" fill="#fff" opacity=".45" transform="rotate(-30 78 78)"/>
+<ellipse cx="66" cy="120" rx="10" ry="6" fill="#ff8fa3" opacity=".55"/><ellipse cx="134" cy="120" rx="10" ry="6" fill="#ff8fa3" opacity=".55"/>
+<path d="M68 102 q10 -12 20 0 M112 102 q10 -12 20 0" stroke="#1b1733" stroke-width="5" fill="none" stroke-linecap="round"/>
+<path d="M82 124 q18 16 36 0" stroke="#1b1733" stroke-width="5" fill="none" stroke-linecap="round"/>
+</g>
+<g><path d="M100 60 c-8 -14 -30 -6 -22 10 l22 20 l22 -20 c8 -16 -14 -24 -22 -10 z" fill="#ff8fa3" transform="translate(0 -28)"><animateTransform attributeName="transform" type="translate" values="0 -28;0 -36;0 -28" dur="2s" repeatCount="indefinite"/></path></g>
+</svg>

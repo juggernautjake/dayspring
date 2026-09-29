@@ -2914,6 +2914,420 @@
         "a YouTube video playing on the screen"
       ],
       "safety": ""
+    },
+    {
+      "id": "mediabrowser-01",
+      "feature": "mediabrowser",
+      "title": "Open the Music & Video browser",
+      "steps": [
+        "Click 🎵 Music by the clock (or in ⋯ More).",
+        "Say \"open my music\".",
+        "Drag the title bar, resize from the bottom-right corner, then double-click the title bar."
+      ],
+      "expected": "A window with Spotify · YouTube · My files (and Drive when it's connected) opens inside the screen's margins. It moves, resizes and docks back; nothing goes past the edges.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "mediabrowser-02",
+      "feature": "mediabrowser",
+      "title": "Sign in to YouTube in the media window",
+      "steps": [
+        "Settings → Apps & connections → YouTube → Sign in to YouTube.",
+        "Sign in yourself in the window that opens (2-step code too).",
+        "Wait a few seconds."
+      ],
+      "expected": "The card changes to \"✓ Signed in as …\" by itself and the media window tucks away. Dayspring never asked for the password.",
+      "needs": [
+        "a YouTube account"
+      ],
+      "safety": "Sign in only on Google's own page."
+    },
+    {
+      "id": "mediabrowser-03",
+      "feature": "mediabrowser",
+      "title": "Watch history, grouped by day",
+      "steps": [
+        "Say \"show my YouTube history\".",
+        "Scroll to the bottom a few times.",
+        "Type a word in \"Search your history\"."
+      ],
+      "expected": "Your history shows with thumbnails under Today, Yesterday and earlier days; more loads as you scroll; the search narrows it to matching videos.",
+      "needs": [
+        "a YouTube account",
+        "the internet"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "mediabrowser-04",
+      "feature": "mediabrowser",
+      "title": "Remove a video from watch history",
+      "steps": [
+        "In Watch history, press 🗑 on one video.",
+        "Open youtube.com/feed/history in your own browser."
+      ],
+      "expected": "It disappears from the list and from YouTube's own history.",
+      "needs": [
+        "a YouTube account",
+        "the internet"
+      ],
+      "safety": "Pick a video you don't mind removing."
+    },
+    {
+      "id": "mediabrowser-05",
+      "feature": "mediabrowser",
+      "title": "Grant access to your library and history (Spotify)",
+      "steps": [
+        "Open the browser → Spotify → Followed artists.",
+        "If it shows \"Grant access to your library and history\", press it and approve in the browser page.",
+        "Come back to Followed artists."
+      ],
+      "expected": "After approving once, Followed artists, Top artists & songs and Recently played all load.",
+      "needs": [
+        "Spotify connected"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "mediabrowser-06",
+      "feature": "mediabrowser",
+      "title": "Spotify sections",
+      "steps": [
+        "Look at Playlists (Yours / Followed / Collaborative), Liked Songs (scroll to the end), Saved albums, Top artists & songs (4 weeks / 6 months / All time) and Recently played."
+      ],
+      "expected": "Each list loads and keeps loading as you scroll; the top lists change with the time range; Recently played is grouped by day.",
+      "needs": [
+        "Spotify connected"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "mediabrowser-07",
+      "feature": "mediabrowser",
+      "title": "Live search and results",
+      "steps": [
+        "Choose Spotify, type \"hillsong\" slowly.",
+        "Switch to YouTube and type \"dovetail joint\".",
+        "Press Load more on a group."
+      ],
+      "expected": "Results appear as you type (after a short pause), grouped into Songs · Artists · Albums · Playlists · Genres and moods, or Videos · Channels · Playlists; Load more adds more.",
+      "needs": [
+        "the internet"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "mediabrowser-08",
+      "feature": "mediabrowser",
+      "title": "Play, play next, queue, like, add to playlist",
+      "steps": [
+        "On a song: ▶, then ⤴ on another, then ＋ on a third.",
+        "Press ♡ on a song, then ☰＋ and pick one of your playlists.",
+        "On a YouTube video: ⤴ Play next."
+      ],
+      "expected": "Each does what it says; the Queue section shows them; the song is in Liked Songs and in that playlist; the video is next in the video queue.",
+      "needs": [
+        "Spotify connected",
+        "the internet"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "mediabrowser-09",
+      "feature": "mediabrowser",
+      "title": "Voice numbers on whatever is showing",
+      "steps": [
+        "With search results showing, say \"play number 3\".",
+        "Say \"queue number 2\", then \"like number 4\", then \"open number 1\"."
+      ],
+      "expected": "Each acts on that numbered item in the browser.",
+      "needs": [
+        "the internet"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "mediabrowser-10",
+      "feature": "mediabrowser",
+      "title": "History questions",
+      "steps": [
+        "Say \"what did I listen to yesterday\".",
+        "Say \"what did I watch last night\".",
+        "Say \"my top songs this month\"."
+      ],
+      "expected": "Each opens the right list and says a short summary.",
+      "needs": [
+        "Spotify connected",
+        "a YouTube account"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "mediabrowser-11",
+      "feature": "mediabrowser",
+      "title": "Multi-select",
+      "steps": [
+        "Press ☑ Select, pick three songs.",
+        "Press Add to queue in the bar at the bottom."
+      ],
+      "expected": "All three are queued and picking ends.",
+      "needs": [
+        "Spotify connected"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "mediabrowser-12",
+      "feature": "mediabrowser",
+      "title": "Sign out of one service only",
+      "steps": [
+        "Settings → Apps & connections → YouTube → Sign out.",
+        "Look at the Spotify card, then open the browser's Spotify tab."
+      ],
+      "expected": "YouTube shows signed out; Spotify's web player is still signed in and plays. Your own Chrome is unchanged.",
+      "needs": [
+        "a YouTube account",
+        "a Spotify account"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "mediabrowser-13",
+      "feature": "mediabrowser",
+      "title": "Study time and speakers",
+      "steps": [
+        "During a study block, try to play a YouTube video from the browser.",
+        "Play a Spotify song from it."
+      ],
+      "expected": "The video is refused with the reason; the song plays on the speaker Dayspring uses.",
+      "needs": [
+        "a study block on the schedule"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "mediabrowser-14",
+      "feature": "mediabrowser",
+      "title": "Keyboard and remote",
+      "steps": [
+        "Open the browser, press ↓ to reach the list, ↑↓ to move, Enter to play, Space to pick, N/Q/L, Backspace, Esc."
+      ],
+      "expected": "Everything works without a mouse; Esc closes a menu, then the open page, then the window.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "themes-01",
+      "feature": "themes",
+      "title": "The default look is unchanged",
+      "steps": [
+        "Update Dayspring and open the Dayspring screen without changing anything in Settings → Look & feel."
+      ],
+      "expected": "Everything looks exactly as before: the dawn indigo and violet colours and the orb.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "themes-02",
+      "feature": "themes",
+      "title": "Pick a theme in Settings",
+      "steps": [
+        "Open Settings → Look & feel.",
+        "Click Rose, then Sage, then Candy, then Light (Day), then High Contrast."
+      ],
+      "expected": "Each theme shows at once in Settings and on the Dayspring screen (cards, text, buttons, the sky's tint and the orb's colours). All text stays easy to read, including small labels and times.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "themes-03",
+      "feature": "themes",
+      "title": "Themes everywhere",
+      "steps": [
+        "With a theme on (say Ocean), open Dayspring mini, the guide (?), a pop-up (the Sound panel), the Schedule, and the GIF, mail and video windows if you have them."
+      ],
+      "expected": "They all use the theme's colours.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "themes-04",
+      "feature": "themes",
+      "title": "Make your own theme",
+      "steps": [
+        "In Settings → Look & feel, open Make your own theme.",
+        "Pick a bright pink and a teal, leave the background off, and press Use this theme.",
+        "Try a light background colour too."
+      ],
+      "expected": "The sample and the readability check update as you pick (✓ Easy to read), and the theme shows everywhere. A light background colour makes a light theme.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "themes-05",
+      "feature": "themes",
+      "title": "Surprise me and preview",
+      "steps": [
+        "Press Surprise me a few times.",
+        "Press Preview on the Dayspring screen."
+      ],
+      "expected": "A different theme each time (sometimes a brand-new mix). The preview shows on the Dayspring screen for about 15 seconds, then it goes back.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "themes-06",
+      "feature": "themes",
+      "title": "Themes by voice",
+      "steps": [
+        "Say \"switch to the pink theme\", \"green theme\", \"surprise me with a theme\", then \"default theme\"."
+      ],
+      "expected": "Rose, Sage, a surprise, then the default look again. \"Make it rain\" still changes the sky, not the theme.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "avatar-01",
+      "feature": "avatar",
+      "title": "The five avatars",
+      "steps": [
+        "In Settings → Look & feel → Avatar, watch the live previews (▶ All of them), then pick each state chip.",
+        "Pick the Blob buddy, then press Test talking on the screen."
+      ],
+      "expected": "Every avatar animates in every state (idle, listening, thinking, talking, off, stopped, error, sleeping). The Dayspring screen's avatar talks for 5 seconds with no sound.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "avatar-02",
+      "feature": "avatar",
+      "title": "Avatars follow the voice",
+      "steps": [
+        "Pick the Aurora flame, the Sun ring, the Waveform halo and the Pixel pal in turn, and ask Dayspring something each time."
+      ],
+      "expected": "Each one moves with the voice while it talks, leans in while it listens, circles while it thinks, and goes back to breathing after.",
+      "needs": [
+        "a microphone and speakers"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "avatar-03",
+      "feature": "avatar",
+      "title": "Your picture",
+      "steps": [
+        "Upload a JPEG or PNG as the Main picture.",
+        "Ask Dayspring something."
+      ],
+      "expected": "The picture becomes Dayspring's face. It grows and shrinks gently with the voice while talking, and gets a little bigger while listening.",
+      "needs": [
+        "a picture of your own"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "avatar-04",
+      "feature": "avatar",
+      "title": "A picture per state",
+      "steps": [
+        "Upload a different picture for Listening and for Off.",
+        "Say \"Dayspring\", then turn Dayspring Off with the badge."
+      ],
+      "expected": "The listening picture shows while it listens, the Off picture when it's off, and the main picture otherwise, each crossfading smoothly.",
+      "needs": [
+        "two or three pictures of your own"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "avatar-05",
+      "feature": "avatar",
+      "title": "A look for a personality",
+      "steps": [
+        "Under Per personality, give the Cowboy Harvest Gold and the Pixel pal.",
+        "Switch to the Cowboy, then back to Default."
+      ],
+      "expected": "The Cowboy brings its theme and avatar; Default goes back to your usual look.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "avatar-06",
+      "feature": "avatar",
+      "title": "Avatars by voice",
+      "steps": [
+        "Say \"use the blob avatar\", \"change your avatar\", then \"go back to the orb\"."
+      ],
+      "expected": "The blob, then the next avatar, then the orb.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "avatar-07",
+      "feature": "avatar",
+      "title": "Expression mode is off until you turn it on",
+      "steps": [
+        "Talk to Dayspring for a while without changing anything."
+      ],
+      "expected": "No GIFs or memes ever appear.",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "avatar-08",
+      "feature": "avatar",
+      "title": "Expression mode with GIFs",
+      "steps": [
+        "Turn on Express feelings with GIFs and memes (PG, How often: Whenever it clearly feels something).",
+        "Press Build my expression library and wait for a few feelings to fill.",
+        "Say \"tell me a joke\" and \"I finished my study session!\"."
+      ],
+      "expected": "Now and then a GIF that fits (laughing, proud, excited) shows in the avatar's place for a loop or two, then the avatar comes back. Pointing at it shows where it's from. It never covers anything else, and nothing unsuitable appears.",
+      "needs": [
+        "the internet"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "avatar-09",
+      "feature": "avatar",
+      "title": "GIFs that fit the personality",
+      "steps": [
+        "Switch to the Cowboy and build the library for it.",
+        "Then switch to the Robot and build it again.",
+        "Open See and remove what's kept."
+      ],
+      "expected": "The Cowboy's GIFs are western (cowboys, horses, yeehaw), the Robot's are robots and tech. Removing one keeps it from coming back.",
+      "needs": [
+        "the internet"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "avatar-10",
+      "feature": "avatar",
+      "title": "Your own GIFs",
+      "steps": [
+        "Under Add your own, upload a GIF, say it shows Excited, for every personality.",
+        "Say something exciting (\"we did it!\")."
+      ],
+      "expected": "Your GIF is used, for as long as its loop, and isn't repeated back to back.",
+      "needs": [
+        "a GIF of your own"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "avatar-11",
+      "feature": "avatar",
+      "title": "Back to the default look",
+      "steps": [
+        "Press Back to the default look."
+      ],
+      "expected": "The default theme, the orb, and expression mode off, straight away on every screen.",
+      "needs": [],
+      "safety": ""
     }
   ]
 }

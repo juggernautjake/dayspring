@@ -390,6 +390,9 @@
     // creators' channels, and keeps the queue (public/videos.js shows them)
     const vs = window.dsFeatures?.on ? window.dsFeatures.on("videosearch") !== false : false;
     let m;
+    // with the Music & Video browser (public/mediabrowser.js), opening, searching and "what did I watch" are the server's
+    // (lib/mediabrowser answers them, and opens the browser)
+    if (window.dsMB && /^(show|open|pull up|bring up|browse|search|find|look up|what did i|what have i|what'?s on youtube)\b/.test(t) && !/\b(queue|up next|coming up)\b/.test(t)) return null;
     if (/^(close|hide|exit)( the| my)? (library|browser|video browser|queue)$/.test(t) && isOpen()) { close(); return r(""); }
     if (!vs && (m = /^(?:browse|search|find|look up|show me|pull up)(?: youtube| some)?(?: for)? (videos?|playlists?) (?:about|of|on|for|with) (.+)$|^what'?s on youtube (?:about|for) (.+)$|^search youtube for (.+)$|^browse videos$/.exec(t))) {
       const q = (m[2] ?? m[3] ?? m[4] ?? "").trim();

@@ -97,6 +97,17 @@
     mkOrder(Math.max(0, Math.min(Q.length - 1, Number(cmd.index) || 0)));
     start(pos, { first: true });
   }
+  // the Music & Video browser's Play next / Add to queue: after the one playing, or at the end
+  function enqueue(list, atNext = false) {
+    const add = (list ?? []).filter((x) => x && x.src);
+    if (!add.length) return;
+    if (!Q.length || !el) { play({ queue: add, index: 0 }); return; }
+    const start0 = Q.length;
+    Q.push(...add);
+    const idx = add.map((_, k) => start0 + k);
+    if (atNext) order.splice(pos + 1, 0, ...idx); else order.push(...idx);
+    H().render?.();
+  }
   function next(auto = false) {
     if (repeat === "one" && auto) { el.currentTime = 0; el.play().catch(() => {}); return ""; }
     if (pos < order.length - 1) { start(pos + 1); return ""; }
@@ -161,7 +172,7 @@
     step();
   }
   function volume() { if (el) el.volume = vol(); }
-  window.dsLocalPlayer = { play, ctl, stop, duck, volume, next, current: () => (el ? { ...cur(), position: el.currentTime, sink: el.sinkId ?? null, paused: el.paused } : null), _el: () => el };
+  window.dsLocalPlayer = { play, enqueue, ctl, stop, duck, volume, next, current: () => (el ? { ...cur(), position: el.currentTime, sink: el.sinkId ?? null, paused: el.paused } : null), _el: () => el };
 
   // ---- the numbered list, and pictures -------------------------------------------------------------------------------------
   const css = document.createElement("style");
@@ -218,7 +229,7 @@
     if (!panel || e.ctrlKey || e.altKey || e.metaKey || /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName ?? "")) return;
     if (/^[1-9]$/.test(e.key)) { const li = panel.querySelector(`li[data-n="${e.key}"]`); if (li) { e.preventDefault(); li.click(); } }
   });
-  const attach = (es) => es.addEventListener("medialib", (e) => { let d = {}; try { d = JSON.parse(e.data); } catch { return; } if (d.close) { closeList(); return; } if (d.list) showList(d.list); if (d.image) showImage(d.image); });
+  const attach = (es) => es.addEventListener("medialib", (e) => { let d = {}; try { d = JSON.parse(e.data); } catch { return; } if (d.close) { closeList(); return; } if (d.enqueue) { if (window.dsIsSpeaker !== false) enqueue(d.enqueue, d.next); return; } if (d.list) showList(d.list); if (d.image) showImage(d.image); });
   if (window.dsEvents) attach(window.dsEvents); else addEventListener("ds-events", (e) => attach(e.detail), { once: true });
   window.dsMediaLib = { showList, closeList, showImage };
 })();
