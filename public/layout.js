@@ -226,6 +226,67 @@
   }
   window.dsSafeRect = safeRect;
   window.dsKeepInSafe = keepInSafe;
+
+  /* ---------------- "full screen" is the whole safe area, never the whole TV ---------------- */
+  // A TV crops its edges, so only the Dayspring screen itself goes truly full screen (F11, ⛶ on the window bar). Anything
+  // else that asks — the details card's ⛶ (a photo, a video), the file viewer's video ⛶, a video's own ⛶ in its
+  // controls (the gallery's), YouTube's ⛶ inside a frame — fills the safe area instead (.ds-safe-full, safe-area.css).
+  // Asking again, or Esc, puts it back. Inside a window of the window manager (winman.js) that window is made big for as
+  // long (a window with a blurred backdrop is where its fixed children are placed), then goes back to how it was.
+  //   dsSafeFull(el[, on]) → true when it's now filling the safe area
+  const FULL = "ds-safe-full", fullOn = new Set(), FULL_PROPS = ["left", "top", "right", "bottom", "width", "height"];
+  // placed in pixels: a fixed element inside a window with a blurred backdrop or a transform is placed from that window,
+  // not the screen, so where its 0,0 lands is measured first
+  function placeFull(el) {
+    if (!el.isConnected) return;
+    const S = safeRect(), g = el.dataset.dsFullWin ? (window.winman?.GAP ?? 12) : 0;   // (in a window: the big window's place)
+    const T = { left: S.left + g, top: S.top + g, width: Math.max(1, S.width - 2 * g), height: Math.max(1, S.height - 2 * g) };
+    Object.assign(el.style, { left: "0px", top: "0px", right: "auto", bottom: "auto", width: T.width + "px", height: T.height + "px" });
+    const o = el.getBoundingClientRect();
+    el.style.left = T.left - o.left + "px"; el.style.top = T.top - o.top + "px";
+  }
+  function safeFull(el, on) {
+    if (!el || el === document.documentElement || el === document.body) return false;
+    on = on === undefined ? !el.classList.contains(FULL) : Boolean(on);
+    if (on === el.classList.contains(FULL)) return on;
+    const win = el.parentElement?.closest?.("[data-wm-id]"), id = win?.dataset.wmId, W = window.winman;
+    if (on) {
+      el.__dsFullStyle = Object.fromEntries(FULL_PROPS.map((k) => [k, el.style[k]]));
+      el.classList.add(FULL); fullOn.add(el);
+      if (id && W?.get?.(id)) { el.dataset.dsFullWin = id; const m = W.get(id).mode; if (m !== "max") { el.dataset.dsFullWas = m; W.setMode(id, "max", { user: false }); } }
+      placeFull(el);
+    } else {
+      el.classList.remove(FULL); fullOn.delete(el);
+      Object.assign(el.style, el.__dsFullStyle ?? Object.fromEntries(FULL_PROPS.map((k) => [k, ""]))); delete el.__dsFullStyle;
+      const was = el.dataset.dsFullWas, wid = el.dataset.dsFullWin; delete el.dataset.dsFullWas; delete el.dataset.dsFullWin;
+      if (was && wid && W?.get?.(wid)?.mode === "max") W.setMode(wid, was, { user: false });
+    }
+    document.dispatchEvent(new CustomEvent("ds-safefull", { detail: { el, on } }));
+    return on;
+  }
+  window.dsSafeFull = safeFull;
+  // what page code asks for (el.requestFullscreen()): the safe area, except for the whole screen
+  for (const k of ["requestFullscreen", "webkitRequestFullscreen"]) {
+    const native = Element.prototype[k]; if (typeof native !== "function") continue;
+    Element.prototype[k] = function (...a) { if (this === document.documentElement) return native.apply(this, a); safeFull(this); return Promise.resolve(); };
+  }
+  // what the browser does by itself (a video's own ⛶, YouTube's ⛶ in a frame): straight back out, into the safe area
+  const onNativeFull = () => {
+    const el = document.fullscreenElement ?? document.webkitFullscreenElement;
+    if (!el || el === document.documentElement) { for (const x of fullOn) placeFull(x); return; }
+    // (placed once it's out: in the browser's full screen it's measured from the whole screen)
+    Promise.resolve((document.exitFullscreen ?? document.webkitExitFullscreen)?.call(document)).catch(() => {}).then(() => requestAnimationFrame(() => safeFull(el)));
+  };
+  document.addEventListener("fullscreenchange", onNativeFull);
+  document.addEventListener("webkitfullscreenchange", onNativeFull);
+  // Esc: the newest one goes back first (before the window it's in closes)
+  addEventListener("keydown", (e) => {
+    if (e.key !== "Escape" || !fullOn.size) return;
+    const el = [...fullOn].pop();
+    e.stopImmediatePropagation(); e.preventDefault(); safeFull(el, false);
+  }, true);
+  // gone (closed, hidden, another photo): nothing left filling the safe area, its window back to how it was
+  setInterval(() => { for (const el of [...fullOn]) if (!el.isConnected || el.closest("[hidden]") || getComputedStyle(el).display === "none") safeFull(el, false); }, 700);
   // everything placed from script (menus and pop-overs next to their buttons); the rest are pinned by safe-area.css
   const POPS = ".stpop, .tunepop, .meetpop, .lib .menu, .morebox, .statemenu, #soundPanel, .mailcomp";   // (.mailcomp: the email and invitation editors, mail-compose.js)
   const popRo = new ResizeObserver(() => requestAnimationFrame(clampPopups));
@@ -236,6 +297,7 @@
       if (!watched.has(el)) { watched.add(el); popRo.observe(el); }   // it grows (more text, a longer list): check again
       keepInSafe(el);
     }
+    for (const el of fullOn) placeFull(el);   // (a "full screen" follows the margins and the window's size too)
   }
 
   /* ---------------- watching for anything that changes sizes ---------------- */

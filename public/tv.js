@@ -640,14 +640,15 @@
     const d = $("#detail");
     if (d.hidden) return false;
     d.hidden = true; $("#dBody").innerHTML = "";        // stops any video in it
-    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    window.dsSafeFull?.(d, false);                      // (its ⛶: the safe area, layout.js; never the whole screen)
     pinnedUntil = Date.now() + 30_000;
     return true;
   }
   const detailOpen = () => !$("#detail").hidden;
   $("#dClose").onclick = closeDetail;
   $("#dBack").onclick = () => detailBack?.();
-  $("#dFull").onclick = () => { const el = $("#detail"); document.fullscreenElement ? document.exitFullscreen().catch(() => {}) : el.requestFullscreen?.().catch(() => {}); };
+  // ⛶: the card fills the screen's safe area (a TV crops its edges), and back (layout.js dsSafeFull)
+  $("#dFull").onclick = () => { window.dsSafeFull?.($("#detail")); };
   $("#detail").addEventListener("click", (e) => { if (e.target.id === "detail") closeDetail(); });
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;

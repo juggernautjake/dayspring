@@ -2,6 +2,15 @@
 
 All notable changes to Dayspring. Versions follow [semantic versioning](https://semver.org).
 
+## 1.7.5 (2026-09-29)
+
+### In this version
+
+**Every pop-up stays inside your screen's margins, whatever it's doing.** The margins you set in Settings → Screen (or with 📐 Fit to screen) mark the part of the screen your TV really shows, and now nothing goes past them.
+- **Full screen means the whole area inside your margins,** never the edges your TV crops. That's the video's full screen, the ⛶ on a photo or details card, the file viewer's video ⛶, a video's own ⛶ in its controls (the photo gallery's videos) and YouTube's ⛶. Press it again, or Esc, to go back. Only the Dayspring screen itself (⛶ on the window bar, or F11) truly fills the screen.
+- The photo gallery, the file viewer, the Music & Video browser, Maps, the picture grid, the GIF picker and the page windows stay inside the margins as big, normal and small windows. A small window you drag hard into a corner, or stretch from its handle, stops at the margins.
+- Change the margins, or the window's size, while something is open and it moves to stay inside.
+
 ## 1.7.4 (2026-09-29)
 
 ### In this version

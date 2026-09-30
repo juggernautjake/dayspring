@@ -187,7 +187,6 @@
       e.stopImmediatePropagation(); e.preventDefault();
       if ($(".vw-ask", root)) { $(".vw-ask", root).remove(); return; }
       if (!menu.hidden) { menu.hidden = true; return; }
-      if (document.fullscreenElement) { document.exitFullscreen?.(); return; }
       if (V.entry && V.zipBack) { V.zipBack(); return; }
       close();
     }, true);
@@ -216,7 +215,10 @@
     $(".vw-grip", root).addEventListener("pointerdown", (e) => start(e, "size"));
     bar.addEventListener("dblclick", (e) => { if (!e.target.closest("button")) setFull(!V.full); });
   }
-  function setFull(on) { V.full = Boolean(on); root.classList.toggle("full", V.full); $("[data-a=full]", root).setAttribute("aria-pressed", String(V.full)); clamp(); setTimeout(() => V.ctl.refit?.(), 30); }
+  function setFull(on) {
+    // (a small window of the window manager goes back to normal first: it would keep pulling the viewer back to its place)
+    if (on && window.winman?.get?.("viewer")?.mode === "small") window.winman.setMode("viewer", "normal");
+    V.full = Boolean(on); root.classList.toggle("full", V.full); $("[data-a=full]", root).setAttribute("aria-pressed", String(V.full)); clamp(); setTimeout(() => V.ctl.refit?.(), 30); }
   const status = (t) => { $(".st", foot).textContent = t ?? ""; };
   function report(now = false) {
     clearTimeout(V.reportT);
@@ -269,7 +271,6 @@
   function close() {
     if (!root || !V.open) return;
     V.open = false; teardown(); root.hidden = true; V.item = null; report(true);
-    if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
   }
   const btn = (label, a, title, extra = "") => `<button type="button" class="vb" data-t="${a}" title="${esc(title)}" aria-label="${esc(title)}" ${extra}>${label}</button>`;
   function onTools(map) { tools.onclick = (e) => { const b = e.target.closest("[data-t]"); if (b && map[b.dataset.t]) map[b.dataset.t](b, e); }; }
@@ -404,7 +405,8 @@
       play: () => (el.paused ? el.play().catch(() => {}) : el.pause()), back: () => seekTo(cur() - 10), fwd: () => seekTo(cur() + 10),
       mute: (b) => { el.muted = !el.muted; b.textContent = el.muted ? "🔇" : "🔊"; }, cc: () => cc(), loop: (b) => { el.loop = !el.loop; b.setAttribute("aria-pressed", String(el.loop)); },
       pip: async () => { try { if (document.pictureInPictureElement) await document.exitPictureInPicture(); else await el.requestPictureInPicture(); } catch { status("Picture-in-picture isn't available here."); } },
-      vfull: async () => { try { if (document.fullscreenElement) await document.exitFullscreen(); else await el.requestFullscreen(); } catch { setFull(true); } },
+      // (the viewer fills the screen's safe area with the video in it, its controls still there: never the whole TV)
+      vfull: () => setFull(!V.full),
     };
     bar2.addEventListener("click", (e) => { const b = e.target.closest("[data-t]"); if (b && map[b.dataset.t]) map[b.dataset.t](b); });
     $("select[data-t=speed]", bar2).onchange = (e) => { el.playbackRate = Number(e.target.value) || 1; };

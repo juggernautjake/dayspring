@@ -150,6 +150,8 @@ You can also change Windows' own scale: **Settings → System → Display**, sel
 
 Dayspring rearranges itself to fit whatever window it's in (a TV, a monitor, half of your laptop screen, a tall portrait screen) and whatever margin you set with the **Overscan** slider. Everything is sized from the space *inside* the margins, so moving the slider reflows the content instead of squeezing it out of its boxes.
 
+Every pop-up stays inside the margins too, whatever it's doing: the photo gallery, the file viewer, the picture and details cards, the Music & Video browser, Maps, the picture grid, and every window made big, small or dragged into a corner. **Full screen** for a video, a photo or the details card means the whole area inside your margins, never the part of the screen your TV crops (a video's own ⛶ and YouTube's ⛶ work the same way; press it again, or Esc, to go back). Change the margins while something is open and it moves with them. Only the Dayspring screen itself (⛶ on the window bar, or F11) truly fills the screen.
+
 When space gets tight, in this order:
 
 1. Long text uses a shorter version: "Friday, September 25" → "Fri, Sep 25" → "Sep 25"; "9:30 AM – 10:00 AM" → "9:30–10 AM"; the exam's place shortens. Hover a shortened title to see all of it.

@@ -23,10 +23,22 @@ html{--safe-w:calc(100vw - var(--safe-left) - var(--safe-right));--safe-h:calc(1
   padding:calc(var(--safe-top) + var(--safe-gap)) calc(var(--safe-right) + var(--safe-gap)) calc(var(--safe-bottom) + var(--safe-gap)) calc(var(--safe-left) + var(--safe-gap))}
 .safe-cover > *{max-width:100%;max-height:100%;overflow:auto}
 
+/* ---------- "full screen" inside Dayspring: the whole safe area (layout.js dsSafeFull places it, in pixels) ----------
+   The details card's ⛶, the file viewer's video ⛶, a video's own ⛶ in its controls, YouTube's ⛶ in a frame: never the
+   whole TV. (Only the Dayspring screen itself goes truly full screen: F11, ⛶ on the window bar.) */
+html body .ds-safe-full{position:fixed!important;margin:0!important;transform:none!important;max-width:none!important;max-height:none!important;min-width:0!important;min-height:0!important;
+  box-sizing:border-box!important;z-index:2147482000!important;border-radius:0!important;animation:none!important;transition:none!important}
+html body video.ds-safe-full, html body iframe.ds-safe-full{background:#000;object-fit:contain}
+html body .detail.ds-safe-full{padding:.5em}
+html body .detail.ds-safe-full .dbox{width:100%;height:100%;max-height:none}
+html body .detail.ds-safe-full .dphoto{height:calc(var(--safe-h) - 9em)}
+html body .detail.ds-safe-full .dvideo{max-height:calc(var(--safe-h) - 7em)}
+
 /* ---------- screens that fill the safe area ---------- */
 html body .calwrap{inset:calc(.6em + var(--safe-top)) calc(.6em + var(--safe-right)) calc(.6em + var(--safe-bottom)) calc(.6em + var(--safe-left))}
 html body .media.video{inset:calc(1em + var(--safe-top)) calc(1em + var(--safe-right)) calc(1em + var(--safe-bottom)) calc(1em + var(--safe-left))}
-html body .media.full{inset:0}
+/* the video full screen: the whole safe area, not the whole TV (a TV crops its edges) */
+html body .media.full{inset:var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left)!important;width:auto!important;height:auto!important}
 html body .media.video.minip{inset:auto;left:auto;top:auto;right:calc(1.2em + var(--safe-right));bottom:calc(1.2em + var(--safe-bottom));width:min(26em, calc(var(--safe-w) - 2.4em));height:auto;aspect-ratio:16/9;max-height:calc(var(--safe-h) - 2.4em)}
 html body #dsVideos{top:calc(var(--safe-top) + var(--safe-gap));bottom:calc(var(--safe-bottom) + var(--safe-gap));left:calc(var(--safe-left) + var(--safe-gap));right:calc(var(--safe-right) + var(--safe-gap))}
 html body #dsVQueue{top:calc(var(--safe-top) + var(--safe-gap));bottom:calc(var(--safe-bottom) + var(--safe-gap));right:calc(var(--safe-right) + var(--safe-gap));width:min(32em, calc(var(--safe-w) - 2 * var(--safe-gap)))}
