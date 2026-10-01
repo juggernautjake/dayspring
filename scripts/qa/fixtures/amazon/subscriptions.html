@@ -1,0 +1,25 @@
+<!-- A made-up stand-in page in the shape of amazon.com's, for Dayspring's tests. Not a real Amazon page; no real account data. -->
+<!doctype html><html lang="en-us"><head><meta charset="utf-8"><title>Subscribe &amp; Save</title>
+<style>body{font:14px Arial,sans-serif;margin:0;background:#fff;color:#0f1111}#navbar{background:#131921;color:#fff;padding:8px 14px;display:flex;gap:18px;align-items:center}.a-offscreen{position:absolute;left:-9999px}
+.s-result-item{display:inline-block;width:220px;vertical-align:top;margin:8px;border:1px solid #ddd;padding:8px}img{max-width:100%}.a-button-unavailable{opacity:.4}button,input[type=submit]{cursor:pointer}</style></head>
+<body><header id="navbar"><a href="/" id="nav-logo">amazon (test)</a><a id="nav-link-accountList" href="/gp/css/homepage.html"><span id="nav-link-accountList-nav-line-1">Hello, Testshopper</span></a>
+<a id="nav-cart" href="/gp/cart/view.html">Cart <span id="nav-cart-count">0</span></a></header><main id="a-page"><h1>Subscribe &amp; Save: upcoming deliveries</h1><div id="subscription-list"><div class="subscription-card a-box" data-subscription-id="SUB-001">
+  <img src="/images/I/B0TEST0201._AC_UL320_.jpg" alt=""><a href="/dp/B0TEST0201"><span class="subscription-product-title">BrewMate Basket Coffee Filters, 200 Count</span></a>
+  <div class="subscription-next-delivery">Arriving Oct 5, 2026</div><div class="subscription-frequency">Every 2 months</div><div class="subscription-quantity">Qty: 1</div>
+  <div class="subscription-price"><span class="a-price"><span class="a-offscreen">$6.17</span></span></div>
+  <span class="a-button"><button type="button" data-action="skip-delivery" class="subscription-skip" aria-label="Skip delivery of BrewMate Basket Coffee Filters, 200 Count">Skip</button></span>
+  <span class="a-button"><button type="button" data-action="cancel-subscription">Cancel subscription</button></span>
+  <span class="a-button"><button type="button" data-action="deliver-now">Deliver now</button></span></div><div class="subscription-card a-box" data-subscription-id="SUB-002">
+  <img src="/images/I/B0TEST0202._AC_UL320_.jpg" alt=""><a href="/dp/B0TEST0202"><span class="subscription-product-title">Softleaf Paper Towels, 12 Rolls</span></a><span class="subscription-new-badge">New</span>
+  <div class="subscription-next-delivery">Arriving Oct 19, 2026</div><div class="subscription-frequency">Every 1 months</div><div class="subscription-quantity">Qty: 2</div>
+  <div class="subscription-price"><span class="a-price"><span class="a-offscreen">$23.74</span></span></div>
+  <span class="a-button"><button type="button" data-action="skip-delivery" class="subscription-skip" aria-label="Skip delivery of Softleaf Paper Towels, 12 Rolls">Skip</button></span>
+  <span class="a-button"><button type="button" data-action="cancel-subscription">Cancel subscription</button></span>
+  <span class="a-button"><button type="button" data-action="deliver-now">Deliver now</button></span></div></div>
+<div class="a-popover" role="dialog" id="skip-dialog" hidden aria-label="Skip this delivery?"><p>Skip this delivery?</p><button type="button" data-action="confirm-skip">Skip</button> <button type="button" data-action="dismiss">Keep it</button></div>
+<script>
+let target = null;
+for (const b of document.querySelectorAll('[data-action="skip-delivery"]')) b.addEventListener("click", () => { target = b.closest("[data-subscription-id]").dataset.subscriptionId; document.getElementById("skip-dialog").hidden = false; });
+document.querySelector('[data-action="confirm-skip"]').addEventListener("click", async () => { await fetch("/auto-deliveries/ajax/skipDelivery?id=" + encodeURIComponent(target), { method: "POST" }); location.reload(); });
+document.querySelector('[data-action="cancel-subscription"]')?.addEventListener("click", () => fetch("/auto-deliveries/ajax/cancelSubscription", { method: "POST" }));
+</script></main></body></html>

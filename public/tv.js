@@ -3367,6 +3367,13 @@
         await notify(item.text, { kind: "system", toasted: true, sound: "ding", chip: { title: `⚠ ${t}`, category: "flex" } });
         return;
       }
+      if (item.kind === "shopping") {
+        // Shopping on Amazon (lib/shopping): the Subscribe & Save notice; when it asks "Want me to skip …?" he can just answer
+        toast(item.title || "Amazon", item.text, "wait", "bell");
+        await notify(item.text, { kind: "system", toasted: true, sound: "ding", chip: { title: item.title || "Amazon", category: "home" } });
+        if (prefs.mode === "voice" && item.ask) openCommandWindow(30_000);
+        return;
+      }
       if (item.kind === "hook") {
         // an incoming webhook (IFTTT, Zapier…): its title, then what it said
         toast(item.title || "Message", item.text, "", "link");

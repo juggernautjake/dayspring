@@ -101,6 +101,7 @@ import * as floor from "./lib/floor.mjs";
 import * as vision from "./lib/vision/index.mjs";
 import * as videoRoutes from "./lib/video/routes.mjs";   // finding videos, creators' channels, his YouTube playlists, the video queue (lib/video)
 import * as video from "./lib/video/index.mjs";
+import * as shopRoutes from "./lib/shopping/routes.mjs";   // Shopping on Amazon: the Shopping panel and Settings → Shopping (lib/shopping)
 import * as mbRoutes from "./lib/mediabrowser/routes.mjs";   // the Music & Video browser, and signing in to YouTube / Spotify in the media window
 import * as mbrowser from "./lib/mediabrowser/index.mjs";
 import * as mediasignin from "./lib/mediasignin.mjs";
@@ -127,7 +128,7 @@ addHello("micOwner", () => lantern.micOwner());
 addHello("listenState", () => settings.get().listenState ?? "active");
 addHello("notices", () => firstrun.notices());
 // The Settings/setup wizard, updates and the in-app guide each answer their own /api routes.
-const ROUTES = [featureRoutes, ollamaRoutes, setupRoutes, updateRoutes, helpRoutes, discordRoutes, callRoutes, callsRoutes, meetRoutes, studyRoutes, playerRoutes, ambientRoutes, windowRoutes, winman, documentRoutes, connectorRoutes, fsRoutes, toolingRoutes, welcomeRoutes, discoverRoutes, calendarRoutes, lanternRoutes, aboutRoutes, intentRoutes, personaRoutes, xpRoutes, imageRoutes, activityRoutes, moneyRoutes, visionRoutes, socialRoutes, floorRoutes, devRoutes, mbRoutes, videoRoutes, medialibRoutes, viewerRoutes, galleryRoutes, gifRoutes, mailRoutes, cameraRoutes, remoteRoutes, smarthomeRoutes, printerRoutes, looksRoutes, mapsRoutes, namingRoutes];
+const ROUTES = [featureRoutes, ollamaRoutes, setupRoutes, updateRoutes, helpRoutes, discordRoutes, callRoutes, callsRoutes, meetRoutes, studyRoutes, playerRoutes, ambientRoutes, windowRoutes, winman, documentRoutes, connectorRoutes, fsRoutes, toolingRoutes, welcomeRoutes, discoverRoutes, calendarRoutes, lanternRoutes, aboutRoutes, intentRoutes, personaRoutes, xpRoutes, imageRoutes, activityRoutes, moneyRoutes, visionRoutes, socialRoutes, floorRoutes, devRoutes, mbRoutes, videoRoutes, medialibRoutes, viewerRoutes, galleryRoutes, gifRoutes, mailRoutes, cameraRoutes, remoteRoutes, smarthomeRoutes, printerRoutes, looksRoutes, mapsRoutes, namingRoutes, shopRoutes];
 // Maps: the panel's "maps" event, spoken steps through the floor, home from Settings → Where you are (no GPS here), his phone
 maps.start({ broadcast: (t, d) => announcer.broadcast(t, d), announce: (x) => announcer.announce(x), home: () => owner.get().location, notify: (msg) => remote.notify("all", msg) });
 imageRoutes.setDeps({ openUrl: async (u) => (await import("./lib/browsers.mjs")).openUrl(u, owner.displayBrowser()) });
@@ -1046,6 +1047,8 @@ createServer(async (req, res) => {
   // his own music and videos: joins the music sources now, looks through the allowed folders a little later, slowly
   // are YouTube and Spotify still signed in in the media window? (only while it's open; at most every few hours)
   mediasignin.startHealth();
+  // Shopping on Amazon: the once-a-day Subscribe & Save check, only when the owner turned shopping AND its notices on (lib/shopping)
+  features.startJob("shopping", "shopping.subscriptions", () => import("./lib/shopping/index.mjs").then((s) => s.start({ announce: (x) => announcer.announce(x) })));
   features.startJob("medialib", "medialib.sources", () => import("./lib/medialib/skills.mjs").then((m) => m.registerSources()));
   setTimeout(() => features.startJob("medialib", "medialib.scan", () => import("./lib/medialib/library.mjs").then((l) => l.scanSoon())), 90_000).unref?.();
   setTimeout(() => features.startJob("fileviewer", "fileviewer.scan", () => import("./lib/finder/index.mjs").then((x) => x.scanSoon())), 150_000).unref?.();

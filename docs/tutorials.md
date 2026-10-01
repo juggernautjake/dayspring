@@ -134,6 +134,17 @@ Every task in Dayspring, with a link to its step-by-step walkthrough. You can al
 - **Get severe weather alerts** → [Connecting apps](connections.md#severe-weather-alerts)
 - **Show my photos** → [Photos](photos.md#turn-it-on)
 
+## Shopping on Amazon
+
+- **Turn on shopping and sign in to Amazon** → [Shopping on Amazon](shopping.md#turn-it-on)
+- **Find something for sale on Amazon** → [Shopping on Amazon](shopping.md#finding-something)
+- **Filter Amazon results by price, brand, rating or Prime** → [Shopping on Amazon](shopping.md#filters)
+- **Choose a size or colour and add it to my cart** → [Shopping on Amazon](shopping.md#looking-at-one-item)
+- **See my Amazon orders and buy something again** → [Shopping on Amazon](shopping.md#your-orders)
+- **Get told about Subscribe & Save deliveries, or skip one** → [Shopping on Amazon](shopping.md#subscribe--save)
+- **See or change my Amazon account settings** → [Shopping on Amazon](shopping.md#your-account-read-only)
+- **Amazon is asking if I'm a robot** → [Shopping on Amazon](shopping.md#robot-checks-and-problems)
+
 ## Study and faith
 
 - **Study a course with it** → [Studying](learning.md#things-you-can-say)

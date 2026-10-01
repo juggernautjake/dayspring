@@ -271,6 +271,21 @@ Keys save as soon as you click **Save key**; everything else saves with **Save**
 | **Favourites and recent GIFs** | How many you have, with **Clear favourites** and **Clear recent GIFs**. | — |
 | **Say the GIF's title when you pick one** | "Number 4: Dancing cat, from GIPHY", or just "Number 4". | On |
 
+## Shopping
+
+`?s=shopping` · Shown in Settings only (development version) · Full walkthrough: [Shopping on Amazon](shopping.md)
+
+The switches and the sign-in buttons act straight away; the rest saves with **Save** (or when you move to another section). Kept in `data\shopping.json` (never a password, a cookie or a card).
+
+| Setting | What it does | Default |
+|---|---|---|
+| **Shopping on Amazon** | The on/off switch. While it's off Dayspring never opens Amazon. | Off |
+| **Sign in to Amazon** · **Check** · **Sign out** | Amazon's own sign-in in Dayspring's browser window (you sign in yourself), whether it's signed in and as whom, and signing out of Dayspring's window only. | — |
+| **Tell me about new subscriptions and upcoming deliveries** | Once a day, in the daytime: new Subscribe & Save subscriptions and deliveries coming soon, with "Want me to skip it?". Off: nothing checks. | Off |
+| **Tell me about deliveries in the next** | 3, 7 or 14 days. | 7 days |
+| **Prime only** · **Highest price** · **Lowest rating** | Default filters for every search. | Off · none · any |
+| **Ask before opening Amazon pages** | "Okay to open Amazon?" first; a yes covers 15 minutes. | Off |
+
 ## Lantern
 
 Shown in Settings only. Everything here is optional; see [Dayspring and Lantern](lantern.md).

@@ -156,6 +156,13 @@ const fakeVideo = (p) => p.evaluate(() => {
 });
 const video = (a, v) => (p) => p.evaluate(([x, y]) => window.dayspring.playerCtl(x, y), [a, v]);
 
+// the Shopping panel (public/shopping.js): made-up results and one made-up item (nothing is asked of Amazon from here)
+const SHOP_RESULTS = { query: "waterproof work boot", filters: { minPrice: null, maxPrice: 120, brand: null, prime: false, minRating: null, sort: "relevance" }, filterText: "under $120", hasMore: true, brands: ["Stormtrek", "Ridgeline"],
+  items: Array.from({ length: 12 }, (_, i) => ({ n: i + 1, asin: "B0TEST" + String(i).padStart(4, "0"), title: `A waterproof work boot with a fairly long product title, number ${i + 1}`, brand: "Stormtrek", price: 50 + i, listPrice: i % 3 ? null : 80, rating: 4.2, reviews: 1200 + i, prime: i % 2 === 0, delivery: "FREE delivery Fri, Oct 3", sponsored: i === 2, badge: i === 0 ? "Best Seller" : null, image: null })) };
+const SHOP_ITEM = { asin: "B0TEST0001", n: 1, title: "Stormtrek Men's Waterproof Work Boot, Steel Toe, Slip Resistant, with a long name that wraps", brand: "Stormtrek", price: 109.99, listPrice: 139.99, savings: "-21%", deal: "Limited time deal", images: [], stock: "In Stock", delivery: "FREE delivery Fri, Oct 3", seller: "Stormtrek Direct", shipsFrom: "Amazon",
+  variations: [{ key: "color", name: "Color", selected: "Walnut", options: ["Walnut", "Charcoal"].map((l, i) => ({ label: l, asin: "B0TESTC00" + i, available: true, selected: i === 0 })) }, { key: "size", name: "Size", selected: "10", options: ["8", "9", "10", "11", "12", "13"].map((l, i) => ({ label: l, asin: "B0TESTS00" + i, available: i !== 5, selected: l === "10" })) }],
+  buyingOptions: ["One-time purchase: $109.99", "Subscribe & Save: $104.49"], bullets: ["WATERPROOF: sealed seams.", "PROTECTIVE TOE.", "GRIP."], specs: [{ name: "Item Weight", value: "4.2 pounds" }], rating: 4.6, reviews: 12345,
+  histogram: [5, 4, 3, 2, 1].map((s) => ({ stars: s, pct: s * 4 })), topReviews: [{ title: "Dry feet", rating: 5, body: "Kept my feet dry.", author: "R. Example", date: "August 2, 2026" }], canAddToCart: true, subscribe: true };
 const SCENARIOS = [
   { name: "file viewer (a picture)", open: (p) => p.evaluate(() => window.dsViewer.open({ item: { id: "0123456789abcdef", name: "A tall picture.svg", kind: "image", type: "Picture", sizeText: "12 KB", where: "Pictures" } })), box: "#dsViewer",
     steps: [["⛶ full screen", (p) => p.click('#dsViewer [data-a="full"]')], ["⛶ full screen off", (p) => p.click('#dsViewer [data-a="full"]')], ...wmSteps("viewer", "#dsViewer", "#dsViewer .vw-bar")],
@@ -179,6 +186,10 @@ const SCENARIOS = [
   { name: "photo gallery: one photo", open: (p) => p.evaluate(() => window.dsGallery.open({ view: "all", focus: "0123456789abcd01", single: true })), box: "#dsGallery", steps: [...wmSteps("gallery", "#dsGallery", "#dsGallery .g-bar").slice(0, 4),
     ["the slideshow", (p) => p.evaluate(() => { window.winman.setMode("gallery", "normal"); document.querySelector('#dsGallery [data-s="show"]')?.click(); })]],
     close: (p) => p.evaluate(() => { window.winman.setMode("gallery", "normal"); window.dsGallery.close(); }) },
+  { name: "Shopping panel", open: (p) => p.evaluate((r) => window.dsShop.open({ tab: "search", results: r, focus: false }), SHOP_RESULTS), box: "#dsShop", steps: wmSteps("shopping", "#dsShop", "#dsShop .sh-bar"),
+    close: (p) => p.evaluate(() => { window.winman.setMode("shopping", "normal"); window.dsShop.close(); }) },
+  { name: "Shopping: one item", open: (p) => p.evaluate((d) => window.dsShop.open({ tab: "item", item: d, focus: false }), SHOP_ITEM), box: "#dsShop", steps: wmSteps("shopping", "#dsShop", "#dsShop .sh-bar").slice(0, 4),
+    close: (p) => p.evaluate(() => { window.winman.setMode("shopping", "normal"); window.dsShop.close(); }) },
   { name: "Music & Video browser", open: (p) => p.evaluate(() => window.dsMB.open({ source: "local" })), box: "#dsMB", steps: wmSteps("mediabrowser", "#dsMB", "#dsMB .mb-bar"),
     close: (p) => p.evaluate(() => { window.winman.setMode("mediabrowser", "normal"); window.dsMB.close(); }) },
   { name: "Maps window", open: (p) => p.evaluate((v) => window.dispatchEvent(new CustomEvent("ds-test-maps", { detail: v })), MAPS_VIEW), box: "#dsMaps", steps: wmSteps("maps", "#dsMaps", "#dsMaps .mp-bar"),

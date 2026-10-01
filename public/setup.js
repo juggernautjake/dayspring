@@ -869,6 +869,13 @@
       mount: () => window.DayspringMapsSettings?.mount($("#card"), { toast, onLeave, openLink }),
       save: async () => { if (window.DayspringMapsSettings) await window.DayspringMapsSettings.save(); } },
 
+    // ------------------------------------------------------------------------------------------------ shopping (public/shopping-settings.js)
+    // Amazon: the on/off switch, signing in (he does it himself), Sign out, Subscribe & Save notices, default filters, ask before opening.
+    { id: "shopping", icon: "🛒", title: "Shopping", settingsOnly: true, enabled: () => window.DayspringShoppingSettings?.enabled !== false,   // (the "shopping" release feature)
+      render: () => window.DayspringShoppingSettings ? window.DayspringShoppingSettings.html() : `<h1>Shopping</h1><p class="lead">This page didn't load. Reload to try again.</p>`,
+      mount: () => window.DayspringShoppingSettings?.mount($("#card"), { toast, onLeave }),
+      save: async () => { if (window.DayspringShoppingSettings) await window.DayspringShoppingSettings.save(); } },
+
     // ------------------------------------------------------------------------------------------------ lantern
     { id: "lantern", icon: "🏮", title: "Lantern", settingsOnly: true,
       render: () => `
@@ -1397,7 +1404,7 @@
   const GUIDE = { welcome: ["getting-started", "Getting started"], you: ["settings-reference/you", "About you"], assistant: ["settings-reference/your-assistant", "Your assistant"],
     location: ["settings-reference/where-you-are", "Where you are"], ai: ["ai-providers", "AI providers"], voice: ["voices", "Voices"], sound: ["audio-devices", "Speakers and microphones"],
     week: ["schedule/routine-and-fixed-blocks", "Your usual week"], features: ["settings-reference/features--apps", "Features & apps"], apps: ["connections", "Connecting apps"], email: ["email", "Email"],
-    permissions: ["permissions", "Permissions"], photos: ["photos-and-people", "Photos & people"], cameras: ["cameras", "Cameras"], devices: ["smart-devices", "Smart devices"], printers: ["bambu-printers", "3D printers"], gifs: ["gifs", "GIFs"], maps: ["maps", "Maps and directions"], activity: ["permissions/the-activity-log", "The activity log"], remote: ["multiple-devices", "Dayspring on more than one computer"], screen: ["display-setup/fitting-dayspring-to-your-screen", "Fitting Dayspring to your screen"], sky: ["display-setup/the-living-sky", "The living sky"],
+    permissions: ["permissions", "Permissions"], photos: ["photos-and-people", "Photos & people"], cameras: ["cameras", "Cameras"], devices: ["smart-devices", "Smart devices"], printers: ["bambu-printers", "3D printers"], gifs: ["gifs", "GIFs"], maps: ["maps", "Maps and directions"], shopping: ["shopping", "Shopping on Amazon"], activity: ["permissions/the-activity-log", "The activity log"], remote: ["multiple-devices", "Dayspring on more than one computer"], screen: ["display-setup/fitting-dayspring-to-your-screen", "Fitting Dayspring to your screen"], sky: ["display-setup/the-living-sky", "The living sky"],
     done: ["tutorials", "Tutorials: how do I…?"] };
   const guideLink = (id) => { const g = GUIDE[id]; if (!g) return ""; const embed = params.get("embed");
     return `<p class="hint guide-link" style="margin-top:1.4em">❓ Need help? <a href="/help${embed ? "?embed=1" : ""}#${g[0]}"${embed ? "" : ' target="_blank" rel="noopener"'}>Open the guide for this step: ${esc(g[1])}</a> · <a href="/help${embed ? "?embed=1" : ""}#settings-reference"${embed ? "" : ' target="_blank" rel="noopener"'}>every setting explained</a></p>`; };

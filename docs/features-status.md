@@ -72,6 +72,7 @@ Which of Dayspring's features are finished, new, or still being built, and which
 | Multi-device remote control | `remote` | Home control | In progress (dev) | 1.7.0 | 11 |  |
 | Everyday commands without AI | `commands` | Talking to Dayspring | In progress (dev) | 1.8.0 | 11 |  |
 | Maps and directions | `maps` | Apps and connections | In progress (dev) | 1.8.0 | 8 |  |
+| Shopping on Amazon | `shopping` | Apps and connections | In progress (dev) | 1.8.0 | 9 |  |
 | Sharing with friends | `social` | Apps and connections | In progress (dev) | 1.6.0 | 3 |  |
 
 ## Beta (New) features
@@ -108,6 +109,7 @@ Which of Dayspring's features are finished, new, or still being built, and which
 - **Multi-device remote control** (`remote`, since 1.7.0): Several Dayspring computers linked securely: control one from another ("turn on my home computer" from the laptop). Hidden when off: routes `/api/remote`; pages `/remote-view.html`; 1 AI tool pattern; intents `remote.`; Settings `remote`, `signin`; jobs `remote.engine`.
 - **Everyday commands without AI** (`commands`, since 1.8.0): (Ending a conversation and "stop" are the "Stop and goodbye" feature, in production.) Every setting by voice with "undo that"; the sky, the background and the screen ("make it rain for 10 minutes"); the schedule with repeats ("gym every Monday Wednesday Friday at 6am"); alarms with days, labels, sounds, snooze and a gentle wake; timers to a clock time; "every 30 minutes remind me to stand up"; your name, where you live and what you like ("I live in Springfield, Illinois"); two requests at once. Hidden when off: routes `/api/commands`.
 - **Maps and directions** (`maps`, since 1.8.0): A map window with search ("find coffee near me"), directions for driving, walking, cycling and transit, spoken step-by-step guidance, "leave by" for schedule items, and sending a trip to your phone. Free OpenStreetMap maps with no key; Google Maps when you add a key. Hidden when off: routes `/api/maps`; 1 AI tool pattern; Settings `maps`; 4 screen elements.
+- **Shopping on Amazon** (`shopping`, since 1.8.0): "Find a waterproof work boot size 11 under $120 on Amazon": results in the Shopping panel with Amazon's own filters (price, brand, rating, Prime, sort), an item's pictures, details, customisations, reviews and comparing; your orders and buying again; Subscribe & Save with a daily notice (if you want it) and skipping a delivery; your account, read-only. You sign in to Amazon yourself; adding to the cart needs your yes, and Dayspring never places an order: it opens the checkout page for you to review. Hidden when off: routes `/api/shopping`; 1 AI tool pattern; intents `shopping.`; Settings `shopping`; 2 screen elements; jobs `shopping.subscriptions`.
 - **Sharing with friends** (`social`, since 1.6.0): Sharing memories with friends. Also behind its own developer switch (lib/social/flag.mjs); off by default even in development. Hidden when off: checks `features.on()` in its own code.
 
 ## Stable features

@@ -64,6 +64,7 @@ The same list is on the **Testing** page (Settings → This app → Testing, in 
 | Avatars and expression mode | Beta (New) | 11 |
 | Stop and goodbye | Beta (New) | 5 |
 | Everyday commands without AI | In progress (dev) | 11 |
+| Shopping on Amazon | In progress (dev) | 9 |
 
 ## Schedule and calendar (Stable)
 
@@ -3389,5 +3390,121 @@ The same list is on the **Testing** page (Settings → This app → Testing, in 
 2. Say "show the real sky again" afterwards.
 
 **Expected:** Both happen, and both are answered.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+
+## Shopping on Amazon (In progress (dev))
+
+### shopping-01: Shopping appears only where it should, and stays off until you turn it on
+
+1. On the production version, look for 🛒 Shop by the clock and Settings → Shopping; on the development version, look again.
+2. In development, before turning it on, say "find work boots on Amazon".
+
+**Expected:** Production: no Shopping anywhere. Development: Settings → Shopping is there with the switch off, there is no 🛒 Shop button yet, and Dayspring answers that Amazon shopping is turned off (it never opens Amazon).
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### shopping-02: Sign in to Amazon yourself, once
+
+*You need: An Amazon account*
+
+> ⚠ Dayspring never sees or keeps your password or codes.
+
+1. Settings → Shopping: turn on Shopping on Amazon.
+2. Press Sign in to Amazon. Sign in yourself in Dayspring's browser window (with your 2-step code if asked).
+3. Wait a few seconds, then press Check. Reload Settings.
+
+**Expected:** Amazon's own sign-in page opens in Dayspring's browser window; Dayspring doesn't type anything. After you finish, Settings says ✓ Signed in to Amazon (with your first name) and the window tucks away. It stays signed in after restarting Dayspring.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### shopping-03: Find something by describing it, with filters
+
+*You need: Signed in to Amazon in Dayspring*
+
+1. Say "find a waterproof work boot size 11 under $120 on Amazon".
+2. In the panel, set Brand to a brand from the list, tick Prime, set Sort to Price: low to high, press Apply.
+3. Say "show more", then "only 4 stars and up".
+
+**Expected:** The Shopping panel opens inside the screen's margins with numbered results: picture, title, price, stars and number of ratings, Prime, delivery, and Sponsored where Amazon marks it. Each filter asks Amazon again (the results change, not just hide). Show more adds the next page, numbered on.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### shopping-04: Open an item and choose a size or colour
+
+*You need: Signed in to Amazon in Dayspring*
+
+1. Say "open number 2".
+2. Click through the pictures; read About this item, Product details, the rating bars and the top reviews.
+3. Choose another size or colour (click it, or say "size 11" / "the black one").
+
+**Expected:** The item shows every picture, price and any deal, stock, delivery, seller, the choices, buying options, bullets, specs, rating breakdown and reviews. Choosing an option reads that option's own price and stock; an unavailable option says so.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### shopping-05: Add to cart needs your yes; Buy now stops at the checkout page
+
+*You need: Signed in to Amazon in Dayspring*
+
+> ⚠ Never press Place your order yourself during testing unless you really mean to buy. Dayspring itself never can.
+
+1. On an item, press Add to cart. Read the question, then press No.
+2. Press Add to cart again and say "yes" (or press Yes).
+3. On another item press Buy now… and answer Yes.
+4. Look at Dayspring's browser window.
+
+**Expected:** No: nothing is added. Yes: the item is in your Amazon cart and Dayspring says so. Buy now: the item goes in the cart and Amazon's checkout review page opens in Dayspring's browser window with the banner "Review and press Place order yourself. Dayspring never places orders." Dayspring does not place the order. Remove the items from your cart afterwards if you don't want them.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### shopping-06: Orders, "when did I last buy", and Buy it again
+
+*You need: Signed in to Amazon in Dayspring, At least one past order*
+
+> ⚠ Never press Place your order yourself during testing unless you really mean to buy. Dayspring itself never can.
+
+1. Say "show my Amazon orders".
+2. Say "when did I last buy coffee filters" (use something you've really ordered).
+3. On an order item press Buy it again… and answer No; then try once more and answer Yes.
+
+**Expected:** Your orders show with date, items, total, status and Track package. The question gets the right date. Buy it again asks first; Yes puts it in your cart and says to go to checkout when you're ready (you place the order yourself).
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### shopping-07: Subscribe & Save: the list, the notice, skipping one delivery
+
+*You need: Signed in to Amazon in Dayspring, A Subscribe & Save subscription*
+
+> ⚠ Skipping changes a real delivery.
+
+1. Say "show my Subscribe and Save".
+2. Turn on "Tell me about new subscriptions and upcoming deliveries" (in the panel or Settings).
+3. Press Skip this delivery… on one and answer No.
+4. Optional, only if you really want to skip one: press it again and answer Yes.
+
+**Expected:** Your subscriptions show with the next delivery date. Within a day (daytime only) Dayspring tells you about upcoming deliveries once and asks if it should skip one; nothing is skipped without your yes. Turning the notice off stops all checking.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### shopping-08: Account (read-only), Amazon's own settings pages, and Sign out
+
+*You need: Signed in to Amazon in Dayspring*
+
+1. Open the panel's Account tab.
+2. Press ↗ Addresses, then ↗ Email preferences.
+3. Say "am I a Prime member?".
+4. Settings → Shopping → Sign out.
+
+**Expected:** Prime status, the default address's name and city (the street hidden) and email preferences show; nothing can be changed from Dayspring. The buttons open Amazon's own pages in Dayspring's browser window for you. Sign out clears Amazon only from Dayspring's window; your own Chrome stays signed in.
+
+- [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____
+
+### shopping-09: Robot checks and fit on the screen
+
+1. If Amazon ever shows a "type the characters" check, look at the panel and the window.
+2. Make the Shopping window small, minimise it to the dock and bring it back; change Settings → Screen margins while it's open.
+
+**Expected:** Dayspring never answers the check: it shows the page to you, pauses, and continues when you press Continue. The panel stays inside the screen's margins in every mode.
 
 - [ ] Pass  - [ ] Fail  - [ ] Skip  - [ ] Blocked  Notes: ____

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-09-29",
+  "updated": "2026-10-01",
   "intro": "Go through each feature step by step, simple to complex. Stable features get a quick smoke pass; new (beta) and in-progress (dev) features get the full list. Home-control items follow the stages of the home-control plan. Mark each test Pass, Fail, Skip or Blocked on the Testing page (Settings → This app → Testing).",
   "items": [
     {
@@ -4182,6 +4182,140 @@
       "needs": [
         "no AI"
       ],
+      "safety": ""
+    },
+    {
+      "id": "shopping-01",
+      "feature": "shopping",
+      "title": "Shopping appears only where it should, and stays off until you turn it on",
+      "steps": [
+        "On the production version, look for 🛒 Shop by the clock and Settings → Shopping; on the development version, look again.",
+        "In development, before turning it on, say \"find work boots on Amazon\"."
+      ],
+      "expected": "Production: no Shopping anywhere. Development: Settings → Shopping is there with the switch off, there is no 🛒 Shop button yet, and Dayspring answers that Amazon shopping is turned off (it never opens Amazon).",
+      "needs": [],
+      "safety": ""
+    },
+    {
+      "id": "shopping-02",
+      "feature": "shopping",
+      "title": "Sign in to Amazon yourself, once",
+      "steps": [
+        "Settings → Shopping: turn on Shopping on Amazon.",
+        "Press Sign in to Amazon. Sign in yourself in Dayspring's browser window (with your 2-step code if asked).",
+        "Wait a few seconds, then press Check. Reload Settings."
+      ],
+      "expected": "Amazon's own sign-in page opens in Dayspring's browser window; Dayspring doesn't type anything. After you finish, Settings says ✓ Signed in to Amazon (with your first name) and the window tucks away. It stays signed in after restarting Dayspring.",
+      "needs": [
+        "An Amazon account"
+      ],
+      "safety": "Dayspring never sees or keeps your password or codes."
+    },
+    {
+      "id": "shopping-03",
+      "feature": "shopping",
+      "title": "Find something by describing it, with filters",
+      "steps": [
+        "Say \"find a waterproof work boot size 11 under $120 on Amazon\".",
+        "In the panel, set Brand to a brand from the list, tick Prime, set Sort to Price: low to high, press Apply.",
+        "Say \"show more\", then \"only 4 stars and up\"."
+      ],
+      "expected": "The Shopping panel opens inside the screen's margins with numbered results: picture, title, price, stars and number of ratings, Prime, delivery, and Sponsored where Amazon marks it. Each filter asks Amazon again (the results change, not just hide). Show more adds the next page, numbered on.",
+      "needs": [
+        "Signed in to Amazon in Dayspring"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "shopping-04",
+      "feature": "shopping",
+      "title": "Open an item and choose a size or colour",
+      "steps": [
+        "Say \"open number 2\".",
+        "Click through the pictures; read About this item, Product details, the rating bars and the top reviews.",
+        "Choose another size or colour (click it, or say \"size 11\" / \"the black one\")."
+      ],
+      "expected": "The item shows every picture, price and any deal, stock, delivery, seller, the choices, buying options, bullets, specs, rating breakdown and reviews. Choosing an option reads that option's own price and stock; an unavailable option says so.",
+      "needs": [
+        "Signed in to Amazon in Dayspring"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "shopping-05",
+      "feature": "shopping",
+      "title": "Add to cart needs your yes; Buy now stops at the checkout page",
+      "steps": [
+        "On an item, press Add to cart. Read the question, then press No.",
+        "Press Add to cart again and say \"yes\" (or press Yes).",
+        "On another item press Buy now… and answer Yes.",
+        "Look at Dayspring's browser window."
+      ],
+      "expected": "No: nothing is added. Yes: the item is in your Amazon cart and Dayspring says so. Buy now: the item goes in the cart and Amazon's checkout review page opens in Dayspring's browser window with the banner \"Review and press Place order yourself. Dayspring never places orders.\" Dayspring does not place the order. Remove the items from your cart afterwards if you don't want them.",
+      "needs": [
+        "Signed in to Amazon in Dayspring"
+      ],
+      "safety": "Never press Place your order yourself during testing unless you really mean to buy. Dayspring itself never can."
+    },
+    {
+      "id": "shopping-06",
+      "feature": "shopping",
+      "title": "Orders, \"when did I last buy\", and Buy it again",
+      "steps": [
+        "Say \"show my Amazon orders\".",
+        "Say \"when did I last buy coffee filters\" (use something you've really ordered).",
+        "On an order item press Buy it again… and answer No; then try once more and answer Yes."
+      ],
+      "expected": "Your orders show with date, items, total, status and Track package. The question gets the right date. Buy it again asks first; Yes puts it in your cart and says to go to checkout when you're ready (you place the order yourself).",
+      "needs": [
+        "Signed in to Amazon in Dayspring",
+        "At least one past order"
+      ],
+      "safety": "Never press Place your order yourself during testing unless you really mean to buy. Dayspring itself never can."
+    },
+    {
+      "id": "shopping-07",
+      "feature": "shopping",
+      "title": "Subscribe & Save: the list, the notice, skipping one delivery",
+      "steps": [
+        "Say \"show my Subscribe and Save\".",
+        "Turn on \"Tell me about new subscriptions and upcoming deliveries\" (in the panel or Settings).",
+        "Press Skip this delivery… on one and answer No.",
+        "Optional, only if you really want to skip one: press it again and answer Yes."
+      ],
+      "expected": "Your subscriptions show with the next delivery date. Within a day (daytime only) Dayspring tells you about upcoming deliveries once and asks if it should skip one; nothing is skipped without your yes. Turning the notice off stops all checking.",
+      "needs": [
+        "Signed in to Amazon in Dayspring",
+        "A Subscribe & Save subscription"
+      ],
+      "safety": "Skipping changes a real delivery."
+    },
+    {
+      "id": "shopping-08",
+      "feature": "shopping",
+      "title": "Account (read-only), Amazon's own settings pages, and Sign out",
+      "steps": [
+        "Open the panel's Account tab.",
+        "Press ↗ Addresses, then ↗ Email preferences.",
+        "Say \"am I a Prime member?\".",
+        "Settings → Shopping → Sign out."
+      ],
+      "expected": "Prime status, the default address's name and city (the street hidden) and email preferences show; nothing can be changed from Dayspring. The buttons open Amazon's own pages in Dayspring's browser window for you. Sign out clears Amazon only from Dayspring's window; your own Chrome stays signed in.",
+      "needs": [
+        "Signed in to Amazon in Dayspring"
+      ],
+      "safety": ""
+    },
+    {
+      "id": "shopping-09",
+      "feature": "shopping",
+      "title": "Robot checks and fit on the screen",
+      "steps": [
+        "If Amazon ever shows a \"type the characters\" check, look at the panel and the window.",
+        "Make the Shopping window small, minimise it to the dock and bring it back; change Settings → Screen margins while it's open."
+      ],
+      "expected": "Dayspring never answers the check: it shows the page to you, pauses, and continues when you press Continue. The panel stays inside the screen's margins in every mode.",
+      "needs": [],
       "safety": ""
     }
   ]

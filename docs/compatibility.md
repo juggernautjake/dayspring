@@ -26,6 +26,7 @@ The devices, services, browsers and systems Dayspring works with, and how sure w
 | Email providers | 11 | 0 | 3 | 7 | 1 | 0 |
 | GIF providers | 5 | 0 | 4 | 0 | 0 | 1 |
 | Maps and directions | 8 | 0 | 6 | 0 | 0 | 2 |
+| Shopping sites | 2 | 0 | 1 | 0 | 0 | 1 |
 | Voice and AI providers | 12 | 3 | 0 | 8 | 0 | 1 |
 | Browsers for the Dayspring screen | 7 | 1 | 1 | 2 | 2 | 1 |
 | Operating systems | 7 | 1 | 1 | 0 | 2 | 3 |
@@ -273,6 +274,15 @@ Where the Maps window gets its map, its search and its turn-by-turn directions. 
 | **OpenStreetMap Standard map pictures (tiles)** | 🧪 tested-sim | Internet service | no | map, attribution, kept for a week | For light personal use, as the tile policy allows. Dayspring fetches the pictures itself with its own name, keeps them for a week, asks for at most two at a time, and always shows the © OpenStreetMap credit. |
 | **Apple Apple Maps** | ⛔ not-supported | Internet service | no |  | Not supported: Apple Maps' web service needs a paid Apple Developer account and signed tokens, and has no way to hand turn-by-turn steps to another app on Windows. |
 | **Google Waze** | ⛔ not-supported | Internet service | no |  | Not supported: Waze has no public routing or search service for other apps. |
+
+## Shopping sites
+
+Where Dayspring can look things up for you to buy (Settings → Shopping). It reads the store in its own browser window, where you signed in yourself. It never places an order: adding to the cart needs your yes, and checkout is always yours to press.
+
+| Device | Status | Connection | Works offline | Can do | Notes |
+|---|---|---|---|---|---|
+| **Amazon amazon.com (United States)** | 🧪 tested-sim | Internet service | no | search by description, price, brand, rating, Prime and sort filters, item details, pictures, reviews, sizes, colours and other options, compare, add to cart (with your yes), checkout page for you to review, order history and search, buy it again (with your yes), Subscribe & Save: list, notices, skip a delivery (with your yes), account, read-only | Read in Dayspring's own browser window (the same one YouTube and Spotify sign in to), at a calm pace, a few pages at a time. Robot checks are shown to you, never answered. The shopping test script checks it against a stand-in Amazon on the same computer; Amazon changes its pages now and then, so if something stops showing, update Dayspring. |
+| **Amazon Other Amazon stores (amazon.ca, amazon.co.uk, amazon.de and the rest)** | ⛔ not-supported | Internet service | no |  | Not supported: Each Amazon store has its own pages, filters, prices and sign-in. Dayspring is built and tested for amazon.com only so far. |
 
 ## Voice and AI providers
 

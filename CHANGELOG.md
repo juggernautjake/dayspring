@@ -2,6 +2,26 @@
 
 All notable changes to Dayspring. Versions follow [semantic versioning](https://semver.org).
 
+## 1.7.6 (2026-10-01)
+
+### In this version
+
+Nothing changes in how this version works. It carries the groundwork for shopping on Amazon (below), switched off: production copies have no Shopping settings, button, voice commands or AI tools, and never open Amazon.
+
+### In the development version only (1.8.0-dev.7)
+
+**Shopping on Amazon.** Optional, and off until you turn it on in **Settings → Shopping**. amazon.com (United States) only for now. [Guide: Shopping on Amazon](docs/shopping.md)
+- **Sign in once, yourself.** **Sign in to Amazon** opens Amazon's own sign-in page in Dayspring's browser window (the same one YouTube and Spotify use). You type your own password and codes; Dayspring never sees, types or keeps them. It shows whether you're signed in, and Sign out clears Amazon from that window only.
+- **Find it by describing it.** "Find a waterproof work boot size 11 under $120 on Amazon", "Is there a 6-outlet smart power strip on Amazon?", "Does Amazon sell cast iron skillets?". With an AI brain the description becomes a search and filters by itself; without one, prices, brands, ratings, Prime and "cheapest / best rated / newest" are understood.
+- **The Shopping panel** (🛒 Shop by the clock): numbered results with the picture, price (and the old price), stars and how many ratings, Prime, delivery and Sponsored. Filters for price range, brand, rating, Prime and sort use Amazon's own filters, so a change asks Amazon again. "Show more", "open number 2", "only Prime", "under $80", "sort by price".
+- **Everything about one item:** every picture, price and deal, stock, delivery, seller, buying options, About this item, details and specs, the rating breakdown and top reviews, and its choices (size, colour, style, count). Choosing one reads that choice's own price and stock ("size 11", "the gray one"). Compare two or three side by side. Save for later (on this computer).
+- **Dayspring never buys.** Add to cart always asks first ("Add … to your Amazon cart?", answered by voice or a tap). **Buy now** puts it in the cart and opens Amazon's checkout page in Dayspring's browser window with "Review and press Place order yourself. Dayspring never places orders." It can never press Place your order, Buy Now, 1-Click, Subscribe or Pay, and never touches payment methods, addresses, your password, security or Prime: only Add to Cart and one Subscribe & Save Skip can ever be pressed, each after your yes.
+- **Your orders:** dates, items, totals, status and tracking; "when did I last buy coffee filters?"; **Buy it again** (with your yes).
+- **Subscribe & Save:** your subscriptions and next deliveries, and **Skip this delivery** for one delivery (with your yes). Turn on *Tell me about new subscriptions and upcoming deliveries* and once a day, in the daytime, Dayspring tells you about new ones and what's arriving in the next 7 days, and asks if it should skip one. Off: nothing checks Amazon.
+- **Your account, read-only:** Prime, the default address's name and city (the street is never read), email preferences, and Amazon's own settings pages to open for you to change yourself.
+- **Gentle with Amazon:** one page at a time at a human pace, a few minutes' memory so repeating a question is one visit, no browsing on its own except the daily check you turned on, and "Ask before opening Amazon pages" if you like. A robot check is never answered: Dayspring shows you the page and waits for you. Signed out, Amazon's error page and a slow Amazon get plain answers.
+- Also: the AI tools (Claude and Ollama), the no-AI words, "stop" and goodbyes, your requests first, the window's – ❐ ▢ and the dock, the screen's margins, and the activity log (every Amazon action, never a secret) all include Shopping. Testing checklist items and a compatibility entry are added.
+
 ## 1.7.5 (2026-09-29)
 
 ### In this version

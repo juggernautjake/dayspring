@@ -1,0 +1,42 @@
+{
+  "category": "shopping",
+  "label": "Shopping sites",
+  "description": "Where Dayspring can look things up for you to buy (Settings → Shopping). It reads the store in its own browser window, where you signed in yourself. It never places an order: adding to the cart needs your yes, and checkout is always yours to press.",
+  "entries": [
+    {
+      "id": "amazon-us",
+      "brand": "Amazon",
+      "model": "amazon.com (United States)",
+      "category": "shopping",
+      "connection": "cloud",
+      "offline": false,
+      "status": "tested-sim",
+      "capabilities": ["search by description", "price, brand, rating, Prime and sort filters", "item details, pictures, reviews", "sizes, colours and other options", "compare", "add to cart (with your yes)", "checkout page for you to review", "order history and search", "buy it again (with your yes)", "Subscribe & Save: list, notices, skip a delivery (with your yes)", "account, read-only"],
+      "notes": "Read in Dayspring's own browser window (the same one YouTube and Spotify sign in to), at a calm pace, a few pages at a time. Robot checks are shown to you, never answered. The shopping test script checks it against a stand-in Amazon on the same computer; Amazon changes its pages now and then, so if something stops showing, update Dayspring.",
+      "howToSetUp": [
+        "Open Settings → Shopping and turn on Shopping on Amazon.",
+        "Press Sign in to Amazon. Amazon's sign-in opens in Dayspring's browser window: sign in there yourself (with your 2-step code if you use one). Dayspring notices when you're done.",
+        "Say “find a waterproof work boot size 11 under $120 on Amazon”, or press 🛒 Shop by the clock."
+      ],
+      "links": ["https://www.amazon.com/"],
+      "lastChecked": "2026-10-01",
+      "features": ["shopping"]
+    },
+    {
+      "id": "amazon-other-stores",
+      "brand": "Amazon",
+      "model": "Other Amazon stores (amazon.ca, amazon.co.uk, amazon.de and the rest)",
+      "category": "shopping",
+      "connection": "cloud",
+      "offline": false,
+      "status": "not-supported",
+      "capabilities": [],
+      "notes": "Only the United States store for now.",
+      "reason": "Each Amazon store has its own pages, filters, prices and sign-in. Dayspring is built and tested for amazon.com only so far.",
+      "howToSetUp": [],
+      "links": ["https://www.amazon.com/"],
+      "lastChecked": "2026-10-01",
+      "features": ["shopping"]
+    }
+  ]
+}

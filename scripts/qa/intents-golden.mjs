@@ -183,6 +183,14 @@ game.20q: let's play 20 questions | 20 questions | guess what i'm thinking | let
 meta.heard: what did you hear | what did i just say | what did you think i said | did you catch that
 meta.wrong: that's wrong | you misheard me | that's not what i said | you got it wrong | that's not what i meant | you misunderstood
 meta.nevermind: never mind | forget it | cancel that | start over | scratch that | that's all | nothing else
+shopping.search: find a waterproof work boot size 11 under $120 on amazon | is there a 6 outlet smart power strip on amazon | search amazon for coffee filters | does amazon sell cast iron skillets | find me a phone case on amazon | look up desk lamps on amazon | can i buy a kindle on amazon
+shopping.orders: show my amazon orders | my amazon order history | where is my amazon package | what did i order on amazon
+shopping.lastbought: when did i last buy coffee filters | did i already order paper towels on amazon | search my amazon orders for batteries
+shopping.reorder: buy coffee filters again on amazon | reorder paper towels | order dog food again on amazon
+shopping.subs: show my subscribe and save | what is coming from subscribe and save | skip the coffee filters delivery | turn off amazon subscription notifications
+shopping.account: show my amazon account | am i a prime member | what is my prime status | open my amazon addresses
+shopping.open: open shopping | open the shopping panel
+shopping.signin: sign in to amazon | sign out of amazon | am i signed in to amazon
 `;
 
 // Things that must NOT be read as the look-alike (the matcher's hardest confusions).
@@ -213,6 +221,12 @@ export const NEGATIVES = [
   ["remind me to call mom at 5", "reminder.set", "timer.start", {}],
   ["remind me in 20 minutes to flip the chicken", "timer.start", "reminder.set", {}],
   ["add milk to my shopping list", "list.add", "sched.add", {}],
+  // Amazon words that aren't shopping (lib/shopping): music, the website, the shopping list
+  ["play amazon music", "media.play", "shopping.search", {}],
+  ["go to amazon", "web.open", "shopping.search", {}],
+  ["what's on my shopping list", "list.read", "shopping.open", {}],
+  ["put eggs on the shopping list", "list.add", "shopping.open", {}],
+  ["read psalm 23", "bible.read", "shopping.search", {}],
   ["add dentist friday at 3", "sched.add", "list.add", {}],
   ["turn it up", "media.volume", "ds.volume", {}],
   ["speak louder", "ds.volume", "media.volume", {}],
