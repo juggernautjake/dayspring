@@ -685,6 +685,10 @@
         <h2>How each kind arrives</h2>
         <div class="field" id="nkinds"></div>
         <div class="field"><label for="nAll"><b>Quick switch for everything</b></label> <select id="nAll"><option value="">Use the settings above</option><option value="voice">Speak everything</option><option value="chime">Chime only for everything</option><option value="silent">Everything silent (on screen only)</option></select></div>
+        <h2>While we're talking</h2>
+        <p class="hint">While you're talking to Dayspring (and for a few seconds after), notifications never interrupt you and never stop it listening. Alarms, timers and emergencies still ring.</p>
+        <div class="field"><label for="talkNotify"><b>Notifications</b></label> <select id="talkNotify"><option value="wait">Wait until I'm done, then tell me</option><option value="silent">Show them silently (no sound, not said later)</option><option value="interrupt">Interrupt me (say them right away)</option></select></div>
+        <div class="field"><label for="talkGrace"><b>Wait after we talk</b></label> <select id="talkGrace">${[3, 5, 8, 10, 15, 20, 30].map((n) => `<option value="${n}">${n} seconds${n === 8 ? " (usual)" : ""}</option>`).join("")}</select></div>
         <h2>Desktop notifications</h2>
         ${toggle("ovOn", "Show notifications in front of every window", "Small cards at the top-right of the screen, even over full-screen apps. They never take the focus, and they go away by themselves. Skipped while the Dayspring window itself is in front.", S.voice?.overlay?.on !== false)}
         ${toggle("overlayWhenOff", "Show them when Dayspring is off", "Off stops listening and talking; the cards can still show.", S.voice?.overlayWhenOff !== false)}
@@ -706,6 +710,8 @@
         const OPTS = [["auto", "Usual (" + ({ voice: "spoken", chime: "chime", silent: "silent" }[s.mode] ?? "spoken") + ")"], ["voice", "Speak"], ["chime", "Chime only"], ["silent", "Silent"]];
         $("#nkinds").innerHTML = KINDS.map(([k, t]) => `<div class="row" style="display:flex;gap:.6em;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:.25em 0"><label for="nk-${k}">${t}</label><select id="nk-${k}" data-kind="${k}">${OPTS.map(([v, l]) => `<option value="${v}"${(s.notify?.[k] ?? "auto") === v ? " selected" : ""}>${l}</option>`).join("")}</select></div>`).join("");
         $("#nAll").value = s.notifyAll ?? "";
+        $("#talkNotify").value = ["wait", "silent", "interrupt"].includes(s.talkNotify) ? s.talkNotify : "wait";
+        { const g = Number(s.talkGraceSec) || 8, opts = [...$("#talkGrace").options].map((o) => Number(o.value)); if (!opts.includes(g)) $("#talkGrace").insertAdjacentHTML("beforeend", `<option value="${g}">${g} seconds</option>`); $("#talkGrace").value = String(g); }
         $("#ovScreen").value = String(s.overlay?.screen ?? "primary");
         const secs = () => { $("#ovSecsV").textContent = `${$("#ovSecs").value} seconds`; }; $("#ovSecs").oninput = secs; secs();
         api("/overlay").then((o) => { $("#ovState").textContent = o.running ? "On." : o.error ? o.error : "Starts with Dayspring's screen."; }).catch(() => {});
@@ -714,7 +720,7 @@
       },
       save: async () => {
         const notify = Object.fromEntries($$("#nkinds select").map((x) => [x.dataset.kind, x.value]));
-        const r = await post("/settings", { notify, notifyAll: $("#nAll").value || null, alarmsWhenOff: isOn("alarmsWhenOff"), timersWhenQuiet: isOn("timersWhenQuiet"), jokeOffersOn: isOn("jokeOffersOn"), jokeOffers: Number($("#jokeOffers")?.value ?? 3), overlayWhenOff: isOn("overlayWhenOff"), speakWhenClosed: isOn("speakWhenClosed"), overlay: { on: isOn("ovOn"), seconds: Number($("#ovSecs").value), screen: $("#ovScreen").value } });
+        const r = await post("/settings", { notify, notifyAll: $("#nAll").value || null, talkNotify: $("#talkNotify")?.value || "wait", talkGraceSec: Number($("#talkGrace")?.value) || 8, alarmsWhenOff: isOn("alarmsWhenOff"), timersWhenQuiet: isOn("timersWhenQuiet"), jokeOffersOn: isOn("jokeOffersOn"), jokeOffers: Number($("#jokeOffers")?.value ?? 3), overlayWhenOff: isOn("overlayWhenOff"), speakWhenClosed: isOn("speakWhenClosed"), overlay: { on: isOn("ovOn"), seconds: Number($("#ovSecs").value), screen: $("#ovScreen").value } });
         if (S.voice) Object.assign(S.voice, r.settings ?? {});
         const want = chosen("listenState"); if (want && want !== (r.settings?.listenState ?? "active")) await post("/listen", { state: want, from: "settings" });
       } },

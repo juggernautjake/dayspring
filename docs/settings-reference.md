@@ -165,6 +165,8 @@ Each group has its own **Reset**, and **Reset the whole screen layout** puts eve
 | **Alarms still ring when Off** | On by default. |
 | **How each kind arrives** | For Reminders, Schedule, Texts and phone, Lantern, Discover, and Updates, alerts and system: **Usual**, **Speak**, **Chime only** or **Silent**. |
 | **Quick switch for everything** | Overrides them all (speak, chime only, or silent) until you choose **Use the settings above**. |
+| **While we're talking: Notifications** | What happens to a notification while you're talking to Dayspring: **Wait until I'm done, then tell me** (the usual), **Show them silently** (a card, no sound, not said later) or **Interrupt me**. Alarms, timers and emergencies always ring. By voice: "hold notifications while we talk", "show notifications silently while we talk", "let notifications interrupt me". |
+| **While we're talking: Wait after we talk** | How long after a conversation before anything that waited comes out: 3–30 seconds (8 usually). "Wait 15 seconds after we're done talking before notifications." |
 | **Show notifications in front of every window** | Small cards at the top-right, over any app, without taking the focus. Skipped while the Dayspring window is in front. |
 | **Show them when Dayspring is off** | On by default. |
 | **Speak announcements even when the screen is closed** | Off by default. With no Dayspring screen open, notifications set to Speak are read in Windows' own voice; off, they chime instead. Alarms always ring from the desktop card. |

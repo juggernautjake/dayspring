@@ -1528,6 +1528,9 @@
 
   /* ================================================================ speaking (fetched ahead, played through the chain) */
   let speaking = false, speakQueue = Promise.resolve(), current = null, voiceNode = null;
+  // speakingNote: a notification is being said (the recognizer keeps listening, so "Dayspring, …" is heard over it);
+  // lastSpeechEndAt: when Dayspring last stopped talking (the echo guard only works just after its own voice)
+  let speakingNote = false, lastSpeechEndAt = 0;
   const PAGE_ID = (crypto.randomUUID?.() ?? String(Math.random()).slice(2)) + "";
   window.dsPageId = PAGE_ID;                     // (public/winman.js reports this page's windows under it)
   window.dsPageId = PAGE_ID;             // xp.js reports "stop listening" per page with it
@@ -1564,7 +1567,10 @@
     lastSaid = { text, v };
     noteOwnSpeech(text);
     stateSince = Date.now();
-    speaking = true; setMic("speak", "Speaking…"); pauseListening(); duck(true);
+    // a reply stops the recognizer while it's said (so it never hears itself); a notification doesn't: he can still say
+    // "Dayspring, …" over it (the echo guard drops its own words), and nothing he's saying is cut off
+    const listenOn = Boolean(v.listen) && bus !== "alarm";
+    speaking = true; speakingNote = listenOn; setMic("speak", "Speaking…"); if (!listenOn) pauseListening(); duck(true);
     tuneIn(true, 1500 + text.length * 75);
     setMood(moodFor(text, v.tone));
     stage("speak", text, chip ?? null);
@@ -1585,7 +1591,7 @@
         current.onloadedmetadata = () => { if (isFinite(current.duration)) { tuneIn(true, current.duration * 1000 + 300); clearTimeout(guard); guard = setTimeout(() => { try { current?.pause(); } catch { /* gone */ } resolve(); }, current.duration * 1000 + 4000); } };
         try { const ctx = audioCtx(); voiceNode = ctx.createMediaElementSource(current); voiceNode.connect((CH[bus] ?? CH.general).voice); } catch { /* plays direct */ }
         current.onended = done; current.onerror = (e) => { clearTimeout(guard); reject(e); };
-        current.onplay = () => followCaption(current);
+        current.onplay = () => { followCaption(current); markAudio(); };
         current.play().catch(reject);
       });
       URL.revokeObjectURL(url);
@@ -1594,13 +1600,13 @@
       if (e && e.name === "NotAllowedError") { needStart(text); return; }
       usingFallbackVoice = true;
       if (!e?.browserVoice) dlog("error", { where: "tts", error: String(e?.message ?? e).slice(0, 200), fallback: "browser voice" });
-      if (g0 === speechGen) await browserSpeak(text, v);
+      if (g0 === speechGen) { markAudio(); await browserSpeak(text, v); }
     } finally {
       // let go of this clip's element and audio node (a screen on for weeks would otherwise keep every one)
       try { voiceNode?.disconnect(); } catch { /* gone */ }
       voiceNode = null;
       try { if (current) { current.onended = current.onerror = current.onloadedmetadata = current.onplay = null; current.removeAttribute("src"); current.load(); } } catch { /* gone */ }
-      current = null; speaking = false;
+      current = null; speaking = false; speakingNote = false; lastSpeechEndAt = Date.now();
       tuneIn(false);
       await sleep(250);
       stage(mode === "command" ? "listen" : "off");
@@ -1662,6 +1668,15 @@
   async function notify(text, { sound = "motif", chip = null, bus = "notify", polite = true, voice = {}, kind = null, toasted = false } = {}) {
     const m = kind ? modeForKind(kind) : listenState !== "active" ? "silent" : prefs.mode;
     if (window.dsFloor?.tokFor(text)?.cls === "emergency") polite = false;   // an emergency doesn't wait for a pause (floor.js)
+    // The conversation comes first: something with no place in the server's line (floor.js has no token for it) that
+    // arrives while he's talking waits here (or only shows, "show them silently"). Alarms and timers (polite: false) don't.
+    const args = { sound, chip, bus, polite, voice, kind, toasted };
+    const unqueued = () => polite !== false && bus !== "alarm" && !window.dsFloor?.tokFor(text);
+    if (unqueued()) {
+      const g = talkGate({ kind: kind ?? "note" });
+      if (g === "silent") { if (!toasted) toast(chip?.title ?? "Dayspring", text.length > 140 ? text.slice(0, 137) + "…" : text, "", "bell"); dlog("talk-silent", { kind }); return; }
+      if (g === "hold") { holdForLater(() => notify(text, { ...args, toasted: true }), { title: chip?.title ?? "Dayspring", text, kind, toasted }); return; }
+    }
     window.__dsNotified = (window.__dsNotified ?? 0) + 1; window.__dsLastNotify = { kind, mode: m };
     // chime and silent: shown on screen (a toast), unless the caller already showed one
     if (m !== "voice" && !toasted) toast(chip?.title ?? "Dayspring", text.length > 140 ? text.slice(0, 137) + "…" : text, "", "bell");
@@ -1672,6 +1687,8 @@
     let said = text;
     if (polite && m === "voice") {
       const moment = await politeMoment();
+      // (he may have started talking to Dayspring while it waited for that pause: then this waits for him)
+      if (unqueued() && talkGate({ kind: kind ?? "note" }) !== "go") { holdForLater(() => notify(text, { ...args, toasted: true }), { title: chip?.title ?? "Dayspring", text, kind, toasted: true }); return; }
       if (moment.mode === "timeout") said = "Hey, don't mean to interrupt anything if I did, but I need to let you know: " + text.replace(new RegExp("^(hey|hi|alright)( " + (config.ownerName || "there").replace(/[^\w ]/g, "") + ")?[,!.]?\\s*", "i"), "").replace(/^./, (c) => c.toLowerCase());
     }
     // the conversation floor (floor.js): he started talking before the chime or in the first words → called back (throws)
@@ -1679,7 +1696,93 @@
     gate("chime");
     if (m === "voice" && isSpeaker) prefetch(said, voice).catch(() => {});   // fetch the voice while the chime plays (only the screen that speaks)
     playSound(m === "chime" ? "soft" : sound, bus);
-    if (m === "voice") { await sleep(700); gate("speech"); await speak(said, chip, bus, voice); gate("after"); }
+    if (m === "voice") { await sleep(700); gate("speech"); await speak(said, chip, bus, bus === "alarm" ? voice : { ...voice, listen: true }); gate("after"); }
+  }
+
+  /* ---------------- the conversation comes first ---------------- */
+  // He's "engaged" while he's talking to Dayspring (saying "Dayspring", his words being gathered, the listening window,
+  // Dayspring thinking or answering) and for a grace period after (Settings → Notifications → While we're talking, 8 s).
+  // Meanwhile a notification is never said and never stops the recognizer: a quiet card shows at once and it waits
+  // (the server's line, lib/floor.mjs, or holdForLater below), or with "show them silently" it only shows. Alarms,
+  // timers and emergencies still ring. public/floor.js reports "busy" to the server for as long as talkActive() says.
+  let lastActiveAt = 0, lastInterimAt = 0, lastAddressedAt = 0, lateUntil = 0, graceCutAt = 0, engagedSince = 0, wasEngaged = null;
+  const talkGraceMs = () => Math.max(3, Math.min(30, Number(prefs.talkGraceSec) || 8)) * 1000;
+  function talkActive() {
+    const t = Date.now();
+    if (mode !== "idle") return mode;                         // the listening window, thinking, answering
+    if (utter) return "talking";                              // his words are being gathered
+    if (t < lateUntil) return "finishing";                    // the window closed while he was still mid-sentence
+    if (t - lastAddressedAt < 2000) return "talking";         // he's saying "Dayspring, …"
+    if (speaking && !speakingNote) return "answering";
+    return null;
+  }
+  function engaged() {
+    const t = Date.now(), a = talkActive();
+    if (a) { if (!wasEngaged) engagedSince = t; lastActiveAt = t; wasEngaged = a; return a; }
+    // (he ended it himself, "thanks, that's all", or asked "what were you going to say?": no grace period)
+    const g = graceCutAt >= engagedSince && graceCutAt > 0 ? 0 : talkGraceMs() - 300;
+    wasEngaged = lastActiveAt && t - lastActiveAt < g ? "grace" : null;
+    return wasEngaged;
+  }
+  setInterval(engaged, 200);
+  // "go" (say it now) | "hold" (a card now, said after) | "silent" (a card, never said) for something Dayspring wants to say
+  function talkGate(item = {}) {
+    if (item.floor === "ring" || item.floor === "emergency" || item.floor === "requested" || item.alarm === true || ["alarm", "morning", "timer", "emergency"].includes(item.kind)) return "go";
+    if (listenState !== "active" || (typeof textOnly !== "undefined" && textOnly)) return "go";   // shown, not said, anyway
+    if (item.quietly) return "silent";
+    const tm = prefs.talkNotify ?? "wait";
+    if (tm === "interrupt" || !engaged()) return "go";
+    return tm === "silent" ? "silent" : "hold";
+  }
+  // things with no place in the server's line wait here, then come out one at a time once he's done
+  const localHeld = []; let localBusy = false;
+  function holdForLater(fn, { title = "Dayspring", text = "", kind = null, toasted = false } = {}) {
+    localHeld.push(fn);
+    if (!toasted) talkCard(title, text);
+    dlog("talk-held", { kind, why: engaged(), local: true });
+    window.dsFloor?.repaint?.();
+  }
+  setInterval(async () => {
+    if (!localHeld.length || localBusy || engaged()) return;
+    localBusy = true; const fn = localHeld.shift(); window.dsFloor?.repaint?.();
+    try { await fn(); } catch { /* it had its turn */ } finally { localBusy = false; }
+  }, 500);
+  // the quiet card shown the moment something has to wait
+  function talkCard(title, text) {
+    const t = String(text ?? "");
+    toast(title, (t.length > 110 ? t.slice(0, 107) + "…" : t) + (t ? " " : "") + "(I'll say it when we're done talking.)", "talkheld", "bell");
+  }
+  // he started talking while a notification was being said: it stops and goes back in line, to be said later
+  function interruptNote(how) {
+    const n = window.dsFloor?.recall?.() ?? 0;
+    stopSpeaking();
+    dlog("note-interrupted", { how, recalled: n });
+  }
+  // what a held item is called on its card
+  const talkTitle = (it) => it.kind === "claude" ? (it.event === "waiting" ? `Claude needs you · ${it.project}` : `Claude finished · ${it.project}`)
+    : it.kind === "reminder" ? "Reminder" : it.kind === "text" ? `Text from ${it.from ?? "someone"}` : it.kind === "coder" ? "Claude Code"
+    : it.kind === "checkin" ? `Time's up · ${it.ended?.title ?? ""}` : it.title ?? it.started?.title ?? "Dayspring";
+  // an announcement (or Claude Code alert) that can't be said now: shown, and put back in the server's line (or held here)
+  function talkHold(item, g, tok, deliver) {
+    if (g === "silent") {
+      if (!item.again) toast(talkTitle(item), item.kind === "claude" ? item.summary || item.text : item.text, "", item.kind === "claude" ? "code" : "bell");
+      push("ann", item.text);
+      dlog("talk-silent", { kind: item.kind, quietly: Boolean(item.quietly) });
+      window.dsFloor?.done(item);
+      return;
+    }
+    if (!item.again && !item.carded) talkCard(talkTitle(item), item.kind === "claude" ? item.summary || item.text : item.text);
+    dlog("talk-held", { kind: item.kind, why: engaged() });
+    if (tok && item.floor === "hold" && item.fid) { tok.cancelled = true; window.dsFloor.done(item); }   // back in the server's line
+    else { localHeld.push(() => deliver().finally(() => window.dsFloor?.done(item))); window.dsFloor?.repaint?.(); }
+  }
+  // how long things take, from his last word to Dayspring's voice (the devlog: "timing")
+  let timing = null;
+  function markAudio() {
+    if (!timing?.replyAt || timing.audioAt) return;
+    timing.audioAt = Date.now();
+    const t = timing; timing = null;
+    dlog("timing", { pauseMs: t.flushAt - t.finalAt, chatMs: t.replyAt - t.sentAt, voiceMs: t.audioAt - t.replyAt, totalMs: t.audioAt - t.finalAt, by: t.by ?? null });
   }
 
   /* ---------------- listening before speaking ---------------- */
@@ -2853,7 +2956,7 @@
       else if (e.error === "not-allowed" || e.error === "service-not-allowed") { micBlocked = true; setMic("", "Microphone blocked: allow it for localhost (the lock icon in the address bar)."); }
       else if (e.error === "network") setMic("", "Listening needs the internet. Retrying…");
     };
-    rec.onend = () => { rec = null; if (!paused) setTimeout(() => { micBlocked = false; startListening(); }, micBlocked ? 30_000 : 300); };
+    rec.onend = () => { rec = null; if (!paused) setTimeout(() => { micBlocked = false; startListening(); }, micBlocked ? 30_000 : 60); };
     try { rec.start(); if (mode === "idle") setMic("wait", idleText()); } catch { rec = null; }
   }
   function pauseListening() { paused = true; if (rec) { try { rec.abort(); } catch { /* stopped */ } rec = null; } }
@@ -2863,7 +2966,7 @@
   // into one message and sent only after he's really done: ~2 s of quiet (3.5 s if he trailed off on "and", "so", a comma…),
   // or right away on "that's it" / "send it". Talking again before then just keeps the message open.
   let utter = null;            // { text, timer }
-  const PAUSE_MS = 2000, TRAIL_MS = 3500;
+  const PAUSE_MS = 2000, TRAIL_MS = 3500, QUESTION_MS = 1400;
   const trailing = (t) => /(,|\b(and|so|but|or|then|because|also|plus|like|um|uh|with|to|the|a|my|for))\s*$/i.test(t);
   // an ending ("thanks", "that's all", "bye", "good night") means he's finished: sent now, not after the pause, and
   // the server answers briefly and closes the window (lib/commands/closing.mjs has the full list)
@@ -2874,17 +2977,20 @@
     const done = clean !== piece.trim() || (cmdsOn() && ENDING.test(piece.trim()) && !/\b(to|say|said|for|a|an|the|my|called|named|text|tell)\s+\S+(\s+\S+)?\W*$/i.test(piece.trim()));
     if (!utter) utter = { text: "", timer: 0 };
     if (clean) utter.text = (utter.text + " " + clean).trim();
+    utter.lastAt = Date.now();
     clearTimeout(commandTimer);                        // he's talking: the listening window stays open
     mode = "command"; setMic("listen", "Listening…"); if (!speaking) stage("listen");
     $("#youSaid").textContent = "You: " + utter.text; $("#youSaid").classList.add("interim");
     clearTimeout(utter.timer);
     if (done) return flushUtter();
-    utter.timer = setTimeout(flushUtter, trailing(utter.text) ? TRAIL_MS : PAUSE_MS);
+    // (a finished question, "…on YouTube?", is sent a little sooner; more words before then still join it)
+    utter.timer = setTimeout(flushUtter, trailing(utter.text) ? TRAIL_MS : /\?["”’)]*$/.test(utter.text) ? QUESTION_MS : PAUSE_MS);
   }
   function flushUtter() {
     if (!utter) return;
     clearTimeout(utter.timer);
-    const text = utter.text.trim(); utter = null;
+    const text = utter.text.trim(), lastAt = utter.lastAt ?? Date.now(); utter = null;
+    timing = text.length > 1 ? { finalAt: lastAt, flushAt: Date.now() } : null;
     clearInterim();
     $("#youSaid").classList.remove("interim");
     if (text.length > 1) ask(text); else backToIdle();
@@ -2902,6 +3008,13 @@
       handleFinal(bestOf(r));
     }
     interim = interim.trim();
+    const echo = interim && (speaking || Date.now() - lastSpeechEndAt < ECHO_MS) && isOwnEcho(interim);
+    if (interim && !echo) {
+      lastInterimAt = Date.now();
+      // "Dayspring, …" over a notification: it stops (and is said later); he comes first
+      if (wakeRe.test(interim)) { lastAddressedAt = Date.now(); if (speakingNote) interruptNote("wake"); }
+    }
+    if (echo) return;
     if (interim && bargeIn(interim)) return;            // "stop" over Dayspring's own voice: cut off now
     if (interim && window.dsDictation?.active && mode !== "command" && !utter && !wakeRe.test(interim)) window.dsDictation.interim?.(interim);   // dictation (mail-compose.js)
     if (interim && wakeRe.test(interim) && mode === "idle") { duck(true); wake(); }
@@ -2909,7 +3022,7 @@
       window.dsFloor?.owner("voice");        // he's talking to Dayspring: a planned line just starting is called back (floor.js)
       stillTalking();
       // he started talking after just "Dayspring": the window waits for him instead of closing mid-thought
-      if (mode === "command" && !utter) { clearTimeout(commandTimer); const left = Math.max(0, windowOpenedAt + WINDOW_MAX_MS - Date.now()); commandTimer = setTimeout(() => { if (mode === "command" && !utter) backToIdle(); }, Math.min(REPLY_MS, left)); }
+      if (mode === "command" && !utter) { clearTimeout(commandTimer); const left = Math.max(0, windowOpenedAt + windowMax() - Date.now()); commandTimer = setTimeout(windowTimeout, Math.min(REPLY_MS, left)); }
       const shown = ((utter?.text ?? "") + " " + interim.replace(wakeRe, "$1")).trim();
       if (!interimEl) interimEl = push("me interim", shown); else interimEl.textContent = shown;
       $("#youSaid").textContent = "You: " + shown; $("#youSaid").classList.add("interim");
@@ -2922,16 +3035,21 @@
   const ownSpeech = [];
   function noteOwnSpeech(text) { ownSpeech.push({ w: words(text), at: Date.now() }); while (ownSpeech.length > 6) ownSpeech.shift(); }
   const words = (t) => String(t).toLowerCase().replace(/[^a-z0-9' ]+/g, " ").split(/\s+/).filter(Boolean);
+  // Only while Dayspring is talking or just after (ECHO_MS): the mic can't hear its voice later than that. (It used to look
+  // back 30 s, so "change your avatar", right after Dayspring said "say change your avatar again", was thrown away.)
+  const ECHO_MS = 4000;
   function isOwnEcho(text) {
     const w = words(text); if (w.length < 2) return false;
-    return ownSpeech.some((s) => Date.now() - s.at < 30_000 && w.filter((x) => s.w.includes(x)).length / w.length >= 0.75
+    if (!speaking && Date.now() - lastSpeechEndAt > ECHO_MS) return false;
+    return ownSpeech.some((s) => Date.now() - s.at < 120_000 && w.filter((x) => s.w.includes(x)).length / w.length >= 0.75
       && s.w.join(" ").includes(w.slice(0, 2).join(" ")));        // same words, in the same order it said them
   }
 
   function handleFinal(text) {
     clearInterim();
     if (!text) return;
-    if (isOwnEcho(text) && !wakeRe.test(text)) { dlog("ignored-echo", { words: text.split(/\s+/).length }); return; }
+    // (its own voice saying "Dayspring" — "Claude's all done with Dayspring" — isn't him calling it either)
+    if (isOwnEcho(text) && (!wakeRe.test(text) || speaking)) { dlog("ignored-echo", { words: text.split(/\s+/).length }); return; }
     // dictating into an email (mail-compose.js): what he says goes into the email, except "Dayspring, …" (a request),
     // and "Dayspring, stop dictating"; the words aren't logged
     if (window.dsDictation?.active && !alarmOn && mode !== "command" && !utter) {
@@ -2939,6 +3057,13 @@
       if (!dw || /^(?:(?:ok(?:ay)? )?(?:stop|end|finish|done)(?: dictating| dictation)?|that'?s all)\W*$/i.test(rest)) { if (window.dsDictation.take(dw ? "stop dictating" : text)) { dlog("dictated", { words: text.split(/\s+/).length }); return; } }
     }
     const m = wakeRe.exec(text);
+    if (m && speakingNote) interruptNote("wake");
+    // the listening window closed while he was still mid-sentence: the words that finish it are still for Dayspring
+    if (!m && mode === "idle" && !utter && !alarmOn && Date.now() < lateUntil) {
+      lateUntil = 0; dlog("late-final", { words: text.split(/\s+/).length });
+      if (!isStopPhrase(text)) { window.dsFloor?.owner("voice"); collect(text); }
+      return;
+    }
     // right after "stop" cut Dayspring off mid-sentence: the finished words ("stop the timer") are still a request
     if (!m && mode === "idle" && !utter && Date.now() < stopGraceUntil) { stopGraceUntil = 0; if (!isStopPhrase(text)) { window.dsFloor?.owner("voice"); collect(text); } return; }
     // "stop", "that's enough", "never mind"… on its own (or after "Dayspring"): this interaction stops here (not an alarm:
@@ -2947,6 +3072,18 @@
       // (right after a request he's still saying, "that's all" / "got it, thanks" ends the request: it's sent, then closed)
       const finishing = utter?.text && /^(?:(?:ok(?:ay)?|alright)[, ]+)?(?:that'?s (?:all|it|good|fine)|got it(?:[, ]+thanks| thank you)?|thanks?)[.!]*$/i.test(said);
       if (said && !finishing && isStopPhrase(said) && !alarmOn && (m || speaking || mode !== "idle" || utter || window.dsReader?.state?.().playing)) { if (Date.now() - interruptedAt > 1500) interruptNow(said); else backToIdle(); return; } }
+    // he kept talking while Dayspring was thinking or answering him: kept as his next turn (takeNext), never merged into
+    // the request already on its way; "stop" / "never mind" / "cancel that" were handled above and stop that request
+    if ((mode === "thinking" || mode === "replying") && askByVoice && !alarmOn) {
+      const said = (m ? String(m[1] || "") : text).trim();
+      if (said.length > 1) {
+        pendingNext = (pendingNext ? pendingNext + " " : "") + said;
+        window.dsFloor?.owner("voice");
+        dlog("next-held", { words: said.split(/\s+/).length, mode });
+        const y = $("#youSaid"); if (y) { y.textContent = "Next: " + pendingNext; y.classList.add("interim"); }
+      }
+      return;
+    }
     if (m || mode === "command" || utter) window.dsFloor?.owner("voice");
     // privacy: speech that isn't for Dayspring (room conversation) is logged only as a word count, never the words;
     // "nearWake" flags things that sounded close to the wake word, to catch missed "Dayspring"s
@@ -2961,21 +3098,51 @@
     if (!m) { if (ducked && !speaking) duck(false); return; }   // everything else in the room is ignored
     const rest = (m[1] || "").trim();
     if (rest.length > 1) collect(rest);
-    else { playSound("wake"); openCommandWindow(10000); }
+    else { playSound("wake"); openCommandWindow(WAKE_MS, { wake: true }); }
   }
   // After Dayspring asks something (or hears just its name) it listens for an answer without the wake word, but never
   // for more than REPLY_MS: an unanswered question goes back to "Ready" instead of waiting on room noise. When
   // listening is stopped, off or quiet, there is no window at all and it goes straight back to Ready.
   const REPLY_MS = 7000, WINDOW_MAX_MS = 12000;   // 7 s to start answering; if someone is mid-answer, a few seconds more to finish
-  let windowOpenedAt = 0;
-  if (window.__dsAllowAutomatedListen) window.__dsTest = { openCommandWindow: (ms) => openCommandWindow(ms), mode: () => mode };   // test hook only
-  function openCommandWindow(ms = REPLY_MS) {
+  // After just "Dayspring" he gets 10 s to start, and the window then stays open for as long as he's talking (up to
+  // 45 s). Any other window still closes after 12 s at most (room noise can't hold it open), but if he was mid-sentence
+  // when it closed, the words that finish that sentence (within LATE_MS) are still taken: they used to be thrown away.
+  const WAKE_MS = 10_000, TALKING_MAX_MS = 45_000, LATE_MS = 15_000;
+  let windowOpenedAt = 0, windowByWake = false;
+  const windowMax = () => (windowByWake ? TALKING_MAX_MS : WINDOW_MAX_MS);
+  // someone's talking right now: new words from the recognizer, or (no music or video playing) the mic's level
+  function voiceActive(ms = 1200) {
+    const t = Date.now();
+    if (t - lastInterimAt < ms) return true;
+    if (!micAn || speaking || mediaPlaying()) return false;
+    const w = levels.filter((x) => x.t >= t - ms && !x.own);
+    if (w.length < 5) return false;
+    const f = floorDb();
+    return w.filter((x) => x.db > f + 9).length / w.length >= 0.3;
+  }
+  // Recognized words hold the window open (up to TALKING_MAX_MS); the mic's level alone (no words, as when Chrome sends
+  // no partial results, or a noisy room) holds it at most VAD_ONLY_MAX_MS past the last words, and never earns the "late"
+  // words afterwards, so noise can't keep it open or feed it a stray sentence.
+  const VAD_ONLY_MAX_MS = 12_000;
+  function windowTimeout() {
+    if (mode !== "command" || utter) return;
+    const t = Date.now(), byWords = t - lastInterimAt < 1200, byLevel = !byWords && voiceActive();
+    const wordsHere = lastInterimAt > windowOpenedAt;
+    const levelOk = byLevel && t - Math.max(windowOpenedAt, lastInterimAt) < VAD_ONLY_MAX_MS;
+    if ((byWords || levelOk) && windowByWake && t - windowOpenedAt < TALKING_MAX_MS) { commandTimer = setTimeout(windowTimeout, 600); return; }
+    backToIdle();
+    if (byWords || (byLevel && wordsHere)) lateUntil = t + LATE_MS;
+    dlog("window-closed", { after: t - windowOpenedAt, wake: windowByWake, talking: byWords ? "words" : byLevel ? "level" : false });
+    if (window.__dsTest) window.__dsTest.lastWindow = { after: t - windowOpenedAt, wake: windowByWake, byWords, byLevel, sinceWords: t - lastInterimAt };
+  }
+  if (window.__dsAllowAutomatedListen) window.__dsTest = { openCommandWindow: (ms, o) => openCommandWindow(ms, o), mode: () => mode, engaged: () => engaged(), talkActive: () => talkActive(), heldHere: () => localHeld.length, lateUntil: () => lateUntil, recLive: () => Boolean(rec), paused: () => paused, speakingNote: () => speakingNote, setInterimAt: (t) => { lastInterimAt = t; }, pendingNext: () => pendingNext };   // test hook only
+  function openCommandWindow(ms = REPLY_MS, { wake: byWake = false } = {}) {
     if (listenState !== "active" || micMuted || textOnly || !SR || micBlocked) { if (mode !== "thinking") backToIdle(); return; }
     mode = "command"; setMic("listen", "Listening…"); duck(true); wake();
     if (!speaking) stage("listen");
-    windowOpenedAt = Date.now();
+    windowOpenedAt = Date.now(); windowByWake = byWake; lateUntil = 0;
     clearTimeout(commandTimer);
-    commandTimer = setTimeout(() => { if (mode === "command" && !utter) backToIdle(); }, Math.min(ms, REPLY_MS));
+    commandTimer = setTimeout(windowTimeout, Math.min(ms, byWake ? WAKE_MS : REPLY_MS));
   }
   // ⌨ Type: a typed conversation, no audio either way
   $("#typeBtn").onclick = () => { const f = $("#typeForm"); f.hidden = !f.hidden; $("#typeBtn").classList.toggle("on", !f.hidden); if (!f.hidden) $("#typeBox").focus(); };
@@ -2994,7 +3161,7 @@
     if (!keepAsk) cancelAsk();
     window.dsExtras?.stop?.();
     if (utter) { clearTimeout(utter.timer); utter = null; }
-    clearInterim(); clearTimeout(commandTimer);
+    clearInterim(); clearTimeout(commandTimer); lateUntil = 0;
     if (speaking) stopSpeaking();
     backToIdle();
   }
@@ -3013,7 +3180,8 @@
     speak, notify, stopSpeaking, playSound, toast, push, openPage, sleep, post, json, ask, backToIdle, wake, esc,
     openCommandWindow: (ms) => openCommandWindow(ms), cancelAsk,
     get listenState() { return listenState; }, get prefs() { return prefs; }, get textOnly() { return textOnly; }, get micMuted() { return micMuted; },
-    get mode() { return mode; }, get speaking() { return speaking; }, get utter() { return Boolean(utter); }, get alarmOn() { return alarmOn; }, get isSpeaker() { return isSpeaker; }, get askGen() { return askGen; }, get speechGen() { return speechGen; },
+    get mode() { return mode; }, get speaking() { return speaking; }, get utter() { return Boolean(utter); },
+    get talkActive() { return talkActive(); }, engaged: () => engaged(), talkReleased: () => { graceCutAt = Date.now(); }, get talkHeld() { return localHeld.length; }, talkCard: (t, x) => talkCard(t, x), get alarmOn() { return alarmOn; }, get isSpeaker() { return isSpeaker; }, get askGen() { return askGen; }, get speechGen() { return speechGen; },
     REPLY_MS,
   };
   function repeatLast() { if (lastSaid) speak(lastSaid.text, null, "general", lastSaid.v); else speak("I haven't said anything yet."); }
@@ -3054,7 +3222,7 @@
     try { window.dsReader?.pause?.(); } catch { /* no reader */ }
     try { window.dsExtras?.stop?.(); } catch { /* no extras */ }
     if (utter) { clearTimeout(utter.timer); utter = null; }
-    clearInterim(); clearTimeout(commandTimer);
+    clearInterim(); clearTimeout(commandTimer); lateUntil = 0; graceCutAt = Date.now();
     // a plain "stop" with nothing being said: the music or video stops too
     if (!wasSpeaking && /^(?:(?:ok(?:ay)?|dayspring)[, ]+)?stop(?:[, ]+stop)*(?: it| please)?[.!]*$/i.test(String(said).trim()) && mediaPlaying()) { stopMedia(false); post("/media/stop").catch(() => {}); showNowPlaying(null); }
     backToIdle();                                       // (never the stopped / muted state: wake-word listening stays on)
@@ -3118,17 +3286,65 @@
   }
   const settle = (ms) => new Promise((r) => setTimeout(r, ms));
 
+  // /api/chat, streamed when asked (stream: true): the answer's sentences arrive as they're written ({t:"say", text, round}
+  // lines), then {t:"done", round, data}. Anything answered without the AI comes back as plain JSON. → { r, round }
+  async function chatRequest(body, signal, onSay) {
+    const res = await api("/chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body), signal });
+    if (!/ndjson/i.test(res.headers.get("content-type") ?? "") || !res.body?.getReader) return { r: await res.json(), round: null };
+    const reader = res.body.getReader(), dec = new TextDecoder();
+    let buf = "", done = null;
+    for (;;) {
+      const { value, done: end } = await reader.read();
+      if (value) buf += dec.decode(value, { stream: true });
+      let i;
+      while ((i = buf.indexOf("\n")) >= 0) {
+        const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
+        if (!line) continue;
+        let m; try { m = JSON.parse(line); } catch { continue; }
+        if (m.t === "say") { try { onSay?.(m); } catch { /* keep reading */ } }
+        else if (m.t === "done") done = m;
+        else if (m.t === "error") throw new Error(m.error || "no answer");
+      }
+      if (end) break;
+    }
+    if (!done) throw new Error("the answer was cut off");
+    return { r: done.data, round: done.round };
+  }
+  // what's left of the answer after the sentences already said from its last step (nothing twice)
+  function restAfter(full, saidPieces) {
+    const norm = (s) => String(s ?? "").replace(/\s+/g, " ").trim();
+    const all = norm(full);
+    if (!saidPieces.length) return all;
+    const said = norm(saidPieces.join(" "));
+    if (all.startsWith(said)) return all.slice(said.length).trim();
+    let rest = all;                                   // (the wording changed a little: drop each piece said, where it is)
+    for (const p of saidPieces) { const k = rest.indexOf(norm(p)); if (k >= 0) rest = (rest.slice(0, k) + rest.slice(k + norm(p).length)).replace(/\s+/g, " ").trim(); }
+    return rest;
+  }
+  // He kept talking while Dayspring was thinking or answering: those words are his NEXT turn, asked once this answer is
+  // done (never added to the request already on its way, so nothing runs twice). "Stop" / "never mind" stop it instead.
+  let pendingNext = null, askByVoice = false;
+  function takeNext() {
+    if (!pendingNext) return false;
+    const t = pendingNext; pendingNext = null;
+    dlog("next-turn", { words: t.split(/\s+/).length });
+    ask(t);
+    return true;
+  }
   async function ask(text, { typed = false, internal = false } = {}) {
     const silent = typed || textOnly || listenState !== "active";
+    if (!internal) askByVoice = !typed;
     const say = (t, ...rest) => (silent ? Promise.resolve() : speak(t, ...rest));
     cancelAsk(); const gen = askGen;
+    lateUntil = 0;
+    if (typed || internal) timing = null;
     if (!internal) window.dsFloor?.owner(typed ? "typed" : "voice");   // his turn: anything planned waits (floor.js)
     window.dsExtras?.asking?.(text, { internal });
     clearTimeout(commandTimer);
     if (utter) { clearTimeout(utter.timer); utter = null; }
     if (typed) dlog("heard", { how: "typed", text });
     if (!internal) push("me", text);
-    if (localCommand(text)) { dlog("local-reply", { heard: text, said: "(local command)", handler: "localCommand" }); backToIdle(); return; }
+    if (localCommand(text)) { timing = null; dlog("local-reply", { heard: text, said: "(local command)", handler: "localCommand" }); backToIdle(); return; }
     const mc = musicCommand(text);
     if (mc) { dlog("local-reply", { heard: text, said: mc.say || "(music control)", handler: "musicCommand" }); if (mc.say) push("ai", mc.say); if (mc.speak) await say(mc.say); backToIdle(); return; }
     const lc = window.dsLibrary?.command(text);
@@ -3153,9 +3369,21 @@
     try {
       const ctl = new AbortController(), tmo = setTimeout(() => ctl.abort(), 75_000);
       askCtl = ctl;
-      const r = await json("/chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ message: text, surface: "tv", typed: silent }), signal: ctl.signal }).finally(() => clearTimeout(tmo));
+      if (timing) timing.sentAt = Date.now();
+      // spoken answers stream: the first sentence is said while the rest is written (not a schedule change: that one is
+      // "I'll make that change", the change on screen, then the confirmation, in that order)
+      const early = { pieces: [], el: null };
+      const { r, round } = await chatRequest({ message: text, surface: "tv", typed: silent, stream: !silent && !editing && !internal }, ctl.signal, (p) => {
+        if (gen !== askGen) return;
+        early.pieces.push(p);
+        if (!early.el) { early.el = push("ai", p.text); mode = "replying"; if (timing?.sentAt && !timing.replyAt) { timing.replyAt = Date.now(); timing.by = "ai-stream"; } }
+        else early.el.textContent += " " + p.text;
+        speak(p.text, null, "general");
+      }).finally(() => clearTimeout(tmo));
       if (gen !== askGen) { dlog("dropped-reply", { heard: text }); return; }     // stopped, or a newer question: this answer isn't wanted
       askCtl = null;
+      if (timing?.sentAt && !timing.replyAt) { timing.replyAt = Date.now(); timing.by = r.intent ?? (r.usage ? "ai" : "local"); }
+      if (r.intent === "floor.release" || r.close) graceCutAt = Date.now();   // "what were you going to say?" / "thanks, that's all"
       // "offline"/"done" are broad (any quick reply), so they count only when it was clearly a schedule edit
       const changedSchedule = r.changes?.some((c) => SCHED_CHANGES.has(c) || (editing && (c === "offline" || c === "done")));
       if (editing || changedSchedule) {
@@ -3168,7 +3396,8 @@
       }
       const ex = window.dsExtras;
       const shown = ex?.before?.(r, { silent, typed, internal }) ?? null;      // lists, links, timers, recipes, cooking
-      const msgEl = push("ai", r.reply);
+      const msgEl = early.el ?? push("ai", r.reply);
+      if (early.el) early.el.textContent = r.reply;
       ex?.decorate?.(msgEl, r);
       if (r.photo === "next") showPhoto({ pin: true }).catch(() => {});
       if (r.panel === "voices") voicesDetail().catch(() => {});
@@ -3176,17 +3405,21 @@
       if (r.changes?.length) { loadDay(); loadLearning(); }
       mode = "replying";
       const rv = r.speed ? { speed: r.speed } : {};
+      const rest = early.pieces.length ? restAfter(r.reply, early.pieces.filter((p) => p.round === round).map((p) => p.text)) : r.reply;
       // counting, jokes with a pause before the punchline, knock-knock: said in their own rhythm
-      if (ex?.deliver && await ex.deliver(r, { silent, typed, gen: () => gen === askGen, rv })) { if (r.clientRun && !internal) ask(r.clientRun, { typed, internal: true }); return; }
+      if (!early.pieces.length && ex?.deliver && await ex.deliver(r, { silent, typed, gen: () => gen === askGen, rv })) { if (r.clientRun && !internal) ask(r.clientRun, { typed, internal: true }); else takeNext(); return; }
       if (silent) { lastSaid = { text: r.reply, v: rv }; backToIdle(); if (typed) $("#typeBox").focus(); if (r.clientRun && !internal) ask(r.clientRun, { typed, internal: true }); return; }   // typed: read, not heard
       if (r.quiet) {                       // "I'm ready, don't want to talk": two words, then quiet
-        await speak(r.reply, null, "general", rv);
+        if (rest) await speak(rest, null, "general", rv); else await speakQueue;
         backToIdle(); playSound("done");
         return;
       }
-      await speak(r.reply, ex?.chipFor?.(r) ?? null, "general", rv);   // a direct answer is always spoken, whatever the notification mode
+      if (rest) await speak(rest, ex?.chipFor?.(r) ?? null, "general", rv);   // a direct answer is always spoken, whatever the notification mode
+      else await speakQueue;                       // (all of it was already said as it was written)
+      if (early.pieces.length) lastSaid = { text: r.reply, v: rv };   // "say that again": the whole answer
       if (gen !== askGen) return;                  // stopped while speaking
       if (r.clientRun && !internal) { ask(r.clientRun, { typed, internal: true }); return; }
+      if (takeNext()) return;                      // what he said while it was thinking: his next turn, now
       // "thanks, that's all" / "…, thanks": the conversation is over, so no listening window at all (lib/commands)
       if (r.close) { dlog("closed", { heard: text, how: r.closing ?? "done" }); backToIdle(); return; }
       // In a between-blocks conversation he just keeps talking — no wake phrase — until it wraps up.
@@ -3200,6 +3433,7 @@
       dlog("error", { where: "ask", heard: text, name: e.name, error: String(e.message).slice(0, 300), said: msg });
       push("sys", msg); mode = "replying"; await say(msg).catch(() => {});
       backToIdle();
+      takeNext();
     }
   }
 
@@ -3306,8 +3540,12 @@
     // ("called back") skips the rest of its handler and goes back in the server's line
     es.addEventListener("announce", (e) => {
       const item = JSON.parse(e.data);
-      window.dsFloor?.present(item);
-      onAnnounce(item).catch((x) => { if (!x?.floorCancel) dlog("error", { where: "announce", error: String(x?.message ?? x).slice(0, 200) }); }).finally(() => window.dsFloor?.done(item));
+      const tok = window.dsFloor?.present(item);
+      const run = () => onAnnounce(item).catch((x) => { if (!x?.floorCancel) dlog("error", { where: "announce", error: String(x?.message ?? x).slice(0, 200) }); });
+      // he's talking to Dayspring: shown now, said after (or only shown); alarms, timers and emergencies go on
+      const g = talkGate(item);
+      if (g !== "go") return talkHold(item, g, tok, run);
+      run().finally(() => window.dsFloor?.done(item));
     });
     const onAnnounce = async (item) => {
       push("ann", item.text);
@@ -3442,11 +3680,19 @@
       if (JSON.stringify(prefs.audioOutputs) !== before) routeAudio().then(() => playSound("chime")).catch(() => {});
       if (mode === "idle") setMic("wait", idleText());
     });
+    // Claude Code finished or needs him (hooks/claude-event.mjs): the card shows at once; the words wait while he talks
     es.addEventListener("claude", (e) => {
       const c = JSON.parse(e.data);
-      toast(c.event === "finished" ? `Claude finished · ${c.project}` : `Claude needs you · ${c.project}`, c.summary, c.event === "finished" ? "" : "wait", "code");
-      if (c.quiet && prefs.mode === "voice") { playSound("ding", "general"); return; }
-      notify(c.text, { sound: "ding", bus: "general", chip: { title: c.event === "finished" ? `Claude · ${c.project}` : `Claude needs you · ${c.project}`, category: "work" } });
+      const tok = window.dsFloor?.present(c);
+      const say = () => {
+        if (c.quiet && prefs.mode === "voice") { playSound("ding", "general"); return Promise.resolve(); }
+        return notify(c.text, { sound: "ding", bus: "general", chip: { title: c.event === "finished" ? `Claude · ${c.project}` : `Claude needs you · ${c.project}`, category: "work" } })
+          .catch((x) => { if (!x?.floorCancel) dlog("error", { where: "claude", error: String(x?.message ?? x).slice(0, 200) }); });
+      };
+      const g = talkGate(c);
+      if (g !== "go") return talkHold(c, g, tok, say);
+      if (!c.again && !c.carded) toast(c.event === "waiting" ? `Claude needs you · ${c.project}` : `Claude finished · ${c.project}`, c.summary, c.event === "waiting" ? "wait" : "", "code");
+      say().finally(() => window.dsFloor?.done(c));
     });
     es.addEventListener("refresh", (e) => {
       loadDay(); loadLearning();

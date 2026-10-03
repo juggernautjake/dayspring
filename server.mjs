@@ -22,6 +22,7 @@ import * as knowledge from "./lib/knowledge.mjs";
 import * as browser from "./lib/browser.mjs";
 import * as settings from "./lib/settings.mjs";
 import * as session from "./lib/session.mjs";
+import { createSplitter } from "./lib/calls/sentences.mjs";   // the Dayspring screen's answer, sentence by sentence
 import * as transcripts from "./lib/transcripts.mjs";
 import * as morning from "./lib/morning.mjs";
 import { setBitRate } from "./lib/phrases.mjs";
@@ -300,7 +301,9 @@ function claudeEvent(ev) {
     ? `Claude's all done ${home ? "on your computer" : "with " + project}.${gist ? " " + gist : " It's ready for you to look over."}`
     : /permission/i.test(summary) ? `Claude needs a quick yes from you ${home ? "on your computer" : "on " + project}.` : `Claude's waiting on you ${home ? "on your computer" : "in " + project}.`;
   const item = { at: new Date().toISOString(), kind: "claude", event: kind, project, cwd: ev.cwd, text: spoken, summary: gist || summary.slice(0, 160), quiet };
-  floor.offer(item, (it) => announcer.broadcast("claude", it), { expectDone: false });   // waits while he's talking (lib/floor.mjs)
+  // waits while he's talking (lib/floor.mjs); the screen reports it done, or "called back" when he started talking as it
+  // began (then it goes back in line and comes again, marked again: its card is already up)
+  floor.offer(item, (it) => announcer.broadcast("claude", it), { refire: (it) => announcer.broadcast("claude", { ...it, again: true }) });
   rememberSpoken(`Claude Code ${kind} in ${ev.cwd}. ${summary ? "Its last words: " + summary.slice(0, 300) : ""}`, spoken);
   return item;
 }
@@ -724,7 +727,7 @@ async function api(req, res, url) {
 
   if (m === "POST" && p === "/chat") {
     const MONEY_NOT_KEPT = "(a money review answer; not kept)";
-    const { message, surface, typed } = await readJSON(req);
+    const { message, surface, typed, stream: wantStream } = await readJSON(req);
     if (!message?.trim()) return send(res, 400, { error: "message is required" });
     const key = surface === "tv" ? "tv" : "desk";
     transcripts.log({ role: "user", text: message.trim(), surface: key });
@@ -799,6 +802,21 @@ async function api(req, res, url) {
     if (fv) { transcripts.log({ role: "dayspring", text: fv.reply, surface: key }); return send(res, 200, { reply: fv.reply, changes: [], usage: null, intent: "fileviewer", ...(fv.listen ? { listen: true } : {}) }); }
     const t0 = Date.now();
     lastChatAt = Date.now();
+    // The Dayspring screen can have the answer as it's written (stream: true): each finished sentence goes out at once as a
+    // line of NDJSON {t:"say", text, round}, then {t:"done", round, data} with the usual reply. Only once the AI actually
+    // writes something; everything answered without it stays plain JSON. round: which step it came from (text before a
+    // tool call is said too, "Let me check"; the reply is the last step's text).
+    let ndjson = false, finalRound = -1;
+    const splitters = new Map();
+    const streamOpts = wantStream && key === "tv" && !typed ? {
+      onText: (d, round) => {
+        if (!ndjson) { res.writeHead(200, { "content-type": "application/x-ndjson; charset=utf-8", "cache-control": "no-store" }); ndjson = true; }
+        let sp = splitters.get(round);
+        if (!sp) { sp = createSplitter({ firstMin: 60, onSentence: (text) => { try { res.write(JSON.stringify({ t: "say", text, round }) + "\n"); } catch { /* the screen went away */ } } }); splitters.set(round, sp); }
+        sp.push(d);
+      },
+      onRoundEnd: (round, stop) => { splitters.get(round)?.flush(); if (stop !== "tool_use" && stop !== "pause_turn") finalRound = round; },
+    } : {};
     const before = chatLocks[key]; let unlock; chatLocks[key] = new Promise((r) => { unlock = r; });
     let out;
     try {
@@ -806,8 +824,16 @@ async function api(req, res, url) {
       devlog.log("sent", { surface: key, text: message.trim(), historyLen: histories[key].length });
       // "Pick for me" (off unless chosen): a quick command goes to the fast model, for this one request (lib/llm.mjs)
       const llmMod = await import("./lib/llm.mjs");
-      try { out = await llmMod.withModel(llmMod.autoModel(message.trim()), () => chat(histories[key], message.trim(), key === "tv" ? { surface: "tv", photo: photoOnScreen, typed: Boolean(typed) } : { surface: "desk", typed: true })); }
-      catch (err) { devlog.log("error", { where: "chat", surface: key, text: message.trim(), status: err?.status ?? null, error: String(err?.message ?? err).slice(0, 500), ms: Date.now() - t0 }); throw err; }
+      // (a serious talk, sparring, or a between-blocks conversation stays on the main model for every turn)
+      const deep = Boolean(settings.get().convMode || (key === "tv" && session.current()));
+      const model = llmMod.autoModel(message.trim(), { deep });
+      try { out = await llmMod.withModel(model, () => chat(histories[key], message.trim(), key === "tv" ? { surface: "tv", photo: photoOnScreen, typed: Boolean(typed), ...streamOpts } : { surface: "desk", typed: true })); }
+      catch (err) {
+        devlog.log("error", { where: "chat", surface: key, text: message.trim(), status: err?.status ?? null, error: String(err?.message ?? err).slice(0, 500), ms: Date.now() - t0 });
+        if (ndjson) { try { res.end(JSON.stringify({ t: "error", error: "Sorry, I couldn't get an answer just then." }) + "\n"); } catch { /* gone */ } return; }
+        throw err;
+      }
+      if (out) out.model = model ?? llmMod.modelName();
       histories[key] = out.history;
     } finally { unlock(); }
     // a Money review answer (amounts, payees, balances) is never kept in the conversation history on disk, the same as
@@ -816,16 +842,18 @@ async function api(req, res, url) {
     transcripts.log({ role: "dayspring", text: moneyAnswer ? MONEY_NOT_KEPT : out.reply, surface: key });
     // who answered: Claude (it used tokens), a built-in skill, the offline fallback, or a local handler
     const by = out.usage ? "claude" : out.offline ? "offline(" + out.offline + ")" : out.changes?.includes("skills") ? "skill" : out.changes?.includes("offline") ? "offline" : "local";
-    devlog.log("reply", { surface: key, by, ms: Date.now() - t0, reply: moneyAnswer ? MONEY_NOT_KEPT : out.reply, changes: out.changes, tokensIn: out.usage?.input_tokens ?? null, tokensOut: out.usage?.output_tokens ?? null, cacheRead: out.usage?.cache_read_input_tokens ?? null, historyLen: out.history?.length ?? null, open: Boolean(out.open), quiet: Boolean(out.quiet) });
+    devlog.log("reply", { surface: key, by, model: out.usage ? out.model : null, streamed: ndjson, ms: Date.now() - t0, reply: moneyAnswer ? MONEY_NOT_KEPT : out.reply, changes: out.changes, tokensIn: out.usage?.input_tokens ?? null, tokensOut: out.usage?.output_tokens ?? null, cacheRead: out.usage?.cache_read_input_tokens ?? null, historyLen: out.history?.length ?? null, open: Boolean(out.open), quiet: Boolean(out.quiet) });
     if (out.changes.length) announcer.broadcast("refresh", { reason: "chat" });
     // conversation: the TV keeps listening (no wake phrase) while a between-blocks conversation is open;
     // quiet: he asked to stop talking, so the TV goes quiet right away
     if (out.restart) setTimeout(restartSelf, 3500);      // after "Restarting, I'll be right back" has been said
-    return send(res, 200, { reply: out.reply, changes: out.changes, usage: out.usage, conversation: Boolean(key === "tv" && (session.current() || out.open)), quiet: Boolean(out.quiet), speed: out.speed ?? null, photo: out.photo ?? null, panel: out.panel ?? null,
+    const body = { reply: out.reply, changes: out.changes, usage: out.usage, conversation: Boolean(key === "tv" && (session.current() || out.open)), quiet: Boolean(out.quiet), speed: out.speed ?? null, photo: out.photo ?? null, panel: out.panel ?? null,
       // what the no-AI understanding adds: a list to pick from, a help link, something for the screen to do
       ...Object.fromEntries(["suggest", "link", "clientRun", "clientShow", "count", "timers", "cooking", "cookingDone", "recipes", "recipeView", "listen", "joke", "intent", "openPage", "offerSearch", "dismissTimers", "miss", "dictating", "webResults", "breathing", "show", "devVoice", "support", "offer", "trivia",
         // (lib/commands: he ended the conversation, so the screen stops listening at once; the parts of "this and that")
-        "close", "closing", "parts", "security"].filter((k) => out[k] !== undefined).map((k) => [k, out[k]])) });
+        "close", "closing", "parts", "security"].filter((k) => out[k] !== undefined).map((k) => [k, out[k]])) };
+    if (ndjson) { res.end(JSON.stringify({ t: "done", round: finalRound, data: body }) + "\n"); return; }
+    return send(res, 200, body);
   }
   if (m === "POST" && p === "/chat/reset") { const { surface } = await readJSON(req).catch(() => ({})); histories[surface === "tv" ? "tv" : "desk"] = []; return send(res, 200, { ok: true }); }
 

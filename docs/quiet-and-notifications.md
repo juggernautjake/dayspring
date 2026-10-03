@@ -38,7 +38,11 @@ When you start talking to Dayspring (saying "Dayspring", pressing **🎙 Talk**,
 
 - its answer has been said,
 - any follow-up is finished (it asked you something and you answered, you confirmed or cancelled a change, or the answer window closed),
-- and about 4 seconds have passed without you saying anything new.
+- and about 8 seconds have passed without you saying anything new (Settings → **Notifications** → **While we're talking** → **Wait after we talk**).
+
+While you're talking, a notification never speaks over you and never stops Dayspring listening. It shows at once as a quiet card ("I'll say it when we're done talking"), and is said afterwards. Several Claude Code alerts that came in while you talked are said together: "While we were talking, Claude finished 2 tasks, on Dayspring and Lantern." Small things that had to wait (an update note, a badge, a few free minutes) are only shown, not said. If a notification is being said and you say "Dayspring, …", it stops straight away and is said again after your request.
+
+**While we're talking** (Settings → **Notifications**) can also be **Show them silently** (a card, no sound, and it isn't said later) or **Interrupt me** (said straight away, the way Dayspring worked before). By voice: "hold notifications while we talk", "show notifications silently while we talk", "let notifications interrupt me".
 
 Then the waiting items come out one at a time, most important first (reminders before questions, questions before jokes), with a short pause between them. If you start talking again, the rest waits again. Nothing is skipped. Anything that has gone out of date is re-worded or dropped: "leave in 10 minutes" becomes "leave at 3:15 p.m.", a late reminder says when it was due, a block that has already ended isn't announced, and a joke offer is dropped after 30 minutes.
 

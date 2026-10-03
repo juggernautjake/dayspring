@@ -6,7 +6,10 @@
 // their words wait for the reply to finish (at most 20 s). A small sign shows what's waiting ("1 thing to tell you
 // after this"); tapping it, or asking "what were you going to say?", brings it out now.
 //   window.dsFloor: present(item) · tokFor(text) · gate(tok, stage) · done(item) · owner(source) · replyActive()
-//                   afterReply(maxMs) · busy() · held() · _state()
+//                   afterReply(maxMs) · busy() · held() · recall() · repaint() · _state()
+// "Busy" also covers the moments the screen knows he's still talking to it (tv.js talkActive: his words being gathered,
+// a sentence still finishing after the listening window closed, "Dayspring" just heard), so the server never decides
+// he's done while he's mid-sentence.
 (() => {
   const LEAD_CANCEL_MS = 300, RING_SPEECH_MAX_MS = 20_000, GRACE_MS = 4000, TYPING_MS = 15_000, OWNER_HOLD_MS = 2500;
   const core = () => window.dsCore;
@@ -27,7 +30,7 @@
     const c = core(); if (!c) return "idle";
     const typing = Date.now() - typedAt < TYPING_MS && document.activeElement?.id === "typeBox" && String(document.activeElement.value ?? "").trim() !== "";
     // (he just started: "busy" for a moment even before the recognizer has his first full words)
-    return c.mode !== "idle" || c.speaking || c.utter || c.alarmOn || typing || Date.now() - ownerAt < OWNER_HOLD_MS ? "busy" : "idle";
+    return c.mode !== "idle" || c.speaking || c.utter || c.talkActive || c.alarmOn || typing || Date.now() - ownerAt < OWNER_HOLD_MS ? "busy" : "idle";
   }
   setInterval(() => {
     if (!speakerHere()) return;
@@ -76,6 +79,18 @@
       reported = "busy"; lastBeat = t;               // the next idle is reported, which ends his turn
       if (t - ownerSent > 1000) { ownerSent = t; send({ type: "owner", source }); }
     },
+    // he said "Dayspring" over a notification being said: it stops and goes back in the server's line (said later)
+    recall() {
+      let n = 0;
+      for (const tok of toks.values()) {
+        if (tok.finished || tok.cancelled || tok.cls !== "hold") continue;
+        tok.cancelled = true; n++;
+        note("callback", { kind: tok.item.kind, during: tok.speechAt ? "words" : "lead-in" });
+      }
+      ownerAt = Date.now(); reported = "busy"; lastBeat = ownerAt; send({ type: "owner", source: "voice" });
+      return n;
+    },
+    repaint() { paint(); },
     // his answer is on its way or being said (not the follow-up window after it)
     replyActive() { const c = core(); return Boolean(c && (c.mode === "thinking" || c.mode === "replying" || c.utter)); },
     // for an alarm's or a timer's words: wait until the reply is said, at most 20 s
@@ -108,18 +123,20 @@
   const pill = document.createElement("button");
   pill.id = "dsFloorPill"; pill.type = "button"; pill.hidden = true;
   pill.title = "Tap to hear it now (or say “what were you going to say?”)";
-  pill.onclick = (e) => { e.stopPropagation(); F.release(); pill.textContent = "Okay, telling you now"; };
+  pill.onclick = (e) => { e.stopPropagation(); try { core()?.talkReleased?.(); } catch { /* an older screen */ } F.release(); pill.textContent = "Okay, telling you now"; };
   const place = () => { const st = document.getElementById("talkStatus"); if (st && !pill.isConnected) st.insertAdjacentElement("afterend", pill); else if (!st && !pill.isConnected) document.body.appendChild(pill); };
   function paint() {
     place();
-    const n = Number(server.held) || 0;
+    const n = (Number(server.held) || 0) + (Number(core()?.talkHeld) || 0);   // (+ what the screen itself is holding)
     pill.hidden = n < 1;
     if (n < 1) return;
     pill.textContent = n === 1 ? "1 thing to tell you after this" : `${n} things to tell you after this`;
-    pill.setAttribute("aria-label", `${pill.textContent}: ${(server.items ?? []).join(", ")}. Tap to hear it now.`);
+    pill.setAttribute("aria-label", `${pill.textContent}: ${(server.items ?? []).join(", ") || "a notification"}. Tap to hear it now.`);
     pill.title = `Waiting: ${(server.items ?? []).join(" · ")}\nTap to hear it now (or say “what were you going to say?”)`;
   }
   const hook = (es) => {
+    // something Dayspring will say after he's done: a quiet card now (tv.js talkCard), so nothing is lost
+    es.addEventListener("floor-card", (e) => { try { const c = JSON.parse(e.data); if (speakerHere()) core()?.talkCard?.(c.title, c.text); } catch { /* bad event */ } });
     es.addEventListener("floor", (e) => { try { server = JSON.parse(e.data) ?? server; paint(); } catch { /* bad event */ } });
     es.addEventListener("hello", (e) => { try { const d = JSON.parse(e.data); if (d.floor) { server = { ...server, ...d.floor }; paint(); } } catch { /* bad event */ } });
   };

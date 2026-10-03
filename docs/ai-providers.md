@@ -110,7 +110,9 @@ On a laptop without a graphics card (for example 16 GB of memory and Intel graph
 - **By voice** (works even with no AI): "turn off the AI" / "use no AI" / "go offline mode", "switch to Claude", "use Ollama", "which AI are you using?", "use Opus", "switch to Haiku", "use the smartest model", "use the fastest model", "switch to qwen" (any installed Ollama model by name), "what model are you using?", "check my AI key".
 - **Each keeps its own settings.** Switching back to Claude brings back the Claude model you used; switching back to Ollama brings back its model. Your keys stay in `.env`.
 - **No AI** is really no AI: nothing calls any model (no warm-up, no summaries, no pictures). Features that need an AI say so, or use their built-in versions.
-- **Pick for me** (off unless you turn it on): quick commands go to the fast model (Claude Haiku, or the smaller of your Ollama models), and conversation, writing and summaries go to the one you chose.
+- **Pick for me** (off unless you turn it on): quick commands, schedule changes and quick questions go to the fast model (Claude Haiku, or the smaller of your Ollama models); writing, explaining, planning, coding, faith and Scripture questions, sparring, serious talks and between-blocks conversations go to the one you chose.
+
+On the Dayspring screen, Claude's spoken answers are streamed: the first sentence is said while the rest is still being written.
 
 ## Looking things up online
 

@@ -2,6 +2,30 @@
 
 All notable changes to Dayspring. Versions follow [semantic versioning](https://semver.org).
 
+## 1.7.7 (2026-10-02)
+
+### In this version
+
+**Your conversation comes first.** While you're talking to Dayspring (saying its name, the listening window, while it thinks or answers, and about 8 seconds after), notifications never speak over you and never stop it listening. They show at once as a quiet card ("I'll say it when we're done talking") and are said afterwards. Several Claude Code alerts that came in while you talked are said together ("While we were talking, Claude finished 2 tasks, on … and …"), and small things that had to wait (update notes, badges, free minutes) are only shown. Alarms, timers and emergencies still ring. If a notification is being said and you say "Dayspring, …", it stops and is said again later. [Guide](docs/quiet-and-notifications.md)
+- **Settings → Notifications → While we're talking:** *Wait until I'm done* (the usual), *Show them silently*, or *Interrupt me*, and how long to wait after you talk (3–30 seconds). By voice: "hold notifications while we talk", "show notifications silently while we talk", "let notifications interrupt me", "wait 15 seconds after we're done talking before notifications".
+
+**Dayspring hears all of what you say.**
+- After just "Dayspring" you get 10 seconds to start, and it keeps listening for as long as you're talking (it used to stop after 12 seconds, so a longer request was lost).
+- Words that finish a sentence just after the listening window closed are still taken.
+- Saying something Dayspring itself just said ("change your avatar") is no longer mistaken for its own echo.
+- If you keep talking while it's thinking, that's your next request, asked as soon as this answer is done (never mixed into the one on its way). "Never mind" or "stop" while it's thinking cancels it.
+- Room noise alone can't hold the listening window open for more than about 12 seconds, or slip a stray sentence in.
+
+**Faster answers.**
+- Spoken answers from Claude are streamed: Dayspring starts saying the first sentence while the rest is still being written.
+- "Pick for me" (Settings → AI brain) now sends short commands, schedule changes and quick questions to the fast model, and keeps explaining, planning, coding, faith and Scripture questions, sparring and serious talks on the main one.
+- It connects to the AI and the voice while you're still talking, and a question ending in "?" is sent a little sooner.
+- With "Pick for me" on, the first words of an answer were ready in about 0.8 s instead of about 3.8 s in our tests.
+
+### In the development version only (1.8.0-dev.8)
+
+Everything above, plus the development features from 1.8.0-dev.7.
+
 ## 1.7.6 (2026-10-01)
 
 ### In this version
